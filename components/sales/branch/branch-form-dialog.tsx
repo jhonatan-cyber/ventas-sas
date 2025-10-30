@@ -1,0 +1,143 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Branch } from "@prisma/client"
+
+interface BranchFormDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  branch?: Branch
+  onSave: (data: any) => void
+}
+
+export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchFormDialogProps) {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (branch) {
+      setName(branch.name || "")
+      setEmail(branch.email || "")
+      setPhone(branch.phone || "")
+      setAddress(branch.address || "")
+    } else {
+      setName("")
+      setEmail("")
+      setPhone("")
+      setAddress("")
+    }
+  }, [branch, open])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!name.trim()) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await onSave({
+        name: name.trim(),
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        address: address.trim() || undefined
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {branch ? "Editar Sucursal" : "Nueva Sucursal"}
+          </DialogTitle>
+          <DialogDescription>
+            {branch 
+              ? "Modifica los datos de la sucursal" 
+              : "Completa los datos para crear una nueva sucursal"}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre <span className="text-red-500">*</span></Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nombre de la sucursal"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Teléfono"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Dirección</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Dirección completa de la sucursal"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isLoading || !name.trim()}
+            >
+              {isLoading ? "Guardando..." : branch ? "Actualizar" : "Crear"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

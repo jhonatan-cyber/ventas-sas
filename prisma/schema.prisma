@@ -1,0 +1,477 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  password            String?
+  fullName            String?              @map("full_name")
+  role                String               @default("user")
+  isSuperAdmin        Boolean              @default(false) @map("is_super_admin")
+  isActive            Boolean              @default(true) @map("is_active")
+  lastLoginAt         DateTime?            @map("last_login_at")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  address             String?
+  phone               String?
+  ci                  String?              @unique
+  organizationMembers OrganizationMember[]
+
+  @@map("profiles")
+}
+
+model Organization {
+  id                    String               @id @default(cuid())
+  name                  String
+  slug                  String               @unique
+  ownerId               String               @map("owner_id")
+  subscriptionPlanId    String?              @map("subscription_plan_id")
+  subscriptionStatus    String               @default("trial") @map("subscription_status")
+  subscriptionStartDate DateTime?            @map("subscription_start_date")
+  subscriptionEndDate   DateTime?            @map("subscription_end_date")
+  settings              Json?
+  createdAt             DateTime             @default(now()) @map("created_at")
+  updatedAt             DateTime             @updatedAt @map("updated_at")
+  customers             Customer[]
+  orders                Order[]
+  organizationMembers   OrganizationMember[]
+  subscriptionPlan      SubscriptionPlan?    @relation(fields: [subscriptionPlanId], references: [id])
+  products              Product[]
+  // Sistema de Ventas
+  categories            Category[]
+  salesRoles            SalesRole[]
+  salesUsers            SalesUser[]
+  salesProducts         SalesProduct[]
+  salesCustomers        SalesCustomer[]
+  sales                 Sale[]
+  quotations            Quotation[]
+  expenses              Expense[]
+  cashRegisters         CashRegister[]
+  branches              Branch[]
+  subscriptions         Subscription[]
+
+  @@map("organizations")
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(cuid())
+  name            String         @unique
+  description     String?
+  priceMonthly    Decimal?       @db.Decimal(10, 2) @map("price_monthly")
+  priceYearly     Decimal?       @db.Decimal(10, 2) @map("price_yearly")
+  hasMonthly      Boolean        @default(false) @map("has_monthly")
+  hasYearly       Boolean        @default(false) @map("has_yearly")
+  features        Json?
+  modules         Json?          @map("modules")
+  maxUsers      Int?           @map("max_users")
+  maxProducts   Int?           @map("max_products")
+  maxOrders     Int?           @map("max_orders")
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  organizations Organization[]
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  organizationId        String?            @map("organization_id")
+  customerId            String?            @map("customer_id")
+  planId                String             @map("plan_id")
+  status                String             @default("active") // active, cancelled, expired, trial
+  billingPeriod         String             @default("monthly") @map("billing_period") // monthly, yearly
+  startDate             DateTime           @default(now()) @map("start_date")
+  endDate               DateTime?          @map("end_date")
+  autoRenew             Boolean            @default(true) @map("auto_renew")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  organization          Organization?      @relation(fields: [organizationId], references: [id])
+  customer              Customer?          @relation(fields: [customerId], references: [id])
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Role {
+  id                  String               @id @default(cuid())
+  name                String               @unique
+  description         String?
+  permissions         Json?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  isActive            Boolean              @default(true) @map("is_active")
+  organizationMembers OrganizationMember[]
+
+  @@map("roles")
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  roleId         String?      @map("role_id")
+  isActive       Boolean      @default(true) @map("is_active")
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  role           Role?        @relation(fields: [roleId], references: [id])
+  profile        Profile      @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+model Customer {
+  id             String        @id @default(cuid())
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  razonSocial    String?       @map("razon_social")
+  slug           String?       @unique
+  nit            String?       @unique
+  ci             String?       @unique
+  nombre         String?
+  apellido       String?
+  direccion      String?
+  telefono       String?
+  email          String?
+  password       String?
+  city           String?
+  country        String?
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  orders         Order[]
+  subscriptions  Subscription[]
+  rolesSas       RoleSas[]
+  usuariosSas    UsuarioSas[]
+
+  @@map("customers")
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  name           String
+  description    String?
+  price          Decimal       @db.Decimal(10, 2)
+  stock          Int           @default(0)
+  sku            String?
+  category       String?
+  imageUrl       String?       @map("image_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  orderItems     OrderItem[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("products")
+}
+
+model Order {
+  id             String        @id @default(cuid())
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  customerId     String        @map("customer_id")
+  orderNumber    String        @unique @map("order_number")
+  status         String        @default("pending")
+  total          Decimal       @db.Decimal(10, 2)
+  notes          String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  orderItems     OrderItem[]
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String   @map("order_id")
+  productId String   @map("product_id")
+  quantity  Int
+  unitPrice Decimal  @map("unit_price") @db.Decimal(10, 2)
+  subtotal  Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// ========================================
+// SISTEMA DE VENTAS (Separado del Admin)
+// ========================================
+
+// Categorías de productos
+model Category {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  name           String
+  description    String?
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       SalesProduct[]
+
+  @@map("categories")
+}
+
+// Roles para el sistema de ventas (separado del admin)
+model SalesRole {
+  id          String          @id @default(cuid())
+  organizationId String       @map("organization_id")
+  name        String
+  description String?
+  permissions Json?
+  isActive    Boolean         @default(true) @map("is_active")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  users       SalesUser[]
+  organization Organization  @relation(fields: [organizationId], references: [id])
+
+  @@map("sales_roles")
+}
+
+// Usuarios del sistema de ventas
+model SalesUser {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  email          String
+  password       String
+  fullName       String      @map("full_name")
+  roleId         String?     @map("role_id")
+  isActive       Boolean     @default(true) @map("is_active")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  role           SalesRole?  @relation(fields: [roleId], references: [id])
+  sales          Sale[]
+  expenses       Expense[]
+
+  @@map("sales_users")
+}
+
+// Productos del sistema de ventas
+model SalesProduct {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  categoryId     String?     @map("category_id")
+  name           String
+  description    String?
+  price          Decimal     @db.Decimal(10, 2)
+  cost           Decimal     @db.Decimal(10, 2)
+  stock          Int         @default(0)
+  minStock       Int         @default(0) @map("min_stock")
+  sku            String?
+  barcode        String?
+  imageUrl       String?     @map("image_url")
+  isActive       Boolean     @default(true) @map("is_active")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  category       Category?   @relation(fields: [categoryId], references: [id])
+  saleItems      SaleItem[]
+  quotationItems QuotationItem[]
+
+  @@map("sales_products")
+}
+
+// Clientes del sistema de ventas
+model SalesCustomer {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  country        String?
+  ruc            String?     // Número de identificación fiscal
+  isActive       Boolean     @default(true) @map("is_active")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sales          Sale[]
+  quotations     Quotation[]
+
+  @@map("sales_customers")
+}
+
+// Ventas
+model Sale {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  userId         String      @map("user_id")
+  customerId     String?     @map("customer_id")
+  saleNumber     String      @unique @map("sale_number")
+  status         String      @default("completed")
+  subtotal       Decimal     @db.Decimal(10, 2)
+  discount       Decimal     @default(0) @db.Decimal(10, 2)
+  total          Decimal     @db.Decimal(10, 2)
+  paymentMethod  String      @default("cash") @map("payment_method")
+  notes          String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           SalesUser   @relation(fields: [userId], references: [id])
+  customer       SalesCustomer? @relation(fields: [customerId], references: [id])
+  items          SaleItem[]
+
+  @@map("sales")
+}
+
+// Items de venta
+model SaleItem {
+  id         String       @id @default(cuid())
+  saleId     String       @map("sale_id")
+  productId  String       @map("product_id")
+  quantity   Int
+  unitPrice  Decimal      @map("unit_price") @db.Decimal(10, 2)
+  subtotal   Decimal      @db.Decimal(10, 2)
+  createdAt  DateTime     @default(now()) @map("created_at")
+  sale       Sale         @relation(fields: [saleId], references: [id])
+  product    SalesProduct @relation(fields: [productId], references: [id])
+
+  @@map("sale_items")
+}
+
+// Cotizaciones
+model Quotation {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  customerId     String      @map("customer_id")
+  quotationNumber String     @unique @map("quotation_number")
+  status         String      @default("pending")
+  subtotal       Decimal     @db.Decimal(10, 2)
+  discount       Decimal     @default(0) @db.Decimal(10, 2)
+  total          Decimal     @db.Decimal(10, 2)
+  expiresAt      DateTime?   @map("expires_at")
+  notes          String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  customer       SalesCustomer @relation(fields: [customerId], references: [id])
+  items          QuotationItem[]
+
+  @@map("quotations")
+}
+
+// Items de cotización
+model QuotationItem {
+  id            String     @id @default(cuid())
+  quotationId   String     @map("quotation_id")
+  productId     String     @map("product_id")
+  quantity      Int
+  unitPrice     Decimal    @map("unit_price") @db.Decimal(10, 2)
+  subtotal      Decimal    @db.Decimal(10, 2)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  quotation     Quotation  @relation(fields: [quotationId], references: [id])
+  product       SalesProduct @relation(fields: [productId], references: [id])
+
+  @@map("quotation_items")
+}
+
+// Gastos
+model Expense {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  userId         String      @map("user_id")
+  category       String
+  description    String
+  amount         Decimal     @db.Decimal(10, 2)
+  date           DateTime    @db.Date
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           SalesUser   @relation(fields: [userId], references: [id])
+
+  @@map("expenses")
+}
+
+// Cajas
+model CashRegister {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  name           String
+  branchId       String?     @map("branch_id")
+  openingBalance Decimal     @default(0) @map("opening_balance") @db.Decimal(10, 2)
+  currentBalance Decimal     @default(0) @map("current_balance") @db.Decimal(10, 2)
+  isOpen         Boolean     @default(false) @map("is_open")
+  lastOpenAt     DateTime?   @map("last_open_at")
+  lastCloseAt    DateTime?   @map("last_close_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  branch         Branch?     @relation(fields: [branchId], references: [id])
+
+  @@map("cash_registers")
+}
+
+// Sucursales
+model Branch {
+  id             String          @id @default(cuid())
+  organizationId String          @map("organization_id")
+  name           String
+  address        String?
+  phone          String?
+  email          String?
+  isActive       Boolean         @default(true) @map("is_active")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  cashRegisters  CashRegister[]
+  rolesSas       RoleSas[]
+  usuariosSas    UsuarioSas[]
+
+  @@map("branches")
+}
+
+// Roles para el Sistema SAS (separado del admin y sales)
+model RoleSas {
+  id          String      @id @default(cuid())
+  nombre      String      @map("nombre")
+  descripcion String?     @map("descripcion")
+  customerId  String      @map("customer_id")
+  sucursalId  String?     @map("sucursal_id")
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  sucursal    Branch?     @relation(fields: [sucursalId], references: [id])
+  usuariosSas UsuarioSas[]
+
+  @@map("roles_sas")
+}
+
+// Usuarios para el Sistema SAS (separado del admin)
+model UsuarioSas {
+  id        String    @id @default(cuid())
+  ci        String?   @unique
+  nombre    String
+  apellido  String
+  direccion String?   @map("direccion")
+  telefono  String?   @map("telefono")
+  correo    String?   @unique @map("correo")
+  contraseña String?  @map("contraseña")
+  rolId     String?   @map("rol_id")
+  foto      String?   @map("foto")
+  sucursalId String?  @map("sucursal_id")
+  customerId String   @map("customer_id")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  rol       RoleSas?  @relation(fields: [rolId], references: [id])
+  sucursal  Branch?   @relation(fields: [sucursalId], references: [id])
+  customer  Customer  @relation(fields: [customerId], references: [id])
+
+  @@map("usuarios_sas")
+}
