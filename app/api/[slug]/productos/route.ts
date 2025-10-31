@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(
@@ -16,8 +16,8 @@ export async function GET(
     const status = searchParams.get('status') || undefined
     const categoryId = searchParams.get('categoryId') || undefined
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -27,7 +27,7 @@ export async function GET(
     const skip = (page - 1) * pageSize
 
     const { products, total } = await SalesProductService.getAllProducts(
-      organizationId,
+      customer.id,
       skip,
       pageSize,
       search,
@@ -59,7 +59,7 @@ export async function POST(
   try {
     const { slug } = await params
     const body = await request.json()
-    const { categoryId, name, description, price, cost, stock, minStock, sku, barcode, imageUrl } = body
+    const { categoryId, name, description, brand, model, price, cost, stock, minStock, sku, barcode, imageUrl } = body
 
     if (!name || price === undefined || cost === undefined) {
       return NextResponse.json(
@@ -68,18 +68,20 @@ export async function POST(
       )
     }
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
       )
     }
 
-    const newProduct = await SalesProductService.createProduct(organizationId, {
+    const newProduct = await SalesProductService.createProduct(customer.id, {
       categoryId,
       name,
       description,
+      brand,
+      model,
       price: Number(price),
       cost: Number(cost),
       stock: stock ? Number(stock) : undefined,

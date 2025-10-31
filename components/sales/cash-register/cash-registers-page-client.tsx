@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback, useEffect, useState } from "react"
 import { CashRegistersHeader } from "./cash-registers-header"
 import { CashRegistersContainer } from "./cash-registers-container"
 import { CashRegisterFormDialog } from "./cash-register-form-dialog"
@@ -8,14 +9,41 @@ import { CashRegisterOpenDialog } from "./cash-register-open-dialog"
 import { CashRegisterCloseDialog } from "./cash-register-close-dialog"
 import { CashRegister } from "@prisma/client"
 import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions"
+import { toast } from "sonner"
 
 interface CashRegistersPageClientProps {
   initialCashRegisters: Array<CashRegister & { branch?: any }>
   customerSlug: string
-  organizationId: string
 }
 
-export function CashRegistersPageClient({ initialCashRegisters, customerSlug, organizationId }: CashRegistersPageClientProps) {
+export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: CashRegistersPageClientProps) {
+  const [cashRegisters, setCashRegisters] = useState(initialCashRegisters)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    setCashRegisters(initialCashRegisters)
+  }, [initialCashRegisters])
+
+  const loadCashRegisters = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/${customerSlug}/cajas?page=1&pageSize=1000`)
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "No se pudieron cargar las cajas")
+      }
+
+      const data = await response.json()
+      setCashRegisters(data.cashRegisters || [])
+    } catch (error: any) {
+      console.error("Error al cargar cajas:", error)
+      toast.error(error.message || "Error al cargar las cajas")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [customerSlug])
+
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -32,7 +60,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug, or
     handleDelete,
     handleOpen,
     handleClose
-  } = useCashRegisterActions(customerSlug, organizationId)
+  } = useCashRegisterActions(customerSlug, loadCashRegisters)
 
   return (
     <div className="space-y-6 p-6">
@@ -46,8 +74,8 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug, or
 
       {/* Contenedor con filtros, tabla y paginación */}
       <CashRegistersContainer 
-        cashRegisters={initialCashRegisters}
-        organizationId={organizationId}
+        cashRegisters={cashRegisters}
+        isLoading={isLoading}
         onEdit={openEditDialog}
         onOpen={openOpenDialog}
         onClose={openCloseDialog}
@@ -59,7 +87,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug, or
         open={isFormDialogOpen}
         onOpenChange={closeDialogs}
         cashRegister={selectedCashRegister}
-        organizationId={organizationId}
+        customerSlug={customerSlug}
         onSave={handleSave}
       />
 

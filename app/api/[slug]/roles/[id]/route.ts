@@ -61,6 +61,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    const role = await RoleSasService.getRoleById(id)
+    if (!role) {
+      return NextResponse.json({ error: 'Rol no encontrado' }, { status: 404 })
+    }
+    if ((role.nombre || '').toLowerCase() === 'administrador') {
+      return NextResponse.json({ error: 'No se puede eliminar el rol Administrador' }, { status: 400 })
+    }
     await RoleSasService.deleteRole(id)
     return NextResponse.json({ message: 'Rol eliminado correctamente' })
   } catch (error: any) {

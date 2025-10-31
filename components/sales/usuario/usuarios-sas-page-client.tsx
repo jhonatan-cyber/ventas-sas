@@ -4,6 +4,7 @@ import { UsuariosSasHeader } from "./usuarios-sas-header"
 import { UsuariosSasContainer } from "./usuarios-sas-container"
 import { UsuarioSasFormDialog } from "./usuario-sas-form-dialog"
 import { UsuarioSasDeleteDialog } from "./usuario-sas-delete-dialog"
+import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { UsuarioSas, RoleSas, Branch } from "@prisma/client"
 import { useUsuarioSasActions } from "@/hooks/sales/usuario/use-usuario-sas-actions"
 
@@ -28,6 +29,12 @@ export function UsuariosSasPageClient({
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedUsuario,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
@@ -43,13 +50,14 @@ export function UsuariosSasPageClient({
       <UsuariosSasHeader
         title="Gestión de Usuarios"
         description="Administra los usuarios del sistema SAS"
-        newButtonText="Nuevo Usuario"
+        newButtonText="Agregar Usuario"
         onNewClick={openCreateDialog}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <UsuariosSasContainer 
-        usuarios={initialUsuarios} 
+        usuarios={initialUsuarios}
+        sucursalesCount={sucursales.length}
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}
@@ -63,6 +71,7 @@ export function UsuariosSasPageClient({
         roles={roles}
         sucursales={sucursales}
         onSave={handleSave}
+        defaultSucursalId={sucursales.length === 1 ? sucursales[0].id : undefined}
       />
 
       {/* Modal de confirmación de eliminar */}
@@ -71,6 +80,15 @@ export function UsuariosSasPageClient({
         onOpenChange={closeDialogs}
         usuario={selectedUsuario}
         onDelete={handleDelete}
+      />
+
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmTitle}
+        description={confirmDesc}
+        onConfirm={confirmPerform}
+        confirmColor={confirmColor}
       />
     </div>
   )

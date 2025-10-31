@@ -11,7 +11,9 @@ interface RoleSasDeleteDialogProps {
 }
 
 export function RoleSasDeleteDialog({ open, onOpenChange, role, onDelete }: RoleSasDeleteDialogProps) {
+  const isAdminRole = (role?.nombre || '').toLowerCase() === 'administrador'
   const handleDelete = () => {
+    if (isAdminRole) return
     onDelete()
     onOpenChange(false)
   }
@@ -20,11 +22,19 @@ export function RoleSasDeleteDialog({ open, onOpenChange, role, onDelete }: Role
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{isAdminRole ? 'No se puede eliminar' : '¿Estás seguro?'}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el rol
-            <strong className="block mt-2">"{role?.nombre}"</strong>
-            y todos sus datos asociados.
+            {isAdminRole ? (
+              <>
+                El rol <strong>Administrador</strong> no puede eliminarse por seguridad del sistema.
+              </>
+            ) : (
+              <>
+                Esta acción no se puede deshacer. Se eliminará permanentemente el rol
+                <strong className="block mt-2">"{role?.nombre}"</strong>
+                y <strong>se desactivará</strong> a los usuarios que tengan asignado este rol.
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -32,6 +42,7 @@ export function RoleSasDeleteDialog({ open, onOpenChange, role, onDelete }: Role
           <AlertDialogAction
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 text-white"
+            disabled={isAdminRole}
           >
             Eliminar
           </AlertDialogAction>

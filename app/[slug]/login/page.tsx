@@ -1,6 +1,6 @@
 import { LoginSasForm } from "@/components/sales/auth/login-sas-form"
 import { getCustomerBySlug } from "@/lib/utils/organization"
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
 
 export default async function LoginPage({
   params,
@@ -13,7 +13,7 @@ export default async function LoginPage({
   const customer = await getCustomerBySlug(slug)
   
   if (!customer) {
-    notFound()
+    redirect('/')
   }
 
   return (

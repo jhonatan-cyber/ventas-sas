@@ -20,6 +20,14 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
     const [description, setDescription] = useState("")
     const [isLoading, setIsLoading] = useState(false)
 
+    // Función para capitalizar palabras
+    const capitalizeWords = (str: string) => {
+        return str
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+    }
+
     useEffect(() => {
         if (category) {
             setName(category.name || "")
@@ -68,10 +76,11 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                             <Input
                                 id="name"
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                onChange={(e) => setName(capitalizeWords(e.target.value))}
                                 placeholder="Ej: Electrónicos, Ropa, Alimentos..."
                                 required
                                 disabled={isLoading}
+                                className="rounded-full"
                             />
                         </div>
                         <div className="space-y-2">
@@ -79,28 +88,31 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                             <Textarea
                                 id="description"
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                onChange={(e) => setDescription(capitalizeWords(e.target.value))}
                                 placeholder="Descripción opcional de la categoría..."
                                 rows={3}
                                 disabled={isLoading}
+                                className="rounded-full"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="justify-center sm:justify-center gap-3">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             disabled={isLoading}
+                            className="rounded-full"
                         >
                             Cancelar
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-green-600 hover:bg-green-700"
+                            variant="new"
                             disabled={isLoading || !name.trim()}
+                            className="rounded-full"
                         >
-                            {isLoading ? "Guardando..." : category ? "Actualizar" : "Crear"}
+                            {isLoading ? "Guardando..." : category ? "Actualizar" : "Agregar"}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -13,7 +13,7 @@ interface RoleHeaderProps {
 export function RoleHeader({
   title,
   description,
-  newButtonText = "Nuevo",
+  newButtonText = "Agregar Rol",
   onNewClick
 }: RoleHeaderProps) {
   return (

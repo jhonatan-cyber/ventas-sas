@@ -14,13 +14,15 @@ interface UsuariosSasTableProps {
     sucursal: { id: string; name: string } | null
     customer: any
   })[]
+  sucursalesCount?: number
   isLoading?: boolean
   onEditClick?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
   onDeleteClick?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
   onToggleStatus?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
 }
 
-export function UsuariosSasTable({ usuarios, isLoading, onEditClick, onDeleteClick, onToggleStatus }: UsuariosSasTableProps) {
+export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditClick, onDeleteClick, onToggleStatus }: UsuariosSasTableProps) {
+  const showSucursalColumn = (sucursalesCount || 0) > 1
   if (isLoading) {
     return (
       <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -39,7 +41,7 @@ export function UsuariosSasTable({ usuarios, isLoading, onEditClick, onDeleteCli
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">CI</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Contacto</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Rol</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
+              {showSucursalColumn && <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>}
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
@@ -47,7 +49,7 @@ export function UsuariosSasTable({ usuarios, isLoading, onEditClick, onDeleteCli
           <TableBody>
             {usuarios.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={showSucursalColumn ? 7 : 6} className="text-center text-muted-foreground py-12">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                       <User className="h-8 w-8 text-gray-400" />
@@ -109,15 +111,17 @@ export function UsuariosSasTable({ usuarios, isLoading, onEditClick, onDeleteCli
                         <span className="text-sm text-gray-400">Sin rol</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      {usuario.sucursal ? (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
-                          {usuario.sucursal.name}
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-gray-400">Todas</span>
-                      )}
-                    </TableCell>
+                    {showSucursalColumn && (
+                      <TableCell>
+                        {usuario.sucursal ? (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
+                            {usuario.sucursal.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-gray-400">Todas</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge className={usuario.isActive ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800" : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"}>
                         {usuario.isActive ? "Activo" : "Inactivo"}

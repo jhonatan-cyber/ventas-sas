@@ -35,7 +35,6 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Rol</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Descripción</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
@@ -43,7 +42,7 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
           <TableBody>
             {roles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                       <Shield className="h-8 w-8 text-gray-400" />
@@ -70,15 +69,6 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
                       <span className="text-sm text-gray-900 dark:text-white">{role.descripcion}</span>
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {role.sucursal ? (
-                      <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
-                        {role.sucursal.name}
-                      </Badge>
-                    ) : (
-                      <span className="text-sm text-gray-400">Todas las sucursales</span>
                     )}
                   </TableCell>
                   <TableCell>

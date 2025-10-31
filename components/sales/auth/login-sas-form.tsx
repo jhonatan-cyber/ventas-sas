@@ -198,7 +198,8 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
           {/* Botón de envío */}
           <Button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full text-white hover:opacity-90"
+            style={{ background: 'var(--primary)' } as React.CSSProperties}
             disabled={isLoading}
           >
             {isLoading ? (

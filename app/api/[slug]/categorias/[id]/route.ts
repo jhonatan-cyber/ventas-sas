@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // GET - Obtener categoría por ID
 export async function GET(
@@ -7,13 +8,30 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
+
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
     const category = await CategoryService.getCategoryById(id)
     
     if (!category) {
       return NextResponse.json(
         { error: 'Categoría no encontrada' },
         { status: 404 }
+      )
+    }
+
+    // Verificar que la categoría pertenece al cliente
+    if (category.customerId !== customer.id) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 403 }
       )
     }
 
@@ -33,9 +51,26 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
     const body = await request.json()
     const { name, description, isActive } = body
+
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
+    // Verificar que la categoría existe y pertenece al cliente
+    const existingCategory = await CategoryService.getCategoryById(id)
+    if (!existingCategory || existingCategory.customerId !== customer.id) {
+      return NextResponse.json(
+        { error: 'Categoría no encontrada' },
+        { status: 404 }
+      )
+    }
 
     const category = await CategoryService.updateCategory(id, {
       name,
@@ -59,7 +94,25 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
+
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
+    // Verificar que la categoría existe y pertenece al cliente
+    const existingCategory = await CategoryService.getCategoryById(id)
+    if (!existingCategory || existingCategory.customerId !== customer.id) {
+      return NextResponse.json(
+        { error: 'Categoría no encontrada' },
+        { status: 404 }
+      )
+    }
+
     await CategoryService.deleteCategory(id)
     return NextResponse.json({ message: 'Categoría eliminada correctamente' })
   } catch (error: any) {

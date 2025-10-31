@@ -5,11 +5,10 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { 
+import {
   LayoutDashboard,
   Users,
   ShoppingBag,
-  TrendingUp,
   FileText,
   ShoppingCart,
   Banknote,
@@ -17,14 +16,12 @@ import {
   Receipt,
   DollarSign,
   Building2,
+  Settings,
   LogOut
 } from "lucide-react"
 
-interface NavItem {
-  title: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-}
+interface NavItem { title: string; href: string; icon: React.ComponentType<{ className?: string }>; }
+interface NavSection { label: string; items: NavItem[] }
 
 interface SalesSidebarProps {
   organizationSlug: string
@@ -34,20 +31,46 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const navItems: NavItem[] = [
-    { title: "Dashboard", href: `/${organizationSlug}/dashboard`, icon: LayoutDashboard },
-    { title: "Roles", href: `/${organizationSlug}/roles`, icon: Users },
-    { title: "Permisos", href: `/${organizationSlug}/permisos`, icon: FileText },
-    { title: "Usuarios", href: `/${organizationSlug}/usuarios`, icon: Users },
-    { title: "Clientes", href: `/${organizationSlug}/clientes`, icon: Users },
-    { title: "Categorías", href: `/${organizationSlug}/categorias`, icon: ShoppingBag },
-    { title: "Productos", href: `/${organizationSlug}/productos`, icon: ShoppingBag },
-    { title: "Ventas", href: `/${organizationSlug}/ventas`, icon: ShoppingCart },
-    { title: "Cajas", href: `/${organizationSlug}/cajas`, icon: Banknote },
-    { title: "Reportes", href: `/${organizationSlug}/reportes`, icon: BarChart3 },
-    { title: "Cotizaciones", href: `/${organizationSlug}/cotizaciones`, icon: Receipt },
-    { title: "Gastos", href: `/${organizationSlug}/gastos`, icon: DollarSign },
-    { title: "Sucursales", href: `/${organizationSlug}/sucursales`, icon: Building2 },
+  const sections: NavSection[] = [
+    {
+      label: 'Inicio',
+      items: [
+        { title: 'Dashboard', href: `/${organizationSlug}/dashboard`, icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: 'Operación',
+      items: [
+        { title: 'Ventas', href: `/${organizationSlug}/ventas`, icon: ShoppingCart },
+        { title: 'Cajas', href: `/${organizationSlug}/cajas`, icon: Banknote },
+        { title: 'Cotizaciones', href: `/${organizationSlug}/cotizaciones`, icon: Receipt },
+        { title: 'Gastos', href: `/${organizationSlug}/gastos`, icon: DollarSign },
+      ],
+    },
+    {
+      label: 'Catálogo',
+      items: [
+        { title: 'Productos', href: `/${organizationSlug}/productos`, icon: ShoppingBag },
+        { title: 'Categorías', href: `/${organizationSlug}/categorias`, icon: ShoppingBag },
+        { title: 'Clientes', href: `/${organizationSlug}/clientes`, icon: Users },
+      ],
+    },
+    {
+      label: 'Gestión',
+      items: [
+        { title: 'Usuarios', href: `/${organizationSlug}/usuarios`, icon: Users },
+        { title: 'Roles', href: `/${organizationSlug}/roles`, icon: Users },
+        { title: 'Permisos', href: `/${organizationSlug}/permisos`, icon: FileText },
+        { title: 'Sucursales', href: `/${organizationSlug}/sucursales`, icon: Building2 },
+        { title: 'Configuración', href: `/${organizationSlug}/configuracion`, icon: Settings },
+      ],
+    },
+    {
+      label: 'Reportes',
+      items: [
+        { title: 'Reportes', href: `/${organizationSlug}/reportes`, icon: BarChart3 },
+      ],
+    },
   ]
 
   const handleLogout = async () => {
@@ -83,46 +106,42 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
         </div>
 
         {/* Navegación */}
-        <nav className="flex-1 overflow-y-auto p-4">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-              
-              return (
-                <li key={item.href}>
+        <nav className="flex-1 overflow-y-auto p-3">
+          {sections.map((section) => (
+            <div key={section.label} className="mb-4">
+              <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {section.label}
+              </div>
+              <ul className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  return (
+                    <li key={item.href}>
                   <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-green-600 text-white"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-white"
-                    )}
-                  >
-                    <Icon className={cn(
-                      "h-5 w-5",
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      !isActive && "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-white"
+                        )}
+                    style={isActive ? ({ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties) : undefined}
+                      >
+                        <Icon className={cn(
+                          "h-5 w-5",
                       isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
-                    )} />
-                    {item.title}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+                        )} />
+                        {item.title}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
-        {/* Botón de logout */}
-        <div className="p-4 border-t border-gray-200 dark:border-[#2a2a2a]">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-gray-600 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Cerrar Sesión
-          </Button>
-        </div>
+        {/* Footer espacio */}
+        <div className="p-3 border-t border-transparent" />
       </div>
     </aside>
   )

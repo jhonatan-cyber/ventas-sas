@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // GET - Obtener sucursal por ID
 export async function GET(
@@ -10,8 +10,8 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -27,8 +27,8 @@ export async function GET(
       )
     }
 
-    // Verificar que la sucursal pertenece a la organización
-    if (branch.organizationId !== organizationId) {
+    // Verificar que la sucursal pertenece al cliente
+    if (branch.customerId !== customer.id) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 403 }
@@ -54,17 +54,17 @@ export async function PUT(
     const { slug, id } = await params
     const body = await request.json()
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
       )
     }
 
-    // Verificar que la sucursal existe y pertenece a la organización
+    // Verificar que la sucursal existe y pertenece al cliente
     const existingBranch = await BranchService.getBranchById(id)
-    if (!existingBranch || existingBranch.organizationId !== organizationId) {
+    if (!existingBranch || existingBranch.customerId !== customer.id) {
       return NextResponse.json(
         { error: 'Sucursal no encontrada' },
         { status: 404 }
@@ -97,17 +97,17 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
       )
     }
 
-    // Verificar que la sucursal existe y pertenece a la organización
+    // Verificar que la sucursal existe y pertenece al cliente
     const existingBranch = await BranchService.getBranchById(id)
-    if (!existingBranch || existingBranch.organizationId !== organizationId) {
+    if (!existingBranch || existingBranch.customerId !== customer.id) {
       return NextResponse.json(
         { error: 'Sucursal no encontrada' },
         { status: 404 }

@@ -21,6 +21,15 @@ export interface UpdateRoleData {
 }
 
 export class RoleAdminService {
+  private static capitalizeWords(text?: string): string | undefined {
+    if (!text) return text
+    return text
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
   // Obtener todos los roles con estadísticas
   static async getAllRoles(): Promise<RoleWithStats[]> {
     return prisma.role.findMany({
@@ -51,10 +60,12 @@ export class RoleAdminService {
 
   // Crear nuevo rol
   static async createRole(data: CreateRoleData): Promise<Role> {
+    const name = this.capitalizeWords(data.name?.trim()) as string
+    const description = this.capitalizeWords(data.description?.trim())
     return prisma.role.create({
       data: {
-        name: data.name,
-        description: data.description,
+        name,
+        description,
         permissions: data.permissions || []
       }
     })

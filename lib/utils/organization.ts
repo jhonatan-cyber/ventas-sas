@@ -26,14 +26,18 @@ export async function getOrganizationBySlug(slug: string) {
  * Retorna null si no existe o si el cliente está inactivo
  */
 export async function getCustomerBySlug(slug: string) {
+  const razonNormalized = slug.replace(/-/g, ' ')
   return prisma.customer.findFirst({
     where: {
-      slug,
-      isActive: true
+      isActive: true,
+      OR: [
+        { slug },
+        { razonSocial: { equals: razonNormalized, mode: 'insensitive' } },
+      ],
     },
     include: {
-      organization: true
-    }
+      organization: true,
+    },
   })
 }
 

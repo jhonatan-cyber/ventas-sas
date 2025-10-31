@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { CashRegister } from "@prisma/client"
 
-export function useCashRegisterActions(customerSlug: string, organizationId: string) {
+export function useCashRegisterActions(customerSlug: string, onCashRegistersChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
@@ -69,7 +69,11 @@ export function useCashRegisterActions(customerSlug: string, organizationId: str
       const message = selectedCashRegister ? "Caja actualizada" : "Caja creada"
       toast.success(message)
       closeDialogs()
-      
+
+      if (onCashRegistersChange) {
+        await Promise.resolve(onCashRegistersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -93,7 +97,11 @@ export function useCashRegisterActions(customerSlug: string, organizationId: str
 
       toast.success("Caja eliminada")
       closeDialogs()
-      
+
+      if (onCashRegistersChange) {
+        await Promise.resolve(onCashRegistersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -122,7 +130,11 @@ export function useCashRegisterActions(customerSlug: string, organizationId: str
 
       toast.success("Caja abierta correctamente")
       closeDialogs()
-      
+
+      if (onCashRegistersChange) {
+        await Promise.resolve(onCashRegistersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -150,7 +162,11 @@ export function useCashRegisterActions(customerSlug: string, organizationId: str
 
       toast.success("Caja cerrada correctamente")
       closeDialogs()
-      
+
+      if (onCashRegistersChange) {
+        await Promise.resolve(onCashRegistersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })

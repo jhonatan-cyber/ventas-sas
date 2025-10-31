@@ -13,7 +13,7 @@ interface PlanHeaderProps {
 export function PlanHeader({
   title,
   description,
-  newButtonText = "Nuevo",
+  newButtonText = "Agregar Plan",
   onNewClick
 }: PlanHeaderProps) {
   return (

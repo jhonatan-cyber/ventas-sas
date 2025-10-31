@@ -20,6 +20,19 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
   const [description, setDescription] = useState(role?.description || "")
   const [isLoading, setIsLoading] = useState(false)
 
+  const capitalizeWords = (text: string) => {
+    // Preservar espacio(s) al final para no bloquear la escritura
+    const trailing = /\s+$/.exec(text)?.[0] || ""
+    const core = text.replace(/\s+$/,'')
+    if (!core) return trailing
+    const cap = core
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+    return cap + trailing
+  }
+
   // Resetear el formulario cuando el modal se abre o se cambia el rol
   useEffect(() => {
     if (role) {
@@ -70,7 +83,7 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
                 id="name"
                 placeholder="Ej: Vendedor"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(capitalizeWords(e.target.value))}
                 required
                 className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
               />
@@ -84,7 +97,7 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
                 id="description"
                 placeholder="Describe las funciones y responsabilidades del rol"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(capitalizeWords(e.target.value))}
                 rows={4}
                 className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
               />

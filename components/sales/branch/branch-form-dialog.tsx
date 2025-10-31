@@ -21,6 +21,19 @@ export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchF
   const [address, setAddress] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  const capitalizeWords = (text: string) => {
+    // Preservar espacio(s) al final para no bloquear la escritura
+    const trailing = /\s+$/.exec(text)?.[0] || ""
+    const core = text.replace(/\s+$/,'')
+    if (!core) return trailing
+    const cap = core
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+    return cap + trailing
+  }
+
   useEffect(() => {
     if (branch) {
       setName(branch.name || "")
@@ -75,10 +88,11 @@ export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchF
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(capitalizeWords(e.target.value))}
                 placeholder="Nombre de la sucursal"
                 required
                 disabled={isLoading}
+                className="rounded-full"
               />
             </div>
 
@@ -92,6 +106,7 @@ export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchF
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@ejemplo.com"
                   disabled={isLoading}
+                  className="rounded-full"
                 />
               </div>
               <div className="space-y-2">
@@ -103,6 +118,7 @@ export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchF
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Teléfono"
                   disabled={isLoading}
+                  className="rounded-full"
                 />
               </div>
             </div>
@@ -112,25 +128,28 @@ export function BranchFormDialog({ open, onOpenChange, branch, onSave }: BranchF
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => setAddress(capitalizeWords(e.target.value))}
                 placeholder="Dirección completa de la sucursal"
                 disabled={isLoading}
+                className="rounded-full"
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="justify-center sm:justify-center gap-3">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="rounded-full"
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
+              variant="new"
               disabled={isLoading || !name.trim()}
+              className="rounded-full"
             >
               {isLoading ? "Guardando..." : branch ? "Actualizar" : "Crear"}
             </Button>

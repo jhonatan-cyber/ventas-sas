@@ -1,11 +1,13 @@
 "use client"
 
+import { useCallback, useEffect, useState } from "react"
 import { SalesCustomersHeader } from "./sales-customers-header"
 import { SalesCustomersContainer } from "./sales-customers-container"
 import { SalesCustomerFormDialog } from "./sales-customer-form-dialog"
 import { SalesCustomerDeleteDialog } from "./sales-customer-delete-dialog"
 import { SalesCustomer } from "@prisma/client"
 import { useSalesCustomerActions } from "@/hooks/sales/customer/use-sales-customer-actions"
+import { toast } from "sonner"
 
 interface SalesCustomersPageClientProps {
   initialCustomers: SalesCustomer[]
@@ -13,6 +15,33 @@ interface SalesCustomersPageClientProps {
 }
 
 export function SalesCustomersPageClient({ initialCustomers, customerSlug }: SalesCustomersPageClientProps) {
+  const [customers, setCustomers] = useState<SalesCustomer[]>(initialCustomers)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    setCustomers(initialCustomers)
+  }, [initialCustomers])
+
+  const loadCustomers = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/${customerSlug}/clientes?page=1&pageSize=1000`)
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "No se pudieron cargar los clientes")
+      }
+
+      const data = await response.json()
+      setCustomers(data.customers || [])
+    } catch (error: any) {
+      console.error("Error al cargar clientes:", error)
+      toast.error(error.message || "Error al cargar los clientes")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [customerSlug])
+
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -24,7 +53,7 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useSalesCustomerActions(customerSlug)
+  } = useSalesCustomerActions(customerSlug, loadCustomers)
 
   return (
     <div className="space-y-6 p-6">
@@ -38,7 +67,8 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
 
       {/* Contenedor con filtros, tabla y paginación */}
       <SalesCustomersContainer 
-        customers={initialCustomers} 
+        customers={customers} 
+        isLoading={isLoading}
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}
@@ -50,6 +80,7 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
         onOpenChange={closeDialogs}
         customer={selectedCustomer}
         onSave={handleSave}
+        isLoading={isLoading}
       />
 
       {/* Modal de confirmación de eliminar */}

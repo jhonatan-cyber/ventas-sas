@@ -6,9 +6,7 @@ export class AuthService {
   static async createProfile(data: {
     id: string
     fullName?: string
-    companyName?: string
     role?: string
-    organizationId?: string
     isSuperAdmin?: boolean
   }) {
     return await prisma.profile.create({
@@ -69,8 +67,7 @@ export class AuthService {
   static async getAllOrganizations() {
     return await prisma.organization.findMany({
       include: {
-        subscriptionPlan: true,
-        profiles: true
+        subscriptionPlan: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -146,7 +143,7 @@ export class AuthService {
   static async getSubscriptionPlans() {
     return await prisma.subscriptionPlan.findMany({
       where: { isActive: true },
-      orderBy: { price: 'asc' }
+      orderBy: { name: 'asc' }
     })
   }
 
@@ -154,16 +151,32 @@ export class AuthService {
   static async createSubscriptionPlan(data: {
     name: string
     description?: string
-    price: number
-    billingPeriod: string
+    priceMonthly?: number
+    priceYearly?: number
+    hasMonthly?: boolean
+    hasYearly?: boolean
     features?: any
+    modules?: any
     maxUsers?: number
     maxProducts?: number
     maxOrders?: number
     isActive?: boolean
   }) {
     return await prisma.subscriptionPlan.create({
-      data
+      data: {
+        name: data.name,
+        description: data.description,
+        priceMonthly: data.priceMonthly as any,
+        priceYearly: data.priceYearly as any,
+        hasMonthly: data.hasMonthly,
+        hasYearly: data.hasYearly,
+        features: data.features,
+        modules: data.modules,
+        maxUsers: data.maxUsers,
+        maxProducts: data.maxProducts,
+        maxOrders: data.maxOrders,
+        isActive: data.isActive,
+      }
     })
   }
 

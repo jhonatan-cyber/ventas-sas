@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Building2, CreditCard, UserCog, TrendingUp, Activity, DollarSign, BarChart3, Zap, CheckCircle, XCircle } from "lucide-react"
@@ -6,16 +8,21 @@ import { AdminService } from "@/lib/services/admin/admin-service"
 import { AuthService } from "@/lib/services/auth-service"
 
 export default async function AdminPage() {
-  // TODO: Implementar autenticación con Prisma
-  // Por ahora usamos un usuario demo
-  const userId = "super-admin-id"
-  
-  // Verificar si el usuario existe y es super admin
-  const profile = await AuthService.getProfileById(userId)
-  // Temporalmente desactivamos la validación
-  // if (!profile || !profile.isSuperAdmin) {
-  //   redirect("/administracion/login")
-  // }
+  // Validación de sesión Admin en el servidor
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin-auth-token')?.value
+  if (!token) {
+    redirect('/administracion/login')
+  }
+  const payload = AdminJWTService.verifyToken(token!)
+  if (!payload) {
+    redirect('/administracion/login')
+  }
+  // Opcional: validar super admin
+  const profile = await AuthService.getProfileById(payload.userId)
+  if (!profile || !profile.isSuperAdmin) {
+    redirect('/administracion/login')
+  }
 
   // Get comprehensive admin statistics
   const [dashboardStats, recentActivity, growthStats, systemMetrics] = await Promise.all([

@@ -12,35 +12,35 @@ interface SalesCustomerFormDialogProps {
   onOpenChange: (open: boolean) => void
   customer?: SalesCustomer
   onSave: (data: any) => void
+  isLoading?: boolean
 }
 
-export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }: SalesCustomerFormDialogProps) {
+const capitalizeWords = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+
+export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, isLoading: externalLoading = false }: SalesCustomerFormDialogProps) {
+  const [ci, setCi] = useState("")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
-  const [city, setCity] = useState("")
-  const [country, setCountry] = useState("")
-  const [ruc, setRuc] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (customer) {
-      setName(customer.name || "")
+      setCi(customer.ruc || "")
+      setName(customer.name ? capitalizeWords(customer.name) : "")
       setEmail(customer.email || "")
       setPhone(customer.phone || "")
-      setAddress(customer.address || "")
-      setCity(customer.city || "")
-      setCountry(customer.country || "")
-      setRuc(customer.ruc || "")
+      setAddress(customer.address ? capitalizeWords(customer.address) : "")
     } else {
+      setCi("")
       setName("")
       setEmail("")
       setPhone("")
       setAddress("")
-      setCity("")
-      setCountry("")
-      setRuc("")
     }
   }, [customer, open])
 
@@ -54,13 +54,11 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
     setIsLoading(true)
     try {
       await onSave({
+        ruc: ci.trim() ? ci.trim().toUpperCase() : undefined,
         name: name.trim(),
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
         address: address.trim() || undefined,
-        city: city.trim() || undefined,
-        country: country.trim() || undefined,
-        ruc: ruc.trim() || undefined
       })
     } finally {
       setIsLoading(false)
@@ -69,7 +67,7 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {customer ? "Editar Cliente" : "Nuevo Cliente"}
@@ -82,19 +80,34 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre <span className="text-red-500">*</span></Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nombre del cliente"
-                required
-                disabled={isLoading}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ci">CI</Label>
+                <Input
+                  id="ci"
+                  value={ci}
+                  onChange={(e) => setCi(e.target.value.toUpperCase())}
+                  placeholder="Documento de identidad"
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre <span className="text-red-500">*</span></Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(capitalizeWords(e.target.value))}
+                  placeholder="Nombre del cliente"
+                  required
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo Electrónico</Label>
                 <Input
@@ -103,7 +116,8 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@ejemplo.com"
-                  disabled={isLoading}
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
                 />
               </div>
               <div className="space-y-2">
@@ -114,7 +128,8 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Teléfono"
-                  disabled={isLoading}
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
                 />
               </div>
             </div>
@@ -124,61 +139,30 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave }
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => setAddress(capitalizeWords(e.target.value))}
                 placeholder="Dirección completa"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ciudad</Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Ciudad"
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
-                <Input
-                  id="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  placeholder="País"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ruc">RUC</Label>
-              <Input
-                id="ruc"
-                value={ruc}
-                onChange={(e) => setRuc(e.target.value)}
-                placeholder="Número de identificación fiscal"
-                disabled={isLoading}
+                disabled={isLoading || externalLoading}
+                className="rounded-full"
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="justify-center sm:justify-center gap-3">
             <Button 
               type="button" 
               variant="outline" 
+              className="rounded-full"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={isLoading || externalLoading}
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading || !name.trim()}
+              variant="new"
+              className="rounded-full"
+              disabled={isLoading || externalLoading || !name.trim()}
             >
-              {isLoading ? "Guardando..." : customer ? "Actualizar" : "Crear"}
+              {isLoading || externalLoading ? "Guardando..." : customer ? "Actualizar" : "Crear"}
             </Button>
           </DialogFooter>
         </form>

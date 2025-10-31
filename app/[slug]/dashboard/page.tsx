@@ -33,7 +33,7 @@ export default async function DashboardPage({
 
   // Verificar sesión
   const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get("sales_session")
+  const sessionCookie = cookieStore.get("sas-session")
   
   if (!sessionCookie) {
     redirect(`/${slug}/login`)

@@ -29,7 +29,6 @@ export default async function CashRegistersPage({
     <CashRegistersPageClient 
       initialCashRegisters={cashRegisters} 
       customerSlug={slug}
-      organizationId={slug}
     />
   )
 }

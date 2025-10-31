@@ -14,12 +14,13 @@ interface UsuariosSasContainerProps {
     sucursal: { id: string; name: string } | null
     customer: any
   })[]
+  sucursalesCount?: number
   onEdit?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
   onToggleStatus?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
   onDelete?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
 }
 
-export function UsuariosSasContainer({ usuarios, onEdit, onToggleStatus, onDelete }: UsuariosSasContainerProps) {
+export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onToggleStatus, onDelete }: UsuariosSasContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -101,7 +102,8 @@ export function UsuariosSasContainer({ usuarios, onEdit, onToggleStatus, onDelet
         <CardContent>
           <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
             <UsuariosSasTable 
-              usuarios={currentUsuarios} 
+              usuarios={currentUsuarios}
+              sucursalesCount={sucursalesCount}
               onEditClick={onEdit} 
               onToggleStatus={onToggleStatus} 
               onDeleteClick={onDelete} 

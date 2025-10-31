@@ -1,6 +1,7 @@
 import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { getCustomerBySlug } from "@/lib/utils/organization"
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export default async function SalesLayout({
   children,
@@ -15,12 +16,14 @@ export default async function SalesLayout({
   const customer = await getCustomerBySlug(slug)
   
   if (!customer) {
-    notFound()
+    redirect('/')
   }
   
   return (
-    <SalesLayoutClient organizationSlug={slug}>
-      {children}
-    </SalesLayoutClient>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="sas-theme">
+      <SalesLayoutClient organizationSlug={slug}>
+        {children}
+      </SalesLayoutClient>
+    </ThemeProvider>
   )
 }

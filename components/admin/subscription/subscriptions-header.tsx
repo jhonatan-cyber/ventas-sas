@@ -13,7 +13,7 @@ interface SubscriptionsHeaderProps {
 export function SubscriptionsHeader({
   title,
   description,
-  newButtonText = "Nueva",
+  newButtonText = "Agregar Suscripción",
   onNewClick
 }: SubscriptionsHeaderProps) {
   return (

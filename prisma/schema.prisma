@@ -151,6 +151,9 @@ model Customer {
   subscriptions  Subscription[]
   rolesSas       RoleSas[]
   usuariosSas    UsuarioSas[]
+  branches       Branch[]
+  categories     Category[]
+  salesProducts  SalesProduct[]
 
   @@map("customers")
 }
@@ -213,16 +216,19 @@ model OrderItem {
 // Categorías de productos
 model Category {
   id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
+  organizationId String?   @map("organization_id")
+  customerId     String?   @map("customer_id")
   name           String
   description    String?
   isActive       Boolean   @default(true) @map("is_active")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  customer       Customer?    @relation(fields: [customerId], references: [id])
   products       SalesProduct[]
 
   @@map("categories")
+  @@index([customerId])
 }
 
 // Roles para el sistema de ventas (separado del admin)
@@ -263,10 +269,13 @@ model SalesUser {
 // Productos del sistema de ventas
 model SalesProduct {
   id             String      @id @default(cuid())
-  organizationId String      @map("organization_id")
+  organizationId String?     @map("organization_id")
+  customerId     String?     @map("customer_id")
   categoryId     String?     @map("category_id")
   name           String
   description    String?
+  brand          String?     @map("brand")
+  model          String?     @map("model")
   price          Decimal     @db.Decimal(10, 2)
   cost           Decimal     @db.Decimal(10, 2)
   stock          Int         @default(0)
@@ -277,12 +286,14 @@ model SalesProduct {
   isActive       Boolean     @default(true) @map("is_active")
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  category       Category?   @relation(fields: [categoryId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  category       Category?     @relation(fields: [categoryId], references: [id])
   saleItems      SaleItem[]
   quotationItems QuotationItem[]
 
   @@map("sales_products")
+  @@index([customerId])
 }
 
 // Clientes del sistema de ventas
@@ -419,7 +430,8 @@ model CashRegister {
 // Sucursales
 model Branch {
   id             String          @id @default(cuid())
-  organizationId String          @map("organization_id")
+  organizationId String?         @map("organization_id")
+  customerId     String?         @map("customer_id")
   name           String
   address        String?
   phone          String?
@@ -427,12 +439,14 @@ model Branch {
   isActive       Boolean         @default(true) @map("is_active")
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
-  organization   Organization    @relation(fields: [organizationId], references: [id])
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  customer       Customer?       @relation(fields: [customerId], references: [id])
   cashRegisters  CashRegister[]
   rolesSas       RoleSas[]
   usuariosSas    UsuarioSas[]
 
   @@map("branches")
+  @@index([customerId])
 }
 
 // Roles para el Sistema SAS (separado del admin y sales)
@@ -450,6 +464,7 @@ model RoleSas {
   usuariosSas UsuarioSas[]
 
   @@map("roles_sas")
+  @@index([customerId])
 }
 
 // Usuarios para el Sistema SAS (separado del admin)

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { getCustomerBySlug } from "@/lib/utils/organization"
-import { notFound } from "next/navigation"
 
 export default async function SlugPage({
   params,
@@ -13,7 +12,7 @@ export default async function SlugPage({
   const customer = await getCustomerBySlug(slug)
   
   if (!customer) {
-    notFound()
+    redirect('/')
   }
 
   // Redirigir automáticamente al login

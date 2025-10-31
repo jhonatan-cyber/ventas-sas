@@ -13,7 +13,7 @@ interface CustomersHeaderProps {
 export function CustomersHeader({
   title,
   description,
-  newButtonText = "Nuevo",
+  newButtonText = "Agregar Cliente",
   onNewClick
 }: CustomersHeaderProps) {
   return (

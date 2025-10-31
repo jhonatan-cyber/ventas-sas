@@ -65,14 +65,17 @@ export function CashRegistersTable({
                 return (
                   <TableRow key={cashRegister.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
                     <TableCell>
-                      <div className="font-semibold text-gray-900 dark:text-white">
+                      <div
+                        className="font-semibold text-gray-900 dark:text-white"
+                        style={{ color: "color-mix(in oklch, var(--primary) 85%, black)" }}
+                      >
                         {cashRegister.name}
                       </div>
                     </TableCell>
                     <TableCell>
                       {cashRegister.branch ? (
                         <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <Building2 className="h-4 w-4" style={{ color: "color-mix(in oklch, var(--primary) 70%, white)" }} />
                           <span className="text-sm text-gray-900 dark:text-white">{cashRegister.branch.name}</span>
                         </div>
                       ) : (
@@ -90,10 +93,11 @@ export function CashRegistersTable({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={cashRegister.isOpen 
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800" 
-                        : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
-                      }>
+                      <Badge
+                        className={`${cashRegister.isOpen 
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800" 
+                          : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"} rounded-full px-3 py-1 text-xs font-semibold`}
+                      >
                         {cashRegister.isOpen ? "Abierta" : "Cerrada"}
                       </Badge>
                     </TableCell>
@@ -115,7 +119,7 @@ export function CashRegistersTable({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onEditClick(cashRegister)}
-                                className="hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                className="rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -131,7 +135,7 @@ export function CashRegistersTable({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => onCloseClick(cashRegister)}
-                                  className="hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                                  className="rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
                                 >
                                   <Lock className="h-4 w-4" />
                                 </Button>
@@ -147,7 +151,7 @@ export function CashRegistersTable({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => onOpenClick(cashRegister)}
-                                  className="hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                  className="rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
                                 >
                                   <Unlock className="h-4 w-4" />
                                 </Button>
@@ -163,7 +167,7 @@ export function CashRegistersTable({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onDeleteClick(cashRegister)}
-                                className="hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                                className="rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

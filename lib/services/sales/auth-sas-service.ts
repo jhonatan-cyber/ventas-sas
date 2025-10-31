@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { JWTService, type JWTPayload } from '@/lib/auth/jwt'
+import { SasJWTService } from '@/lib/auth/sas-jwt'
 import { PasswordService } from '@/lib/auth/password'
 import { getCustomerBySlug } from '@/lib/utils/organization'
 
@@ -112,14 +112,8 @@ export class AuthSasService {
         }
       }
 
-      // Generar token JWT
-      const payload: JWTPayload = {
-        userId: usuario.id,
-        email: usuario.correo || '',
-        isSuperAdmin: false
-      }
-
-      const token = JWTService.generateToken(payload)
+      // Generar token JWT (SAS)
+      const token = SasJWTService.generateToken({ userId: usuario.id, correo: usuario.correo || undefined })
 
       // Preparar datos del usuario (sin contraseña)
       const userData = {
@@ -155,7 +149,7 @@ export class AuthSasService {
   // Verificar token y obtener usuario
   static async verifyToken(customerSlug: string, token: string) {
     try {
-      const decoded = JWTService.verifyToken(token)
+      const decoded = SasJWTService.verifyToken(token)
       if (!decoded) return null
 
       // Verificar que el usuario pertenece al cliente

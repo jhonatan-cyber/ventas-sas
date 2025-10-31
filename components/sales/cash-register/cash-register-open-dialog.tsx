@@ -65,16 +65,18 @@ export function CashRegisterOpenDialog({ open, onOpenChange, cashRegister, onOpe
                 placeholder="0.00"
                 required
                 disabled={isLoading}
+                className="rounded-full"
               />
               <p className="text-xs text-gray-500">
                 Este será el monto con el que se abre la caja
               </p>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="justify-center sm:justify-center gap-3">
             <Button 
               type="button" 
               variant="outline" 
+              className="rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
@@ -82,7 +84,8 @@ export function CashRegisterOpenDialog({ open, onOpenChange, cashRegister, onOpe
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
+              variant="new"
+              className="rounded-full"
               disabled={isLoading}
             >
               {isLoading ? "Abriendo..." : "Abrir Caja"}

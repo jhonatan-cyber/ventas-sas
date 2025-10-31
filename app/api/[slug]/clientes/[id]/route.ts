@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getOrganizationIdBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener cliente por ID
 export async function GET(
@@ -8,10 +8,19 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
     const customer = await SalesCustomerService.getCustomerById(id)
     
-    if (!customer) {
+    if (!customer || customer.organizationId !== organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado' },
         { status: 404 }
@@ -34,20 +43,36 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-    const { name, email, phone, address, city, country, ruc, isActive } = body
+    const { slug, id } = await params
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
-    const customer = await SalesCustomerService.updateCustomer(id, {
-      name,
-      email,
-      phone,
-      address,
-      city,
-      country,
-      ruc,
-      isActive
-    })
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
+    const existingCustomer = await SalesCustomerService.getCustomerById(id)
+
+    if (!existingCustomer || existingCustomer.organizationId !== organizationId) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    const body = await request.json()
+    const payload = {
+      name: body.name?.trim(),
+      email: body.email?.trim(),
+      phone: body.phone?.trim(),
+      address: body.address?.trim(),
+      ruc: body.ruc?.trim()?.toUpperCase(),
+      isActive: body.isActive,
+    }
+
+    const customer = await SalesCustomerService.updateCustomer(id, payload)
 
     return NextResponse.json(customer)
   } catch (error: any) {
@@ -65,7 +90,25 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado o inactivo' },
+        { status: 404 }
+      )
+    }
+
+    const existingCustomer = await SalesCustomerService.getCustomerById(id)
+
+    if (!existingCustomer || existingCustomer.organizationId !== organizationId) {
+      return NextResponse.json(
+        { error: 'Cliente no encontrado' },
+        { status: 404 }
+      )
+    }
+
     await SalesCustomerService.deleteCustomer(id)
     return NextResponse.json({ message: 'Cliente eliminado correctamente' })
   } catch (error: any) {

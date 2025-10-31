@@ -13,16 +13,16 @@ export interface UpdateCategoryData {
 }
 
 export class CategoryService {
-  // Obtener todas las categorías de una organización
+  // Obtener todas las categorías de un cliente
   static async getAllCategories(
-    organizationId: string,
+    customerId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
     status?: string
   ) {
     const where: any = {
-      organizationId
+      customerId
     }
 
     if (search) {
@@ -43,6 +43,13 @@ export class CategoryService {
         where,
         skip,
         take,
+        include: {
+          _count: {
+            select: {
+              products: true
+            }
+          }
+        },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.category.count({ where })
@@ -54,18 +61,25 @@ export class CategoryService {
   // Obtener categoría por ID
   static async getCategoryById(id: string): Promise<Category | null> {
     return prisma.category.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            products: true
+          }
+        }
+      }
     })
   }
 
   // Crear nueva categoría
   static async createCategory(
-    organizationId: string,
+    customerId: string,
     data: CreateCategoryData
   ): Promise<Category> {
     return prisma.category.create({
       data: {
-        organizationId,
+        customerId,
         name: data.name,
         description: data.description,
         isActive: true
@@ -92,10 +106,10 @@ export class CategoryService {
   }
 
   // Obtener categorías activas (para selects)
-  static async getActiveCategories(organizationId: string) {
+  static async getActiveCategories(customerId: string) {
     return prisma.category.findMany({
       where: {
-        organizationId,
+        customerId,
         isActive: true
       },
       orderBy: { name: 'asc' }

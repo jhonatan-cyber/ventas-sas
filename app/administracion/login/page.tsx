@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AdminLoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +31,7 @@ export default function AdminLoginPage() {
       })
 
       const data = await response.json()
+      console.log('[ADMIN LOGIN PAGE] response.ok', response.ok, 'data', data)
 
       if (!response.ok) {
         setError(data.error || "Error de autenticación")
@@ -36,10 +39,11 @@ export default function AdminLoginPage() {
         return
       }
 
-      console.log('Login exitoso, redirigiendo...', data)
-      
-      // Redirigir al dashboard de administración
-      window.location.href = "/administracion/dashboard"
+      const target = data.redirect || '/administracion/dashboard'
+      console.log('[ADMIN LOGIN PAGE] login OK, redirigiendo a', target)
+      try { router.replace(target) } catch {}
+      // Pequeño delay para asegurar persistencia de cookie antes de navegar
+      setTimeout(() => { window.location.replace(target) }, 50)
     } catch (error: unknown) {
       setError("Error de conexión")
     } finally {

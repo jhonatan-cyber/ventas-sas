@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // GET - Obtener todas las sucursales con paginación y filtros
 export async function GET(
@@ -15,8 +15,8 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -26,7 +26,7 @@ export async function GET(
     const skip = (page - 1) * pageSize
 
     const { branches, total } = await BranchService.getAllBranches(
-      organizationId,
+      customer.id,
       skip,
       pageSize,
       search,
@@ -58,8 +58,8 @@ export async function POST(
     const { slug } = await params
     const body = await request.json()
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -73,7 +73,7 @@ export async function POST(
       )
     }
 
-    const branch = await BranchService.createBranch(organizationId, {
+    const branch = await BranchService.createBranch(customer.id, {
       name: body.name.trim(),
       address: body.address?.trim(),
       phone: body.phone?.trim(),

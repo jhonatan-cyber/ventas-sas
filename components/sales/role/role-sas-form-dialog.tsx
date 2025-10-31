@@ -72,6 +72,7 @@ export function RoleSasFormDialog({ open, onOpenChange, role, onSave }: RoleSasF
                 placeholder="Ej: Vendedor, Supervisor, Cajero..."
                 required
                 disabled={isLoading}
+                className="rounded-full"
               />
             </div>
             <div className="space-y-2">
@@ -83,24 +84,27 @@ export function RoleSasFormDialog({ open, onOpenChange, role, onSave }: RoleSasF
                 placeholder="Descripción opcional del rol..."
                 rows={3}
                 disabled={isLoading}
+                className="rounded-full"
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="justify-center sm:justify-center gap-3">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="rounded-full"
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
+              variant="new"
               disabled={isLoading || !nombre.trim()}
+              className="rounded-full"
             >
-              {isLoading ? "Guardando..." : role ? "Actualizar" : "Crear"}
+              {isLoading ? "Guardando..." : role ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

@@ -10,6 +10,11 @@ export function useCategoryActions(customerSlug: string) {
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmDesc, setConfirmDesc] = useState<string>('')
+  const [confirmColor, setConfirmColor] = useState<'red'|'orange'|'green'>('orange')
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>()
 
   const openCreateDialog = () => {
@@ -30,6 +35,7 @@ export function useCategoryActions(customerSlug: string) {
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setConfirmOpen(false)
     setSelectedCategory(undefined)
   }
 
@@ -88,9 +94,59 @@ export function useCategoryActions(customerSlug: string) {
     }
   }
 
-  const handleToggleStatus = async (category: Category) => {
+  const handleToggleStatus = async (category: any) => {
+    const newStatus = !category.isActive
+    const count = category?._count?.products || 0
+    
+    // Si está desactivando y no tiene productos asociados, hacer la acción directamente sin confirmación
+    if (newStatus === false && count === 0) {
+      try {
+        const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: newStatus }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Error al cambiar el estado de la categoría")
+        }
+
+        toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
+        
+        startTransition(() => {
+          router.refresh()
+        })
+      } catch (error: any) {
+        toast.error(error.message || "Error al cambiar el estado de la categoría")
+      }
+      return
+    }
+    
+    // Si está desactivando y tiene productos, mostrar confirmación
+    if (newStatus === false) {
+      setConfirmTitle('Desactivar categoría')
+      setConfirmColor('orange')
+      setConfirmDesc(`Se desactivará la categoría "${category.name}" y afectará a ${count} producto(s) asociados.`)
+      setPendingAction(() => async () => {
+        const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: newStatus }),
+        })
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Error al cambiar el estado de la categoría")
+        }
+        toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
+        startTransition(() => router.refresh())
+      })
+      setConfirmOpen(true)
+      return
+    }
+    
+    // Si está activando, hacer la acción directamente
     try {
-      const newStatus = !category.isActive
       const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -111,11 +167,29 @@ export function useCategoryActions(customerSlug: string) {
       toast.error(error.message || "Error al cambiar el estado de la categoría")
     }
   }
+  
+  const confirmPerform = async () => {
+    if (!pendingAction) return
+    try {
+      await pendingAction()
+    } catch (error: any) {
+      toast.error(error.message || "Acción fallida")
+    } finally {
+      setConfirmOpen(false)
+      setPendingAction(null)
+    }
+  }
 
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedCategory,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,

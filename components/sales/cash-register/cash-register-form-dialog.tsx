@@ -12,34 +12,39 @@ interface CashRegisterFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   cashRegister?: CashRegister & { branch?: any }
-  organizationId: string
+  customerSlug: string
   onSave: (data: any) => void
 }
 
-export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organizationId, onSave }: CashRegisterFormDialogProps) {
+export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, customerSlug, onSave }: CashRegisterFormDialogProps) {
   const [name, setName] = useState("")
-  const [branchId, setBranchId] = useState("")
+  const [branchId, setBranchId] = useState("none")
   const [openingBalance, setOpeningBalance] = useState("0")
   const [branches, setBranches] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
+
+  const capitalizeWords = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
 
   // Cargar sucursales
   useEffect(() => {
     if (open) {
       loadBranches()
     }
-  }, [open, organizationId])
+  }, [open, customerSlug])
 
   // Cargar datos de la caja si existe
   useEffect(() => {
     if (cashRegister && open) {
-      setName(cashRegister.name || "")
-      setBranchId(cashRegister.branchId || "")
+      setName(cashRegister.name ? capitalizeWords(cashRegister.name) : "")
+      setBranchId(cashRegister.branchId || "none")
       setOpeningBalance(Number(cashRegister.openingBalance).toString())
     } else if (!cashRegister && open) {
       setName("")
-      setBranchId("")
+      setBranchId("none")
       setOpeningBalance("0")
     }
   }, [cashRegister, open])
@@ -47,7 +52,7 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
   const loadBranches = async () => {
     try {
       setIsLoadingData(true)
-      const response = await fetch(`/api/${organizationId}/sucursales`)
+      const response = await fetch(`/api/${customerSlug}/sucursales`)
       if (response.ok) {
         const data = await response.json()
         setBranches(data.branches || [])
@@ -70,7 +75,7 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
     try {
       await onSave({
         name: name.trim(),
-        branchId: branchId || undefined,
+        branchId: branchId !== "none" ? branchId : undefined,
         openingBalance: parseFloat(openingBalance) || 0
       })
     } finally {
@@ -99,10 +104,11 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(capitalizeWords(e.target.value))}
                 placeholder="Nombre de la caja"
                 required
                 disabled={isLoading || isLoadingData}
+                className="rounded-full"
               />
             </div>
 
@@ -110,11 +116,11 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
             <div className="space-y-2">
               <Label htmlFor="branchId">Sucursal</Label>
               <Select value={branchId} onValueChange={setBranchId} disabled={isLoading || isLoadingData}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-full">
                   <SelectValue placeholder="Seleccionar sucursal (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin sucursal</SelectItem>
+                  <SelectItem value="none">Sin sucursal</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.name}
@@ -137,6 +143,7 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
                   onChange={(e) => setOpeningBalance(e.target.value)}
                   placeholder="0.00"
                   disabled={isLoading}
+                  className="rounded-full"
                 />
                 <p className="text-xs text-gray-500">
                   Este será el balance inicial cuando la caja se abra por primera vez
@@ -144,10 +151,11 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="justify-center sm:justify-center gap-3">
             <Button 
               type="button" 
               variant="outline" 
+              className="rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
@@ -155,7 +163,8 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, organ
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
+              variant="new"
+              className="rounded-full"
               disabled={isLoading || !name.trim()}
             >
               {isLoading ? "Guardando..." : cashRegister ? "Actualizar" : "Crear"}

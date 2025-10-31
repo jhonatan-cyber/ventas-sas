@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // GET - Obtener todas las categorías con paginación y filtros
 export async function GET(
@@ -15,8 +15,8 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -26,7 +26,7 @@ export async function GET(
     const skip = (page - 1) * pageSize
 
     const { categories, total } = await CategoryService.getAllCategories(
-      organizationId,
+      customer.id,
       skip,
       pageSize,
       search,
@@ -66,15 +66,15 @@ export async function POST(
       )
     }
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    const customer = await getCustomerBySlug(slug)
+    if (!customer) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
       )
     }
 
-    const newCategory = await CategoryService.createCategory(organizationId, {
+    const newCategory = await CategoryService.createCategory(customer.id, {
       name,
       description
     })

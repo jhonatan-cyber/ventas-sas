@@ -10,12 +10,13 @@ import { SalesCustomer } from "@prisma/client"
 
 interface SalesCustomersContainerProps {
   customers: SalesCustomer[]
+  isLoading?: boolean
   onEdit?: (customer: SalesCustomer) => void
   onToggleStatus?: (customer: SalesCustomer) => void
   onDelete?: (customer: SalesCustomer) => void
 }
 
-export function SalesCustomersContainer({ customers, onEdit, onToggleStatus, onDelete }: SalesCustomersContainerProps) {
+export function SalesCustomersContainer({ customers, isLoading = false, onEdit, onToggleStatus, onDelete }: SalesCustomersContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -65,6 +66,11 @@ export function SalesCustomersContainer({ customers, onEdit, onToggleStatus, onD
     setCurrentPage(page)
   }
 
+  const cardTitle = `Clientes (${filteredCustomers.length})`
+  const cardDescription = filteredCustomers.length === customers.length
+    ? "Lista completa de clientes disponibles"
+    : `Mostrando ${filteredCustomers.length} de ${customers.length} clientes`
+
   return (
     <div className="space-y-6">
       {/* Estadísticas */}
@@ -83,12 +89,10 @@ export function SalesCustomersContainer({ customers, onEdit, onToggleStatus, onD
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-gray-900 dark:text-white">
-                Clientes ({filteredCustomers.length})
+                {cardTitle}
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredCustomers.length === customers.length 
-                  ? "Lista completa de clientes disponibles"
-                  : `Mostrando ${filteredCustomers.length} de ${customers.length} clientes`}
+                {cardDescription}
               </CardDescription>
             </div>
           </div>
@@ -97,6 +101,7 @@ export function SalesCustomersContainer({ customers, onEdit, onToggleStatus, onD
           <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
             <SalesCustomersTable 
               customers={currentCustomers} 
+              isLoading={isLoading}
               onEditClick={onEdit} 
               onToggleStatus={onToggleStatus} 
               onDeleteClick={onDelete} 

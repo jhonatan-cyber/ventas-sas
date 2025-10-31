@@ -4,6 +4,7 @@ import { CategoriesHeader } from "./categories-header"
 import { CategoriesContainer } from "./categories-container"
 import { CategoryFormDialog } from "./category-form-dialog"
 import { CategoryDeleteDialog } from "./category-delete-dialog"
+import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { Category } from "@prisma/client"
 import { useCategoryActions } from "@/hooks/sales/category/use-category-actions"
 
@@ -17,6 +18,12 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedCategory,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
@@ -32,7 +39,7 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
       <CategoriesHeader
         title="Gestión de Categorías"
         description="Administra las categorías de productos de tu sistema"
-        newButtonText="Nueva Categoría"
+        newButtonText="Agregar Categoría"
         onNewClick={openCreateDialog}
       />
 
@@ -58,6 +65,17 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
         onOpenChange={closeDialogs}
         category={selectedCategory}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de confirmación para acciones */}
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmTitle}
+        description={confirmDesc}
+        confirmText="Confirmar"
+        confirmColor={confirmColor}
+        onConfirm={confirmPerform}
       />
     </div>
   )

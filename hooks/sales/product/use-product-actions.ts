@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesProduct, Category } from "@prisma/client"
 
-export function useProductActions(customerSlug: string) {
+export function useProductActions(customerSlug: string, onProductsChange?: () => void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
@@ -56,6 +56,11 @@ export function useProductActions(customerSlug: string) {
       toast.success(message)
       closeDialogs()
       
+      // Recargar productos si hay callback
+      if (onProductsChange) {
+        onProductsChange()
+      }
+      
       startTransition(() => {
         router.refresh()
       })
@@ -80,6 +85,11 @@ export function useProductActions(customerSlug: string) {
       toast.success("Producto eliminado")
       closeDialogs()
       
+      // Recargar productos si hay callback
+      if (onProductsChange) {
+        onProductsChange()
+      }
+      
       startTransition(() => {
         router.refresh()
       })
@@ -103,6 +113,11 @@ export function useProductActions(customerSlug: string) {
       }
 
       toast.success(newStatus ? "Producto activado" : "Producto desactivado")
+      
+      // Recargar productos si hay callback
+      if (onProductsChange) {
+        onProductsChange()
+      }
       
       startTransition(() => {
         router.refresh()

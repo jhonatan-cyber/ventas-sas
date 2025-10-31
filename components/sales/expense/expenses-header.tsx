@@ -23,10 +23,9 @@ export function ExpensesHeader({
         <p className="text-gray-600 dark:text-gray-400">{description}</p>
       </div>
       <Button 
-        variant="outline" 
+        variant="new" 
         rounded="full" 
         onClick={onNewClick}
-        className="bg-green-600 hover:bg-green-700 text-white"
       >
         <Plus className="h-4 w-4" />
         {newButtonText}

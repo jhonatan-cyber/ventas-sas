@@ -35,10 +35,10 @@ export function CashRegisterCloseDialog({ open, onOpenChange, cashRegister, onCl
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleClose}
-            className="bg-orange-600 hover:bg-orange-700 text-white"
+            className="rounded-full bg-orange-600 hover:bg-orange-700 text-white"
           >
             Cerrar Caja
           </AlertDialogAction>

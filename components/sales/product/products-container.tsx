@@ -10,12 +10,13 @@ import { SalesProduct, Category } from "@prisma/client"
 
 interface ProductsContainerProps {
   products: (SalesProduct & { category: Category | null })[]
+  categoryName?: string
   onEdit?: (product: SalesProduct & { category: Category | null }) => void
   onToggleStatus?: (product: SalesProduct & { category: Category | null }) => void
   onDelete?: (product: SalesProduct & { category: Category | null }) => void
 }
 
-export function ProductsContainer({ products, onEdit, onToggleStatus, onDelete }: ProductsContainerProps) {
+export function ProductsContainer({ products, categoryName, onEdit, onToggleStatus, onDelete }: ProductsContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -65,6 +66,14 @@ export function ProductsContainer({ products, onEdit, onToggleStatus, onDelete }
     setCurrentPage(page)
   }
 
+  const cardTitle = categoryName
+    ? `Productos ${categoryName} (${filteredProducts.length})`
+    : `Productos (${filteredProducts.length})`
+
+  const cardDescription = filteredProducts.length === products.length
+    ? (categoryName ? `Productos pertenecientes a la categoría ${categoryName}` : "Lista completa de productos disponibles")
+    : `Mostrando ${filteredProducts.length} de ${products.length} productos`
+
   return (
     <div className="space-y-6">
       {/* Estadísticas */}
@@ -83,25 +92,23 @@ export function ProductsContainer({ products, onEdit, onToggleStatus, onDelete }
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-gray-900 dark:text-white">
-                Productos ({filteredProducts.length})
+                {cardTitle}
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredProducts.length === products.length 
-                  ? "Lista completa de productos disponibles"
-                  : `Mostrando ${filteredProducts.length} de ${products.length} productos`}
+                {cardDescription}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        
             <ProductsTable 
               products={currentProducts} 
               onEditClick={onEdit} 
               onToggleStatus={onToggleStatus} 
               onDeleteClick={onDelete} 
             />
-          </div>
+       
         </CardContent>
       </Card>
 

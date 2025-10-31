@@ -11,6 +11,11 @@ export function useUsuarioSasActions(customerSlug: string) {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<(UsuarioSas & { rol?: any; sucursal?: any }) | undefined>()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmDesc, setConfirmDesc] = useState('')
+  const [confirmColor, setConfirmColor] = useState<'red'|'orange'|'green'>('orange')
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
 
   const openCreateDialog = () => {
     setSelectedUsuario(undefined)
@@ -66,56 +71,47 @@ export function useUsuarioSasActions(customerSlug: string) {
 
   const handleDelete = async () => {
     if (!selectedUsuario) return
-
-    try {
-      const response = await fetch(`/api/${customerSlug}/usuarios/${selectedUsuario.id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al eliminar el usuario")
-      }
-
-      toast.success("Usuario eliminado")
-      closeDialogs()
-      
-      startTransition(() => {
-        router.refresh()
-      })
-    } catch (error: any) {
-      toast.error(error.message || "Error al eliminar el usuario")
-    }
+    setConfirmTitle('Eliminar usuario')
+    setConfirmColor('red')
+    setConfirmDesc(`Se eliminará al usuario "${selectedUsuario.nombre} ${selectedUsuario.apellido}" y se revocarán sus accesos.`)
+    setPendingAction(() => async () => {
+      const response = await fetch(`/api/${customerSlug}/usuarios/${selectedUsuario.id}`, { method: 'DELETE' })
+      if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error al eliminar el usuario') }
+      toast.success('Usuario eliminado')
+      closeDialogs(); startTransition(() => router.refresh())
+    })
+    setConfirmOpen(true)
   }
 
   const handleToggleStatus = async (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => {
-    try {
-      const newStatus = !usuario.isActive
-      const response = await fetch(`/api/${customerSlug}/usuarios/${usuario.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: newStatus }),
-      })
+    const newStatus = !usuario.isActive
+    setConfirmTitle(newStatus ? 'Activar usuario' : 'Desactivar usuario')
+    setConfirmColor(newStatus ? 'green' : 'orange')
+    setConfirmDesc(`Se ${newStatus ? 'activará' : 'desactivará'} al usuario "${usuario.nombre} ${usuario.apellido}" (${usuario.ci || 'sin CI'}).`)
+    setPendingAction(() => async () => {
+      const response = await fetch(`/api/${customerSlug}/usuarios/${usuario.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: newStatus }) })
+      if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error al cambiar el estado del usuario') }
+      toast.success(newStatus ? 'Usuario activado' : 'Usuario desactivado')
+      startTransition(() => router.refresh())
+    })
+    setConfirmOpen(true)
+  }
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cambiar el estado del usuario")
-      }
-
-      toast.success(newStatus ? "Usuario activado" : "Usuario desactivado")
-      
-      startTransition(() => {
-        router.refresh()
-      })
-    } catch (error: any) {
-      toast.error(error.message || "Error al cambiar el estado del usuario")
-    }
+  const confirmPerform = async () => {
+    if (!pendingAction) return
+    try { await pendingAction() } catch (e: any) { toast.error(e?.message || 'Acción fallida') } finally { setConfirmOpen(false); setPendingAction(null) }
   }
 
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedUsuario,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,

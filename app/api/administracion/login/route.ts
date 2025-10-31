@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth/auth-service'
-import { JWTService } from '@/lib/auth/jwt'
+import { AdminAuthService } from '@/lib/auth/admin-auth-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +12,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await AuthService.login({ email, password })
+    console.log('[ADMIN LOGIN] Intento de login', { email })
+    const result = await AdminAuthService.login({ email, password })
 
     if (!result.success) {
       return NextResponse.json(
@@ -22,17 +22,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crear cookie de autenticación con nombre auth_session
-    const response = NextResponse.json(
-      { 
-        success: true, 
-        user: result.user 
-      },
-      { status: 200 }
-    )
+    // Responder OK y dejar que el cliente redirija
+    const response = NextResponse.json({ success: true, user: result.user, redirect: '/administracion/dashboard' }, { status: 200 })
 
     if (result.token) {
-      response.cookies.set('auth_session', result.token, {
+      console.log('[ADMIN LOGIN] Seteando cookie admin-auth-token')
+      response.cookies.set('admin-auth-token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -40,7 +35,7 @@ export async function POST(request: NextRequest) {
         path: '/',
       })
     }
-
+    console.log('[ADMIN LOGIN] Respondiendo 200 con redirect /administracion/dashboard')
     return response
 
   } catch (error) {

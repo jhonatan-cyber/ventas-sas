@@ -122,4 +122,52 @@
   body {
     @apply bg-background text-foreground;
   }
+  button,
+  [type='button'],
+  [type='submit'],
+  [role='button'],
+  .cursor-button {
+    @apply cursor-pointer;
+  }
+  button:disabled,
+  [type='button']:disabled,
+  [type='submit']:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
+/* Variantes de color SAS por data attribute (afectan variables principales) */
+[data-sas-color="green"] {
+  --primary: oklch(0.69 0.16 148);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.69 0.16 148);
+  --ring: var(--primary);
+}
+[data-sas-color="blue"] {
+  --primary: oklch(0.69 0.13 264);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.69 0.13 264);
+  --ring: var(--primary);
+}
+[data-sas-color="purple"] {
+  --primary: oklch(0.67 0.14 313);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.67 0.14 313);
+  --ring: var(--primary);
+}
+[data-sas-color="orange"] {
+  --primary: oklch(0.77 0.16 70);
+  --primary-foreground: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.77 0.16 70);
+  --ring: var(--primary);
+}
+
+/* Botones de "crear nuevo" (variant=new) usan el color elegido en SAS */
+[data-sas-color] [data-slot="button"][data-variant="new"] {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+[data-sas-color] [data-slot="button"][data-variant="new"]:hover {
+  filter: brightness(0.95);
 }

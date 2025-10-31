@@ -62,7 +62,8 @@ export class RoleSasService {
             select: {
               name: true
             }
-          }
+          },
+          _count: { select: { usuariosSas: true } }
         },
         orderBy: { createdAt: 'desc' }
       }),

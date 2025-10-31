@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
@@ -32,6 +33,35 @@ export async function POST(
       )
     }
 
+    // Validar suscripción activa del cliente asociado al usuario SAS
+    const customerId = result.user?.customer?.id
+    if (!customerId) {
+      return NextResponse.json(
+        { error: 'Cuenta sin cliente asociado. Contacta a soporte.' },
+        { status: 403 }
+      )
+    }
+
+    const activeSub = await prisma.subscription.findFirst({
+      where: {
+        customerId,
+        status: { in: ['active', 'trial'] },
+        OR: [
+          { endDate: null },
+          { endDate: { gt: new Date() } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, status: true, endDate: true },
+    })
+
+    if (!activeSub) {
+      return NextResponse.json(
+        { error: 'Tu suscripción no está activa. Por favor, contacta a tu proveedor de servicio.' },
+        { status: 403 }
+      )
+    }
+
     // Crear cookie de sesión para el sistema SAS
     const response = NextResponse.json(
       { 
@@ -52,11 +82,12 @@ export async function POST(
         correo: result.user.correo,
         rol: result.user.rol?.nombre || null,
         customerSlug: slug,
-        customerId: result.user.customer.id
+        customerId,
+        sucursalId: result.user.sucursal?.id || null,
       }
 
       // Establecer cookies con configuración mejorada
-      response.cookies.set('sales_session', JSON.stringify(sessionData), {
+      response.cookies.set('sas-session', JSON.stringify(sessionData), {
         httpOnly: false, // Necesitamos acceder desde el cliente
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -64,8 +95,8 @@ export async function POST(
         path: '/',
       })
 
-      // También guardar token JWT para validaciones del servidor
-      response.cookies.set('sales_token', result.token, {
+      // Token JWT para validaciones del servidor (SAS)
+      response.cookies.set('sas-auth-token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

@@ -28,10 +28,10 @@ export function SalesCustomerDeleteDialog({ open, onOpenChange, customer, onDele
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="rounded-full bg-red-600 hover:bg-red-700 text-white"
           >
             Eliminar
           </AlertDialogAction>

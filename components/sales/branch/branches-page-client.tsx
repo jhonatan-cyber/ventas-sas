@@ -4,6 +4,7 @@ import { BranchesHeader } from "./branches-header"
 import { BranchesContainer } from "./branches-container"
 import { BranchFormDialog } from "./branch-form-dialog"
 import { BranchDeleteDialog } from "./branch-delete-dialog"
+import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { Branch } from "@prisma/client"
 import { useBranchActions } from "@/hooks/sales/branch/use-branch-actions"
 
@@ -17,6 +18,12 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedBranch,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
@@ -58,6 +65,17 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
         onOpenChange={closeDialogs}
         branch={selectedBranch}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de confirmación para acciones */}
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmTitle}
+        description={confirmDesc}
+        confirmText="Confirmar"
+        confirmColor={confirmColor}
+        onConfirm={confirmPerform}
       />
     </div>
   )

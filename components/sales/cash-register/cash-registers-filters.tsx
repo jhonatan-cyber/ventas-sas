@@ -19,15 +19,15 @@ export function CashRegistersFilters({ branches, onPageSizeChange, onStatusChang
       <div className="flex-1 relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
-          placeholder="Buscar por nombre, sucursal..."
-          className="pl-10"
+          placeholder="Buscar por nombre o sucursal"
+          className="pl-10 rounded-full"
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
 
       {/* Filtro de estado */}
       <Select onValueChange={onStatusChange} defaultValue="all">
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px] rounded-full">
           <SelectValue placeholder="Filtrar por estado" />
         </SelectTrigger>
         <SelectContent>
@@ -39,7 +39,7 @@ export function CashRegistersFilters({ branches, onPageSizeChange, onStatusChang
 
       {/* Filtro de sucursal */}
       <Select onValueChange={onBranchChange} defaultValue="all">
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px] rounded-full">
           <SelectValue placeholder="Filtrar por sucursal" />
         </SelectTrigger>
         <SelectContent>
@@ -54,7 +54,7 @@ export function CashRegistersFilters({ branches, onPageSizeChange, onStatusChang
 
       {/* Tamaño de página */}
       <Select onValueChange={(value) => onPageSizeChange(Number(value))} defaultValue="10">
-        <SelectTrigger className="w-full sm:w-[150px]">
+        <SelectTrigger className="w-full sm:w-[150px] rounded-full">
           <SelectValue placeholder="Por página" />
         </SelectTrigger>
         <SelectContent>

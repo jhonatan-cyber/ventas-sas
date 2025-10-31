@@ -10,6 +10,11 @@ export function useBranchActions(customerSlug: string) {
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTitle, setConfirmTitle] = useState('')
+  const [confirmDesc, setConfirmDesc] = useState<string>('')
+  const [confirmColor, setConfirmColor] = useState<'red'|'orange'|'green'>('orange')
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
   const [selectedBranch, setSelectedBranch] = useState<Branch | undefined>()
 
   const openCreateDialog = () => {
@@ -30,6 +35,7 @@ export function useBranchActions(customerSlug: string) {
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setConfirmOpen(false)
     setSelectedBranch(undefined)
   }
 
@@ -88,9 +94,59 @@ export function useBranchActions(customerSlug: string) {
     }
   }
 
-  const handleToggleStatus = async (branch: Branch) => {
+  const handleToggleStatus = async (branch: any) => {
+    const newStatus = !branch.isActive
+    const count = branch?._count?.usuariosSas || 0
+    
+    // Si está desactivando y no tiene usuarios asignados, hacer la acción directamente sin confirmación
+    if (newStatus === false && count === 0) {
+      try {
+        const response = await fetch(`/api/${customerSlug}/sucursales/${branch.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: newStatus }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Error al cambiar el estado de la sucursal")
+        }
+
+        toast.success(newStatus ? "Sucursal activada" : "Sucursal desactivada")
+        
+        startTransition(() => {
+          router.refresh()
+        })
+      } catch (error: any) {
+        toast.error(error.message || "Error al cambiar el estado de la sucursal")
+      }
+      return
+    }
+    
+    // Si está desactivando y tiene usuarios, mostrar confirmación
+    if (newStatus === false) {
+      setConfirmTitle('Desactivar sucursal')
+      setConfirmColor('orange')
+      setConfirmDesc(`Se desactivará la sucursal "${branch.name}" y se desactivarán ${count} usuario(s) asociados.`)
+      setPendingAction(() => async () => {
+        const response = await fetch(`/api/${customerSlug}/sucursales/${branch.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: newStatus }),
+        })
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Error al cambiar el estado de la sucursal")
+        }
+        toast.success(newStatus ? "Sucursal activada" : "Sucursal desactivada")
+        startTransition(() => router.refresh())
+      })
+      setConfirmOpen(true)
+      return
+    }
+    
+    // Si está activando, hacer la acción directamente
     try {
-      const newStatus = !branch.isActive
       const response = await fetch(`/api/${customerSlug}/sucursales/${branch.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -111,11 +167,29 @@ export function useBranchActions(customerSlug: string) {
       toast.error(error.message || "Error al cambiar el estado de la sucursal")
     }
   }
+  
+  const confirmPerform = async () => {
+    if (!pendingAction) return
+    try {
+      await pendingAction()
+    } catch (error: any) {
+      toast.error(error.message || "Acción fallida")
+    } finally {
+      setConfirmOpen(false)
+      setPendingAction(null)
+    }
+  }
 
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
     selectedBranch,
+    confirmOpen,
+    confirmTitle,
+    confirmDesc,
+    confirmColor,
+    confirmPerform,
+    setConfirmOpen,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,

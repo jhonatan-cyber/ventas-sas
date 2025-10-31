@@ -1,6 +1,8 @@
 "use client"
 
-import { Bell, Moon, Sun, Monitor, HelpCircle, Search } from "lucide-react"
+import { Bell, Moon, Sun, Monitor, HelpCircle, Search, LogOut, User } from "lucide-react"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
@@ -100,16 +102,43 @@ export function AdminHeader() {
             <HelpCircle className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
 
-          {/* Usuario */}
-          <div className="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-[#2a2a2a]">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">SA</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Super Administrador</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">super_administrador</p>
-            </div>
-          </div>
+        {/* Usuario */}
+        <div className="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-[#2a2a2a]">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-3 outline-none">
+              <Avatar className="w-8 h-8">
+                <AvatarFallback>SA</AvatarFallback>
+              </Avatar>
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Super Administrador</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">super_administrador</p>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Cuenta
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => { window.location.href = '/administracion/perfil' }}>
+                Perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    await fetch('/api/administracion/logout', { method: 'POST', credentials: 'include' })
+                  } catch {}
+                  window.location.href = '/administracion/login'
+                }}
+                className="text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Salir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener todos los clientes con paginación y filtros
 export async function GET(
@@ -15,8 +15,9 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -57,7 +58,11 @@ export async function POST(
   try {
     const { slug } = await params
     const body = await request.json()
-    const { name, email, phone, address, city, country, ruc } = body
+    const name = (body.name || '').trim()
+    const email = body.email?.trim()
+    const phone = body.phone?.trim()
+    const address = body.address?.trim()
+    const ruc = body.ruc?.trim()?.toUpperCase()
 
     if (!name) {
       return NextResponse.json(
@@ -66,8 +71,9 @@ export async function POST(
       )
     }
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -79,8 +85,6 @@ export async function POST(
       email,
       phone,
       address,
-      city,
-      country,
       ruc
     })
 

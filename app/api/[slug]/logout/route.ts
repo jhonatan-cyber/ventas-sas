@@ -10,7 +10,21 @@ export async function POST(
       { status: 200 }
     )
 
-    // Eliminar cookies de sesión
+    // Eliminar cookies de sesión SAS
+    response.cookies.set('sas-auth-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    })
+    response.cookies.set('sas-session', '', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    })
     response.cookies.delete('sales_session')
     response.cookies.delete('sales_token')
 

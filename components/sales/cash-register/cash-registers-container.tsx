@@ -10,14 +10,14 @@ import { CashRegister } from "@prisma/client"
 
 interface CashRegistersContainerProps {
   cashRegisters: Array<CashRegister & { branch?: any }>
-  organizationId: string
+  isLoading?: boolean
   onEdit?: (cashRegister: CashRegister) => void
   onOpen?: (cashRegister: CashRegister) => void
   onClose?: (cashRegister: CashRegister) => void
   onDelete?: (cashRegister: CashRegister) => void
 }
 
-export function CashRegistersContainer({ cashRegisters, organizationId, onEdit, onOpen, onClose, onDelete }: CashRegistersContainerProps) {
+export function CashRegistersContainer({ cashRegisters, isLoading = false, onEdit, onOpen, onClose, onDelete }: CashRegistersContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -87,6 +87,11 @@ export function CashRegistersContainer({ cashRegisters, organizationId, onEdit, 
     setCurrentPage(page)
   }
 
+  const cardTitle = `Cajas (${filteredCashRegisters.length})`
+  const cardDescription = filteredCashRegisters.length === cashRegisters.length
+    ? "Lista completa de cajas registradas"
+    : `Mostrando ${filteredCashRegisters.length} de ${cashRegisters.length} cajas`
+
   return (
     <div className="space-y-6">
       {/* Estadísticas */}
@@ -107,12 +112,10 @@ export function CashRegistersContainer({ cashRegisters, organizationId, onEdit, 
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-gray-900 dark:text-white">
-                Cajas ({filteredCashRegisters.length})
+                {cardTitle}
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredCashRegisters.length === cashRegisters.length 
-                  ? "Lista completa de cajas registradas"
-                  : `Mostrando ${filteredCashRegisters.length} de ${cashRegisters.length} cajas`}
+                {cardDescription}
               </CardDescription>
             </div>
           </div>
@@ -121,6 +124,7 @@ export function CashRegistersContainer({ cashRegisters, organizationId, onEdit, 
           <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
             <CashRegistersTable 
               cashRegisters={currentCashRegisters} 
+              isLoading={isLoading}
               onEditClick={onEdit} 
               onOpenClick={onOpen}
               onCloseClick={onClose}

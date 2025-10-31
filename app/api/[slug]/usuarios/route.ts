@@ -61,11 +61,11 @@ export async function POST(
   try {
     const { slug } = await params
     const body = await request.json()
-    const { ci, nombre, apellido, direccion, telefono, correo, contraseña, rolId, foto, sucursalId } = body
+    const { ci, nombre, apellido, direccion, telefono, correo, rolId, foto, sucursalId } = body
 
-    if (!nombre || !apellido) {
+    if (!ci || !nombre || !apellido || !telefono || !rolId) {
       return NextResponse.json(
-        { error: 'El nombre y apellido son requeridos' },
+        { error: 'El CI, nombre, apellido, teléfono y rol son requeridos' },
         { status: 400 }
       )
     }
@@ -85,7 +85,6 @@ export async function POST(
       direccion,
       telefono,
       correo,
-      contraseña,
       rolId,
       foto,
       sucursalId

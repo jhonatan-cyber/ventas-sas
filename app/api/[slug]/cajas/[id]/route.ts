@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener caja por ID
 export async function GET(
@@ -10,8 +10,9 @@ export async function GET(
   try {
     const { slug, id } = await params
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -54,8 +55,9 @@ export async function PUT(
     const { slug, id } = await params
     const body = await request.json()
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -73,13 +75,20 @@ export async function PUT(
 
     // Si se trata de abrir o cerrar la caja, usar métodos específicos
     if (body.action === 'open') {
-      if (!body.openingBalance && body.openingBalance !== 0) {
+      if (body.openingBalance === undefined || body.openingBalance === null) {
         return NextResponse.json(
           { error: 'El balance inicial es requerido para abrir la caja' },
           { status: 400 }
         )
       }
-      const cashRegister = await CashRegisterService.openCashRegister(id, body.openingBalance)
+      const openingBalance = Number(body.openingBalance)
+      if (isNaN(openingBalance) || openingBalance < 0) {
+        return NextResponse.json(
+          { error: 'El balance inicial debe ser un número válido' },
+          { status: 400 }
+        )
+      }
+      const cashRegister = await CashRegisterService.openCashRegister(id, openingBalance)
       return NextResponse.json(cashRegister)
     }
 
@@ -89,13 +98,15 @@ export async function PUT(
     }
 
     // Actualización normal
-    const cashRegister = await CashRegisterService.updateCashRegister(id, {
+    const payload = {
       name: body.name?.trim(),
-      branchId: body.branchId,
-      openingBalance: body.openingBalance,
-      currentBalance: body.currentBalance,
-      isOpen: body.isOpen
-    })
+      branchId: body.branchId?.trim(),
+      openingBalance: body.openingBalance !== undefined ? Number(body.openingBalance) : undefined,
+      currentBalance: body.currentBalance !== undefined ? Number(body.currentBalance) : undefined,
+      isOpen: body.isOpen,
+    }
+
+    const cashRegister = await CashRegisterService.updateCashRegister(id, payload)
 
     return NextResponse.json(cashRegister)
   } catch (error: any) {
@@ -115,8 +126,9 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }

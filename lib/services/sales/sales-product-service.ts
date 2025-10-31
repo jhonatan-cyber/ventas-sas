@@ -5,6 +5,8 @@ export interface CreateSalesProductData {
   categoryId?: string
   name: string
   description?: string
+  brand?: string
+  model?: string
   price: number
   cost: number
   stock?: number
@@ -18,6 +20,8 @@ export interface UpdateSalesProductData {
   categoryId?: string
   name?: string
   description?: string
+  brand?: string
+  model?: string
   price?: number
   cost?: number
   stock?: number
@@ -29,9 +33,9 @@ export interface UpdateSalesProductData {
 }
 
 export class SalesProductService {
-  // Obtener todos los productos de una organización
+  // Obtener todos los productos de un cliente
   static async getAllProducts(
-    organizationId: string,
+    customerId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
@@ -39,7 +43,7 @@ export class SalesProductService {
     categoryId?: string
   ) {
     const where: any = {
-      organizationId
+      customerId
     }
 
     if (search) {
@@ -89,15 +93,17 @@ export class SalesProductService {
 
   // Crear nuevo producto
   static async createProduct(
-    organizationId: string,
+    customerId: string,
     data: CreateSalesProductData
   ): Promise<SalesProduct> {
     return prisma.salesProduct.create({
       data: {
-        organizationId,
+        customerId,
         categoryId: data.categoryId,
         name: data.name,
         description: data.description,
+        brand: data.brand,
+        model: data.model,
         price: data.price,
         cost: data.cost,
         stock: data.stock || 0,
@@ -117,7 +123,11 @@ export class SalesProductService {
   ): Promise<SalesProduct> {
     return prisma.salesProduct.update({
       where: { id },
-      data
+      data: {
+        ...data,
+        brand: data.brand !== undefined ? data.brand : undefined,
+        model: data.model !== undefined ? data.model : undefined,
+      }
     })
   }
 
@@ -147,10 +157,10 @@ export class SalesProductService {
   }
 
   // Obtener productos activos (para selects)
-  static async getActiveProducts(organizationId: string) {
+  static async getActiveProducts(customerId: string) {
     return prisma.salesProduct.findMany({
       where: {
-        organizationId,
+        customerId,
         isActive: true
       },
       include: {

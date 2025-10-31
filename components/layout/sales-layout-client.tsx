@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { SalesSidebar } from "./sales-sidebar"
+import { SalesHeader } from "./sales-header"
 
 interface SalesLayoutClientProps {
   children: React.ReactNode
@@ -21,7 +22,10 @@ export function SalesLayoutClient({ children, organizationSlug }: SalesLayoutCli
     <div className="flex h-screen bg-gray-50 dark:bg-[#1a1a1a]">
       <SalesSidebar organizationSlug={organizationSlug} />
       <main className="flex-1 ml-64 overflow-y-auto">
+        <SalesHeader />
+        <div className="mt-16">
         {children}
+        </div>
       </main>
     </div>
   )

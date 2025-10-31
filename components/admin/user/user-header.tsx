@@ -13,7 +13,7 @@ interface UserHeaderProps {
 export function UserHeader({
   title,
   description,
-  newButtonText = "Nuevo",
+  newButtonText = "Agregar Usuario",
   onNewClick
 }: UserHeaderProps) {
   return (

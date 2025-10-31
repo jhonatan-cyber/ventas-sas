@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener todas las cajas con paginación y filtros
 export async function GET(
@@ -16,8 +16,9 @@ export async function GET(
     const branchId = searchParams.get('branchId') || undefined
     const isOpen = searchParams.get('isOpen') === 'true' ? true : searchParams.get('isOpen') === 'false' ? false : undefined
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
@@ -60,15 +61,20 @@ export async function POST(
     const { slug } = await params
     const body = await request.json()
 
+    const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
-    if (!organizationId) {
+    if (!customer || !organizationId) {
       return NextResponse.json(
         { error: 'Cliente no encontrado o inactivo' },
         { status: 404 }
       )
     }
 
-    if (!body.name || body.name.trim() === '') {
+    const name = (body.name || '').trim()
+    const branchId = body.branchId?.trim() || undefined
+    const openingBalance = Number(body.openingBalance ?? 0)
+
+    if (!name) {
       return NextResponse.json(
         { error: 'El nombre es requerido' },
         { status: 400 }
@@ -76,9 +82,9 @@ export async function POST(
     }
 
     const cashRegister = await CashRegisterService.createCashRegister(organizationId, {
-      name: body.name.trim(),
-      branchId: body.branchId,
-      openingBalance: body.openingBalance || 0
+      name,
+      branchId,
+      openingBalance: isNaN(openingBalance) ? 0 : openingBalance
     })
 
     return NextResponse.json(cashRegister, { status: 201 })

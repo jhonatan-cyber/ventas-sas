@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesCustomer } from "@prisma/client"
 
-export function useSalesCustomerActions(customerSlug: string) {
+export function useSalesCustomerActions(customerSlug: string, onCustomersChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
@@ -55,7 +55,11 @@ export function useSalesCustomerActions(customerSlug: string) {
       const message = selectedCustomer ? "Cliente actualizado" : "Cliente creado"
       toast.success(message)
       closeDialogs()
-      
+
+      if (onCustomersChange) {
+        await Promise.resolve(onCustomersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -79,7 +83,11 @@ export function useSalesCustomerActions(customerSlug: string) {
 
       toast.success("Cliente eliminado")
       closeDialogs()
-      
+
+      if (onCustomersChange) {
+        await Promise.resolve(onCustomersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -103,7 +111,11 @@ export function useSalesCustomerActions(customerSlug: string) {
       }
 
       toast.success(newStatus ? "Cliente activado" : "Cliente desactivado")
-      
+
+      if (onCustomersChange) {
+        await Promise.resolve(onCustomersChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
