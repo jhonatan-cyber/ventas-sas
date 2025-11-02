@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { Branch } from '@prisma/client'
+import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateBranchData {
   name: string
@@ -23,10 +24,12 @@ export class BranchService {
     skip: number = 0,
     take: number = 10,
     search?: string,
-    status?: string
+    status?: string,
+    includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId
+      customerId,
+      ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
     if (search) {
@@ -142,11 +145,48 @@ export class BranchService {
     })
   }
 
-  // Eliminar sucursal
+  // Eliminar sucursal (soft delete)
   static async deleteBranch(id: string): Promise<void> {
-    await prisma.branch.delete({
-      where: { id }
+    const startTime = Date.now()
+    await prisma.branch.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('SOFT_DELETE', 'branches', duration, undefined, {
+      branchId: id,
+    })
+  }
+  
+  // Restaurar sucursal (deshacer soft delete)
+  static async restoreBranch(id: string): Promise<Branch> {
+    const startTime = Date.now()
+    const restored = await prisma.branch.update({
+      where: { id },
+      data: {
+        deletedAt: null
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            razonSocial: true,
+            nombre: true,
+            apellido: true
+          }
+        }
+      }
+    })
+    
+    const duration = Date.now() - startTime
+    logDatabase('RESTORE', 'branches', duration, undefined, {
+      branchId: id,
+    })
+    
+    return restored
   }
 
   // Obtener sucursales activas para selects
@@ -154,7 +194,8 @@ export class BranchService {
     return prisma.branch.findMany({
       where: {
         customerId,
-        isActive: true
+        isActive: true,
+        deletedAt: null // Excluir soft deleted
       },
       select: {
         id: true,

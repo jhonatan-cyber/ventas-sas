@@ -3,49 +3,7 @@ import { SaleService, UpdateSaleData } from '@/lib/services/sales/sale-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
-
-function serializeSale(sale: any) {
-  return {
-    ...sale,
-    subtotal: Number(sale.subtotal ?? 0),
-    discount: Number(sale.discount ?? 0),
-    total: Number(sale.total ?? 0),
-    createdAt: sale.createdAt ? sale.createdAt.toISOString() : null,
-    updatedAt: sale.updatedAt ? sale.updatedAt.toISOString() : null,
-    customer: sale.customer
-      ? {
-          id: sale.customer.id,
-          name: sale.customer.name,
-          lastName: sale.customer.lastName,
-          email: sale.customer.email,
-          phone: sale.customer.phone,
-        }
-      : null,
-    user: sale.user
-      ? {
-          id: sale.user.id,
-          fullName: sale.user.fullName,
-          email: sale.user.email,
-        }
-      : null,
-    items: sale.items?.map((item: any) => ({
-      ...item,
-      unitPrice: Number(item.unitPrice ?? 0),
-      subtotal: Number(item.subtotal ?? 0),
-      trackingCodes: Array.isArray(item.trackingCodes)
-        ? item.trackingCodes.filter((code: any) => typeof code === 'string').map((code: string) => code.trim())
-        : [],
-      product: item.product
-        ? {
-            id: item.product.id,
-            name: item.product.name,
-            price: Number(item.product.price ?? 0),
-            imageUrl: item.product.imageUrl,
-          }
-        : null,
-    })),
-  }
-}
+import { serializeSale } from '@/lib/utils/serializers'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null

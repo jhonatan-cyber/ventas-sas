@@ -1,10 +1,11 @@
 "use client"
 
-import { Bell, Moon, Sun, Monitor, HelpCircle, Search, LogOut, User } from "lucide-react"
+import { Moon, Sun, Monitor, HelpCircle, Search, LogOut, User } from "lucide-react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()
@@ -41,10 +42,7 @@ export function AdminHeader() {
         {/* Acciones del header */}
         <div className="flex items-center gap-4">
           {/* Notificaciones */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors">
-            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationsDropdown system="admin" />
 
           {/* Toggle de tema */}
           <div className="relative group">

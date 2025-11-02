@@ -2,30 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ExpenseService, UpdateExpenseData } from '@/lib/services/sales/expense-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-
-function serializeExpense(expense: any) {
-  return {
-    ...expense,
-    amount: Number(expense.amount ?? 0),
-    date: expense.date ? expense.date.toISOString() : null,
-    createdAt: expense.createdAt ? expense.createdAt.toISOString() : null,
-    updatedAt: expense.updatedAt ? expense.updatedAt.toISOString() : null,
-    user: expense.user
-      ? {
-          id: expense.user.id,
-          fullName: expense.user.fullName,
-          email: expense.user.email,
-        }
-      : null,
-    branch: expense.branch
-      ? {
-          id: expense.branch.id,
-          name: expense.branch.name,
-          address: expense.branch.address,
-        }
-      : null,
-  }
-}
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeExpense } from '@/lib/utils/serializers'
 
 // GET - Obtener gasto por ID
 export async function GET(
@@ -37,36 +16,24 @@ export async function GET(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const expense = await ExpenseService.getExpenseById(id)
 
     if (!expense) {
-      return NextResponse.json(
-        { error: 'Gasto no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Gasto no encontrado')
     }
 
     // Verificar que el gasto pertenece a la organización
     if (expense.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 }
-      )
+      throw AppError.forbidden('No autorizado')
     }
 
     return NextResponse.json(serializeExpense(expense))
   } catch (error) {
-    console.error('Error al obtener gasto:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el gasto' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_EXPENSE', expenseId: id }))
   }
 }
 
@@ -75,66 +42,53 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
+  let currentUser: any = null
+  
   try {
     const { slug, id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que el gasto existe y pertenece a la organización
     const existingExpense = await ExpenseService.getExpenseById(id)
     if (!existingExpense || existingExpense.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Gasto no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Gasto no encontrado')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
-    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+    currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
+      throw AppError.unauthorized('No autenticado')
     }
 
     const name = typeof body.name === 'string' ? body.name.trim() : ''
     if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
+      throw AppError.validation('El nombre es requerido')
     }
 
     const description = typeof body.description === 'string' ? body.description.trim() : ''
     if (!description) {
-      return NextResponse.json(
-        { error: 'La descripción es requerida' },
-        { status: 400 }
-      )
+      throw AppError.validation('La descripción es requerida')
     }
 
     const amount = Number(body.amount)
     if (Number.isNaN(amount) || amount <= 0) {
-      return NextResponse.json(
-        { error: 'El monto debe ser mayor a 0' },
-        { status: 400 }
-      )
+      throw AppError.validation('El monto debe ser mayor a 0')
     }
 
     if (!body.date) {
-      return NextResponse.json(
-        { error: 'La fecha es requerida' },
-        { status: 400 }
-      )
+      throw AppError.validation('La fecha es requerida')
     }
 
     const rawCategory = typeof body.category === 'string' ? body.category.trim() : undefined
@@ -168,12 +122,9 @@ export async function PUT(
     const expense = await ExpenseService.updateExpense(id, updatePayload)
 
     return NextResponse.json(serializeExpense(expense))
-  } catch (error: any) {
-    console.error('Error al actualizar gasto:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el gasto' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_EXPENSE', expenseId: id, userId: currentUser?.id }))
   }
 }
 
@@ -187,30 +138,21 @@ export async function DELETE(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que el gasto existe y pertenece a la organización
     const existingExpense = await ExpenseService.getExpenseById(id)
     if (!existingExpense || existingExpense.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Gasto no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Gasto no encontrado')
     }
 
     await ExpenseService.deleteExpense(id)
 
     return NextResponse.json({ message: 'Gasto eliminado correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar gasto:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar el gasto' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_EXPENSE', expenseId: id }))
   }
 }
 

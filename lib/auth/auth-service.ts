@@ -103,7 +103,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      console.error('Error en login:', error)
+      logger.error('Error en login', error as Error)
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -185,7 +185,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      console.error('Error en registro:', error)
+      logger.error('Error en registro', error as Error)
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -262,7 +262,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      console.error('Error cambiando contraseña:', error)
+      logger.error('Error cambiando contraseña', error as Error)
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -299,7 +299,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      console.error('Error reseteando contraseña:', error)
+      logger.error('Error reseteando contraseña', error as Error)
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -327,7 +327,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      console.error('Error generando contraseña temporal:', error)
+      logger.error('Error generando contraseña temporal', error as Error)
       return {
         success: false,
         error: 'Error interno del servidor'

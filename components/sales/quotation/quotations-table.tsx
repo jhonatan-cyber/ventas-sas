@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Edit, Trash2, FileText, Eye } from "lucide-react"
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
@@ -51,11 +52,7 @@ const statusTokens: Record<string, { label: string; className: string }> = {
 
 export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, showBranchColumn = false }) => {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando cotizaciones...
-      </div>
-    )
+    return <TableSkeleton columns={showBranchColumn ? 6 : 5} rows={5} showActions={true} />
   }
 
   return (

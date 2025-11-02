@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { UsuarioSas } from '@prisma/client'
 import { PasswordService } from '@/lib/auth/password'
+import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateUsuarioSasData {
   ci?: string
@@ -38,10 +39,12 @@ export class UsuarioSasService {
     search?: string,
     status?: string,
     rolId?: string,
-    sucursalId?: string
+    sucursalId?: string,
+    includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId
+      customerId,
+      ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
     if (search) {
@@ -103,8 +106,8 @@ export class UsuarioSasService {
   }
 
   // Obtener usuario por ID
-  static async getUsuarioById(id: string): Promise<UsuarioSas | null> {
-    return prisma.usuarioSas.findUnique({
+  static async getUsuarioById(id: string, includeDeleted: boolean = false): Promise<UsuarioSas | null> {
+    const usuario = await prisma.usuarioSas.findUnique({
       where: { id },
       include: {
         rol: true,
@@ -112,6 +115,13 @@ export class UsuarioSasService {
         customer: true
       }
     })
+    
+    // Si no se incluyen eliminados y el usuario está eliminado, retornar null
+    if (!includeDeleted && usuario && usuario.deletedAt) {
+      return null
+    }
+    
+    return usuario
   }
 
   // Crear nuevo usuario
@@ -156,6 +166,20 @@ export class UsuarioSasService {
     // Hashear nueva contraseña si se proporciona
     if (data.contraseña) {
       updateData.contraseña = await PasswordService.hashPassword(data.contraseña)
+      
+      // Invalidar sesiones al cambiar contraseña
+      const { SessionManagement } = await import('@/lib/auth/session-management')
+      const usuario = await prisma.usuarioSas.findUnique({
+        where: { id },
+        select: { customerId: true }
+      })
+      
+      if (usuario?.customerId) {
+        await SessionManagement.invalidateSessionsOnPasswordChange(id, 'sas', usuario.customerId)
+      }
+      
+      // Marcar fecha de cambio de contraseña
+      updateData.passwordChangedAt = new Date()
     } else {
       // No actualizar contraseña si no se proporciona
       delete updateData.contraseña
@@ -167,11 +191,43 @@ export class UsuarioSasService {
     })
   }
 
-  // Eliminar usuario
+  // Eliminar usuario (soft delete)
   static async deleteUsuario(id: string): Promise<void> {
-    await prisma.usuarioSas.delete({
-      where: { id }
+    const startTime = Date.now()
+    await prisma.usuarioSas.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('SOFT_DELETE', 'usuarios_sas', duration, undefined, {
+      usuarioId: id,
+    })
+  }
+
+  // Restaurar usuario (deshacer soft delete)
+  static async restoreUsuario(id: string): Promise<UsuarioSas> {
+    const startTime = Date.now()
+    const restored = await prisma.usuarioSas.update({
+      where: { id },
+      data: {
+        deletedAt: null
+      },
+      include: {
+        rol: true,
+        sucursal: true,
+        customer: true
+      }
+    })
+    
+    const duration = Date.now() - startTime
+    logDatabase('RESTORE', 'usuarios_sas', duration, undefined, {
+      usuarioId: id,
+    })
+    
+    return restored
   }
 
   // Obtener usuarios activos por cliente (para selects)

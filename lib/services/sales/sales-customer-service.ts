@@ -27,10 +27,12 @@ export class SalesCustomerService {
     skip: number = 0,
     take: number = 10,
     search?: string,
-    status?: string
+    status?: string,
+    includeDeleted: boolean = false
   ) {
     const where: any = {
-      organizationId
+      organizationId,
+      ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
     if (search) {
@@ -102,10 +104,23 @@ export class SalesCustomerService {
     })
   }
 
-  // Eliminar cliente
+  // Eliminar cliente (soft delete)
   static async deleteCustomer(id: string): Promise<void> {
-    await prisma.salesCustomer.delete({
-      where: { id }
+    await prisma.salesCustomer.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
+    })
+  }
+
+  // Restaurar cliente (deshacer soft delete)
+  static async restoreCustomer(id: string): Promise<SalesCustomer> {
+    return prisma.salesCustomer.update({
+      where: { id },
+      data: {
+        deletedAt: null
+      }
     })
   }
 
@@ -114,7 +129,8 @@ export class SalesCustomerService {
     return prisma.salesCustomer.findMany({
       where: {
         organizationId,
-        isActive: true
+        isActive: true,
+        deletedAt: null // Excluir soft deleted
       },
       orderBy: [
         { lastName: 'asc' },

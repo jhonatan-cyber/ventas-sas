@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { RoleSas } from '@prisma/client'
+import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateRoleSasData {
   nombre: string
@@ -22,10 +23,12 @@ export class RoleSasService {
     take: number = 10,
     search?: string,
     status?: string,
-    sucursalId?: string
+    sucursalId?: string,
+    includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId
+      customerId,
+      ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
     if (search) {
@@ -74,14 +77,21 @@ export class RoleSasService {
   }
 
   // Obtener rol por ID
-  static async getRoleById(id: string): Promise<RoleSas | null> {
-    return prisma.roleSas.findUnique({
+  static async getRoleById(id: string, includeDeleted: boolean = false): Promise<RoleSas | null> {
+    const role = await prisma.roleSas.findUnique({
       where: { id },
       include: {
         customer: true,
         sucursal: true
       }
     })
+    
+    // Si no se incluyen eliminados y el rol está eliminado, retornar null
+    if (!includeDeleted && role && role.deletedAt) {
+      return null
+    }
+    
+    return role
   }
 
   // Crear nuevo rol
@@ -111,11 +121,42 @@ export class RoleSasService {
     })
   }
 
-  // Eliminar rol
+  // Eliminar rol (soft delete)
   static async deleteRole(id: string): Promise<void> {
-    await prisma.roleSas.delete({
-      where: { id }
+    const startTime = Date.now()
+    await prisma.roleSas.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('SOFT_DELETE', 'roles_sas', duration, undefined, {
+      roleId: id,
+    })
+  }
+  
+  // Restaurar rol (deshacer soft delete)
+  static async restoreRole(id: string): Promise<RoleSas> {
+    const startTime = Date.now()
+    const restored = await prisma.roleSas.update({
+      where: { id },
+      data: {
+        deletedAt: null
+      },
+      include: {
+        customer: true,
+        sucursal: true
+      }
+    })
+    
+    const duration = Date.now() - startTime
+    logDatabase('RESTORE', 'roles_sas', duration, undefined, {
+      roleId: id,
+    })
+    
+    return restored
   }
 
   // Obtener roles activos por cliente (para selects)

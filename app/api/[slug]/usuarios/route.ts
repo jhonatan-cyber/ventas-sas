@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { createUsuarioSasSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener todos los usuarios con paginación y filtros
 export async function GET(
@@ -19,10 +25,7 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -45,11 +48,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener usuarios:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los usuarios' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_USUARIOS' }))
   }
 }
 
@@ -60,52 +59,66 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
-    const { ci, nombre, apellido, direccion, telefono, correo, rolId, foto, sucursalId } = body
-
-    if (!ci || !nombre || !apellido || !telefono || !rolId) {
-      return NextResponse.json(
-        { error: 'El CI, nombre, apellido, teléfono y rol son requeridos' },
-        { status: 400 }
-      )
-    }
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
+
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createUsuarioSasSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Obtener usuario actual para auditoría
+    const currentUser = await getCurrentSasUser(request, slug)
 
     const newUsuario = await UsuarioSasService.createUsuario(customer.id, {
-      ci,
-      nombre,
-      apellido,
-      direccion,
-      telefono,
-      correo,
-      rolId,
-      foto,
-      sucursalId
+      ci: validatedData.ci || undefined,
+      nombre: validatedData.nombre,
+      apellido: validatedData.apellido,
+      direccion: validatedData.direccion || undefined,
+      telefono: validatedData.telefono || undefined,
+      correo: validatedData.correo || undefined,
+      contraseña: validatedData.contraseña || undefined,
+      rolId: validatedData.rolId || undefined,
+      foto: validatedData.foto || undefined,
+      sucursalId: validatedData.sucursalId || undefined
     })
 
-    return NextResponse.json(newUsuario, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear usuario:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un usuario con ese CI o correo' },
-        { status: 409 }
+    // Registrar creación de usuario en auditoría
+    if (currentUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          customerId: customer.id,
+          actionType: 'USER_CREATED',
+          entityType: 'UsuarioSas',
+          entityId: newUsuario.id,
+          details: {
+            newUserCi: newUsuario.ci,
+            newUserEmail: newUsuario.correo,
+            rolId: validatedData.rolId,
+          },
+        },
+        request
       )
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el usuario' },
-      { status: 500 }
-    )
+    return NextResponse.json(newUsuario, { status: 201 })
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_USUARIO' }))
   }
 }
 

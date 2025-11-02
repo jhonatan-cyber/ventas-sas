@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener sucursal por ID
 export async function GET(
@@ -12,36 +14,24 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const branch = await BranchService.getBranchById(id)
 
     if (!branch) {
-      return NextResponse.json(
-        { error: 'Sucursal no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Sucursal no encontrada')
     }
 
     // Verificar que la sucursal pertenece al cliente
     if (branch.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 }
-      )
+      throw AppError.forbidden('No autorizado')
     }
 
     return NextResponse.json(branch)
   } catch (error) {
-    console.error('Error al obtener sucursal:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener la sucursal' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_BRANCH', branchId: id }))
   }
 }
 
@@ -52,23 +42,23 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la sucursal existe y pertenece al cliente
     const existingBranch = await BranchService.getBranchById(id)
     if (!existingBranch || existingBranch.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'Sucursal no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Sucursal no encontrada')
     }
 
     const branch = await BranchService.updateBranch(id, {
@@ -80,12 +70,9 @@ export async function PUT(
     })
 
     return NextResponse.json(branch)
-  } catch (error: any) {
-    console.error('Error al actualizar sucursal:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar la sucursal' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_BRANCH', branchId: id }))
   }
 }
 
@@ -99,30 +86,21 @@ export async function DELETE(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la sucursal existe y pertenece al cliente
     const existingBranch = await BranchService.getBranchById(id)
     if (!existingBranch || existingBranch.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'Sucursal no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Sucursal no encontrada')
     }
 
     await BranchService.deleteBranch(id)
 
     return NextResponse.json({ message: 'Sucursal eliminada correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar sucursal:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar la sucursal' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_BRANCH', branchId: id }))
   }
 }
 

@@ -1,71 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SubscriptionAdminService } from '@/lib/services/admin/subscription-admin-service'
+import { createSubscriptionPlanSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todos los planes
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const plans = await SubscriptionAdminService.getAllPlans()
     return NextResponse.json(plans)
   } catch (error) {
-    console.error('Error al obtener planes:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los planes' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_PLANS' }))
   }
 }
 
 // POST - Crear nuevo plan
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxOrders, modules } = body
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre del plan es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    // Validar que al menos un período esté activo
-    if (!hasMonthly && !hasYearly) {
-      return NextResponse.json(
-        { error: 'Debe activar al menos un período (mensual o anual)' },
-        { status: 400 }
-      )
+    // Validar datos con Zod (incluye validación de al menos un período)
+    const validation = await validateRequestBody(createSubscriptionPlanSchema, body)
+    if (!validation.success) {
+      return validation.response
     }
+
+    const validatedData = validation.data
 
     const newPlan = await SubscriptionAdminService.createPlan({
-      name,
-      description,
-      hasMonthly,
-      hasYearly,
-      priceMonthly,
-      priceYearly,
-      maxUsers,
-      maxProducts,
-      maxOrders,
-      modules,
-      isActive: true
+      name: validatedData.name,
+      description: validatedData.description || undefined,
+      hasMonthly: validatedData.hasMonthly,
+      hasYearly: validatedData.hasYearly,
+      priceMonthly: validatedData.priceMonthly || undefined,
+      priceYearly: validatedData.priceYearly || undefined,
+      features: validatedData.features || undefined,
+      modules: validatedData.modules || undefined,
+      maxUsers: validatedData.maxUsers || undefined,
+      maxProducts: validatedData.maxProducts || undefined,
+      maxOrders: validatedData.maxOrders || undefined,
+      isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
     })
 
     return NextResponse.json(newPlan, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear plan:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un plan con ese nombre' },
-        { status: 409 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el plan' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_PLAN' }))
   }
 }
 

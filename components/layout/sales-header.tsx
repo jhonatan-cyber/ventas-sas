@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { Building2, LogOut, User, Sun, Moon, Monitor, Bell } from "lucide-react"
+import { Building2, LogOut, User, Sun, Moon, Monitor } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
 
 interface SasSession {
   userId: string
@@ -100,12 +101,7 @@ export function SalesHeader() {
         </div>
         <div className="flex items-center gap-3">
           {/* Notificaciones */}
-          <button
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
-            title="Notificaciones"
-          >
-            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </button>
+          <NotificationsDropdown system="sas" slug={slug} />
           {/* Toggle de tema */}
           {mounted && (
             <div className="relative group">

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener usuario por ID
 export async function GET(
@@ -11,21 +15,15 @@ export async function GET(
     const usuario = await UsuarioSasService.getUsuarioById(id)
     
     if (!usuario) {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Usuario no encontrado')
     }
 
     // No retornar la contraseña
     const { contraseña, ...usuarioSinPassword } = usuario
     return NextResponse.json(usuarioSinPassword)
   } catch (error) {
-    console.error('Error al obtener usuario:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el usuario' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_SAS_USER', userId: id }))
   }
 }
 
@@ -36,8 +34,20 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+    
+    const { slug } = await params
     const { ci, nombre, apellido, direccion, telefono, correo, contraseña, rolId, foto, sucursalId, isActive } = body
+
+    // Obtener usuario actual y usuario objetivo para auditoría
+    const currentUser = await getCurrentSasUser(request, slug)
+    const targetUser = await UsuarioSasService.getUsuarioById(id)
 
     const usuario = await UsuarioSasService.updateUsuario(id, {
       ci,
@@ -53,23 +63,83 @@ export async function PUT(
       isActive
     })
 
+    // Registrar actualización de usuario en auditoría
+    if (currentUser && targetUser) {
+      const changedFields: string[] = []
+      if (rolId !== undefined && targetUser.rolId !== rolId) {
+        changedFields.push('rolId')
+      }
+      if (isActive !== undefined && targetUser.isActive !== isActive) {
+        changedFields.push('isActive')
+      }
+      if (contraseña !== undefined && contraseña.trim() !== '') {
+        changedFields.push('password')
+      }
+
+      // Registrar cambio de rol específicamente
+      if (rolId !== undefined && targetUser.rolId !== rolId) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            customerId: targetUser.customerId,
+            actionType: 'ROLE_CHANGED',
+            entityType: 'UsuarioSas',
+            entityId: id,
+            details: {
+              oldRolId: targetUser.rolId,
+              newRolId: rolId,
+              targetUserCi: targetUser.ci,
+              targetUserEmail: targetUser.correo,
+            },
+          },
+          request
+        )
+      }
+
+      // Registrar otros cambios
+      if (changedFields.length > 0 && !changedFields.includes('rolId')) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            customerId: targetUser.customerId,
+            actionType: 'USER_UPDATED',
+            entityType: 'UsuarioSas',
+            entityId: id,
+            details: {
+              changedFields,
+              targetUserCi: targetUser.ci,
+              targetUserEmail: targetUser.correo,
+            },
+          },
+          request
+        )
+      }
+
+      // Registrar activación/desactivación
+      if (isActive !== undefined && targetUser.isActive !== isActive) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            customerId: targetUser.customerId,
+            actionType: isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
+            entityType: 'UsuarioSas',
+            entityId: id,
+            details: {
+              targetUserCi: targetUser.ci,
+              targetUserEmail: targetUser.correo,
+            },
+          },
+          request
+        )
+      }
+    }
+
     // No retornar la contraseña
     const { contraseña: _, ...usuarioSinPassword } = usuario
     return NextResponse.json(usuarioSinPassword)
-  } catch (error: any) {
-    console.error('Error al actualizar usuario:', error)
-    
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un usuario con ese CI o correo' },
-        { status: 409 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el usuario' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_SAS_USER', userId: id }))
   }
 }
 
@@ -79,15 +149,37 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { slug, id } = await params
+
+    // Obtener usuario actual y usuario objetivo para auditoría
+    const currentUser = await getCurrentSasUser(request, slug)
+    const targetUser = await UsuarioSasService.getUsuarioById(id)
+
     await UsuarioSasService.deleteUsuario(id)
+
+    // Registrar eliminación de usuario en auditoría
+    if (currentUser && targetUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          customerId: targetUser.customerId,
+          actionType: 'USER_DELETED',
+          entityType: 'UsuarioSas',
+          entityId: id,
+          details: {
+            deletedUserCi: targetUser.ci,
+            deletedUserEmail: targetUser.correo,
+            deletedUserName: `${targetUser.nombre} ${targetUser.apellido}`,
+          },
+        },
+        request
+      )
+    }
+
     return NextResponse.json({ message: 'Usuario eliminado correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar usuario:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar el usuario' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_SAS_USER', userId: id }))
   }
 }
 

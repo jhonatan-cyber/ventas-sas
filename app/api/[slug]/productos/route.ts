@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { createProductSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { requireCSRF } from '@/lib/utils/csrf-protection'
+import { logBusinessOperation } from '@/lib/utils/logger'
+import { getRequestContext } from '@/lib/utils/request-context'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const startTime = Date.now()
+  const requestContext = getRequestContext(request)
+  
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
@@ -18,10 +28,7 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -35,19 +42,22 @@ export async function GET(
       categoryId
     )
 
-    return NextResponse.json({
+    const duration = Date.now() - startTime
+    const response = NextResponse.json({
       products,
       total,
       page,
       pageSize,
       totalPages: Math.ceil(total / pageSize)
     })
+    
+    // Agregar correlation ID a headers
+    response.headers.set('X-Correlation-ID', requestContext.correlationId)
+    response.headers.set('X-Response-Time', `${duration}ms`)
+    
+    return response
   } catch (error) {
-    console.error('Error al obtener productos:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los productos' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_PRODUCTS' }))
   }
 }
 
@@ -56,48 +66,69 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const startTime = Date.now()
+  const requestContext = getRequestContext(request)
+  
   try {
-    const { slug } = await params
-    const body = await request.json()
-    const { categoryId, name, description, brand, model, price, cost, stock, minStock, sku, barcode, imageUrl } = body
-
-    if (!name || price === undefined || cost === undefined) {
-      return NextResponse.json(
-        { error: 'El nombre, precio y costo son requeridos' },
-        { status: 400 }
-      )
+    // Validar CSRF token (solo si está habilitado)
+    if (process.env.ENABLE_CSRF === 'true') {
+      requireCSRF(request)
     }
+
+    const { slug } = await params
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createProductSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
     const newProduct = await SalesProductService.createProduct(customer.id, {
-      categoryId,
-      name,
-      description,
-      brand,
-      model,
-      price: Number(price),
-      cost: Number(cost),
-      stock: stock ? Number(stock) : undefined,
-      minStock: minStock ? Number(minStock) : undefined,
-      sku,
-      barcode,
-      imageUrl
+      categoryId: validatedData.categoryId || undefined,
+      name: validatedData.name,
+      description: validatedData.description || undefined,
+      brand: validatedData.brand || undefined,
+      model: validatedData.model || undefined,
+      price: validatedData.price,
+      cost: validatedData.cost,
+      stock: validatedData.stock,
+      minStock: validatedData.minStock,
+      sku: validatedData.sku || undefined,
+      barcode: validatedData.barcode || undefined,
+      imageUrl: validatedData.imageUrl || undefined
     })
 
-    return NextResponse.json(newProduct, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear producto:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el producto' },
-      { status: 500 }
-    )
+    // Log de operación de negocio
+    logBusinessOperation('CREATE', 'Product', newProduct.id, undefined, {
+      correlationId: requestContext.correlationId,
+      customerId: customer.id,
+      productName: newProduct.name,
+      slug,
+    })
+
+    const duration = Date.now() - startTime
+    const response = NextResponse.json(newProduct, { status: 201 })
+    response.headers.set('X-Correlation-ID', requestContext.correlationId)
+    response.headers.set('X-Response-Time', `${duration}ms`)
+    
+    return response
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_PRODUCT' }))
   }
 }
 

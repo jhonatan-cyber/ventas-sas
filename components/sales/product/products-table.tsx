@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,11 +79,7 @@ export function ProductsTable({
   onToggleStatus,
 }: ProductsTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando productos...
-      </div>
-    );
+    return <TableSkeleton columns={10} rows={5} showActions={true} />;
   }
 
   return (

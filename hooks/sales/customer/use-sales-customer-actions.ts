@@ -4,10 +4,12 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesCustomer } from "@prisma/client"
+import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
 export function useSalesCustomerActions(customerSlug: string, onCustomersChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<SalesCustomer | undefined>()
@@ -48,8 +50,8 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al guardar el cliente")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       const message = selectedCustomer ? "Cliente actualizado" : "Cliente creado"
@@ -63,8 +65,11 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al guardar el cliente")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: selectedCustomer ? "Error al actualizar cliente" : "Error al crear cliente",
+      })
     }
   }
 
@@ -77,8 +82,8 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al eliminar el cliente")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success("Cliente eliminado")
@@ -91,8 +96,11 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al eliminar el cliente")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: "Error al eliminar cliente",
+      })
     }
   }
 
@@ -106,8 +114,8 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cambiar el estado del cliente")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success(newStatus ? "Cliente activado" : "Cliente desactivado")
@@ -119,8 +127,11 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al cambiar el estado del cliente")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: "Error al cambiar estado del cliente",
+      })
     }
   }
 

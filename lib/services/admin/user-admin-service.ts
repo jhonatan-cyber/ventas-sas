@@ -125,9 +125,16 @@ export class UserAdminService {
   static async changeUserPassword(id: string, newPassword: string): Promise<Profile> {
     const hashedPassword = await PasswordService.hashPassword(newPassword)
 
+    // Invalidar sesiones al cambiar contraseña
+    const { SessionManagement } = await import('@/lib/auth/session-management')
+    await SessionManagement.invalidateSessionsOnPasswordChange(id, 'admin')
+
     return prisma.profile.update({
       where: { id },
-      data: { password: hashedPassword }
+      data: { 
+        password: hashedPassword,
+        passwordChangedAt: new Date()
+      }
     })
   }
 

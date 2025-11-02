@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/prisma'
 import { Sale } from '@prisma/client'
+import { 
+  CursorPaginationOptions, 
+  CursorPaginationResult, 
+  buildCursorWhere,
+  createCursorResponse 
+} from '@/lib/utils/pagination'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
+import { logDatabase } from '@/lib/utils/logger'
+import { NotificationService } from '@/lib/services/notification-service'
 
 interface SaleItemInput {
   productId: string
@@ -63,6 +72,9 @@ export class SaleService {
     return `${prefix}-${year}${month}-${sequenceStr}`
   }
 
+  /**
+   * Obtener ventas con paginación offset-based (backward compatible)
+   */
   static async getAllSales(
     organizationId: string,
     skip: number = 0,
@@ -117,47 +129,86 @@ export class SaleService {
       }
     }
 
+    // Optimizado: usar include común para evitar N+1
     const [sales, total] = await Promise.all([
       prisma.sale.findMany({
         where,
         skip,
         take,
-        include: {
-          customer: {
-            select: {
-              id: true,
-              name: true,
-              lastName: true,
-              email: true,
-              phone: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-            },
-          },
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  price: true,
-                  imageUrl: true,
-                },
-              },
-            },
-          },
-        },
+        include: CommonIncludes.sale, // Usar include optimizado
         orderBy: { createdAt: 'desc' },
       }),
       prisma.sale.count({ where }),
     ])
 
     return { sales, total }
+  }
+
+  /**
+   * Obtener ventas con paginación cursor-based (optimizada)
+   */
+  static async getSalesCursor(
+    organizationId: string,
+    options: CursorPaginationOptions & {
+      search?: string
+      status?: string
+      paymentMethod?: string
+      customerId?: string
+      startDate?: Date
+      endDate?: Date
+    }
+  ): Promise<CursorPaginationResult<Sale & { customer?: any; user?: any; items?: any[] }>> {
+    const { limit = 20, cursor, search, status, paymentMethod, customerId, startDate, endDate } = options
+
+    const where: any = {
+      organizationId,
+      ...buildCursorWhere(cursor, 'createdAt', 'desc'), // Cursor-based pagination
+    }
+
+    if (search) {
+      where.OR = [
+        { saleNumber: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+        {
+          customer: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { lastName: { contains: search, mode: 'insensitive' } },
+            ],
+          },
+        },
+      ]
+    }
+
+    if (status && status !== 'all') {
+      where.status = status
+    }
+
+    if (paymentMethod && paymentMethod !== 'all') {
+      where.paymentMethod = paymentMethod
+    }
+
+    if (customerId) {
+      where.customerId = customerId
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {
+        ...where.createdAt, // Preservar cursor where
+        ...(startDate && { gte: startDate }),
+        ...(endDate && { lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) }),
+      }
+    }
+
+    // Obtener un registro extra para saber si hay más
+    const sales = await prisma.sale.findMany({
+      where,
+      take: limit + 1, // +1 para verificar si hay más
+      include: CommonIncludes.sale, // Include optimizado para evitar N+1
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return createCursorResponse(sales, 'createdAt', limit)
   }
 
   static async getSaleById(id: string): Promise<Sale | null> {
@@ -196,11 +247,11 @@ export class SaleService {
     })
 
     return prisma.$transaction(async (tx) => {
-      const productMap = new Map<string, { id: string; stock: number }>()
+      const productMap = new Map<string, { id: string; stock: number; minStock: number | null; name: string; organizationId: string | null; customerId: string | null }>()
       const productIds = normalizedItems.map((item) => item.productId)
       const products = await tx.salesProduct.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, stock: true },
+        select: { id: true, stock: true, minStock: true, name: true, organizationId: true, customerId: true },
       })
 
       products.forEach((product) => productMap.set(product.id, product))
@@ -281,6 +332,48 @@ export class SaleService {
           })
         }
       }
+
+      // Verificar stock bajo después de decrementar (después de la transacción)
+      Promise.all(
+        normalizedItems.map(async (item) => {
+          const product = productMap.get(item.productId)
+          if (!product || !product.organizationId) return
+
+          const newStock = product.stock - item.quantity
+          const minStock = product.minStock || 0
+
+          if (newStock <= minStock) {
+            return NotificationService.notifyStockLow(
+              product.organizationId,
+              product.id,
+              product.name,
+              newStock,
+              minStock,
+              product.customerId || undefined
+            ).catch((error) => {
+              logDatabase('NOTIFICATION_ERROR', 'notifications', undefined, error as Error, {
+                productId: product.id,
+              })
+            })
+          }
+        })
+      ).catch(() => {
+        // Ignorar errores en notificaciones
+      })
+
+      // Notificar nueva venta (después de la transacción para evitar errores)
+      // No esperamos la notificación para no bloquear la respuesta
+      NotificationService.notifyNewSale(
+        organizationId,
+        sale.id,
+        sale.saleNumber,
+        Number(sale.total),
+        sale.customerName || undefined
+      ).catch((error) => {
+        logDatabase('NOTIFICATION_ERROR', 'notifications', undefined, error as Error, {
+          saleId: sale.id,
+        })
+      })
 
       return sale
     })

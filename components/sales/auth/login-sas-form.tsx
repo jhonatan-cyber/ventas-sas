@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Mail, Lock, User } from "lucide-react"
 import { toast } from "sonner"
+import { TwoFactorInput } from "@/components/auth/two-factor-input"
 
 interface LoginSasFormProps {
   customerSlug: string
@@ -22,6 +23,8 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
   const [ci, setCi] = useState("")
   const [correo, setCorreo] = useState("")
   const [contraseña, setContraseña] = useState("")
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [tempToken, setTempToken] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,6 +71,14 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
       }
 
       if (data.success) {
+        // Si requiere 2FA
+        if (data.requires2FA && data.tempToken) {
+          setRequires2FA(true)
+          setTempToken(data.tempToken)
+          setIsLoading(false)
+          return
+        }
+
         toast.success("Sesión iniciada correctamente")
         
         // Esperar un momento para asegurar que las cookies se establezcan en el navegador
@@ -91,6 +102,27 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
       toast.error("Error de conexión")
       setIsLoading(false)
     }
+  }
+
+  const handle2FASuccess = (data: any) => {
+    const redirectUrl = data.redirect || `/${customerSlug}/dashboard`
+    setTimeout(() => {
+      window.location.href = redirectUrl
+    }, 150)
+  }
+
+  if (requires2FA && tempToken) {
+    return (
+      <TwoFactorInput
+        endpoint={`/api/${customerSlug}/login/verify-2fa`}
+        tempToken={tempToken}
+        onSuccess={handle2FASuccess}
+        onError={(err) => {
+          setError(err)
+          toast.error(err)
+        }}
+      />
+    )
   }
 
   return (

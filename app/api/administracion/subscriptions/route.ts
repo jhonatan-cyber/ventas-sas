@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SubscriptionManagementService } from '@/lib/services/admin/subscription-management-service'
+import { createSubscriptionSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener todas las suscripciones con paginación y filtros
 export async function GET(request: NextRequest) {
@@ -34,36 +40,66 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener suscripciones:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener las suscripciones' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_SUBSCRIPTIONS' }))
   }
 }
 
 // POST - Crear nueva suscripción
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { organizationId, customerId, planId, billingPeriod, startDate, endDate, autoRenew } = body
-
-    if ((!organizationId && !customerId) || !planId || !billingPeriod) {
-      return NextResponse.json(
-        { error: 'Cliente/Organización, plan y período de facturación son requeridos' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createSubscriptionSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Obtener usuario actual para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+
     const newSubscription = await SubscriptionManagementService.createSubscription({
-      organizationId,
-      customerId,
-      planId,
-      billingPeriod,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      autoRenew
+      organizationId: validatedData.organizationId || undefined,
+      customerId: validatedData.customerId || undefined,
+      planId: validatedData.planId,
+      billingPeriod: validatedData.billingPeriod,
+      status: validatedData.status || 'active',
+      autoRenew: validatedData.autoRenew,
+      startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
+      endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined
     })
+
+    // Registrar creación de suscripción en auditoría
+    if (currentUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          organizationId: newSubscription.organizationId || undefined,
+          customerId: newSubscription.customerId || undefined,
+          actionType: 'SUBSCRIPTION_CREATED',
+          entityType: 'Subscription',
+          entityId: newSubscription.id,
+          details: {
+            planId: newSubscription.planId,
+            planName: newSubscription.plan.name,
+            billingPeriod: newSubscription.billingPeriod,
+            status: newSubscription.status,
+            autoRenew: newSubscription.autoRenew,
+            startDate: newSubscription.startDate?.toISOString(),
+            endDate: newSubscription.endDate?.toISOString(),
+          },
+        },
+        request
+      )
+    }
 
     // Convertir Decimal a número
     const serialized = {
@@ -76,20 +112,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(serialized, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear suscripción:', error)
-    
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe una suscripción activa para esta organización' },
-        { status: 409 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: error.message || 'Error al crear la suscripción' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_SUBSCRIPTION' }))
   }
 }
 

@@ -3,49 +3,11 @@ import { SaleService } from '@/lib/services/sales/sale-service'
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
-
-function serializeSale(sale: any) {
-  return {
-    ...sale,
-    subtotal: Number(sale.subtotal ?? 0),
-    discount: Number(sale.discount ?? 0),
-    total: Number(sale.total ?? 0),
-    createdAt: sale.createdAt ? sale.createdAt.toISOString() : null,
-    updatedAt: sale.updatedAt ? sale.updatedAt.toISOString() : null,
-    customer: sale.customer
-      ? {
-          id: sale.customer.id,
-          name: sale.customer.name,
-          lastName: sale.customer.lastName,
-          email: sale.customer.email,
-          phone: sale.customer.phone,
-        }
-      : null,
-    user: sale.user
-      ? {
-          id: sale.user.id,
-          fullName: sale.user.fullName,
-          email: sale.user.email,
-        }
-      : null,
-    items: sale.items?.map((item: any) => ({
-      ...item,
-      unitPrice: Number(item.unitPrice ?? 0),
-      subtotal: Number(item.subtotal ?? 0),
-      trackingCodes: Array.isArray(item.trackingCodes)
-        ? item.trackingCodes.filter((code: any) => typeof code === 'string').map((code: string) => code.trim())
-        : [],
-      product: item.product
-        ? {
-            id: item.product.id,
-            name: item.product.name,
-            price: Number(item.product.price ?? 0),
-            imageUrl: item.product.imageUrl,
-          }
-        : null,
-    })),
-  }
-}
+import { createSaleSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeSale } from '@/lib/utils/serializers'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null
@@ -128,58 +90,66 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json({ error: 'Cliente no encontrado o inactivo' }, { status: 404 })
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
     const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+      throw AppError.unauthorized('No autenticado')
     }
 
-    if (!Array.isArray(body.items) || body.items.length === 0) {
-      return NextResponse.json({ error: 'La venta debe tener al menos un producto' }, { status: 400 })
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createSaleSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
 
     const salesUser = await ensureSalesUser(organizationId, currentUser)
     if (!salesUser) {
-      return NextResponse.json({ error: 'No se pudo asociar el usuario de ventas' }, { status: 400 })
+      throw AppError.validation('No se pudo asociar el usuario de ventas')
     }
 
-    const subtotal = Number(body.subtotal ?? 0)
-    const discount = Number(body.discount ?? 0)
-    const total = Number(body.total ?? 0)
-
+    // Crear venta con datos validados
     const sale = await SaleService.createSale(organizationId, {
       userId: salesUser.id,
-      customerId: body.customerId?.trim() || null,
-      status: body.status?.trim() || 'completed',
-      paymentMethod: body.paymentMethod?.trim() || 'cash',
-      subtotal,
-      discount,
-      total,
-      notes: body.notes?.trim() || null,
-      items: body.items.map((item: any) => ({
+      customerId: validatedData.customerId || null,
+      customerName: validatedData.customerName || null,
+      status: validatedData.status || 'completed',
+      paymentMethod: validatedData.paymentMethod || 'cash',
+      subtotal: validatedData.subtotal,
+      discount: validatedData.discount || 0,
+      total: validatedData.total,
+      notes: validatedData.notes || null,
+      items: validatedData.items.map((item) => ({
         productId: item.productId,
-        quantity: Number(item.quantity ?? 0),
-        unitPrice: Number(item.unitPrice ?? 0),
-        subtotal: Number(item.subtotal ?? 0),
-        trackingCodes: Array.isArray(item.trackingCodes)
-          ? item.trackingCodes
-              .map((code: any) => (typeof code === 'string' ? code.trim() : ''))
-              .filter((code: string) => code.length > 0)
-          : [],
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.subtotal,
+        trackingCodes: item.trackingCodes || [],
       })),
     })
 
     return NextResponse.json(serializeSale(sale), { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear venta:', error)
-    return NextResponse.json({ error: error.message || 'Error al crear la venta' }, { status: 500 })
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { 
+      action: 'CREATE_SALE',
+      organizationId,
+      userId: currentUser?.id 
+    }))
   }
 }

@@ -32,6 +32,12 @@ next-env.d.ts
 *.db
 *.db-journal
 
+# backups
+/backups
+*.sql
+*.dump
+*.meta.json
+
 # temp files
 temp_file.txt
 

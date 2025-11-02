@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Edit, Trash2, Power, PowerOff, Building2, Mail, Phone, MapPin } from "lucide-react"
 import { Branch } from "@prisma/client"
@@ -18,11 +19,7 @@ interface BranchesTableProps {
 
 export function BranchesTable({ branches, isLoading, onEditClick, onDeleteClick, onToggleStatus }: BranchesTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando sucursales...
-      </div>
-    )
+    return <TableSkeleton columns={4} rows={5} showActions={true} />
   }
 
   return (

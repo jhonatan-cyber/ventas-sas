@@ -2,33 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-
-function serializeCashRegister(register: any) {
-  return {
-    ...register,
-    openingBalance: Number(register.openingBalance ?? 0),
-    currentBalance: Number(register.currentBalance ?? 0),
-    lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
-    lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
-    createdAt: register.createdAt ? register.createdAt.toISOString() : null,
-    updatedAt: register.updatedAt ? register.updatedAt.toISOString() : null,
-    branch: register.branch || null,
-    openedBy: register.openedBy
-      ? {
-          id: register.openedBy.id,
-          nombre: register.openedBy.nombre,
-          apellido: register.openedBy.apellido,
-        }
-      : null,
-    closedBy: register.closedBy
-      ? {
-          id: register.closedBy.id,
-          nombre: register.closedBy.nombre,
-          apellido: register.closedBy.apellido,
-        }
-      : null,
-  }
-}
+import { createCashRegisterSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeCashRegister } from '@/lib/utils/serializers'
 
 // GET - Obtener todas las cajas con paginación y filtros
 export async function GET(
@@ -47,10 +25,7 @@ export async function GET(
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -72,11 +47,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener cajas:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener las cajas' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CASH_REGISTERS' }))
   }
 }
 
@@ -85,54 +56,53 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  let currentUser: any = null
+  
   try {
     const { slug } = await params
-    const body = await request.json()
 
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
-    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+    currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
+      throw AppError.unauthorized('No autenticado')
     }
 
-    const name = (body.name || '').trim()
-    const branchId = body.branchId?.trim() || undefined
-    const openingBalance = Number(body.openingBalance ?? 0)
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createCashRegisterSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
 
     const cashRegister = await CashRegisterService.createCashRegister(organizationId, {
-      name,
-      branchId,
-      openingBalance: isNaN(openingBalance) ? 0 : openingBalance,
+      name: validatedData.name,
+      branchId: validatedData.branchId || undefined,
+      openingBalance: validatedData.openingBalance || 0,
       openedById: currentUser.id,
     })
 
     return NextResponse.json(serializeCashRegister(cashRegister), { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear caja:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear la caja' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { 
+      action: 'CREATE_CASH_REGISTER',
+      userId: currentUser?.id 
+    }))
   }
 }
 

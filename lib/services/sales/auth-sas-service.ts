@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { SasJWTService } from '@/lib/auth/sas-jwt'
 import { PasswordService } from '@/lib/auth/password'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import type { NextRequest } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 
 export interface LoginSasCredentials {
   ci?: string
@@ -18,7 +20,11 @@ export interface AuthSasResult {
 
 export class AuthSasService {
   // Login de usuario del sistema SAS
-  static async login(customerSlug: string, credentials: LoginSasCredentials): Promise<AuthSasResult> {
+  static async login(
+    customerSlug: string, 
+    credentials: LoginSasCredentials,
+    request?: NextRequest
+  ): Promise<AuthSasResult> {
     try {
       const { ci, correo, contraseña } = credentials
 
@@ -58,7 +64,20 @@ export class AuthSasService {
 
       const usuario = await prisma.usuarioSas.findFirst({
         where,
-        include: {
+        select: {
+          id: true,
+          ci: true,
+          nombre: true,
+          apellido: true,
+          correo: true,
+          direccion: true,
+          telefono: true,
+          foto: true,
+          contraseña: true,
+          isActive: true,
+          customerId: true,
+          twoFactorEnabled: true,
+          twoFactorSecret: true,
           rol: {
             select: {
               id: true,
@@ -112,8 +131,67 @@ export class AuthSasService {
         }
       }
 
-      // Generar token JWT (SAS)
-      const token = SasJWTService.generateToken({ userId: usuario.id, correo: usuario.correo || undefined })
+      // Verificar si tiene 2FA habilitado
+      if (usuario.twoFactorEnabled && usuario.twoFactorSecret) {
+        // Generar token temporal (válido por 5 minutos) para verificación 2FA
+        const { default: jwt } = await import('jsonwebtoken')
+        const SAS_JWT_SECRET = process.env.SAS_JWT_SECRET || 'dev-sas-secret'
+        
+        const tempToken = jwt.sign(
+          {
+            userId: usuario.id,
+            customerId: usuario.customer.id,
+            temp: true,
+          },
+          SAS_JWT_SECRET,
+          { expiresIn: '5m' } // 5 minutos para verificar 2FA
+        )
+
+        // Preparar datos del usuario (sin información sensible)
+        const userData = {
+          id: usuario.id,
+          nombre: usuario.nombre,
+          apellido: usuario.apellido,
+          correo: usuario.correo,
+          customer: usuario.customer,
+        }
+
+        return {
+          success: true,
+          user: userData,
+          requires2FA: true,
+          tempToken, // Token temporal para verificar 2FA
+        }
+      }
+
+      // No tiene 2FA: proceder con login normal
+      // Crear sesión en BD
+      const { SessionManagement } = await import('@/lib/auth/session-management')
+      
+      // Obtener info del request
+      const ipAddress = request?.ip || request?.headers.get('x-forwarded-for')?.split(',')[0] || undefined
+      const userAgent = request?.headers.get('user-agent') || undefined
+      const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
+      
+      const sessionToken = await SessionManagement.createSession({
+        userId: usuario.id,
+        customerId: usuario.customer.id,
+        systemType: 'sas',
+        ipAddress,
+        userAgent,
+        deviceInfo,
+      }, {
+        forceSingleSession: false, // Permitir múltiples sesiones
+        trackDevice: true,
+      })
+
+      // Generar token JWT (SAS) con sessionId
+      const token = await SasJWTService.generateToken({ 
+        userId: usuario.id, 
+        correo: usuario.correo || undefined,
+        customerId: usuario.customer.id,
+        sessionId: sessionToken
+      })
 
       // Preparar datos del usuario (sin contraseña)
       const userData = {
@@ -138,7 +216,11 @@ export class AuthSasService {
       }
 
     } catch (error) {
-      console.error('Error en login SAS:', error)
+      logger.error('Error en login SAS', error as Error, {
+        customerSlug,
+        hasCi: !!credentials.ci,
+        hasCorreo: !!credentials.correo,
+      })
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -174,7 +256,9 @@ export class AuthSasService {
       return usuarioSinPassword
 
     } catch (error) {
-      console.error('Error verificando token SAS:', error)
+      logger.error('Error verificando token SAS', error as Error, {
+        customerSlug,
+      })
       return null
     }
   }

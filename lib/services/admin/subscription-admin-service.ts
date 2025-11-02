@@ -225,17 +225,43 @@ export class SubscriptionAdminService {
   static async getRevenueByPlan() {
     const plans = await prisma.subscriptionPlan.findMany({
       include: {
-        organizations: true
+        organizations: {
+          include: {
+            subscriptions: {
+              where: {
+                status: 'active'
+              },
+              take: 1,
+              orderBy: {
+                startDate: 'desc'
+              }
+            }
+          }
+        }
       }
     })
 
-    return plans.map(plan => ({
-      planId: plan.id,
-      planName: plan.name,
-      price: plan.price,
-      organizations: plan.organizations.length,
-      totalRevenue: plan.price.toNumber() * plan.organizations.length
-    }))
+    return plans.map(plan => {
+      // Usar priceMonthly como base (o priceYearly / 12 si solo tiene yearly)
+      const basePrice = plan.priceMonthly 
+        ? plan.priceMonthly.toNumber() 
+        : (plan.priceYearly ? plan.priceYearly.toNumber() / 12 : 0)
+      
+      const activeOrganizations = plan.organizations.filter(org => {
+        // Organización activa si tiene suscripción activa
+        return org.subscriptions && org.subscriptions.length > 0
+      }).length
+
+      return {
+        planId: plan.id,
+        planName: plan.name,
+        priceMonthly: plan.priceMonthly?.toNumber() || 0,
+        priceYearly: plan.priceYearly?.toNumber() || 0,
+        organizations: plan.organizations.length,
+        activeOrganizations,
+        totalRevenue: basePrice * activeOrganizations
+      }
+    })
   }
 
   // Validar límites de plan

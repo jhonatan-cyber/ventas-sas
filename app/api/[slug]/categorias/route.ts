@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { createCategorySchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todas las categorías con paginación y filtros
 export async function GET(
@@ -17,10 +21,7 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -41,11 +42,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener categorías:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener las categorías' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CATEGORIES' }))
   }
 }
 
@@ -56,36 +53,36 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
-    const { name, description } = body
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
-    }
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createCategorySchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
     const newCategory = await CategoryService.createCategory(customer.id, {
-      name,
-      description
+      name: validatedData.name,
+      description: validatedData.description || undefined
     })
 
     return NextResponse.json(newCategory, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear categoría:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear la categoría' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_CATEGORY' }))
   }
 }
 

@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Edit, Trash2, Power, PowerOff, Folder } from "lucide-react"
 import { Category } from "@prisma/client"
@@ -17,11 +18,7 @@ interface CategoriesTableProps {
 
 export function CategoriesTable({ categories, isLoading, onEditClick, onDeleteClick, onToggleStatus }: CategoriesTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando categorías...
-      </div>
-    )
+    return <TableSkeleton columns={3} rows={5} showActions={true} />
   }
 
   return (

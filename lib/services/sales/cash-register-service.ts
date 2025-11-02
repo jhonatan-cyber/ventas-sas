@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { CashRegister } from '@prisma/client'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
+import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateCashRegisterData {
   name: string
@@ -46,71 +48,41 @@ export class CashRegisterService {
       where.isOpen = isOpen
     }
 
+    const startTime = Date.now()
     const [cashRegisters, total] = await Promise.all([
       prisma.cashRegister.findMany({
         where,
         skip,
         take,
-        include: {
-          branch: {
-            select: {
-              id: true,
-              name: true,
-              address: true
-            }
-          },
-          organization: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          openedBy: {
-            select: {
-              id: true,
-              nombre: true,
-              apellido: true
-            }
-          },
-          closedBy: {
-            select: {
-              id: true,
-              nombre: true,
-              apellido: true
-            }
-          }
-        },
+        include: CommonIncludes.cashRegister, // Usar include optimizado
         orderBy: { createdAt: 'desc' }
       }),
       prisma.cashRegister.count({ where })
     ])
+    
+    const duration = Date.now() - startTime
+    logDatabase('FIND_MANY', 'cash_registers', duration, undefined, {
+      organizationId,
+      count: cashRegisters.length,
+    })
 
     return { cashRegisters, total }
   }
 
   // Obtener caja por ID
   static async getCashRegisterById(id: string): Promise<CashRegister | null> {
-    return prisma.cashRegister.findUnique({
+    const startTime = Date.now()
+    const cashRegister = await prisma.cashRegister.findUnique({
       where: { id },
-      include: {
-        branch: true,
-        organization: true,
-        openedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        },
-        closedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
+      include: CommonIncludes.cashRegister, // Usar include optimizado
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('FIND_UNIQUE', 'cash_registers', duration, undefined, {
+      cashRegisterId: id,
+    })
+    
+    return cashRegister
   }
 
   // Crear nueva caja
@@ -133,28 +105,7 @@ export class CashRegisterService {
         closedById: null,
         lastCloseAt: null
       },
-      include: {
-        branch: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        openedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        },
-        closedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
+      include: CommonIncludes.cashRegister, // Usar include optimizado
     })
   }
 
@@ -163,32 +114,19 @@ export class CashRegisterService {
     id: string,
     data: UpdateCashRegisterData
   ): Promise<CashRegister> {
-    return prisma.cashRegister.update({
+    const startTime = Date.now()
+    const updated = await prisma.cashRegister.update({
       where: { id },
       data,
-      include: {
-        branch: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        openedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        },
-        closedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
+      include: CommonIncludes.cashRegister, // Usar include optimizado
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('UPDATE', 'cash_registers', duration, undefined, {
+      cashRegisterId: id,
+    })
+    
+    return updated
   }
 
   // Eliminar caja
@@ -225,28 +163,7 @@ export class CashRegisterService {
         closedById: null,
         lastCloseAt: null
       },
-      include: {
-        branch: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        openedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        },
-        closedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
+      include: CommonIncludes.cashRegister, // Usar include optimizado
     })
   }
 
@@ -271,28 +188,7 @@ export class CashRegisterService {
         lastCloseAt: new Date(),
         closedById: userId
       },
-      include: {
-        branch: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        openedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        },
-        closedBy: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
+      include: CommonIncludes.cashRegister, // Usar include optimizado
     })
   }
 

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { createBranchSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todas las sucursales con paginación y filtros
 export async function GET(
@@ -17,10 +21,7 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -41,11 +42,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener sucursales:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener las sucursales' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_BRANCHES' }))
   }
 }
 
@@ -56,37 +53,38 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
-    if (!body.name || body.name.trim() === '') {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createBranchSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
 
     const branch = await BranchService.createBranch(customer.id, {
-      name: body.name.trim(),
-      address: body.address?.trim(),
-      phone: body.phone?.trim(),
-      email: body.email?.trim()
+      name: validatedData.name,
+      address: validatedData.address || undefined,
+      phone: validatedData.phone || undefined,
+      email: validatedData.email || undefined
     })
 
     return NextResponse.json(branch, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear sucursal:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear la sucursal' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_BRANCH' }))
   }
 }
 

@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { CashRegister } from "@prisma/client"
 import { formatDateTime } from "@/lib/utils/date"
 import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
+import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
 
 type CashRegisterWithRelations = CashRegister & {
   branch?: { id: string; name: string; address?: string | null } | null
@@ -42,11 +43,7 @@ export function CashRegistersTable({
   showBranchInfo = true,
 }: CashRegistersTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando cajas...
-      </div>
-    )
+    return <CardsGridSkeleton count={6} columns={3} />
   }
 
   if (cashRegisters.length === 0) {

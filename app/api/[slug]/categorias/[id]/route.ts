@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener categoría por ID
 export async function GET(
@@ -12,36 +14,24 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const category = await CategoryService.getCategoryById(id)
     
     if (!category) {
-      return NextResponse.json(
-        { error: 'Categoría no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Categoría no encontrada')
     }
 
     // Verificar que la categoría pertenece al cliente
     if (category.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 }
-      )
+      throw AppError.forbidden('No autorizado')
     }
 
     return NextResponse.json(category)
   } catch (error) {
-    console.error('Error al obtener categoría:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener la categoría' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CATEGORY', categoryId: id }))
   }
 }
 
@@ -52,24 +42,25 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+    
     const { name, description, isActive } = body
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la categoría existe y pertenece al cliente
     const existingCategory = await CategoryService.getCategoryById(id)
     if (!existingCategory || existingCategory.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'Categoría no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Categoría no encontrada')
     }
 
     const category = await CategoryService.updateCategory(id, {
@@ -79,12 +70,9 @@ export async function PUT(
     })
 
     return NextResponse.json(category)
-  } catch (error: any) {
-    console.error('Error al actualizar categoría:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar la categoría' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_CATEGORY', categoryId: id }))
   }
 }
 
@@ -98,29 +86,20 @@ export async function DELETE(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la categoría existe y pertenece al cliente
     const existingCategory = await CategoryService.getCategoryById(id)
     if (!existingCategory || existingCategory.customerId !== customer.id) {
-      return NextResponse.json(
-        { error: 'Categoría no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Categoría no encontrada')
     }
 
     await CategoryService.deleteCategory(id)
     return NextResponse.json({ message: 'Categoría eliminada correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar categoría:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar la categoría' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_CATEGORY', categoryId: id }))
   }
 }
 

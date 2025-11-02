@@ -4,10 +4,12 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesExpenseWithRelations } from "@/components/sales/expense/types"
+import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
 export function useExpenseActions(customerSlug: string, onExpensesChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedExpense, setSelectedExpense] = useState<SalesExpenseWithRelations | undefined>()
@@ -48,8 +50,8 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al guardar el gasto")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       const message = selectedExpense ? "Gasto actualizado" : "Gasto creado"
@@ -63,8 +65,11 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al guardar el gasto")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: selectedExpense ? "Error al actualizar gasto" : "Error al crear gasto",
+      })
     }
   }
 
@@ -77,8 +82,8 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al eliminar el gasto")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success("Gasto eliminado")
@@ -91,8 +96,11 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al eliminar el gasto")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: "Error al eliminar gasto",
+      })
     }
   }
 

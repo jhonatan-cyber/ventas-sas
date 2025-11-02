@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RoleSasService } from '@/lib/services/sales/role-sas-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener rol por ID
 export async function GET(
@@ -11,19 +13,13 @@ export async function GET(
     const role = await RoleSasService.getRoleById(id)
     
     if (!role) {
-      return NextResponse.json(
-        { error: 'Rol no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Rol no encontrado')
     }
 
     return NextResponse.json(role)
   } catch (error) {
-    console.error('Error al obtener rol:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el rol' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_SAS_ROLE', roleId: id }))
   }
 }
 
@@ -34,7 +30,14 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+    
     const { nombre, descripcion, sucursalId, isActive } = body
 
     const role = await RoleSasService.updateRole(id, {
@@ -45,12 +48,9 @@ export async function PUT(
     })
 
     return NextResponse.json(role)
-  } catch (error: any) {
-    console.error('Error al actualizar rol:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el rol' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_SAS_ROLE', roleId: id }))
   }
 }
 
@@ -63,19 +63,16 @@ export async function DELETE(
     const { id } = await params
     const role = await RoleSasService.getRoleById(id)
     if (!role) {
-      return NextResponse.json({ error: 'Rol no encontrado' }, { status: 404 })
+      throw AppError.notFound('Rol no encontrado')
     }
     if ((role.nombre || '').toLowerCase() === 'administrador') {
-      return NextResponse.json({ error: 'No se puede eliminar el rol Administrador' }, { status: 400 })
+      throw AppError.badRequest('No se puede eliminar el rol Administrador')
     }
     await RoleSasService.deleteRole(id)
     return NextResponse.json({ message: 'Rol eliminado correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar rol:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar el rol' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_SAS_ROLE', roleId: id }))
   }
 }
 

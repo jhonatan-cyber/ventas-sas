@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Edit, Trash2, Power, PowerOff, User } from "lucide-react"
 import { UsuarioSas } from "@prisma/client"
@@ -24,11 +25,7 @@ interface UsuariosSasTableProps {
 export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditClick, onDeleteClick, onToggleStatus }: UsuariosSasTableProps) {
   const showSucursalColumn = (sucursalesCount || 0) > 1
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando usuarios...
-      </div>
-    )
+    return <TableSkeleton columns={showSucursalColumn ? 6 : 5} rows={5} showActions={true} />
   }
 
   return (

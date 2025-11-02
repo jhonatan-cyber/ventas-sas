@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/prisma'
 import { Quotation } from '@prisma/client'
+import { 
+  CursorPaginationOptions, 
+  CursorPaginationResult, 
+  buildCursorWhere,
+  createCursorResponse 
+} from '@/lib/utils/pagination'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
+import { logDatabase } from '@/lib/utils/logger'
+import { NotificationService } from '@/lib/services/notification-service'
 
 const endOfDay = (date: Date) => {
   const end = new Date(date)
@@ -125,42 +134,13 @@ export class QuotationService {
       where.customerId = customerId
     }
 
+    // Optimizado: usar include común para evitar N+1
     const [quotationsData, total] = await Promise.all([
       prisma.quotation.findMany({
         where,
         skip,
         take,
-        include: {
-          customer: {
-            select: {
-              id: true,
-              name: true,
-              lastName: true,
-              email: true,
-              phone: true,
-              address: true,
-              ruc: true
-            }
-          },
-          branch: {
-            select: {
-              id: true,
-              name: true,
-              address: true
-            }
-          },
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  price: true
-                }
-              }
-            }
-          }
-        },
+        include: CommonIncludes.quotation, // Include optimizado
         orderBy: { createdAt: 'desc' }
       }),
       prisma.quotation.count({ where })
@@ -218,26 +198,92 @@ export class QuotationService {
     return { quotations, total }
   }
 
+  /**
+   * Obtener cotizaciones con paginación cursor-based (optimizada)
+   */
+  static async getQuotationsCursor(
+    organizationId: string,
+    options: CursorPaginationOptions & {
+      search?: string
+      status?: string
+      customerId?: string
+    }
+  ): Promise<CursorPaginationResult<Quotation & { customer?: any; branch?: any; items?: any[] }>> {
+    const { limit = 20, cursor, search, status, customerId } = options
+
+    const where: any = {
+      organizationId,
+      ...buildCursorWhere(cursor, 'createdAt', 'desc'),
+    }
+
+    if (search) {
+      where.OR = [
+        { quotationNumber: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+        { customerName: { contains: search, mode: 'insensitive' } },
+        { customer: { name: { contains: search, mode: 'insensitive' } } }
+      ]
+    }
+
+    if (status && status !== 'all') {
+      where.status = status
+    }
+
+    if (customerId) {
+      where.customerId = customerId
+    }
+
+    const quotationsData = await prisma.quotation.findMany({
+      where,
+      take: limit + 1,
+      include: CommonIncludes.quotation,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    // Verificar y actualizar expiradas (sin bloquear paginación)
+    const now = new Date()
+    quotationsData.forEach((q) => {
+      if (q.expiresAt && endOfDay(new Date(q.expiresAt)) < now && q.status !== 'expired') {
+        // Actualizar en background (no bloquear respuesta)
+        prisma.quotation.update({
+          where: { id: q.id },
+          data: { status: 'expired' }
+        }).catch(() => {})
+      }
+    })
+
+    const quotations = quotationsData.filter((q) => {
+      if (q.expiresAt && endOfDay(new Date(q.expiresAt)) < now) {
+        return q.status === 'expired'
+      }
+      return true
+    })
+
+    return createCursorResponse(quotations, 'createdAt', limit)
+  }
+
   // Obtener cotización por ID
   static async getQuotationById(id: string): Promise<Quotation | null> {
-    return prisma.quotation.findUnique({
+    const startTime = Date.now()
+    const quotation = await prisma.quotation.findUnique({
       where: { id },
       include: {
-        customer: true,
-        branch: true,
-        items: {
-          include: {
-            product: true
-          }
-        },
+        ...CommonIncludes.quotation, // Usar include optimizado
         organization: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     })
+    
+    const duration = Date.now() - startTime
+    logDatabase('FIND_UNIQUE', 'quotations', duration, undefined, {
+      quotationId: id,
+    })
+    
+    return quotation
   }
 
   // Crear nueva cotización
@@ -308,7 +354,7 @@ export class QuotationService {
       }
 
       // Retornar la cotización completa
-      return tx.quotation.findUnique({
+      const fullQuotation = await tx.quotation.findUnique({
         where: { id: quotation.id },
         include: {
           customer: true,
@@ -319,7 +365,24 @@ export class QuotationService {
             }
           }
         }
-      }) as Promise<Quotation>
+      })
+
+      // Notificar nueva cotización (después de la transacción)
+      if (fullQuotation) {
+        NotificationService.notifyNewQuotation(
+          organizationId,
+          fullQuotation.id,
+          fullQuotation.quotationNumber,
+          Number(fullQuotation.total),
+          fullQuotation.customerName || undefined
+        ).catch((error) => {
+          logDatabase('NOTIFICATION_ERROR', 'notifications', undefined, error as Error, {
+            quotationId: fullQuotation.id,
+          })
+        })
+      }
+
+      return fullQuotation as Quotation
     })
   }
 

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { createQuotationSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeQuotation } from '@/lib/utils/serializers'
 
 const capitalizeWords = (value: string) =>
   value
@@ -37,10 +42,7 @@ export async function GET(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -55,18 +57,14 @@ export async function GET(
     )
 
     return NextResponse.json({
-      quotations,
+      quotations: quotations.map(serializeQuotation),
       total,
       page,
       pageSize,
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener cotizaciones:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener las cotizaciones' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_QUOTATIONS' }))
   }
 }
 
@@ -77,55 +75,49 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
-    const hasExistingCustomer = typeof body.customerId === 'string' && body.customerId.trim().length > 0
-    const manualCustomerName = typeof body.customerName === 'string' ? body.customerName.trim() : ''
-
-    if (!hasExistingCustomer && manualCustomerName.length === 0) {
-      return NextResponse.json(
-        { error: 'Debe seleccionar un cliente o escribir un nombre' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    if (!body.items || body.items.length === 0) {
-      return NextResponse.json(
-        { error: 'Debe agregar al menos un producto' },
-        { status: 400 }
-      )
+    // Validar estructura básica con Zod
+    // Nota: Validamos la estructura pero permitimos items con productId o productName
+    const validation = await validateRequestBody(createQuotationSchema, body)
+    if (!validation.success) {
+      return validation.response
     }
 
-    const normalizedItems = body.items.map((item: any, index: number) => {
-      const rawProductId = typeof item.productId === 'string' ? item.productId.trim() : ''
-      const productId = rawProductId.length > 0 ? rawProductId : null
-      const manualName = typeof item.productName === 'string' ? capitalizeWords(item.productName.trim()) : ''
+    const validatedData = validation.data
 
-      if (!productId && manualName.length === 0) {
-        throw new Error(`El producto en la posición ${index + 1} requiere un identificador o un nombre.`)
+    // Normalizar items (productId o productName)
+    const normalizedItems = validatedData.items.map((item: any, index: number) => {
+      const rawProductId = item.productId ? String(item.productId).trim() : ''
+      const productId = rawProductId.length > 0 && rawProductId !== 'null' ? rawProductId : null
+      const manualName = item.productName ? capitalizeWords(String(item.productName).trim()) : ''
+
+      if (!productId && !manualName) {
+        throw AppError.validation(`El producto en la posición ${index + 1} requiere un identificador o un nombre.`)
       }
 
-      const quantity = Number(item.quantity ?? 0)
-      const unitPrice = Number(item.unitPrice ?? 0)
-      const subtotal = Number(item.subtotal ?? quantity * unitPrice)
-
       return {
-        productId,
-        productName: manualName.length > 0 ? manualName : undefined,
-        quantity,
-        unitPrice,
-        subtotal,
+        productId: productId || undefined,
+        productName: manualName || undefined,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.subtotal,
       }
     })
 
+    // Obtener branchId del usuario o cookie
     const token = request.cookies.get('sas-auth-token')?.value
     const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
     let branchId: string | null = currentUser?.sucursalId ?? currentUser?.sucursal?.id ?? null
@@ -142,31 +134,24 @@ export async function POST(
       }
     }
 
-    const customerPhone = normalizePhone(body.customerPhone)
+    const customerPhone = normalizePhone(validatedData.customerPhone || undefined)
 
     const quotation = await QuotationService.createQuotation(organizationId, {
-      customerId: hasExistingCustomer ? body.customerId : undefined,
-      customerName: !hasExistingCustomer ? manualCustomerName : undefined,
-      branchId,
+      customerId: validatedData.customerId || undefined,
+      customerName: validatedData.customerName || undefined,
+      branchId: branchId || validatedData.branchId || undefined,
       customerPhone,
-      subtotal: body.subtotal || 0,
-      discount: body.discount || 0,
-      total: body.total || 0,
-      expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
-      notes: body.notes,
+      subtotal: validatedData.subtotal,
+      discount: validatedData.discount || 0,
+      total: validatedData.total,
+      expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : undefined,
+      notes: validatedData.notes || undefined,
       items: normalizedItems
     })
 
-    return NextResponse.json(quotation, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear cotización:', error)
-    if (error instanceof Error && error.message.startsWith('El producto en la posición')) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-    return NextResponse.json(
-      { error: error.message || 'Error al crear la cotización' },
-      { status: 500 }
-    )
+    return NextResponse.json(serializeQuotation(quotation), { status: 201 })
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_QUOTATION' }))
   }
 }
 

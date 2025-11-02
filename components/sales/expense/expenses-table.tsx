@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Edit, Trash2, DollarSign } from "lucide-react"
 import { formatDate } from "@/lib/utils/date"
 import { SalesExpenseWithRelations } from "./types"
@@ -16,11 +17,7 @@ interface ExpensesTableProps {
 
 export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick }: ExpensesTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando gastos...
-      </div>
-    )
+    return <TableSkeleton columns={6} rows={5} showActions={true} />
   }
 
   return (

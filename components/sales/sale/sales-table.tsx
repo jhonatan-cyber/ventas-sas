@@ -4,6 +4,7 @@ import { FC } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Eye, Pencil, Trash2, Receipt, Ban } from "lucide-react"
 import { SalesSaleWithRelations } from "./types"
@@ -42,7 +43,7 @@ const paymentTokens: Record<string, string> = {
 
 export const SalesTable: FC<SalesTableProps> = ({ sales, isLoading, onViewDetails, onEdit, onDelete, onCancel }) => {
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando ventas...</div>
+    return <TableSkeleton columns={6} rows={5} showActions={true} />
   }
 
   return (

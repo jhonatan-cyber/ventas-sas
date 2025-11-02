@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Edit, Trash2, Power, PowerOff, User } from "lucide-react"
@@ -18,11 +19,7 @@ interface SalesCustomersTableProps {
 
 export function SalesCustomersTable({ customers, isLoading, onEditClick, onDeleteClick, onToggleStatus }: SalesCustomersTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando clientes...
-      </div>
-    )
+    return <TableSkeleton columns={4} rows={5} showActions={true} />
   }
 
   return (

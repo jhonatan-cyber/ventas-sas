@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeQuotation } from '@/lib/utils/serializers'
 
 const capitalizeWords = (value: string) =>
   value
@@ -30,36 +33,24 @@ export async function GET(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const quotation = await QuotationService.getQuotationById(id)
 
     if (!quotation) {
-      return NextResponse.json(
-        { error: 'Cotización no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cotización no encontrada')
     }
 
     // Verificar que la cotización pertenece a la organización
     if (quotation.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 }
-      )
+      throw AppError.forbidden('No autorizado')
     }
 
-    return NextResponse.json(quotation)
+    return NextResponse.json(serializeQuotation(quotation))
   } catch (error) {
-    console.error('Error al obtener cotización:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener la cotización' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_QUOTATION', quotationId: id }))
   }
 }
 
@@ -70,29 +61,29 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la cotización existe y pertenece a la organización
     const existingQuotation = await QuotationService.getQuotationById(id)
     if (!existingQuotation || existingQuotation.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Cotización no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cotización no encontrada')
     }
 
     // Si se actualiza el status directamente
     if (body.status && !body.items) {
       const quotation = await QuotationService.updateStatus(id, body.status)
-      return NextResponse.json(quotation)
+      return NextResponse.json(serializeQuotation(quotation))
     }
 
     // Actualización completa
@@ -103,7 +94,7 @@ export async function PUT(
           const manualName = typeof item.productName === 'string' ? capitalizeWords(item.productName.trim()) : ''
 
           if (!productId && manualName.length === 0) {
-            throw new Error(`El producto en la posición ${index + 1} requiere un identificador o un nombre.`)
+            throw AppError.validation(`El producto en la posición ${index + 1} requiere un identificador o un nombre.`)
           }
 
           const quantity = Number(item.quantity ?? 0)
@@ -134,15 +125,9 @@ export async function PUT(
     })
 
     return NextResponse.json(quotation)
-  } catch (error: any) {
-    console.error('Error al actualizar cotización:', error)
-    if (error instanceof Error && error.message.startsWith('El producto en la posición')) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar la cotización' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_QUOTATION', quotationId: id }))
   }
 }
 
@@ -156,30 +141,21 @@ export async function DELETE(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la cotización existe y pertenece a la organización
     const existingQuotation = await QuotationService.getQuotationById(id)
     if (!existingQuotation || existingQuotation.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Cotización no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cotización no encontrada')
     }
 
     await QuotationService.deleteQuotation(id)
 
     return NextResponse.json({ message: 'Cotización eliminada correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar cotización:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar la cotización' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_QUOTATION', quotationId: id }))
   }
 }
 

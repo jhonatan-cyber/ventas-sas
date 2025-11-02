@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, Building2, CreditCard, UserCog, TrendingUp, Activity, DollarSign, BarChart3, Zap, CheckCircle, XCircle } from "lucide-react"
 import { AdminService } from "@/lib/services/admin/admin-service"
 import { AuthService } from "@/lib/services/auth-service"
+import { AdminAnalyticsClient } from "@/components/analytics/admin-analytics-client"
 
 export default async function AdminPage() {
   // Validación de sesión Admin en el servidor
@@ -14,7 +15,7 @@ export default async function AdminPage() {
   if (!token) {
     redirect('/administracion/login')
   }
-  const payload = AdminJWTService.verifyToken(token!)
+  const payload = await AdminJWTService.verifyToken(token!)
   if (!payload) {
     redirect('/administracion/login')
   }
@@ -148,6 +149,14 @@ export default async function AdminPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Analytics */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Analytics del Sistema
+          </h2>
+          <AdminAnalyticsClient />
+        </div>
       </div>
     </AdminLayout>
   )

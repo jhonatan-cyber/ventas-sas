@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Edit, Trash2, Power, PowerOff, Shield } from "lucide-react"
 import { RoleSas } from "@prisma/client"
@@ -20,11 +21,7 @@ interface RolesSasTableProps {
 
 export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, onToggleStatus }: RolesSasTableProps) {
   if (isLoading) {
-    return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-        Cargando roles...
-      </div>
-    )
+    return <TableSkeleton columns={3} rows={5} showActions={true} />
   }
 
   return (

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { createSalesCustomerSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todos los clientes con paginación y filtros
 export async function GET(
@@ -18,10 +22,7 @@ export async function GET(
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -42,11 +43,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener clientes:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los clientes' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CUSTOMERS' }))
   }
 }
 
@@ -57,46 +54,43 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
-    const name = (body.name || '').trim()
-    const lastName = (body.lastName || '').trim()
-    const email = body.email?.trim()
-    const phone = body.phone?.trim()
-    const address = body.address?.trim()
-    const ruc = body.ruc?.trim()?.toUpperCase()
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
-    }
 
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createSalesCustomerSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
     const newCustomer = await SalesCustomerService.createCustomer(organizationId, {
-      name,
-      lastName: lastName || undefined,
-      email,
-      phone,
-      address,
-      ruc
+      name: validatedData.name,
+      lastName: validatedData.lastName || undefined,
+      email: validatedData.email || undefined,
+      phone: validatedData.phone || undefined,
+      address: validatedData.address || undefined,
+      city: validatedData.city || undefined,
+      country: validatedData.country || undefined,
+      ruc: validatedData.ruc || undefined
     })
 
     return NextResponse.json(newCustomer, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear cliente:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el cliente' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_CUSTOMER' }))
   }
 }
 

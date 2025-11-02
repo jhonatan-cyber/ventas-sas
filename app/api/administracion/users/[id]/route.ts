@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserAdminService } from '@/lib/services/admin/user-admin-service'
 import { PasswordService } from '@/lib/auth/password'
+import { updateUserSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener usuario por ID
 export async function GET(
@@ -12,19 +18,13 @@ export async function GET(
     const user = await UserAdminService.getUserById(id)
     
     if (!user) {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Usuario no encontrado')
     }
 
     return NextResponse.json(user)
   } catch (error) {
-    console.error('Error al obtener usuario:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el usuario' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_ADMIN_USER', userId: id }))
   }
 }
 
@@ -35,52 +35,106 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
-    const { email, password, ci, fullName, address, phone, role, roleId, isSuperAdmin, isActive } = body
+
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(updateUserSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
 
     const updateData: any = {}
     
-    if (email) updateData.email = email.trim()
-    if (ci !== undefined) updateData.ci = ci?.trim() || null
-    if (fullName !== undefined) updateData.fullName = fullName?.trim() || null
-    if (address !== undefined) updateData.address = address?.trim() || null
-    if (phone !== undefined) updateData.phone = phone?.trim() || null
-    if (role) updateData.role = role
-    if (roleId) updateData.roleId = roleId
-    if (isSuperAdmin !== undefined) updateData.isSuperAdmin = isSuperAdmin
-    if (isActive !== undefined) updateData.isActive = isActive
+    if (validatedData.email !== undefined) updateData.email = validatedData.email
+    if (validatedData.ci !== undefined) updateData.ci = validatedData.ci || null
+    if (validatedData.fullName !== undefined) updateData.fullName = validatedData.fullName || null
+    if (validatedData.address !== undefined) updateData.address = validatedData.address || null
+    if (validatedData.phone !== undefined) updateData.phone = validatedData.phone || null
+    if (validatedData.role !== undefined) updateData.role = validatedData.role
+    // roleId puede venir del body si no está en el schema
+    if (body.roleId !== undefined) updateData.roleId = body.roleId
+    if (validatedData.isSuperAdmin !== undefined) updateData.isSuperAdmin = validatedData.isSuperAdmin
+    if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive
 
     // Si se proporciona una nueva contraseña, hashearla
-    if (password && password.trim() !== '') {
-      updateData.password = await PasswordService.hashPassword(password)
+    if (validatedData.password && validatedData.password.trim() !== '') {
+      updateData.password = await PasswordService.hashPassword(validatedData.password)
     }
+
+    // Obtener usuario actual y usuario objetivo para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+    const targetUser = await UserAdminService.getUserById(id)
 
     const updatedUser = await UserAdminService.updateUser(id, updateData)
 
+    // Registrar actualización de usuario en auditoría
+    if (currentUser) {
+      const changedFields: string[] = []
+      if (validatedData.email !== undefined && targetUser?.email !== validatedData.email) {
+        changedFields.push('email')
+      }
+      if (validatedData.role !== undefined && targetUser?.role !== validatedData.role) {
+        changedFields.push('role')
+      }
+      if (validatedData.isSuperAdmin !== undefined && targetUser?.isSuperAdmin !== validatedData.isSuperAdmin) {
+        changedFields.push('isSuperAdmin')
+      }
+      if (validatedData.isActive !== undefined && targetUser?.isActive !== validatedData.isActive) {
+        changedFields.push('isActive')
+      }
+      if (validatedData.password && validatedData.password.trim() !== '') {
+        changedFields.push('password')
+      }
+
+      // Registrar cambio de rol específicamente
+      if (validatedData.role !== undefined && targetUser?.role !== validatedData.role) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            actionType: 'ROLE_CHANGED',
+            entityType: 'User',
+            entityId: id,
+            details: {
+              oldRole: targetUser?.role,
+              newRole: validatedData.role,
+              targetUserEmail: targetUser?.email,
+            },
+          },
+          request
+        )
+      }
+
+      // Registrar otros cambios
+      if (changedFields.length > 0 && !changedFields.includes('role')) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            actionType: 'USER_UPDATED',
+            entityType: 'User',
+            entityId: id,
+            details: {
+              changedFields,
+              targetUserEmail: targetUser?.email,
+            },
+          },
+          request
+        )
+      }
+    }
+
     return NextResponse.json(updatedUser)
-  } catch (error: any) {
-    console.error('Error al actualizar usuario:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un usuario con ese email' },
-        { status: 409 }
-      )
-    }
-
-    // Manejar usuario no encontrado
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el usuario' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_ADMIN_USER', userId: id }))
   }
 }
 
@@ -91,34 +145,46 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+    
     const { isActive } = body
 
     if (typeof isActive !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Se requiere un valor booleano para isActive' },
-        { status: 400 }
-      )
+      throw AppError.validation('Se requiere un valor booleano para isActive')
     }
+
+    // Obtener usuario actual y usuario objetivo para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+    const targetUser = await UserAdminService.getUserById(id)
 
     const updatedUser = await UserAdminService.toggleUserStatus(id, isActive)
 
-    return NextResponse.json(updatedUser)
-  } catch (error: any) {
-    console.error('Error al cambiar el estado del usuario:', error)
-    
-    // Manejar usuario no encontrado
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
+    // Registrar activación/desactivación de usuario en auditoría
+    if (currentUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          actionType: isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
+          entityType: 'User',
+          entityId: id,
+          details: {
+            targetUserEmail: targetUser?.email,
+          },
+        },
+        request
       )
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Error al cambiar el estado del usuario' },
-      { status: 500 }
-    )
+    return NextResponse.json(updatedUser)
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'PATCH_ADMIN_USER', userId: id }))
   }
 }
 
@@ -130,30 +196,43 @@ export async function DELETE(
   try {
     const { id } = await params
     
+    // Obtener usuario actual para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+
     // Verificar si el usuario existe
     const user = await UserAdminService.getUserById(id)
     
     if (!user) {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Usuario no encontrado')
     }
 
     // Intentar eliminar el usuario
     await UserAdminService.deleteUser(id)
 
+    // Registrar eliminación de usuario en auditoría
+    if (currentUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          actionType: 'USER_DELETED',
+          entityType: 'User',
+          entityId: id,
+          details: {
+            deletedUserEmail: user.email,
+            deletedUserName: user.fullName,
+          },
+        },
+        request
+      )
+    }
+
     return NextResponse.json(
       { message: 'Usuario eliminado exitosamente' },
       { status: 200 }
     )
-  } catch (error: any) {
-    console.error('Error al eliminar usuario:', error)
-
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar el usuario' },
-      { status: 400 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_ADMIN_USER', userId: id }))
   }
 }
 

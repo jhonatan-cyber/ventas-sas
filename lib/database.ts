@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { logger } from './utils/logger'
 
 // Funciones de utilidad para la base de datos
 export class DatabaseService {
@@ -11,9 +12,15 @@ export class DatabaseService {
   static async connect() {
     try {
       await prisma.$connect()
-      console.log('✅ Conectado a la base de datos PostgreSQL')
+      logger.info('Conectado a la base de datos PostgreSQL', {
+        type: 'database',
+        operation: 'connect',
+      })
     } catch (error) {
-      console.error('❌ Error conectando a la base de datos:', error)
+      logger.error('Error conectando a la base de datos', error as Error, {
+        type: 'database',
+        operation: 'connect',
+      })
       throw error
     }
   }
@@ -22,9 +29,15 @@ export class DatabaseService {
   static async disconnect() {
     try {
       await prisma.$disconnect()
-      console.log('✅ Desconectado de la base de datos')
+      logger.info('Desconectado de la base de datos', {
+        type: 'database',
+        operation: 'disconnect',
+      })
     } catch (error) {
-      console.error('❌ Error desconectando de la base de datos:', error)
+      logger.error('Error desconectando de la base de datos', error as Error, {
+        type: 'database',
+        operation: 'disconnect',
+      })
       throw error
     }
   }
@@ -56,7 +69,10 @@ export class DatabaseService {
         organizations
       }
     } catch (error) {
-      console.error('Error obteniendo estadísticas:', error)
+      logger.error('Error obteniendo estadísticas de base de datos', error as Error, {
+        type: 'database',
+        operation: 'getStats',
+      })
       return null
     }
   }

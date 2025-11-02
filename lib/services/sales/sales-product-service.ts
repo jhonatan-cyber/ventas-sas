@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { SalesProduct } from '@prisma/client'
+import { getCachedData, invalidateCachePattern, CacheKeys } from '@/lib/cache/cache-service'
+import { logDatabase } from '@/lib/utils/logger'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
+import { NotificationService } from '@/lib/services/notification-service'
 
 export interface CreateSalesProductData {
   categoryId?: string
@@ -40,10 +44,12 @@ export class SalesProductService {
     take: number = 10,
     search?: string,
     status?: string,
-    categoryId?: string
+    categoryId?: string,
+    includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId
+      customerId,
+      ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
     if (search) {
@@ -65,30 +71,42 @@ export class SalesProductService {
       where.categoryId = categoryId
     }
 
+    const startTime = Date.now()
     const [products, total] = await Promise.all([
       prisma.salesProduct.findMany({
         where,
         skip,
         take,
-        include: {
-          category: true
-        },
+        include: CommonIncludes.product, // Usar include optimizado
         orderBy: { createdAt: 'desc' }
       }),
       prisma.salesProduct.count({ where })
     ])
+    
+    const duration = Date.now() - startTime
+    logDatabase('FIND_MANY', 'sales_products', duration, undefined, {
+      customerId,
+      count: products.length,
+    })
 
     return { products, total }
   }
 
   // Obtener producto por ID
-  static async getProductById(id: string): Promise<SalesProduct | null> {
-    return prisma.salesProduct.findUnique({
+  static async getProductById(id: string, includeDeleted: boolean = false): Promise<SalesProduct | null> {
+    const product = await prisma.salesProduct.findUnique({
       where: { id },
       include: {
         category: true
       }
     })
+
+    // Si no se incluyen eliminados y el producto está eliminado, retornar null
+    if (!includeDeleted && product && 'deletedAt' in product && product.deletedAt) {
+      return null
+    }
+
+    return product
   }
 
   // Crear nuevo producto
@@ -96,7 +114,8 @@ export class SalesProductService {
     customerId: string,
     data: CreateSalesProductData
   ): Promise<SalesProduct> {
-    return prisma.salesProduct.create({
+    const startTime = Date.now()
+    const product = await prisma.salesProduct.create({
       data: {
         customerId,
         categoryId: data.categoryId,
@@ -114,6 +133,11 @@ export class SalesProductService {
         isActive: true
       }
     })
+
+    // Invalidar caché de productos de este cliente
+    invalidateCachePattern(`product:${customerId}*`)
+
+    return product
   }
 
   // Actualizar producto
@@ -121,21 +145,104 @@ export class SalesProductService {
     id: string,
     data: UpdateSalesProductData
   ): Promise<SalesProduct> {
-    return prisma.salesProduct.update({
+    // Obtener customerId antes de actualizar
+    const product = await prisma.salesProduct.findUnique({
+      where: { id },
+      select: { customerId: true }
+    })
+    
+    const updated = await prisma.salesProduct.update({
       where: { id },
       data: {
         ...data,
         brand: data.brand !== undefined ? data.brand : undefined,
         model: data.model !== undefined ? data.model : undefined,
-      }
+      },
+      include: {
+        customer: {
+          select: {
+            organizationId: true,
+          },
+        },
+      },
     })
+
+    // Invalidar caché de productos si existe
+    if (product) {
+      invalidateCachePattern(`product:${product.customerId}*`)
+    }
+
+    // Notificar si el stock está bajo
+    if (data.stock !== undefined && updated.minStock !== null) {
+      const finalStock = data.stock
+      const minStock = updated.minStock || 0
+      
+      if (finalStock <= minStock && updated.organizationId) {
+        NotificationService.notifyStockLow(
+          updated.organizationId,
+          updated.id,
+          updated.name,
+          finalStock,
+          minStock,
+          updated.customerId || undefined
+        ).catch((error) => {
+          logDatabase('NOTIFICATION_ERROR', 'notifications', undefined, error as Error, {
+            productId: updated.id,
+          })
+        })
+      }
+    }
+
+    return updated
   }
 
-  // Eliminar producto
+  // Eliminar producto (soft delete)
   static async deleteProduct(id: string): Promise<void> {
-    await prisma.salesProduct.delete({
-      where: { id }
+    // Obtener producto para saber el customerId ANTES de eliminar
+    const product = await prisma.salesProduct.findUnique({
+      where: { id },
+      select: { customerId: true }
     })
+    
+    // Soft delete en lugar de eliminación física
+    const startTime = Date.now()
+    await prisma.salesProduct.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      } as any // deletedAt está en el schema pero TypeScript puede no reconocerlo inmediatamente
+    })
+    
+    const duration = Date.now() - startTime
+    logDatabase('SOFT_DELETE', 'sales_products', duration, undefined, {
+      productId: id,
+      customerId: product?.customerId,
+    })
+
+    // Invalidar caché de productos si existe
+    if (product) {
+      invalidateCachePattern(`product:${product.customerId}*`)
+    }
+  }
+
+  // Restaurar producto (deshacer soft delete)
+  static async restoreProduct(id: string): Promise<SalesProduct> {
+    const restored = await prisma.salesProduct.update({
+      where: { id },
+      data: {
+        deletedAt: null
+      } as any, // deletedAt está en el schema pero TypeScript puede no reconocerlo inmediatamente
+      include: {
+        category: true
+      }
+    })
+
+    // Invalidar caché
+    if (restored.customerId) {
+      invalidateCachePattern(`product:${restored.customerId}*`)
+    }
+
+    return restored
   }
 
   // Actualizar stock
@@ -148,26 +255,38 @@ export class SalesProductService {
       throw new Error('Producto no encontrado')
     }
 
-    return prisma.salesProduct.update({
+    const updated = await prisma.salesProduct.update({
       where: { id },
       data: {
         stock: product.stock + quantity
       }
     })
+
+    // Invalidar caché de productos (el stock cambió)
+    invalidateCachePattern(`product:${product.customerId}*`)
+
+    return updated
   }
 
-  // Obtener productos activos (para selects)
+  // Obtener productos activos (para selects) - CON CACHÉ
   static async getActiveProducts(customerId: string) {
-    return prisma.salesProduct.findMany({
-      where: {
-        customerId,
-        isActive: true
-      },
-      include: {
-        category: true
-      },
-      orderBy: { name: 'asc' }
-    })
+    const cacheKey = CacheKeys.product(customerId, 'active')
+    
+    return getCachedData(
+      cacheKey,
+      () => prisma.salesProduct.findMany({
+        where: {
+          customerId,
+          isActive: true,
+          deletedAt: null // Excluir soft deleted
+        } as any, // deletedAt está en el schema pero TypeScript puede no reconocerlo inmediatamente
+        include: {
+          category: true
+        },
+        orderBy: { name: 'asc' }
+      }),
+      300 // Cache por 5 minutos (productos pueden cambiar más frecuentemente)
+    )
   }
 }
 

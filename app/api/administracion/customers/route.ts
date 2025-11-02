@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
+import { createCustomerSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener todos los clientes con paginación y filtros
 export async function GET(request: NextRequest) {
@@ -22,54 +28,66 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener clientes:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los clientes' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CUSTOMERS_ADMIN' }))
   }
 }
 
 // POST - Crear nuevo cliente
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { razonSocial, nit, ci, nombre, apellido, direccion, telefono, email } = body
-
-    if (!ci) {
-      return NextResponse.json(
-        { error: 'El CI es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createCustomerSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Obtener usuario actual para auditoría
+    const currentUser = await getCurrentAdminUser(request)
 
     const newCustomer = await CustomerAdminService.createCustomer({
-      razonSocial,
-      nit,
-      ci,
-      nombre,
-      apellido,
-      direccion,
-      telefono,
-      email
+      razonSocial: validatedData.razonSocial || undefined,
+      nit: validatedData.nit || undefined,
+      ci: validatedData.ci,
+      nombre: validatedData.nombre || undefined,
+      apellido: validatedData.apellido || undefined,
+      direccion: validatedData.direccion || undefined,
+      telefono: validatedData.telefono || undefined,
+      email: validatedData.email || undefined
     })
 
-    return NextResponse.json(newCustomer, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear cliente:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un cliente con ese CI o NIT' },
-        { status: 409 }
+    // Registrar creación de cliente en auditoría
+    if (currentUser) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          customerId: newCustomer.id,
+          actionType: 'SENSITIVE_DATA_ACCESSED', // O crear un nuevo tipo 'CUSTOMER_CREATED'
+          entityType: 'Customer',
+          entityId: newCustomer.id,
+          details: {
+            razonSocial: newCustomer.razonSocial,
+            slug: newCustomer.slug,
+            nit: newCustomer.nit,
+            ci: newCustomer.ci,
+          },
+        },
+        request
       )
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el cliente' },
-      { status: 500 }
-    )
+    return NextResponse.json(newCustomer, { status: 201 })
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_CUSTOMER_ADMIN' }))
   }
 }
 

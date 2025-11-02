@@ -1,5 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { Expense } from '@prisma/client'
+import { 
+  CursorPaginationOptions, 
+  CursorPaginationResult, 
+  buildCursorWhere,
+  createCursorResponse 
+} from '@/lib/utils/pagination'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
 
 export interface CreateExpenseData {
   userId: string
@@ -70,39 +77,80 @@ export class ExpenseService {
       }
     }
 
+    // Optimizado: usar include común para evitar N+1
     const [expenses, total] = await Promise.all([
       prisma.expense.findMany({
         where,
         skip,
         take,
-        include: {
-          user: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true
-            }
-          },
-          branch: {
-            select: {
-              id: true,
-              name: true,
-              address: true
-            }
-          },
-          organization: {
-            select: {
-              id: true,
-              name: true
-            }
-          }
-        },
+        include: CommonIncludes.expense,
         orderBy: { date: 'desc' }
       }),
       prisma.expense.count({ where })
     ])
 
     return { expenses, total }
+  }
+
+  /**
+   * Obtener gastos con paginación cursor-based (optimizada)
+   */
+  static async getExpensesCursor(
+    organizationId: string,
+    options: CursorPaginationOptions & {
+      search?: string
+      branchId?: string | null
+      startDate?: Date
+      endDate?: Date
+      userId?: string
+      category?: string
+    }
+  ): Promise<CursorPaginationResult<Expense & { user?: any; branch?: any }>> {
+    const { limit = 20, cursor, search, branchId, startDate, endDate, userId, category } = options
+
+    const where: any = {
+      organizationId,
+      ...buildCursorWhere(cursor, 'date', 'desc'),
+    }
+
+    if (search) {
+      where.OR = [
+        { description: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    if (branchId === null) {
+      where.branchId = null
+    } else if (branchId) {
+      where.branchId = branchId
+    }
+
+    if (userId) {
+      where.userId = userId
+    }
+
+    if (category) {
+      where.category = category
+    }
+
+    if (startDate || endDate) {
+      where.date = {
+        ...where.date,
+        ...(startDate && { gte: startDate }),
+        ...(endDate && { lte: endDate }),
+      }
+    }
+
+    const expenses = await prisma.expense.findMany({
+      where,
+      take: limit + 1,
+      include: CommonIncludes.expense,
+      orderBy: { date: 'desc' },
+    })
+
+    return createCursorResponse(expenses, 'date', limit)
   }
 
   // Obtener gasto por ID

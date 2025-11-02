@@ -17,6 +17,7 @@ import {
   CheckCircle2
 } from "lucide-react"
 import { formatDate } from "@/lib/utils/date"
+import { AnalyticsDashboardClient } from "@/components/analytics/analytics-dashboard-client"
 
 export default async function DashboardPage({
   params,
@@ -175,6 +176,14 @@ export default async function DashboardPage({
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Analytics y Gráficos */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Analytics y Métricas
+        </h2>
+        <AnalyticsDashboardClient slug={slug} />
       </div>
 
       {/* Contenido secundario */}

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { updateSalesCustomerSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener cliente por ID
 export async function GET(
@@ -12,28 +16,19 @@ export async function GET(
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const customer = await SalesCustomerService.getCustomerById(id)
     
     if (!customer || customer.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado')
     }
 
     return NextResponse.json(customer)
   } catch (error) {
-    console.error('Error al obtener cliente:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el cliente' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_SALES_CUSTOMER', customerId: id }))
   }
 }
 
@@ -47,41 +42,48 @@ export async function PUT(
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const existingCustomer = await SalesCustomerService.getCustomerById(id)
 
     if (!existingCustomer || existingCustomer.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado')
     }
 
-    const body = await request.json()
-    const payload = {
-      name: body.name?.trim(),
-      lastName: body.lastName?.trim(),
-      email: body.email?.trim(),
-      phone: body.phone?.trim(),
-      address: body.address?.trim(),
-      ruc: body.ruc?.trim()?.toUpperCase(),
-      isActive: body.isActive,
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    const customer = await SalesCustomerService.updateCustomer(id, payload)
+    // Validar datos con Zod
+    const validation = await validateRequestBody(updateSalesCustomerSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    const customer = await SalesCustomerService.updateCustomer(id, {
+      name: validatedData.name || undefined,
+      lastName: validatedData.lastName !== undefined ? validatedData.lastName : undefined,
+      email: validatedData.email || undefined,
+      phone: validatedData.phone || undefined,
+      address: validatedData.address !== undefined ? validatedData.address : undefined,
+      city: validatedData.city || undefined,
+      country: validatedData.country || undefined,
+      ruc: validatedData.ruc || undefined,
+      // isActive puede venir del body directamente si no está en el schema
+      isActive: body.isActive !== undefined ? body.isActive : undefined
+    })
 
     return NextResponse.json(customer)
-  } catch (error: any) {
-    console.error('Error al actualizar cliente:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el cliente' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_SALES_CUSTOMER', customerId: id }))
   }
 }
 
@@ -95,29 +97,20 @@ export async function DELETE(
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const existingCustomer = await SalesCustomerService.getCustomerById(id)
 
     if (!existingCustomer || existingCustomer.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado')
     }
 
     await SalesCustomerService.deleteCustomer(id)
     return NextResponse.json({ message: 'Cliente eliminado correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar cliente:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar el cliente' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_SALES_CUSTOMER', customerId: id }))
   }
 }
 

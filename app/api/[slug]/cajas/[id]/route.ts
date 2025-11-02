@@ -2,35 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-
-function serializeCashRegister(register: any) {
-  return register
-    ? {
-        ...register,
-        openingBalance: Number(register.openingBalance ?? 0),
-        currentBalance: Number(register.currentBalance ?? 0),
-        lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
-        lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
-        createdAt: register.createdAt ? register.createdAt.toISOString() : null,
-        updatedAt: register.updatedAt ? register.updatedAt.toISOString() : null,
-        branch: register.branch || null,
-        openedBy: register.openedBy
-          ? {
-              id: register.openedBy.id,
-              nombre: register.openedBy.nombre,
-              apellido: register.openedBy.apellido,
-            }
-          : null,
-        closedBy: register.closedBy
-          ? {
-              id: register.closedBy.id,
-              nombre: register.closedBy.nombre,
-              apellido: register.closedBy.apellido,
-            }
-          : null,
-      }
-    : null
-}
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeCashRegister } from '@/lib/utils/serializers'
 
 // GET - Obtener caja por ID
 export async function GET(
@@ -43,36 +17,24 @@ export async function GET(
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const cashRegister = await CashRegisterService.getCashRegisterById(id)
 
     if (!cashRegister) {
-      return NextResponse.json(
-        { error: 'Caja no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Caja no encontrada')
     }
 
     // Verificar que la caja pertenece a la organización
     if (cashRegister.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 403 }
-      )
+      throw AppError.forbidden('No autorizado')
     }
 
     return NextResponse.json(serializeCashRegister(cashRegister))
   } catch (error) {
-    console.error('Error al obtener caja:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener la caja' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_CASH_REGISTER', cashRegisterId: id }))
   }
 }
 
@@ -81,52 +43,45 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
+  let currentUser: any = null
+  
   try {
     const { slug, id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
 
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
-    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+    currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
+      throw AppError.unauthorized('No autenticado')
     }
 
     // Verificar que la caja existe y pertenece a la organización
     const existingCashRegister = await CashRegisterService.getCashRegisterById(id)
     if (!existingCashRegister || existingCashRegister.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Caja no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Caja no encontrada')
     }
 
     // Si se trata de abrir o cerrar la caja, usar métodos específicos
     if (body.action === 'open') {
       if (body.openingBalance === undefined || body.openingBalance === null) {
-        return NextResponse.json(
-          { error: 'El balance inicial es requerido para abrir la caja' },
-          { status: 400 }
-        )
+        throw AppError.validation('El balance inicial es requerido para abrir la caja')
       }
       const openingBalance = Number(body.openingBalance)
       if (isNaN(openingBalance) || openingBalance < 0) {
-        return NextResponse.json(
-          { error: 'El balance inicial debe ser un número válido' },
-          { status: 400 }
-        )
+        throw AppError.validation('El balance inicial debe ser un número válido')
       }
       const cashRegister = await CashRegisterService.openCashRegister(id, openingBalance, currentUser.id)
       return NextResponse.json(serializeCashRegister(cashRegister))
@@ -149,12 +104,9 @@ export async function PUT(
     const cashRegister = await CashRegisterService.updateCashRegister(id, payload)
 
     return NextResponse.json(serializeCashRegister(cashRegister))
-  } catch (error: any) {
-    console.error('Error al actualizar caja:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar la caja' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_CASH_REGISTER', cashRegisterId: id, userId: currentUser?.id }))
   }
 }
 
@@ -169,38 +121,26 @@ export async function DELETE(
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     // Verificar que la caja existe y pertenece a la organización
     const existingCashRegister = await CashRegisterService.getCashRegisterById(id)
     if (!existingCashRegister || existingCashRegister.organizationId !== organizationId) {
-      return NextResponse.json(
-        { error: 'Caja no encontrada' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Caja no encontrada')
     }
 
     // No permitir eliminar cajas abiertas
     if (existingCashRegister.isOpen) {
-      return NextResponse.json(
-        { error: 'No se puede eliminar una caja abierta. Ciérrela primero.' },
-        { status: 400 }
-      )
+      throw AppError.badRequest('No se puede eliminar una caja abierta. Ciérrela primero.')
     }
 
     await CashRegisterService.deleteCashRegister(id)
 
     return NextResponse.json({ message: 'Caja eliminada correctamente' })
-  } catch (error: any) {
-    console.error('Error al eliminar caja:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al eliminar la caja' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_CASH_REGISTER', cashRegisterId: id }))
   }
 }
 

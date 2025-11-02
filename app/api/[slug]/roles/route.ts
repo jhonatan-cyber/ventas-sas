@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RoleSasService } from '@/lib/services/sales/role-sas-service'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import { createRoleSasSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todos los roles con paginación y filtros
 export async function GET(
@@ -18,10 +22,7 @@ export async function GET(
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -43,11 +44,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener roles:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los roles' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_ROLES_SAS' }))
   }
 }
 
@@ -58,37 +55,40 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
-    const { nombre, descripcion, sucursalId } = body
-
-    if (!nombre) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
-    }
 
     const customer = await getCustomerBySlug(slug)
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createRoleSasSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Obtener sucursalId del body si está presente (no está en el schema, es opcional)
+    const sucursalId = body.sucursalId ? String(body.sucursalId).trim() : undefined
+
     const newRole = await RoleSasService.createRole(customer.id, {
-      nombre,
-      descripcion,
-      sucursalId
+      nombre: validatedData.nombre,
+      descripcion: validatedData.descripcion || undefined,
+      sucursalId: sucursalId || undefined
     })
 
     return NextResponse.json(newRole, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear rol:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el rol' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_ROLE_SAS' }))
   }
 }
 

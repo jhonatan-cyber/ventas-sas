@@ -2,30 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ExpenseService, CreateExpenseData } from '@/lib/services/sales/expense-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-
-function serializeExpense(expense: any) {
-  return {
-    ...expense,
-    amount: Number(expense.amount ?? 0),
-    date: expense.date ? expense.date.toISOString() : null,
-    createdAt: expense.createdAt ? expense.createdAt.toISOString() : null,
-    updatedAt: expense.updatedAt ? expense.updatedAt.toISOString() : null,
-    user: expense.user
-      ? {
-          id: expense.user.id,
-          fullName: expense.user.fullName,
-          email: expense.user.email,
-        }
-      : null,
-    branch: expense.branch
-      ? {
-          id: expense.branch.id,
-          name: expense.branch.name,
-          address: expense.branch.address,
-        }
-      : null,
-  }
-}
+import { createExpenseSchema } from '@/lib/validators/sales-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { serializeExpense } from '@/lib/utils/serializers'
 
 // GET - Obtener todos los gastos con paginación y filtros
 export async function GET(
@@ -47,10 +28,7 @@ export async function GET(
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const skip = (page - 1) * pageSize
@@ -75,11 +53,7 @@ export async function GET(
       totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
-    console.error('Error al obtener gastos:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los gastos' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_EXPENSES' }))
   }
 }
 
@@ -90,60 +64,49 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado o inactivo' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
     const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
+      throw AppError.unauthorized('No autenticado')
     }
 
-    const name = typeof body.name === 'string' ? body.name.trim() : ''
-    if (!name) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    const description = typeof body.description === 'string' ? body.description.trim() : ''
-    if (!description) {
-      return NextResponse.json(
-        { error: 'La descripción es requerida' },
-        { status: 400 }
-      )
+    // Convertir fecha a string ISO si es Date
+    if (body.date instanceof Date) {
+      body.date = body.date.toISOString()
+    } else if (typeof body.date === 'string') {
+      // Validar que sea una fecha válida
+      const dateObj = new Date(body.date)
+      if (isNaN(dateObj.getTime())) {
+        throw AppError.validation('La fecha no es válida')
+      }
     }
 
-    const amount = Number(body.amount)
-    if (Number.isNaN(amount) || amount <= 0) {
-      return NextResponse.json(
-        { error: 'El monto debe ser mayor a 0' },
-        { status: 400 }
-      )
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createExpenseSchema, body)
+    if (!validation.success) {
+      return validation.response
     }
 
-    if (!body.date) {
-      return NextResponse.json(
-        { error: 'La fecha es requerida' },
-        { status: 400 }
-      )
-    }
+    const validatedData = validation.data
 
-    const category = typeof body.category === 'string' ? body.category.trim() : undefined
+    // Manejar branchId
     const branchProvided = Object.prototype.hasOwnProperty.call(body, 'branchId')
-    const rawBranch = typeof body.branchId === 'string' ? body.branchId.trim() : ''
+    const rawBranch = body.branchId ? String(body.branchId).trim() : ''
     let branchId: string | null | undefined
 
     if (branchProvided) {
@@ -154,10 +117,10 @@ export async function POST(
 
     const payload: CreateExpenseData = {
       userId: currentUser.id,
-      name,
-      description,
-      amount,
-      date: new Date(body.date),
+      name: validatedData.name,
+      description: validatedData.description,
+      amount: validatedData.amount,
+      date: typeof validatedData.date === 'string' ? new Date(validatedData.date) : validatedData.date,
     }
 
     if (branchProvided) {
@@ -166,19 +129,18 @@ export async function POST(
       payload.branchId = branchId
     }
 
-    if (category) {
-      payload.category = category
+    if (validatedData.category) {
+      payload.category = validatedData.category
     }
 
     const expense = await ExpenseService.createExpense(organizationId, payload)
 
     return NextResponse.json(serializeExpense(expense), { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear gasto:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el gasto' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { 
+      action: 'CREATE_EXPENSE',
+      userId: currentUser?.id 
+    }))
   }
 }
 

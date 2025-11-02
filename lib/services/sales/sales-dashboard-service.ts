@@ -1,8 +1,14 @@
 import { prisma } from "@/lib/prisma"
+import { getCachedData, CacheKeys } from '@/lib/cache/cache-service'
 
 export class SalesDashboardService {
-  // Obtener estadísticas del dashboard
+  // Obtener estadísticas del dashboard - CON CACHÉ
   static async getDashboardStats(organizationId: string) {
+    const cacheKey = CacheKeys.dashboard(organizationId)
+    
+    return getCachedData(
+      cacheKey,
+      async () => {
     const [
       totalSales,
       totalRevenue,
@@ -54,14 +60,17 @@ export class SalesDashboardService {
       })
     ])
 
-    return {
-      totalSales,
-      totalRevenue: Number(totalRevenue._sum.total || 0),
-      totalCustomers,
-      totalProducts,
-      salesThisMonth,
-      revenueThisMonth: Number(revenueThisMonth._sum.total || 0)
-    }
+        return {
+          totalSales,
+          totalRevenue: Number(totalRevenue._sum.total || 0),
+          totalCustomers,
+          totalProducts,
+          salesThisMonth,
+          revenueThisMonth: Number(revenueThisMonth._sum.total || 0)
+        }
+      },
+      120 // Cache por 2 minutos (dashboard se actualiza frecuentemente)
+    )
   }
 
   // Obtener ventas recientes

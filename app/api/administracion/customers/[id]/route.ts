@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
+import { updateCustomerSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener un cliente por ID
 export async function GET(
@@ -11,19 +17,13 @@ export async function GET(
     const customer = await CustomerAdminService.getCustomerById(id)
     
     if (!customer) {
-      return NextResponse.json(
-        { error: 'Cliente no encontrado' },
-        { status: 404 }
-      )
+      throw AppError.notFound('Cliente no encontrado')
     }
 
     return NextResponse.json(customer)
   } catch (error) {
-    console.error('Error al obtener cliente:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener el cliente' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'GET_ADMIN_CUSTOMER', customerId: id }))
   }
 }
 
@@ -34,36 +34,74 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
-    const { razonSocial, nit, ci, nombre, apellido, direccion, telefono, email } = body
 
-    const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
-      razonSocial,
-      nit,
-      ci,
-      nombre,
-      apellido,
-      direccion,
-      telefono,
-      email
-    })
-
-    return NextResponse.json(updatedCustomer)
-  } catch (error: any) {
-    console.error('Error al actualizar cliente:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un cliente con ese CI o NIT' },
-        { status: 409 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Error al actualizar el cliente' },
-      { status: 500 }
-    )
+    // Validar datos con Zod
+    const validation = await validateRequestBody(updateCustomerSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Obtener usuario actual y cliente objetivo para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id)
+
+    const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
+      razonSocial: validatedData.razonSocial || undefined,
+      nit: validatedData.nit || undefined,
+      ci: validatedData.ci || undefined,
+      nombre: validatedData.nombre || undefined,
+      apellido: validatedData.apellido || undefined,
+      direccion: validatedData.direccion || undefined,
+      telefono: validatedData.telefono || undefined,
+      email: validatedData.email || undefined,
+      isActive: body.isActive !== undefined ? body.isActive : undefined
+    })
+
+    // Registrar actualización de cliente en auditoría
+    if (currentUser && targetCustomer) {
+      const changedFields: string[] = []
+      if (validatedData.razonSocial !== undefined && targetCustomer.razonSocial !== validatedData.razonSocial) {
+        changedFields.push('razonSocial')
+      }
+      if (validatedData.nit !== undefined && targetCustomer.nit !== validatedData.nit) {
+        changedFields.push('nit')
+      }
+      if (body.isActive !== undefined && targetCustomer.isActive !== body.isActive) {
+        changedFields.push('isActive')
+      }
+
+      if (changedFields.length > 0) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            customerId: id,
+            actionType: 'SENSITIVE_DATA_ACCESSED',
+            entityType: 'Customer',
+            entityId: id,
+            details: {
+              changedFields,
+              slug: targetCustomer.slug,
+            },
+          },
+          request
+        )
+      }
+    }
+
+    return NextResponse.json(updatedCustomer)
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_ADMIN_CUSTOMER', customerId: id }))
   }
 }
 
@@ -74,20 +112,46 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+    }
+    
     const { isActive } = body
+
+    // Obtener usuario actual y cliente objetivo para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id)
 
     const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
       isActive
     })
 
+    // Registrar cambio de estado del cliente en auditoría
+    if (currentUser && targetCustomer) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          customerId: id,
+          actionType: 'SENSITIVE_DATA_ACCESSED',
+          entityType: 'Customer',
+          entityId: id,
+          details: {
+            action: isActive ? 'activated' : 'deactivated',
+            slug: targetCustomer.slug,
+          },
+        },
+        request
+      )
+    }
+
     return NextResponse.json(updatedCustomer)
-  } catch (error: any) {
-    console.error('Error al cambiar estado del cliente:', error)
-    return NextResponse.json(
-      { error: error.message || 'Error al cambiar el estado del cliente' },
-      { status: 500 }
-    )
+  } catch (error) {
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'PATCH_ADMIN_CUSTOMER', customerId: id }))
   }
 }
 
@@ -98,14 +162,36 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+
+    // Obtener usuario actual y cliente objetivo para auditoría
+    const currentUser = await getCurrentAdminUser(request)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id)
+
     await CustomerAdminService.deleteCustomer(id)
+
+    // Registrar eliminación de cliente en auditoría
+    if (currentUser && targetCustomer) {
+      await SecurityAuditLogger.logSensitiveAction(
+        {
+          userId: currentUser.id,
+          customerId: id,
+          actionType: 'SENSITIVE_DATA_ACCESSED',
+          entityType: 'Customer',
+          entityId: id,
+          details: {
+            action: 'deleted',
+            razonSocial: targetCustomer.razonSocial,
+            slug: targetCustomer.slug,
+          },
+        },
+        request
+      )
+    }
+
     return NextResponse.json({ message: 'Cliente eliminado exitosamente' })
   } catch (error) {
-    console.error('Error al eliminar cliente:', error)
-    return NextResponse.json(
-      { error: 'Error al eliminar el cliente' },
-      { status: 500 }
-    )
+    const { id } = await params
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_ADMIN_CUSTOMER', customerId: id }))
   }
 }
 

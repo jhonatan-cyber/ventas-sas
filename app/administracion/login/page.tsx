@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { TwoFactorInput } from "@/components/auth/two-factor-input"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -14,6 +15,8 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [tempToken, setTempToken] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +34,6 @@ export default function AdminLoginPage() {
       })
 
       const data = await response.json()
-      console.log('[ADMIN LOGIN PAGE] response.ok', response.ok, 'data', data)
 
       if (!response.ok) {
         setError(data.error || "Error de autenticación")
@@ -39,16 +41,43 @@ export default function AdminLoginPage() {
         return
       }
 
+      // Si requiere 2FA
+      if (data.requires2FA && data.tempToken) {
+        setRequires2FA(true)
+        setTempToken(data.tempToken)
+        setIsLoading(false)
+        return
+      }
+
       const target = data.redirect || '/administracion/dashboard'
-      console.log('[ADMIN LOGIN PAGE] login OK, redirigiendo a', target)
       try { router.replace(target) } catch {}
-      // Pequeño delay para asegurar persistencia de cookie antes de navegar
       setTimeout(() => { window.location.replace(target) }, 50)
     } catch (error: unknown) {
       setError("Error de conexión")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handle2FASuccess = (data: any) => {
+    const target = data.redirect || '/administracion/dashboard'
+    try { router.replace(target) } catch {}
+    setTimeout(() => { window.location.replace(target) }, 50)
+  }
+
+  if (requires2FA && tempToken) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#1a1a1a]">
+        <div className="w-full max-w-md p-4">
+          <TwoFactorInput
+            endpoint="/api/administracion/login/verify-2fa"
+            tempToken={tempToken}
+            onSuccess={handle2FASuccess}
+            onError={(err) => setError(err)}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (

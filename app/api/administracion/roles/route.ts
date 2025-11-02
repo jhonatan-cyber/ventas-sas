@@ -1,66 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RoleAdminService } from '@/lib/services/admin/role-admin-service'
+import { createRoleSchema } from '@/lib/validators/admin-validators'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener todos los roles
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const roles = await RoleAdminService.getAllRoles()
     return NextResponse.json(roles)
   } catch (error) {
-    console.error('Error al obtener roles:', error)
-    return NextResponse.json(
-      { error: 'Error al obtener los roles' },
-      { status: 500 }
-    )
+    return handleApiError(error, createErrorContext(request, { action: 'GET_ROLES_ADMIN' }))
   }
 }
 
 // POST - Crear nuevo rol
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { name, description, permissions } = body
-
-    if (!name || !name.trim()) {
-      return NextResponse.json(
-        { error: 'El nombre del rol es requerido' },
-        { status: 400 }
-      )
+    // Parsear y validar body
+    let body: any
+    try {
+      body = await request.json()
+    } catch {
+      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    // Validar permisos si se proporcionan
-    if (permissions && Array.isArray(permissions) && permissions.length > 0) {
-      const validation = RoleAdminService.validatePermissions(permissions)
-      if (!validation.isValid) {
-        return NextResponse.json(
-          { error: `Permisos inválidos: ${validation.invalidPermissions.join(', ')}` },
-          { status: 400 }
-        )
+    // Validar datos con Zod
+    const validation = await validateRequestBody(createRoleSchema, body)
+    if (!validation.success) {
+      return validation.response
+    }
+
+    const validatedData = validation.data
+
+    // Validar permisos si se proporcionan (validación adicional del servicio)
+    if (validatedData.permissions && Array.isArray(validatedData.permissions) && validatedData.permissions.length > 0) {
+      const permissionValidation = RoleAdminService.validatePermissions(validatedData.permissions)
+      if (!permissionValidation.isValid) {
+        throw AppError.validation(`Permisos inválidos: ${permissionValidation.invalidPermissions.join(', ')}`)
       }
     }
 
     const newRole = await RoleAdminService.createRole({
-      name: name.trim(),
-      description: description?.trim(),
-      permissions: permissions || []
+      name: validatedData.name,
+      description: validatedData.description || undefined,
+      permissions: validatedData.permissions || [],
+      isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
     })
 
     return NextResponse.json(newRole, { status: 201 })
-  } catch (error: any) {
-    console.error('Error al crear rol:', error)
-    
-    // Manejar error de duplicado
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Ya existe un rol con ese nombre' },
-        { status: 409 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: error.message || 'Error al crear el rol' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, createErrorContext(request, { action: 'CREATE_ROLE_ADMIN' }))
   }
 }
 

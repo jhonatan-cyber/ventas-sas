@@ -4,10 +4,12 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesProduct, Category } from "@prisma/client"
+import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
 export function useProductActions(customerSlug: string, onProductsChange?: () => void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<(SalesProduct & { category: Category | null }) | undefined>()
@@ -48,8 +50,8 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al guardar el producto")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       const message = selectedProduct ? "Producto actualizado" : "Producto creado"
@@ -64,8 +66,11 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al guardar el producto")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: selectedProduct ? "Error al actualizar producto" : "Error al crear producto",
+      })
     }
   }
 
@@ -78,8 +83,8 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al eliminar el producto")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success("Producto eliminado")
@@ -93,8 +98,11 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al eliminar el producto")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: "Error al eliminar producto",
+      })
     }
   }
 
@@ -108,8 +116,8 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cambiar el estado del producto")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success(newStatus ? "Producto activado" : "Producto desactivado")
@@ -122,8 +130,11 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       startTransition(() => {
         router.refresh()
       })
-    } catch (error: any) {
-      toast.error(error.message || "Error al cambiar el estado del producto")
+    } catch (error) {
+      handleError(error, {
+        showToast: true,
+        toastTitle: "Error al cambiar estado del producto",
+      })
     }
   }
 

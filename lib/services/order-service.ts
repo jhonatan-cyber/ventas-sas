@@ -1,19 +1,13 @@
 import { prisma } from '../prisma'
 import type { Order, OrderItem, Customer, Product } from '@prisma/client'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
 
 export class OrderService {
   // Obtener todas las órdenes de una organización
   static async getOrdersByOrganization(organizationId: string) {
     return await prisma.order.findMany({
       where: { organizationId },
-      include: {
-        customer: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
-      },
+      include: CommonIncludes.order, // Usar include optimizado
       orderBy: { createdAt: 'desc' }
     })
   }
@@ -23,12 +17,14 @@ export class OrderService {
     return await prisma.order.findMany({
       where: { userId },
       include: {
-        customer: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
+        ...CommonIncludes.order, // Usar include optimizado
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -39,14 +35,15 @@ export class OrderService {
     return await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
-        organization: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
-      }
+        ...CommonIncludes.order,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
     })
   }
 
@@ -129,13 +126,7 @@ export class OrderService {
 
     return await prisma.order.findMany({
       where,
-      include: {
-        customer: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
+        include: CommonIncludes.order, // Usar include optimizado
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -147,13 +138,7 @@ export class OrderService {
     
     return await prisma.order.findMany({
       where,
-      include: {
-        customer: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
+        include: CommonIncludes.order, // Usar include optimizado
       },
       orderBy: { createdAt: 'desc' },
       take: limit
@@ -181,13 +166,7 @@ export class OrderService {
 
     return await prisma.order.findMany({
       where,
-      include: {
-        customer: true,
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
+        include: CommonIncludes.order, // Usar include optimizado
       },
       orderBy: { createdAt: 'desc' }
     })
