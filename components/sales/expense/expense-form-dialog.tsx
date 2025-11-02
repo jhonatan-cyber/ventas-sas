@@ -1,24 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Expense } from "@prisma/client"
 import { toast } from "sonner"
+import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
 
 interface ExpenseFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  expense?: Expense
-  organizationId: string
-  onSave: (data: any) => void
+  expense?: SalesExpenseWithRelations
+  branches: ExpenseBranchSummary[]
+  currentUserBranchId?: string | null
+  onSave: (data: any) => Promise<void> | void
 }
 
-const CATEGORIES = [
+const CATEGORY_SUGGESTIONS = [
   "Servicios",
   "Insumos",
   "Transporte",
@@ -27,128 +28,97 @@ const CATEGORIES = [
   "Servicios Públicos",
   "Marketing",
   "Mantenimiento",
-  "Otros"
+  "Impuestos",
+  "Otros",
 ]
 
-export function ExpenseFormDialog({ open, onOpenChange, expense, organizationId, onSave }: ExpenseFormDialogProps) {
+const capitalizeWords = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase())
+
+export function ExpenseFormDialog({ open, onOpenChange, expense, branches, currentUserBranchId = null, onSave }: ExpenseFormDialogProps) {
+  const [name, setName] = useState("")
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
   const [date, setDate] = useState("")
-  const [userId, setUserId] = useState("")
-  const [users, setUsers] = useState<any[]>([])
+  const [branchId, setBranchId] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingData, setIsLoadingData] = useState(false)
 
-  // Cargar usuarios
-  useEffect(() => {
-    if (open) {
-      loadUsers()
-    }
-  }, [open, organizationId])
+  const branchOptions = useMemo(() => branches.filter((branch) => Boolean(branch.id)), [branches])
 
-  // Cargar datos del gasto si existe
   useEffect(() => {
-    if (expense && open) {
-      setCategory(expense.category || "")
+    if (!open) return
+
+    const today = new Date().toISOString().split("T")[0]
+    const singleBranchId = branchOptions.length === 1 ? branchOptions[0]?.id ?? null : null
+    const userBranchId = currentUserBranchId ?? null
+
+    if (expense) {
+      setName(expense.name || "")
+      setCategory(expense.category ?? "")
       setDescription(expense.description || "")
-      setAmount(Number(expense.amount).toString())
-      setDate(expense.date ? new Date(expense.date).toISOString().split('T')[0] : "")
-      setUserId(expense.userId || "")
-    } else if (!expense && open) {
-      const today = new Date().toISOString().split('T')[0]
+      setAmount(Number(expense.amount ?? 0).toString())
+      setDate(expense.date ? expense.date.substring(0, 10) : today)
+      const prefilledBranch = expense.branchId
+        ?? singleBranchId
+        ?? userBranchId
+        ?? "all"
+      setBranchId(prefilledBranch || "all")
+    } else {
+      setName("")
       setCategory("")
       setDescription("")
       setAmount("")
       setDate(today)
-      setUserId("")
-    }
-  }, [expense, open])
-
-  const loadUsers = async () => {
-    try {
-      setIsLoadingData(true)
-      // Intentar cargar SalesUsers primero (son los requeridos para gastos)
-      let response = await fetch(`/api/${organizationId}/sales-users`)
-      let usersData: any[] = []
-      
-      if (response.ok) {
-        const data = await response.json()
-        usersData = data.users || []
-      }
-
-      // Si no hay SalesUsers, cargar UsuarioSas y el servicio los convertirá automáticamente
-      if (usersData.length === 0) {
-        response = await fetch(`/api/${organizationId}/usuarios?pageSize=100&status=active`)
-        if (response.ok) {
-          const data = await response.json()
-          const usuarios = data.usuarios || []
-          // Mapear usuarios SAS - el servicio los convertirá a SalesUser automáticamente
-          usersData = usuarios.map((user: any) => ({
-            id: user.id,
-            fullName: `${user.nombre || ''} ${user.apellido || ''}`.trim(),
-            nombre: user.nombre,
-            apellido: user.apellido,
-            email: user.correo
-          }))
-        }
+      const defaultBranch = singleBranchId ?? userBranchId
+      if (defaultBranch) {
+        setBranchId(defaultBranch)
+      } else if (branchOptions.length > 1) {
+        setBranchId("all")
       } else {
-        // Mapear SalesUsers al formato esperado
-        usersData = usersData.map((user: any) => ({
-          id: user.id,
-          fullName: user.fullName,
-          email: user.email
-        }))
+        setBranchId("all")
       }
-
-      setUsers(usersData)
-      if (!expense && usersData.length > 0) {
-        setUserId(usersData[0].id)
-      }
-    } catch (error) {
-      console.error('Error al cargar usuarios:', error)
-      toast.error("Error al cargar usuarios")
-    } finally {
-      setIsLoadingData(false)
     }
-  }
+  }, [branchOptions, currentUserBranchId, expense, open])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!category.trim()) {
-      toast.error("La categoría es requerida")
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const trimmedName = capitalizeWords(name.trim())
+    const trimmedDescription = description.trim()
+    const numericAmount = parseFloat(amount)
+
+    if (!trimmedName) {
+      toast.error("El nombre del gasto es requerido")
       return
     }
 
-    if (!description.trim()) {
-      toast.error("La descripción es requerida")
+    if (!trimmedDescription) {
+      toast.error("Describe brevemente el gasto")
       return
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
       toast.error("El monto debe ser mayor a 0")
       return
     }
 
-    if (!userId) {
-      toast.error("Debe seleccionar un usuario")
-      return
-    }
-
     if (!date) {
-      toast.error("La fecha es requerida")
+      toast.error("Selecciona la fecha del gasto")
       return
     }
 
     setIsLoading(true)
     try {
       await onSave({
-        category: category.trim(),
-        description: description.trim(),
-        amount: parseFloat(amount),
+        name: trimmedName,
+        category: category.trim() || undefined,
+        description: trimmedDescription,
+        amount: numericAmount,
         date: new Date(date).toISOString(),
-        userId
+        branchId: branchId !== "all" ? branchId : undefined,
       })
     } finally {
       setIsLoading(false)
@@ -157,111 +127,154 @@ export function ExpenseFormDialog({ open, onOpenChange, expense, organizationId,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[560px] max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {expense ? "Editar Gasto" : "Nuevo Gasto"}
+          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
+            {expense ? "Editar gasto" : "Registrar gasto"}
           </DialogTitle>
-          <DialogDescription>
-            {expense 
-              ? "Modifica los datos del gasto" 
-              : "Completa los datos para registrar un nuevo gasto"}
+          <DialogDescription className="text-gray-500 dark:text-gray-400">
+            {expense
+              ? "Actualiza la información del gasto registrado"
+              : "Completa los datos para registrar un nuevo gasto operativo"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            {/* Fecha */}
-            <div className="space-y-2">
-              <Label htmlFor="date">Fecha <span className="text-red-500">*</span></Label>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 py-2">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="expenseName">Nombre del gasto <span className="text-red-500">*</span></Label>
               <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                disabled={isLoading || isLoadingData}
-              />
-            </div>
-
-            {/* Categoría */}
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoría <span className="text-red-500">*</span></Label>
-              <Select value={category} onValueChange={setCategory} disabled={isLoading || isLoadingData}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Descripción */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Descripción <span className="text-red-500">*</span></Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe el gasto..."
-                required
+                id="expenseName"
+                placeholder="Ej. Compra de insumos"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
                 disabled={isLoading}
-                rows={3}
+                className="rounded-full"
               />
             </div>
 
-            {/* Monto y Usuario */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Monto <span className="text-red-500">*</span></Label>
+            <div className="grid gap-2">
+              <Label htmlFor="expenseCategory">Etiqueta o categoría</Label>
+              <div className="flex flex-col gap-3">
                 <Input
-                  id="amount"
+                  id="expenseCategory"
+                  placeholder="Opcional: Servicios, Alquiler, etc."
+                  value={category}
+                  onChange={(event) => setCategory(capitalizeWords(event.target.value))}
+                  disabled={isLoading}
+                  className="rounded-full"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORY_SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                        category === suggestion
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                      onClick={() => setCategory(suggestion)}
+                      disabled={isLoading}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="expenseDescription">Descripción <span className="text-red-500">*</span></Label>
+              <Textarea
+                id="expenseDescription"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Describe brevemente el gasto, método de pago o cualquier detalle relevante"
+                disabled={isLoading}
+                rows={4}
+                className="rounded-3xl resize-none"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="expenseDate">Fecha <span className="text-red-500">*</span></Label>
+                <Input
+                  id="expenseDate"
+                  type="date"
+                  value={date}
+                  onChange={(event) => setDate(event.target.value)}
+                  disabled={isLoading}
+                  className="rounded-full"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="expenseAmount">Monto <span className="text-red-500">*</span></Label>
+                <Input
+                  id="expenseAmount"
                   type="number"
                   step="0.01"
                   min="0"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  required
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
                   disabled={isLoading}
+                  className="rounded-full"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="userId">Usuario <span className="text-red-500">*</span></Label>
-                <Select value={userId} onValueChange={setUserId} disabled={isLoading || isLoadingData}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar usuario" />
+            </div>
+
+            {branchOptions.length > 1 && (
+              <div className="grid gap-2">
+                <Label htmlFor="expenseBranch">Sucursal</Label>
+                <Select
+                  value={branchId}
+                  onValueChange={setBranchId}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="expenseBranch" className="rounded-full">
+                    <SelectValue placeholder="Seleccionar sucursal" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.fullName || user.email || 'Usuario'}
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">Sin asignar</SelectItem>
+                    {branchOptions.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id || ""}>
+                        {branch.name || "Sin nombre"}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading || !category || !description || !amount || !userId || !date}
+            <Button
+              type="submit"
+              variant="new"
+              className="rounded-full"
+              disabled={
+                isLoading ||
+                !name.trim() ||
+                !description.trim() ||
+                !amount ||
+                Number.isNaN(parseFloat(amount)) ||
+                parseFloat(amount) <= 0 ||
+                !date
+              }
             >
-              {isLoading ? "Guardando..." : expense ? "Actualizar" : "Crear"}
+              {isLoading ? "Guardando..." : expense ? "Actualizar" : "Registrar"}
             </Button>
           </DialogFooter>
         </form>

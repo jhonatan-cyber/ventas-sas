@@ -23,7 +23,15 @@ export default async function CashRegistersPage({
 
   // Obtener cajas
   const result = await CashRegisterService.getAllCashRegisters(organizationId, 0, 1000)
-  const cashRegisters = result.cashRegisters
+  const cashRegisters = result.cashRegisters.map((register) => ({
+    ...register,
+    openingBalance: Number(register.openingBalance),
+    currentBalance: Number(register.currentBalance),
+    lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
+    lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
+    createdAt: register.createdAt.toISOString(),
+    updatedAt: register.updatedAt.toISOString(),
+  }))
 
   return (
     <CashRegistersPageClient 

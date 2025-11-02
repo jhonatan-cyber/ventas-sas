@@ -23,7 +23,7 @@ export function SalesCustomerDeleteDialog({ open, onOpenChange, customer, onDele
           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>
             Esta acción no se puede deshacer. Se eliminará permanentemente el cliente
-            <strong className="block mt-2">"{customer?.name}"</strong>
+            <strong className="block mt-2">"{`${customer?.name ?? ""} ${(customer as any)?.lastName ?? ""}`.trim()}"</strong>
             y todos sus datos asociados.
           </AlertDialogDescription>
         </AlertDialogHeader>

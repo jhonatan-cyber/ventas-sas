@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+
+function serializeCashRegister(register: any) {
+  return {
+    ...register,
+    openingBalance: Number(register.openingBalance ?? 0),
+    currentBalance: Number(register.currentBalance ?? 0),
+    lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
+    lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
+    createdAt: register.createdAt ? register.createdAt.toISOString() : null,
+    updatedAt: register.updatedAt ? register.updatedAt.toISOString() : null,
+    branch: register.branch || null,
+    openedBy: register.openedBy
+      ? {
+          id: register.openedBy.id,
+          nombre: register.openedBy.nombre,
+          apellido: register.openedBy.apellido,
+        }
+      : null,
+    closedBy: register.closedBy
+      ? {
+          id: register.closedBy.id,
+          nombre: register.closedBy.nombre,
+          apellido: register.closedBy.apellido,
+        }
+      : null,
+  }
+}
 
 // GET - Obtener todas las cajas con paginación y filtros
 export async function GET(
@@ -37,7 +65,7 @@ export async function GET(
     )
 
     return NextResponse.json({
-      cashRegisters,
+      cashRegisters: cashRegisters.map(serializeCashRegister),
       total,
       page,
       pageSize,
@@ -70,6 +98,16 @@ export async function POST(
       )
     }
 
+    const token = request.cookies.get('sas-auth-token')?.value
+    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      )
+    }
+
     const name = (body.name || '').trim()
     const branchId = body.branchId?.trim() || undefined
     const openingBalance = Number(body.openingBalance ?? 0)
@@ -84,10 +122,11 @@ export async function POST(
     const cashRegister = await CashRegisterService.createCashRegister(organizationId, {
       name,
       branchId,
-      openingBalance: isNaN(openingBalance) ? 0 : openingBalance
+      openingBalance: isNaN(openingBalance) ? 0 : openingBalance,
+      openedById: currentUser.id,
     })
 
-    return NextResponse.json(cashRegister, { status: 201 })
+    return NextResponse.json(serializeCashRegister(cashRegister), { status: 201 })
   } catch (error: any) {
     console.error('Error al crear caja:', error)
     return NextResponse.json(

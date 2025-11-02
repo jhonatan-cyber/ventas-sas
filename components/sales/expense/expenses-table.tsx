@@ -4,14 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Edit, Trash2, DollarSign } from "lucide-react"
-import { Expense } from "@prisma/client"
 import { formatDate } from "@/lib/utils/date"
+import { SalesExpenseWithRelations } from "./types"
 
 interface ExpensesTableProps {
-  expenses: Array<Expense & { user?: any }>
+  expenses: SalesExpenseWithRelations[]
   isLoading?: boolean
-  onEditClick?: (expense: Expense) => void
-  onDeleteClick?: (expense: Expense) => void
+  onEditClick?: (expense: SalesExpenseWithRelations) => void
+  onDeleteClick?: (expense: SalesExpenseWithRelations) => void
 }
 
 export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick }: ExpensesTableProps) {
@@ -30,17 +30,18 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Fecha</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Categoría</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Concepto</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Descripción</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Usuario</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Monto</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Registrado por</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Monto</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {expenses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                       <DollarSign className="h-8 w-8 text-gray-400" />
@@ -59,8 +60,18 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                        {expense.category}
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {expense.name}
+                      </div>
+                      {expense.category && (
+                        <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                          {expense.category}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                        {expense.branch?.name ?? "Sin sucursal"}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -70,7 +81,7 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {expense.user?.fullName || 'Usuario no encontrado'}
+                        {expense.user?.fullName || "Usuario sin asignar"}
                       </div>
                       {expense.user?.email && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -78,9 +89,9 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                         </div>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <div className="font-semibold text-red-600 dark:text-red-400">
-                        ${Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        BOB {Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

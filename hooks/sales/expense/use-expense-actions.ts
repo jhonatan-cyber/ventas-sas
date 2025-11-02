@@ -3,26 +3,26 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Expense } from "@prisma/client"
+import { SalesExpenseWithRelations } from "@/components/sales/expense/types"
 
-export function useExpenseActions(customerSlug: string, organizationId: string) {
+export function useExpenseActions(customerSlug: string, onExpensesChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>()
+  const [selectedExpense, setSelectedExpense] = useState<SalesExpenseWithRelations | undefined>()
 
   const openCreateDialog = () => {
     setSelectedExpense(undefined)
     setIsFormDialogOpen(true)
   }
 
-  const openEditDialog = (expense: Expense) => {
+  const openEditDialog = (expense: SalesExpenseWithRelations) => {
     setSelectedExpense(expense)
     setIsFormDialogOpen(true)
   }
 
-  const openDeleteDialog = (expense: Expense) => {
+  const openDeleteDialog = (expense: SalesExpenseWithRelations) => {
     setSelectedExpense(expense)
     setIsDeleteDialogOpen(true)
   }
@@ -55,7 +55,11 @@ export function useExpenseActions(customerSlug: string, organizationId: string) 
       const message = selectedExpense ? "Gasto actualizado" : "Gasto creado"
       toast.success(message)
       closeDialogs()
-      
+
+      if (onExpensesChange) {
+        await Promise.resolve(onExpensesChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -79,7 +83,11 @@ export function useExpenseActions(customerSlug: string, organizationId: string) 
 
       toast.success("Gasto eliminado")
       closeDialogs()
-      
+
+      if (onExpensesChange) {
+        await Promise.resolve(onExpensesChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })

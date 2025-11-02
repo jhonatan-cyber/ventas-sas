@@ -8,13 +8,15 @@ interface QuotationsHeaderProps {
   description: string
   newButtonText?: string
   onNewClick: () => void
+  newButtonDisabled?: boolean
 }
 
 export function QuotationsHeader({
   title,
   description,
   newButtonText = "Nuevo",
-  onNewClick
+  onNewClick,
+  newButtonDisabled = false
 }: QuotationsHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-8">
@@ -26,6 +28,7 @@ export function QuotationsHeader({
         variant="new" 
         rounded="full" 
         onClick={onNewClick}
+        disabled={newButtonDisabled}
       >
         <Plus className="h-4 w-4" />
         {newButtonText}

@@ -4,39 +4,52 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, FileText, Check, X } from "lucide-react"
-import { Quotation } from "@prisma/client"
-// Función simple para formatear fechas
+import { Edit, Trash2, FileText, Eye } from "lucide-react"
+import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+import type { FC } from "react"
+
 const formatDate = (date: Date | string): string => {
   const d = new Date(date)
-  return d.toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
 
 interface QuotationsTableProps {
-  quotations: Array<Quotation & { customer?: any; items?: any[] }>
+  quotations: SalesQuotationWithRelations[]
   isLoading?: boolean
-  onEditClick?: (quotation: Quotation) => void
-  onDeleteClick?: (quotation: Quotation) => void
-  onStatusChange?: (quotation: Quotation, newStatus: string) => void
+  onEditClick?: (quotation: SalesQuotationWithRelations) => void
+  onDeleteClick?: (quotation: SalesQuotationWithRelations) => void
+  onViewDetails?: (quotation: SalesQuotationWithRelations) => void
+  showBranchColumn?: boolean
 }
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
-  approved: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800",
-  rejected: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800",
-  converted: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-  expired: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+const statusTokens: Record<string, { label: string; className: string }> = {
+  active: {
+    label: "Activa",
+    className: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800",
+  },
+  expired: {
+    label: "Vencida",
+    className: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800",
+  },
+  converted: {
+    label: "Convertida",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  },
+  pending: {
+    label: "Pendiente",
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800",
+  },
+  approved: {
+    label: "Aprobada",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  },
+  rejected: {
+    label: "Rechazada",
+    className: "bg-gray-200 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800",
+  },
 }
 
-const statusLabels: Record<string, string> = {
-  pending: "Pendiente",
-  approved: "Aprobada",
-  rejected: "Rechazada",
-  converted: "Convertida",
-  expired: "Expirada"
-}
-
-export function QuotationsTable({ quotations, isLoading, onEditClick, onDeleteClick, onStatusChange }: QuotationsTableProps) {
+export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, showBranchColumn = false }) => {
   if (isLoading) {
     return (
       <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -51,11 +64,13 @@ export function QuotationsTable({ quotations, isLoading, onEditClick, onDeleteCl
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Número</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cotización</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cliente</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Fecha</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Items</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Total</TableHead>
+              {showBranchColumn && (
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
+              )}
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Productos</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Importes</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
@@ -63,80 +78,93 @@ export function QuotationsTable({ quotations, isLoading, onEditClick, onDeleteCl
           <TableBody>
             {quotations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-gray-400" />
+                <TableCell colSpan={6} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+                      <FileText className="h-10 w-10 text-gray-400" />
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400">No hay cotizaciones registradas</p>
+                    <p>No hay cotizaciones registradas</p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               quotations.map((quotation) => {
                 const totalItems = quotation.items?.length || 0
-                const totalQuantity = quotation.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
-                
+                const totalQuantity = quotation.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 0
+                const token = statusTokens[quotation.status] || statusTokens.pending
+                const rawFullName = `${quotation.customer?.name ?? ""} ${quotation.customer?.lastName ?? ""}`.trim()
+                const customerDisplayName = rawFullName || quotation.customerName || "Cliente sin registrar"
+                const branchName = quotation.branch?.name || "Sin sucursal"
+                const customerEmail = quotation.customer?.email || null
+
                 return (
-                  <TableRow key={quotation.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
-                    <TableCell>
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        {quotation.quotationNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {quotation.customer?.name || 'Cliente no encontrado'}
-                        </span>
-                        {quotation.customer?.email && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{quotation.customer.email}</span>
+                  <TableRow key={quotation.id} className="border-b border-gray-100 dark:border-[#2a2a2a]">
+                    <TableCell className="align-top py-5">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-gray-900 dark:text-white">{quotation.quotationNumber}</span>
+                        <span className="text-xs uppercase text-gray-500 dark:text-gray-400">Emitida el {formatDate(quotation.createdAt)}</span>
+                        {quotation.expiresAt && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Vence: {formatDate(quotation.expiresAt)}</span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {formatDate(quotation.createdAt)}
-                      </div>
-                      {quotation.expiresAt && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Vence: {formatDate(quotation.expiresAt)}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {totalItems} producto{totalItems !== 1 ? 's' : ''}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {totalQuantity} unidad{totalQuantity !== 1 ? 'es' : ''}
+                    <TableCell className="align-top py-5">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900 dark:text-white">{customerDisplayName}</span>
+                        {customerEmail && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{customerEmail}</span>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        ${Number(quotation.total).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                    {showBranchColumn && (
+                      <TableCell className="align-top py-5">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{branchName}</span>
+                      </TableCell>
+                    )}
+                    <TableCell className="align-top py-5">
+                      <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+                        <span>{totalItems} productos</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{totalQuantity} unidades</span>
                       </div>
-                      {quotation.discount > 0 && (
-                        <div className="text-xs text-green-600 dark:text-green-400">
-                          Desc: ${Number(quotation.discount).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
-                        </div>
-                      )}
                     </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[quotation.status] || statusColors.pending}>
-                        {statusLabels[quotation.status] || quotation.status}
-                      </Badge>
+                    <TableCell className="align-top py-5">
+                      <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-gray-900 dark:text-white">${Number(quotation.total).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                        {Number(quotation.discount) > 0 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Desc: ${Number(quotation.discount).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                        )}
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Subtotal: ${Number(quotation.subtotal).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="align-top py-5">
+                      <Badge className={`${token.className} rounded-full px-3 py-1 text-xs font-semibold`}>{token.label}</Badge>
+                    </TableCell>
+                    <TableCell className="align-top py-5">
                       <div className="flex justify-end gap-2">
+                        {onViewDetails && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-900/30 text-gray-600 dark:text-gray-300"
+                                onClick={() => onViewDetails(quotation)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalles</TooltipContent>
+                          </Tooltip>
+                        )}
+
                         {onEditClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                                 onClick={() => onEditClick(quotation)}
-                                className="hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -144,29 +172,15 @@ export function QuotationsTable({ quotations, isLoading, onEditClick, onDeleteCl
                             <TooltipContent>Editar cotización</TooltipContent>
                           </Tooltip>
                         )}
-                        {onStatusChange && quotation.status === 'pending' && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onStatusChange(quotation, 'approved')}
-                                className="hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Aprobar cotización</TooltipContent>
-                          </Tooltip>
-                        )}
+
                         {onDeleteClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                                 onClick={() => onDeleteClick(quotation)}
-                                className="hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

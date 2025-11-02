@@ -59,6 +59,7 @@ export async function POST(
     const { slug } = await params
     const body = await request.json()
     const name = (body.name || '').trim()
+    const lastName = (body.lastName || '').trim()
     const email = body.email?.trim()
     const phone = body.phone?.trim()
     const address = body.address?.trim()
@@ -82,6 +83,7 @@ export async function POST(
 
     const newCustomer = await SalesCustomerService.createCustomer(organizationId, {
       name,
+      lastName: lastName || undefined,
       email,
       phone,
       address,

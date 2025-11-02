@@ -1,28 +1,60 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { CashRegistersHeader } from "./cash-registers-header"
 import { CashRegistersContainer } from "./cash-registers-container"
 import { CashRegisterFormDialog } from "./cash-register-form-dialog"
 import { CashRegisterDeleteDialog } from "./cash-register-delete-dialog"
 import { CashRegisterOpenDialog } from "./cash-register-open-dialog"
 import { CashRegisterCloseDialog } from "./cash-register-close-dialog"
+import { CashRegisterDetailsDialog } from "./cash-register-details-dialog"
 import { CashRegister } from "@prisma/client"
 import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions"
 import { toast } from "sonner"
 
+type CashRegisterWithRelations = CashRegister & {
+  branch?: { id: string; name: string; address?: string | null } | null
+  openedBy?: { id: string; nombre: string; apellido: string } | null
+  closedBy?: { id: string; nombre: string; apellido: string } | null
+}
+
 interface CashRegistersPageClientProps {
-  initialCashRegisters: Array<CashRegister & { branch?: any }>
+  initialCashRegisters: CashRegisterWithRelations[]
   customerSlug: string
 }
 
 export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: CashRegistersPageClientProps) {
-  const [cashRegisters, setCashRegisters] = useState(initialCashRegisters)
+  const [cashRegisters, setCashRegisters] = useState<CashRegisterWithRelations[]>(initialCashRegisters)
   const [isLoading, setIsLoading] = useState(false)
+  const [detailCashRegister, setDetailCashRegister] = useState<CashRegisterWithRelations | null>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+
+  const uniqueBranchIds = useMemo(() => {
+    const ids = new Set<string>()
+    cashRegisters.forEach((register) => {
+      if (register.branch?.id) {
+        ids.add(register.branch.id)
+      }
+    })
+    return ids
+  }, [cashRegisters])
+
+  const shouldShowBranchInfo = uniqueBranchIds.size !== 1
+  const hasOpenCashRegister = cashRegisters.some((register) => register.isOpen)
 
   useEffect(() => {
     setCashRegisters(initialCashRegisters)
   }, [initialCashRegisters])
+
+  useEffect(() => {
+     if (!detailCashRegister) return
+     const updated = cashRegisters.find((register) => register.id === detailCashRegister.id)
+     if (updated) {
+       setDetailCashRegister(updated)
+    } else if (isDetailDialogOpen) {
+      closeDetailsDialog()
+    }
+  }, [cashRegisters, detailCashRegister, isDetailDialogOpen])
 
   const loadCashRegisters = useCallback(async () => {
     try {
@@ -35,7 +67,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
       }
 
       const data = await response.json()
-      setCashRegisters(data.cashRegisters || [])
+      setCashRegisters((data.cashRegisters || []) as CashRegisterWithRelations[])
     } catch (error: any) {
       console.error("Error al cargar cajas:", error)
       toast.error(error.message || "Error al cargar las cajas")
@@ -51,7 +83,6 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
     isCloseDialogOpen,
     selectedCashRegister,
     openCreateDialog,
-    openEditDialog,
     openDeleteDialog,
     openOpenDialog,
     openCloseDialog,
@@ -62,31 +93,75 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
     handleClose
   } = useCashRegisterActions(customerSlug, loadCashRegisters)
 
+  const handleCreateClick = () => {
+    if (hasOpenCashRegister) {
+      toast.info("Cierra la caja abierta antes de crear una nueva.")
+      return
+    }
+    openCreateDialog()
+  }
+
+  const openDetailsDialog = (cashRegister: CashRegisterWithRelations) => {
+    setDetailCashRegister(cashRegister)
+    setIsDetailDialogOpen(true)
+  }
+
+  const closeDetailsDialog = () => {
+    setIsDetailDialogOpen(false)
+    setDetailCashRegister(null)
+  }
+
+  const handleOpenDialog = (cashRegister: CashRegisterWithRelations) => {
+    openOpenDialog(cashRegister)
+  }
+
+  const handleCloseDialog = (cashRegister: CashRegisterWithRelations) => {
+    openCloseDialog(cashRegister)
+  }
+
+  const handleDeleteDialog = (cashRegister: CashRegisterWithRelations) => {
+    openDeleteDialog(cashRegister)
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* Header con título y botón */}
       <CashRegistersHeader
         title="Gestión de Cajas"
-        description="Administra las cajas registradoras de tu organización"
-        newButtonText="Nueva Caja"
-        onNewClick={openCreateDialog}
+        description="Administra las cajas registradoras de tu sistema"
+        newButtonText="Agregar Caja"
+        onNewClick={handleCreateClick}
+        newButtonDisabled={hasOpenCashRegister}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <CashRegistersContainer 
         cashRegisters={cashRegisters}
         isLoading={isLoading}
-        onEdit={openEditDialog}
-        onOpen={openOpenDialog}
-        onClose={openCloseDialog}
-        onDelete={openDeleteDialog}
+        onViewDetails={openDetailsDialog}
+        onOpen={handleOpenDialog}
+        onClose={handleCloseDialog}
+        onDelete={handleDeleteDialog}
+      />
+
+      <CashRegisterDetailsDialog
+        open={isDetailDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDetailsDialog()
+          } else {
+            setIsDetailDialogOpen(true)
+          }
+        }}
+        cashRegister={detailCashRegister}
+        showBranchInfo={shouldShowBranchInfo}
       />
 
       {/* Modal de crear/editar caja */}
       <CashRegisterFormDialog
         open={isFormDialogOpen}
         onOpenChange={closeDialogs}
-        cashRegister={selectedCashRegister}
+        cashRegister={selectedCashRegister as CashRegisterWithRelations | undefined}
         customerSlug={customerSlug}
         onSave={handleSave}
       />
@@ -95,7 +170,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
       <CashRegisterOpenDialog
         open={isOpenDialogOpen}
         onOpenChange={closeDialogs}
-        cashRegister={selectedCashRegister}
+        cashRegister={selectedCashRegister as CashRegisterWithRelations | undefined}
         onOpen={handleOpen}
       />
 
@@ -103,7 +178,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
       <CashRegisterCloseDialog
         open={isCloseDialogOpen}
         onOpenChange={closeDialogs}
-        cashRegister={selectedCashRegister}
+        cashRegister={selectedCashRegister as CashRegisterWithRelations | undefined}
         onClose={handleClose}
       />
 
@@ -111,7 +186,7 @@ export function CashRegistersPageClient({ initialCashRegisters, customerSlug }: 
       <CashRegisterDeleteDialog
         open={isDeleteDialogOpen}
         onOpenChange={closeDialogs}
-        cashRegister={selectedCashRegister}
+        cashRegister={selectedCashRegister as CashRegisterWithRelations | undefined}
         onDelete={handleDelete}
       />
     </div>

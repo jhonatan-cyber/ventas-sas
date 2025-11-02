@@ -301,6 +301,7 @@ model SalesCustomer {
   id             String      @id @default(cuid())
   organizationId String      @map("organization_id")
   name           String
+  lastName       String?     @map("last_name")
   email          String?
   phone          String?
   address        String?
@@ -323,6 +324,7 @@ model Sale {
   organizationId String      @map("organization_id")
   userId         String      @map("user_id")
   customerId     String?     @map("customer_id")
+  customerName   String?     @map("customer_name")
   saleNumber     String      @unique @map("sale_number")
   status         String      @default("completed")
   subtotal       Decimal     @db.Decimal(10, 2)
@@ -348,6 +350,7 @@ model SaleItem {
   quantity   Int
   unitPrice  Decimal      @map("unit_price") @db.Decimal(10, 2)
   subtotal   Decimal      @db.Decimal(10, 2)
+  trackingCodes Json?      @map("tracking_codes")
   createdAt  DateTime     @default(now()) @map("created_at")
   sale       Sale         @relation(fields: [saleId], references: [id])
   product    SalesProduct @relation(fields: [productId], references: [id])
@@ -359,9 +362,12 @@ model SaleItem {
 model Quotation {
   id             String      @id @default(cuid())
   organizationId String      @map("organization_id")
-  customerId     String      @map("customer_id")
+  customerId     String?     @map("customer_id")
+  customerName   String?     @map("customer_name")
+  customerPhone  String?     @map("customer_phone")
   quotationNumber String     @unique @map("quotation_number")
-  status         String      @default("pending")
+  status         String      @default("active")
+  branchId       String?     @map("branch_id")
   subtotal       Decimal     @db.Decimal(10, 2)
   discount       Decimal     @default(0) @db.Decimal(10, 2)
   total          Decimal     @db.Decimal(10, 2)
@@ -370,7 +376,8 @@ model Quotation {
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  customer       SalesCustomer @relation(fields: [customerId], references: [id])
+  customer       SalesCustomer? @relation(fields: [customerId], references: [id])
+  branch         Branch?     @relation(fields: [branchId], references: [id])
   items          QuotationItem[]
 
   @@map("quotations")
@@ -380,13 +387,14 @@ model Quotation {
 model QuotationItem {
   id            String     @id @default(cuid())
   quotationId   String     @map("quotation_id")
-  productId     String     @map("product_id")
+  productId     String?    @map("product_id")
+  productName   String?    @map("product_name")
   quantity      Int
   unitPrice     Decimal    @map("unit_price") @db.Decimal(10, 2)
   subtotal      Decimal    @db.Decimal(10, 2)
   createdAt     DateTime   @default(now()) @map("created_at")
   quotation     Quotation  @relation(fields: [quotationId], references: [id])
-  product       SalesProduct @relation(fields: [productId], references: [id])
+  product       SalesProduct? @relation(fields: [productId], references: [id])
 
   @@map("quotation_items")
 }
@@ -396,7 +404,9 @@ model Expense {
   id             String      @id @default(cuid())
   organizationId String      @map("organization_id")
   userId         String      @map("user_id")
-  category       String
+  branchId       String?     @map("branch_id")
+  name           String
+  category       String?
   description    String
   amount         Decimal     @db.Decimal(10, 2)
   date           DateTime    @db.Date
@@ -404,6 +414,7 @@ model Expense {
   updatedAt      DateTime    @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
   user           SalesUser   @relation(fields: [userId], references: [id])
+  branch         Branch?     @relation(fields: [branchId], references: [id])
 
   @@map("expenses")
 }
@@ -419,10 +430,14 @@ model CashRegister {
   isOpen         Boolean     @default(false) @map("is_open")
   lastOpenAt     DateTime?   @map("last_open_at")
   lastCloseAt    DateTime?   @map("last_close_at")
+  openedById     String?     @map("opened_by_id")
+  closedById     String?     @map("closed_by_id")
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
   branch         Branch?     @relation(fields: [branchId], references: [id])
+  openedBy       UsuarioSas? @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
+  closedBy       UsuarioSas? @relation("CashRegisterClosedBy", fields: [closedById], references: [id])
 
   @@map("cash_registers")
 }
@@ -444,6 +459,8 @@ model Branch {
   cashRegisters  CashRegister[]
   rolesSas       RoleSas[]
   usuariosSas    UsuarioSas[]
+  quotations     Quotation[]
+  expenses       Expense[]
 
   @@map("branches")
   @@index([customerId])
@@ -487,6 +504,8 @@ model UsuarioSas {
   rol       RoleSas?  @relation(fields: [rolId], references: [id])
   sucursal  Branch?   @relation(fields: [sucursalId], references: [id])
   customer  Customer  @relation(fields: [customerId], references: [id])
+  openedCashRegisters CashRegister[] @relation("CashRegisterOpenedBy")
+  closedCashRegisters CashRegister[] @relation("CashRegisterClosedBy")
 
   @@map("usuarios_sas")
 }

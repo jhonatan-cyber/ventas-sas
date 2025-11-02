@@ -19,11 +19,6 @@ export function useCashRegisterActions(customerSlug: string, onCashRegistersChan
     setIsFormDialogOpen(true)
   }
 
-  const openEditDialog = (cashRegister: CashRegister) => {
-    setSelectedCashRegister(cashRegister)
-    setIsFormDialogOpen(true)
-  }
-
   const openDeleteDialog = (cashRegister: CashRegister) => {
     setSelectedCashRegister(cashRegister)
     setIsDeleteDialogOpen(true)
@@ -66,8 +61,7 @@ export function useCashRegisterActions(customerSlug: string, onCashRegistersChan
         throw new Error(error.error || "Error al guardar la caja")
       }
 
-      const message = selectedCashRegister ? "Caja actualizada" : "Caja creada"
-      toast.success(message)
+      toast.success("Caja creada")
       closeDialogs()
 
       if (onCashRegistersChange) {
@@ -182,7 +176,6 @@ export function useCashRegisterActions(customerSlug: string, onCashRegistersChan
     isCloseDialogOpen,
     selectedCashRegister,
     openCreateDialog,
-    openEditDialog,
     openDeleteDialog,
     openOpenDialog,
     openCloseDialog,

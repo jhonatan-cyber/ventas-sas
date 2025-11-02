@@ -3,6 +3,7 @@ import { SalesCustomer } from '@prisma/client'
 
 export interface CreateSalesCustomerData {
   name: string
+  lastName?: string
   email?: string
   phone?: string
   address?: string
@@ -11,6 +12,7 @@ export interface CreateSalesCustomerData {
 
 export interface UpdateSalesCustomerData {
   name?: string
+  lastName?: string
   email?: string
   phone?: string
   address?: string
@@ -34,6 +36,7 @@ export class SalesCustomerService {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
         { ruc: { contains: search, mode: 'insensitive' } },
@@ -51,7 +54,10 @@ export class SalesCustomerService {
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' }
+        orderBy: [
+          { lastName: 'asc' },
+          { name: 'asc' }
+        ]
       }),
       prisma.salesCustomer.count({ where })
     ])
@@ -75,6 +81,7 @@ export class SalesCustomerService {
       data: {
         organizationId,
         name: data.name,
+        lastName: data.lastName,
         email: data.email,
         phone: data.phone,
         address: data.address,
@@ -109,7 +116,10 @@ export class SalesCustomerService {
         organizationId,
         isActive: true
       },
-      orderBy: { name: 'asc' }
+      orderBy: [
+        { lastName: 'asc' },
+        { name: 'asc' }
+      ]
     })
   }
 }

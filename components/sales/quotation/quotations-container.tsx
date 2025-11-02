@@ -1,49 +1,66 @@
 "use client"
 
-import { useState } from "react"
+import { FC, useMemo, useState } from "react"
 import { QuotationsTable } from "./quotations-table"
 import { QuotationsFilters } from "./quotations-filters"
 import { QuotationsPagination } from "./quotations-pagination"
 import { QuotationsStats } from "./quotations-stats"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Quotation } from "@prisma/client"
+import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 
-interface QuotationsContainerProps {
-  quotations: Array<Quotation & { customer?: any; items?: any[] }>
+const QuotationsTableComponent = QuotationsTable as unknown as FC<any>
+
+export interface QuotationsContainerProps {
+  quotations: SalesQuotationWithRelations[]
+  isLoading?: boolean
   organizationId: string
-  onEdit?: (quotation: Quotation) => void
-  onStatusChange?: (quotation: Quotation, newStatus: string) => void
-  onDelete?: (quotation: Quotation) => void
+  onEdit?: (quotation: SalesQuotationWithRelations) => void
+  onDelete?: (quotation: SalesQuotationWithRelations) => void
+  onViewDetails?: (quotation: SalesQuotationWithRelations) => void
+  showBranchColumn?: boolean
 }
 
-export function QuotationsContainer({ quotations, organizationId, onEdit, onStatusChange, onDelete }: QuotationsContainerProps) {
+export const QuotationsContainer: FC<QuotationsContainerProps> = ({
+  quotations,
+  isLoading = false,
+  organizationId: _organizationId,
+  onEdit,
+  onDelete,
+  onViewDetails,
+  showBranchColumn = false,
+}) => {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
 
   // Filtrar cotizaciones por búsqueda y estado
-  const filteredQuotations = quotations.filter(quotation => {
-    // Filtrar por búsqueda
-    if (searchTerm && searchTerm.trim() !== "") {
-      const searchLower = searchTerm.toLowerCase()
-      const matchesSearch = 
-        quotation.quotationNumber?.toLowerCase().includes(searchLower) ||
-        quotation.customer?.name?.toLowerCase().includes(searchLower) ||
-        quotation.notes?.toLowerCase().includes(searchLower)
-      
-      if (!matchesSearch) return false
-    }
+  const filteredQuotations = useMemo(() => {
+    return quotations.filter((quotation) => {
+      const matchesStatus = statusFilter === 'all' || quotation.status === statusFilter
 
-    // Filtrar por estado
-    if (statusFilter !== "all") {
-      return quotation.status === statusFilter
-    }
-    return true
-  })
+      if (searchTerm.trim() !== "") {
+        const searchLower = searchTerm.toLowerCase()
+        const matchesSearch =
+          quotation.quotationNumber?.toLowerCase().includes(searchLower) ||
+          `${quotation.customer?.name ?? ""} ${quotation.customer?.lastName ?? ""}`.trim().toLowerCase().includes(searchLower) ||
+          quotation.customerName?.toLowerCase().includes(searchLower) ||
+          quotation.notes?.toLowerCase().includes(searchLower)
+
+        return matchesSearch && matchesStatus
+      }
+
+      return matchesStatus
+    })
+  }, [quotations, searchTerm, statusFilter])
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term)
+    setCurrentPage(1)
+  }
+
+  const handleStatusChange = (status: string) => {
+    setStatusFilter(status)
     setCurrentPage(1)
   }
 
@@ -51,11 +68,6 @@ export function QuotationsContainer({ quotations, organizationId, onEdit, onStat
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
   const currentQuotations = filteredQuotations.slice(startIndex, endIndex)
-
-  const handleStatusChange = (status: string) => {
-    setStatusFilter(status)
-    setCurrentPage(1)
-  }
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size)
@@ -68,18 +80,15 @@ export function QuotationsContainer({ quotations, organizationId, onEdit, onStat
 
   return (
     <div className="space-y-6">
-      {/* Estadísticas */}
-      <QuotationsStats quotations={quotations} />
+      <QuotationsStats quotations={quotations as any} isLoading={isLoading} />
 
-      {/* Filtros */}
       <QuotationsFilters 
         onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
         onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
       />
 
-      {/* Tabla de cotizaciones */}
-      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -87,7 +96,7 @@ export function QuotationsContainer({ quotations, organizationId, onEdit, onStat
                 Cotizaciones ({filteredQuotations.length})
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredQuotations.length === quotations.length 
+                {filteredQuotations.length === quotations.length
                   ? "Lista completa de cotizaciones disponibles"
                   : `Mostrando ${filteredQuotations.length} de ${quotations.length} cotizaciones`}
               </CardDescription>
@@ -96,17 +105,18 @@ export function QuotationsContainer({ quotations, organizationId, onEdit, onStat
         </CardHeader>
         <CardContent>
           <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <QuotationsTable 
-              quotations={currentQuotations} 
-              onEditClick={onEdit} 
-              onStatusChange={onStatusChange} 
-              onDeleteClick={onDelete} 
+            <QuotationsTableComponent
+              quotations={currentQuotations as any}
+              isLoading={isLoading}
+              onEditClick={onEdit as any}
+              onDeleteClick={onDelete as any}
+              onViewDetails={onViewDetails as any}
+              showBranchColumn={showBranchColumn}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Paginación */}
       <div className="flex justify-center">
         <QuotationsPagination
           currentPage={currentPage}

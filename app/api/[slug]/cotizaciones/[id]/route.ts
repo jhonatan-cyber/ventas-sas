@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
+const capitalizeWords = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (char) => char.toUpperCase())
+
+const normalizePhone = (value?: string | null): string | undefined => {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  let sanitized = trimmed.replace(/[^0-9+]/g, '')
+  if (!sanitized) return undefined
+  if (!sanitized.startsWith('+')) sanitized = `+${sanitized}`
+  if (sanitized === '+') return undefined
+  const digits = sanitized.replace(/\D/g, '')
+  if (digits.length <= 3) return undefined
+  return sanitized
+}
+
 // GET - Obtener cotización por ID
 export async function GET(
   request: NextRequest,
@@ -78,20 +96,49 @@ export async function PUT(
     }
 
     // Actualización completa
+    const normalizedItems = Array.isArray(body.items)
+      ? body.items.map((item: any, index: number) => {
+          const rawProductId = typeof item.productId === 'string' ? item.productId.trim() : ''
+          const productId = rawProductId.length > 0 ? rawProductId : null
+          const manualName = typeof item.productName === 'string' ? capitalizeWords(item.productName.trim()) : ''
+
+          if (!productId && manualName.length === 0) {
+            throw new Error(`El producto en la posición ${index + 1} requiere un identificador o un nombre.`)
+          }
+
+          const quantity = Number(item.quantity ?? 0)
+          const unitPrice = Number(item.unitPrice ?? 0)
+          const subtotal = Number(item.subtotal ?? quantity * unitPrice)
+
+          return {
+            productId,
+            productName: manualName.length > 0 ? manualName : undefined,
+            quantity,
+            unitPrice,
+            subtotal,
+          }
+        })
+      : undefined
+
     const quotation = await QuotationService.updateQuotation(id, {
-      customerId: body.customerId,
+      customerId: body.customerId ?? undefined,
+      customerName: body.customerName ?? undefined,
+      customerPhone: normalizePhone(body.customerPhone),
       status: body.status,
       subtotal: body.subtotal,
       discount: body.discount,
       total: body.total,
       expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
       notes: body.notes,
-      items: body.items
+      items: normalizedItems
     })
 
     return NextResponse.json(quotation)
   } catch (error: any) {
     console.error('Error al actualizar cotización:', error)
+    if (error instanceof Error && error.message.startsWith('El producto en la posición')) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     return NextResponse.json(
       { error: error.message || 'Error al actualizar la cotización' },
       { status: 500 }

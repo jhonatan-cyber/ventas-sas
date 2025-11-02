@@ -83,6 +83,68 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
                   />
                 </div>
               </div>
+
+              <div className="space-y-2 mt-4">
+                <Label>Nombre de la empresa</Label>
+                <Input name="companyName" placeholder="Razón social o nombre comercial" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nombre del contacto</Label>
+                  <Input name="companyContactName" placeholder="Ej: Ing. Edgar Martínez" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Teléfono de contacto</Label>
+                  <Input name="companyPhone" placeholder="Ej: +59170000000" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Correo de contacto</Label>
+                  <Input name="companyEmail" type="email" placeholder="contacto@empresa.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sitio web (opcional)</Label>
+                  <Input name="companyWebsite" placeholder="https://empresa.com" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dirección</Label>
+                <Input name="companyAddress" placeholder="Calle, ciudad, país" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Logo de la empresa</Label>
+                <input
+                  type="file"
+                  name="companyLogo"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="w-full border border-dashed rounded-lg px-3 py-4 text-sm cursor-pointer bg-white dark:bg-[#1a1a1a]"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">Formatos admitidos: PNG, JPG o WEBP. Tamaño recomendado: 400x400.</p>
+                <div className="flex items-center gap-4 p-3 border border-gray-200 dark:border-[#2a2a2a] rounded-lg bg-gray-50 dark:bg-[#151515]">
+                  <div id="companyLogoPreview" className="w-16 h-16 rounded-lg bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] flex items-center justify-center overflow-hidden">
+                    <span className="text-xs text-gray-400">Sin logo</span>
+                  </div>
+                  <div className="flex-1 text-xs text-gray-500 dark:text-gray-400">
+                    El logo se utilizará en documentos como cotizaciones y reportes.
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <Label>Número de WhatsApp</Label>
+                <Input
+                  name="whatsappNumber"
+                  placeholder="Ej: 59170000000"
+                  inputMode="tel"
+                  pattern="[0-9+ ]*"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Usa código de país sin espacios para enviar cotizaciones por WhatsApp.
+                </p>
+              </div>
+
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Se guardará en tu navegador.</p>
             </form>
           </CardContent>

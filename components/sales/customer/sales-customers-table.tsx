@@ -52,8 +52,15 @@ export function SalesCustomersTable({ customers, isLoading, onEditClick, onDelet
               </TableRow>
             ) : (
               customers.map((customer) => {
-                const nameParts = customer.name?.split(" ") || []
-                const initials = nameParts.slice(0, 2).map((part) => part[0]?.toUpperCase() || "").join("")
+                const firstName = customer.name?.trim() || ""
+                const lastName = (customer as any).lastName?.trim() || ""
+                const fullName = `${firstName} ${lastName}`.trim()
+                const initials = fullName
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part[0]?.toUpperCase() || "")
+                  .join("")
                 
                 return (
                   <TableRow key={customer.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
@@ -71,7 +78,7 @@ export function SalesCustomersTable({ customers, isLoading, onEditClick, onDelet
                         </Avatar>
                         <div className="flex flex-col">
                           <span className="font-semibold text-gray-900 dark:text-white">
-                            {customer.name}
+                            {fullName || customer.name}
                           </span>
                           {customer.email && (
                             <span className="text-xs text-gray-500 dark:text-gray-400">{customer.email}</span>

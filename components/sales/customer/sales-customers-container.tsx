@@ -28,7 +28,8 @@ export function SalesCustomersContainer({ customers, isLoading = false, onEdit, 
     if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase()
       const matchesSearch = 
-        customer.name?.toLowerCase().includes(searchLower) ||
+        (customer.name ? customer.name.toLowerCase().includes(searchLower) : false) ||
+        ((customer as any).lastName ? (customer as any).lastName.toLowerCase().includes(searchLower) : false) ||
         customer.email?.toLowerCase().includes(searchLower) ||
         customer.phone?.toLowerCase().includes(searchLower) ||
         customer.ruc?.toLowerCase().includes(searchLower)

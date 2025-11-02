@@ -3,18 +3,22 @@ import { Expense } from '@prisma/client'
 
 export interface CreateExpenseData {
   userId: string
-  category: string
-  description: string
+  name: string
   amount: number
+  description: string
   date: Date
+  branchId?: string | null
+  category?: string | null
 }
 
 export interface UpdateExpenseData {
   userId?: string
-  category?: string
-  description?: string
+  name?: string
   amount?: number
+  description?: string
   date?: Date
+  branchId?: string | null
+  category?: string | null
 }
 
 export class ExpenseService {
@@ -24,10 +28,11 @@ export class ExpenseService {
     skip: number = 0,
     take: number = 10,
     search?: string,
-    category?: string,
+    branchId?: string | null,
     startDate?: Date,
     endDate?: Date,
-    userId?: string
+    userId?: string,
+    category?: string,
   ) {
     const where: any = {
       organizationId
@@ -36,16 +41,23 @@ export class ExpenseService {
     if (search) {
       where.OR = [
         { description: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
         { category: { contains: search, mode: 'insensitive' } }
       ]
     }
 
-    if (category) {
-      where.category = category
+    if (branchId === null) {
+      where.branchId = null
+    } else if (branchId) {
+      where.branchId = branchId
     }
 
     if (userId) {
       where.userId = userId
+    }
+
+    if (category) {
+      where.category = category
     }
 
     if (startDate || endDate) {
@@ -71,6 +83,13 @@ export class ExpenseService {
               email: true
             }
           },
+          branch: {
+            select: {
+              id: true,
+              name: true,
+              address: true
+            }
+          },
           organization: {
             select: {
               id: true,
@@ -92,6 +111,7 @@ export class ExpenseService {
       where: { id },
       include: {
         user: true,
+        branch: true,
         organization: true
       }
     })
@@ -110,6 +130,9 @@ export class ExpenseService {
       where: { id: data.userId },
       include: { customer: true }
     })
+
+    const branchProvided = Object.prototype.hasOwnProperty.call(data, "branchId")
+    let branchId = data.branchId ?? null
 
     if (usuarioSas) {
       // Buscar si ya existe un SalesUser con el mismo correo o crearlo
@@ -133,16 +156,22 @@ export class ExpenseService {
         })
       }
       salesUserId = salesUser.id
+
+      if (!branchProvided && !branchId && usuarioSas.sucursalId) {
+        branchId = usuarioSas.sucursalId
+      }
     }
 
     return prisma.expense.create({
       data: {
         organizationId,
         userId: salesUserId,
-        category: data.category,
+        name: data.name,
+        category: data.category ?? null,
         description: data.description,
         amount: data.amount,
-        date: data.date
+        date: data.date,
+        branchId
       },
       include: {
         user: {
@@ -150,6 +179,13 @@ export class ExpenseService {
             id: true,
             fullName: true,
             email: true
+          }
+        },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+            address: true
           }
         }
       }
@@ -171,6 +207,13 @@ export class ExpenseService {
             fullName: true,
             email: true
           }
+        },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+            address: true
+          }
         }
       }
     })
@@ -181,17 +224,6 @@ export class ExpenseService {
     await prisma.expense.delete({
       where: { id }
     })
-  }
-
-  // Obtener categorías de gastos únicas
-  static async getCategories(organizationId: string): Promise<string[]> {
-    const expenses = await prisma.expense.findMany({
-      where: { organizationId },
-      select: { category: true },
-      distinct: ['category']
-    })
-
-    return expenses.map(e => e.category)
   }
 
   // Obtener estadísticas de gastos

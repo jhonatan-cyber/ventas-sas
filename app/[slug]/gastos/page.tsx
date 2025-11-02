@@ -1,7 +1,38 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { ExpensesPageClient } from "@/components/sales/expense/expenses-page-client"
 import { ExpenseService } from "@/lib/services/sales/expense-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
+import { BranchService } from "@/lib/services/sales/branch-service"
+import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
+
+const serializeExpense = (expense: any) => ({
+  id: expense.id,
+  organizationId: expense.organizationId,
+  userId: expense.userId,
+  branchId: expense.branchId ?? null,
+  name: expense.name,
+  category: expense.category ?? null,
+  description: expense.description,
+  amount: Number(expense.amount ?? 0),
+  date: expense.date ? expense.date.toISOString() : new Date().toISOString(),
+  createdAt: expense.createdAt ? expense.createdAt.toISOString() : new Date().toISOString(),
+  updatedAt: expense.updatedAt ? expense.updatedAt.toISOString() : new Date().toISOString(),
+  user: expense.user
+    ? {
+        id: expense.user.id,
+        fullName: expense.user.fullName ?? null,
+        email: expense.user.email ?? null,
+      }
+    : null,
+  branch: expense.branch
+    ? {
+        id: expense.branch.id,
+        name: expense.branch.name ?? null,
+        address: expense.branch.address ?? null,
+      }
+    : null,
+})
 
 export default async function ExpensesPage({
   params,
@@ -21,15 +52,29 @@ export default async function ExpensesPage({
     redirect(`/${slug}/dashboard`)
   }
 
+  const cookieStore = await cookies()
+  const token = cookieStore.get('sas-auth-token')?.value
+  const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+  const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
+
   // Obtener gastos
   const result = await ExpenseService.getAllExpenses(organizationId, 0, 1000)
-  const expenses = result.expenses
+  const expenses = result.expenses.map(serializeExpense)
+
+  const branches = await BranchService.getActiveBranches(customer.id)
+
+  const serializedBranches = branches.map((branch) => ({
+    id: branch.id,
+    name: branch.name,
+    address: branch.address ?? null,
+  }))
 
   return (
     <ExpensesPageClient 
       initialExpenses={expenses} 
       customerSlug={slug}
-      organizationId={slug}
+      currentUserBranchId={currentUserBranchId}
+      branches={serializedBranches}
     />
   )
 }

@@ -3,34 +3,46 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Quotation } from "@prisma/client"
+import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 
-export function useQuotationActions(customerSlug: string) {
+export function useQuotationActions(customerSlug: string, onQuotationsChange?: () => Promise<void> | void) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedQuotation, setSelectedQuotation] = useState<Quotation | undefined>()
+  const [selectedQuotation, setSelectedQuotation] = useState<SalesQuotationWithRelations | undefined>()
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
+  const [detailQuotation, setDetailQuotation] = useState<SalesQuotationWithRelations | undefined>()
 
   const openCreateDialog = () => {
     setSelectedQuotation(undefined)
     setIsFormDialogOpen(true)
   }
 
-  const openEditDialog = (quotation: Quotation) => {
+  const openEditDialog = (quotation: SalesQuotationWithRelations) => {
     setSelectedQuotation(quotation)
     setIsFormDialogOpen(true)
   }
 
-  const openDeleteDialog = (quotation: Quotation) => {
+  const openDeleteDialog = (quotation: SalesQuotationWithRelations) => {
     setSelectedQuotation(quotation)
     setIsDeleteDialogOpen(true)
+  }
+
+  const openDetailsDialog = (quotation: SalesQuotationWithRelations) => {
+    setDetailQuotation(quotation)
+    setIsDetailsDialogOpen(true)
   }
 
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
     setSelectedQuotation(undefined)
+  }
+
+  const closeDetailsDialog = () => {
+    setIsDetailsDialogOpen(false)
+    setDetailQuotation(undefined)
   }
 
   const handleSave = async (data: any) => {
@@ -55,7 +67,11 @@ export function useQuotationActions(customerSlug: string) {
       const message = selectedQuotation ? "Cotización actualizada" : "Cotización creada"
       toast.success(message)
       closeDialogs()
-      
+
+      if (onQuotationsChange) {
+        await Promise.resolve(onQuotationsChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -79,7 +95,11 @@ export function useQuotationActions(customerSlug: string) {
 
       toast.success("Cotización eliminada")
       closeDialogs()
-      
+
+      if (onQuotationsChange) {
+        await Promise.resolve(onQuotationsChange())
+      }
+
       startTransition(() => {
         router.refresh()
       })
@@ -88,48 +108,20 @@ export function useQuotationActions(customerSlug: string) {
     }
   }
 
-  const handleStatusChange = async (quotation: Quotation, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/${customerSlug}/cotizaciones/${quotation.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cambiar el estado de la cotización")
-      }
-
-      const statusLabels: Record<string, string> = {
-        pending: "Pendiente",
-        approved: "Aprobada",
-        rejected: "Rechazada",
-        converted: "Convertida",
-        expired: "Expirada"
-      }
-
-      toast.success(`Cotización ${statusLabels[newStatus] || newStatus}`)
-      
-      startTransition(() => {
-        router.refresh()
-      })
-    } catch (error: any) {
-      toast.error(error.message || "Error al cambiar el estado de la cotización")
-    }
-  }
-
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailsDialogOpen,
     selectedQuotation,
+    detailQuotation,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openDetailsDialog,
     closeDialogs,
+    closeDetailsDialog,
     handleSave,
     handleDelete,
-    handleStatusChange
   }
 }
 

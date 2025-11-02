@@ -1,6 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+
+function serializeCashRegister(register: any) {
+  return register
+    ? {
+        ...register,
+        openingBalance: Number(register.openingBalance ?? 0),
+        currentBalance: Number(register.currentBalance ?? 0),
+        lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
+        lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
+        createdAt: register.createdAt ? register.createdAt.toISOString() : null,
+        updatedAt: register.updatedAt ? register.updatedAt.toISOString() : null,
+        branch: register.branch || null,
+        openedBy: register.openedBy
+          ? {
+              id: register.openedBy.id,
+              nombre: register.openedBy.nombre,
+              apellido: register.openedBy.apellido,
+            }
+          : null,
+        closedBy: register.closedBy
+          ? {
+              id: register.closedBy.id,
+              nombre: register.closedBy.nombre,
+              apellido: register.closedBy.apellido,
+            }
+          : null,
+      }
+    : null
+}
 
 // GET - Obtener caja por ID
 export async function GET(
@@ -36,7 +66,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(cashRegister)
+    return NextResponse.json(serializeCashRegister(cashRegister))
   } catch (error) {
     console.error('Error al obtener caja:', error)
     return NextResponse.json(
@@ -64,6 +94,16 @@ export async function PUT(
       )
     }
 
+    const token = request.cookies.get('sas-auth-token')?.value
+    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      )
+    }
+
     // Verificar que la caja existe y pertenece a la organización
     const existingCashRegister = await CashRegisterService.getCashRegisterById(id)
     if (!existingCashRegister || existingCashRegister.organizationId !== organizationId) {
@@ -88,13 +128,13 @@ export async function PUT(
           { status: 400 }
         )
       }
-      const cashRegister = await CashRegisterService.openCashRegister(id, openingBalance)
-      return NextResponse.json(cashRegister)
+      const cashRegister = await CashRegisterService.openCashRegister(id, openingBalance, currentUser.id)
+      return NextResponse.json(serializeCashRegister(cashRegister))
     }
 
     if (body.action === 'close') {
-      const cashRegister = await CashRegisterService.closeCashRegister(id)
-      return NextResponse.json(cashRegister)
+      const cashRegister = await CashRegisterService.closeCashRegister(id, currentUser.id)
+      return NextResponse.json(serializeCashRegister(cashRegister))
     }
 
     // Actualización normal
@@ -108,7 +148,7 @@ export async function PUT(
 
     const cashRegister = await CashRegisterService.updateCashRegister(id, payload)
 
-    return NextResponse.json(cashRegister)
+    return NextResponse.json(serializeCashRegister(cashRegister))
   } catch (error: any) {
     console.error('Error al actualizar caja:', error)
     return NextResponse.json(

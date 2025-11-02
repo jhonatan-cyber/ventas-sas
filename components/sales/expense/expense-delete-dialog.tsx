@@ -1,12 +1,12 @@
 "use client"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Expense } from "@prisma/client"
+import { SalesExpenseWithRelations } from "./types"
 
 interface ExpenseDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  expense?: Expense
+  expense?: SalesExpenseWithRelations
   onDelete: () => void
 }
 
@@ -24,7 +24,7 @@ export function ExpenseDeleteDialog({ open, onOpenChange, expense, onDelete }: E
           <AlertDialogDescription>
             Esta acción no se puede deshacer. Se eliminará permanentemente el gasto
             <strong className="block mt-2">
-              "{expense?.description}" - ${expense ? Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2 }) : '0.00'}
+              "{expense?.name ?? "Gasto"}" - BOB {expense ? Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
             </strong>
           </AlertDialogDescription>
         </AlertDialogHeader>

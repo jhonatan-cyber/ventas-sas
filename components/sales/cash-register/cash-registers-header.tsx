@@ -8,13 +8,15 @@ interface CashRegistersHeaderProps {
   description: string
   newButtonText?: string
   onNewClick: () => void
+  newButtonDisabled?: boolean
 }
 
 export function CashRegistersHeader({
   title,
   description,
   newButtonText = "Nuevo",
-  onNewClick
+  onNewClick,
+  newButtonDisabled = false
 }: CashRegistersHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-8">
@@ -27,6 +29,7 @@ export function CashRegistersHeader({
         rounded="full" 
         className="rounded-full"
         onClick={onNewClick}
+        disabled={newButtonDisabled}
       >
         <Plus className="h-4 w-4" />
         {newButtonText}

@@ -1,134 +1,209 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CashRegister } from "@prisma/client"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CashRegister } from "@prisma/client";
 
 interface CashRegisterFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  cashRegister?: CashRegister & { branch?: any }
-  customerSlug: string
-  onSave: (data: any) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  cashRegister?: CashRegister & { branch?: any };
+  customerSlug: string;
+  onSave: (data: any) => void;
 }
 
-export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, customerSlug, onSave }: CashRegisterFormDialogProps) {
-  const [name, setName] = useState("")
-  const [branchId, setBranchId] = useState("none")
-  const [openingBalance, setOpeningBalance] = useState("0")
-  const [branches, setBranches] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingData, setIsLoadingData] = useState(false)
+const formatDateForName = (date: Date) =>
+  date.toLocaleDateString("es-BO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
-  const capitalizeWords = (value: string) =>
-    value
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
+const getDefaultCashRegisterName = () => {
+  const now = new Date();
+  const weekday = now
+    .toLocaleDateString("es-BO", { weekday: "long" })
+    .toLowerCase();
+  return `Caja ${
+    weekday.charAt(0).toUpperCase() + weekday.slice(1)
+  } ${formatDateForName(now)}`;
+};
+
+const getCurrentDateTimeDisplay = () =>
+  new Date().toLocaleString("es-BO", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+export function CashRegisterFormDialog({
+  open,
+  onOpenChange,
+  cashRegister,
+  customerSlug,
+  onSave,
+}: CashRegisterFormDialogProps) {
+  const [name, setName] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("0");
+  const [branches, setBranches] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [currentDateTime, setCurrentDateTime] = useState<string>(
+    getCurrentDateTimeDisplay()
+  );
 
   // Cargar sucursales
   useEffect(() => {
     if (open) {
-      loadBranches()
+      loadBranches();
     }
-  }, [open, customerSlug])
+  }, [open, customerSlug]);
 
   // Cargar datos de la caja si existe
   useEffect(() => {
     if (cashRegister && open) {
-      setName(cashRegister.name ? capitalizeWords(cashRegister.name) : "")
-      setBranchId(cashRegister.branchId || "none")
-      setOpeningBalance(Number(cashRegister.openingBalance).toString())
+      setName(cashRegister.name || "");
+      setBranchId(cashRegister.branchId || "");
+      setOpeningBalance(Number(cashRegister.openingBalance).toString());
     } else if (!cashRegister && open) {
-      setName("")
-      setBranchId("none")
-      setOpeningBalance("0")
+      setName(getDefaultCashRegisterName());
+      setBranchId("");
+      setOpeningBalance("0");
     }
-  }, [cashRegister, open])
+  }, [cashRegister, open]);
 
   const loadBranches = async () => {
     try {
-      setIsLoadingData(true)
-      const response = await fetch(`/api/${customerSlug}/sucursales`)
+      setIsLoadingData(true);
+      const response = await fetch(`/api/${customerSlug}/sucursales`);
       if (response.ok) {
-        const data = await response.json()
-        setBranches(data.branches || [])
+        const data = await response.json();
+        setBranches(data.branches || []);
       }
     } catch (error) {
-      console.error('Error al cargar sucursales:', error)
+      console.error("Error al cargar sucursales:", error);
     } finally {
-      setIsLoadingData(false)
+      setIsLoadingData(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!name.trim()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       await onSave({
         name: name.trim(),
-        branchId: branchId !== "none" ? branchId : undefined,
-        openingBalance: parseFloat(openingBalance) || 0
-      })
+        branchId: branchId || undefined,
+        openingBalance: parseFloat(openingBalance) || 0,
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (branches.length === 1) {
+      setBranchId(branches[0].id);
+    }
+  }, [branches, open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const updateDateTime = () =>
+      setCurrentDateTime(getCurrentDateTimeDisplay());
+    updateDateTime();
+
+    const intervalId = window.setInterval(updateDateTime, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {cashRegister ? "Editar Caja" : "Nueva Caja"}
           </DialogTitle>
           <DialogDescription>
-            {cashRegister 
-              ? "Modifica los datos de la caja" 
+            {cashRegister
+              ? "Modifica los datos de la caja"
               : "Completa los datos para crear una nueva caja registradora"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
-            {/* Nombre */}
+            {/* Nombre generado */}
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre <span className="text-red-500">*</span></Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(capitalizeWords(e.target.value))}
-                placeholder="Nombre de la caja"
-                required
-                disabled={isLoading || isLoadingData}
-                className="rounded-full"
-              />
+              <Label>Nombre asignado</Label>
+              <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                {name}
+              </div>
             </div>
 
             {/* Sucursal */}
-            <div className="space-y-2">
-              <Label htmlFor="branchId">Sucursal</Label>
-              <Select value={branchId} onValueChange={setBranchId} disabled={isLoading || isLoadingData}>
-                <SelectTrigger className="rounded-full">
-                  <SelectValue placeholder="Seleccionar sucursal (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin sucursal</SelectItem>
-                  {branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {branches.length > 1 ? (
+              <div className="space-y-2">
+                <Label htmlFor="branchId">Sucursal</Label>
+                <Select
+                  value={branchId || undefined}
+                  onValueChange={setBranchId}
+                  disabled={isLoading || isLoadingData}
+                >
+                  <SelectTrigger className="rounded-full w-full">
+                    <SelectValue placeholder="Seleccione una sucursal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : branches.length === 0 ? (
+              <div className="space-y-2">
+                <Label>Sucursal</Label>
+                <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                  Sin sucursales registradas
+                </div>
+              </div>
+            ) : null}
 
             {/* Balance inicial (solo si es nueva caja) */}
             {!cashRegister && (
@@ -146,33 +221,48 @@ export function CashRegisterFormDialog({ open, onOpenChange, cashRegister, custo
                   className="rounded-full"
                 />
                 <p className="text-xs text-gray-500">
-                  Este será el balance inicial cuando la caja se abra por primera vez
+                  Este será el balance inicial cuando la caja se abra por
+                  primera vez
                 </p>
               </div>
             )}
+            {/* Fecha y hora actual */}
+            <div className="space-y-2">
+              <Label htmlFor="currentDateTime">Fecha y hora</Label>
+              <Input
+                id="currentDateTime"
+                value={currentDateTime}
+                readOnly
+                disabled={isLoading || isLoadingData}
+                className="rounded-full"
+              />
+            </div>
           </div>
           <DialogFooter className="justify-center sm:justify-center gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               className="rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               variant="new"
               className="rounded-full"
               disabled={isLoading || !name.trim()}
             >
-              {isLoading ? "Guardando..." : cashRegister ? "Actualizar" : "Crear"}
+              {isLoading
+                ? "Guardando..."
+                : cashRegister
+                ? "Actualizar"
+                : "Agregar"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

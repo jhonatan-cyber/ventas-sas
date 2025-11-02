@@ -1,34 +1,133 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Quotation, SalesCustomer, SalesProduct } from "@prisma/client"
-import { X, Plus } from "lucide-react"
+import { X, Plus, Package2, ChevronsUpDown, Check, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+
+const capitalizeWords = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (char) => char.toUpperCase())
+
+const DEFAULT_PHONE_PREFIX = "+591"
+const DEFAULT_PHONE_PREFIX_DIGITS = DEFAULT_PHONE_PREFIX.replace(/\D/g, '')
+
+const normalizePhoneForState = (value?: string | null) => {
+  if (!value) return DEFAULT_PHONE_PREFIX
+  const trimmed = value.trim()
+  if (!trimmed) return DEFAULT_PHONE_PREFIX
+  const digitsOnly = trimmed.replace(/\D/g, '')
+  const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
+    ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
+    : digitsOnly
+  if (!localDigits) return DEFAULT_PHONE_PREFIX
+  return `${DEFAULT_PHONE_PREFIX}${localDigits}`
+}
+
+const sanitizePhoneForSubmit = (value: string) => {
+  const sanitized = normalizePhoneForState(value)
+  const digits = sanitized.replace(/\D/g, '')
+  if (digits.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
+    return undefined
+  }
+  return sanitized
+}
 
 interface QuotationFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  quotation?: Quotation & { items?: any[]; customer?: any }
+  quotation?: Quotation & { items?: any[]; customer?: any; customerName?: string | null }
   organizationId: string
   onSave: (data: any) => void
+  isBusy?: boolean
 }
 
-export function QuotationFormDialog({ open, onOpenChange, quotation, organizationId, onSave }: QuotationFormDialogProps) {
-  const [customerId, setCustomerId] = useState("")
-  const [customers, setCustomers] = useState<SalesCustomer[]>([])
+interface QuotationItemRow {
+  id: string
+  productId: string
+  productName: string
+  productInput: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+}
+
+const createEmptyItem = (): QuotationItemRow => ({
+  id: `${Date.now()}-${Math.random()}`,
+  productId: "none",
+  productName: "",
+  productInput: "",
+  quantity: 1,
+  unitPrice: 0,
+  subtotal: 0,
+})
+
+const formatDateForInput = (value: string | Date): string => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+  const tzOffset = date.getTimezoneOffset() * 60000
+  const localISO = new Date(date.getTime() - tzOffset).toISOString()
+  return localISO.split("T")[0]
+}
+
+const getTodayInputValue = () => formatDateForInput(new Date())
+
+const toEndOfDayISO = (dateString: string): string => {
+  const [year, month, day] = dateString.split("-").map(Number)
+  const date = new Date(year, (month ?? 1) - 1, day ?? 1, 23, 59, 59, 999)
+  return date.toISOString()
+}
+
+export function QuotationFormDialog({ open, onOpenChange, quotation, organizationId, onSave, isBusy = false }: QuotationFormDialogProps) {
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [customerInputValue, setCustomerInputValue] = useState("")
+  const [customerPhoneInput, setCustomerPhoneInput] = useState(DEFAULT_PHONE_PREFIX)
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
+  const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0)
+  const customerContainerRef = useRef<HTMLDivElement>(null)
+  const customerInputRef = useRef<HTMLInputElement>(null)
+  
+  const [customers, setCustomers] = useState<(SalesCustomer & { lastName?: string | null })[]>([])
   const [products, setProducts] = useState<SalesProduct[]>([])
-  const [items, setItems] = useState<Array<{ productId: string; quantity: number; unitPrice: number; subtotal: number }>>([])
+  const [items, setItems] = useState<QuotationItemRow[]>([])
+  const [openProductPopoverId, setOpenProductPopoverId] = useState<string | null>(null)
+  const quantityInputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
   const [discount, setDiscount] = useState(0)
   const [expiresAt, setExpiresAt] = useState("")
   const [notes, setNotes] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
+  const todayInputValue = useMemo(() => getTodayInputValue(), [])
+
+  // Filtrar clientes basados en el input
+  const filteredCustomers = useMemo(() => {
+    if (!customerInputValue.trim()) return customers
+    const search = customerInputValue.trim().toLowerCase()
+    return customers.filter(customer => {
+      const combined = `${customer.name ?? ""} ${customer.lastName ?? ""}`.trim().toLowerCase()
+      return combined.includes(search)
+    })
+  }, [customers, customerInputValue])
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customerContainerRef.current && !customerContainerRef.current.contains(event.target as Node)) {
+        setIsCustomerDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Cargar clientes y productos
   useEffect(() => {
@@ -41,35 +140,58 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
   // Cargar datos de la cotización si existe
   useEffect(() => {
     if (quotation && open) {
-      setCustomerId(quotation.customerId || "")
+      const initialName = quotation.customer?.name || quotation.customerName || ""
+      setSelectedCustomerId(quotation.customerId ?? null)
+      const combinedName = `${quotation.customer?.name ?? ""} ${(quotation.customer as any)?.lastName ?? ""}`.trim()
+      setCustomerInputValue(capitalizeWords(combinedName || initialName))
+      const phoneValue = (quotation.customer?.phone as string | undefined) ?? (quotation as any)?.customerPhone ?? DEFAULT_PHONE_PREFIX
+      setCustomerPhoneInput(normalizePhoneForState(phoneValue))
       setDiscount(Number(quotation.discount) || 0)
-      setExpiresAt(quotation.expiresAt ? new Date(quotation.expiresAt).toISOString().split('T')[0] : "")
+      if (quotation.expiresAt) {
+        const formatted = formatDateForInput(quotation.expiresAt)
+        setExpiresAt(formatted < todayInputValue ? todayInputValue : formatted)
+      } else {
+        setExpiresAt("")
+      }
       setNotes(quotation.notes || "")
       if (quotation.items) {
-        setItems(quotation.items.map((item: any) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          subtotal: Number(item.subtotal)
-        })))
+        const mapped = quotation.items.map((item: any) => {
+          const baseName = item.product?.name || item.productName || ""
+          const formattedName = baseName ? capitalizeWords(baseName) : ""
+          return {
+            id: item.id || `${item.productId ?? 'manual'}-${Math.random()}`,
+            productId: item.productId ?? "none",
+            productName: formattedName,
+            productInput: formattedName,
+            quantity: Number(item.quantity || 1),
+            unitPrice: Number(item.unitPrice || 0),
+            subtotal: Number(item.subtotal || 0),
+          }
+        })
+        setItems(mapped.length > 0 ? mapped : [createEmptyItem()])
       }
     } else if (!quotation && open) {
-      setCustomerId("")
+      setSelectedCustomerId(null)
+      setCustomerInputValue("")
+      setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
       setDiscount(0)
       setExpiresAt("")
       setNotes("")
-      setItems([])
+      setItems([createEmptyItem()])
     }
   }, [quotation, open])
 
   const loadCustomers = async () => {
     try {
       setIsLoadingData(true)
-      // El organizationId aquí es realmente el slug del customer
       const response = await fetch(`/api/${organizationId}/clientes`)
       if (response.ok) {
         const data = await response.json()
-        setCustomers(data.customers || [])
+        const normalized = (data.customers || []).map((customer: any) => ({
+          ...customer,
+          lastName: customer.lastName ?? customer.apellido ?? null,
+        }))
+        setCustomers(normalized)
       }
     } catch (error) {
       console.error('Error al cargar clientes:', error)
@@ -81,7 +203,6 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
   const loadProducts = async () => {
     try {
       setIsLoadingData(true)
-      // El organizationId aquí es realmente el slug del customer
       const response = await fetch(`/api/${organizationId}/productos`)
       if (response.ok) {
         const data = await response.json()
@@ -94,236 +215,720 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     }
   }
 
-  const addItem = () => {
-    setItems([...items, { productId: "", quantity: 1, unitPrice: 0, subtotal: 0 }])
-  }
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
-
-  const updateItem = (index: number, field: string, value: any) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    
-    // Si se actualiza producto, cantidad o precio, recalcular subtotal
-    if (field === 'productId') {
-      const product = products.find(p => p.id === value)
-      if (product) {
-        newItems[index].unitPrice = Number(product.price)
-        newItems[index].subtotal = newItems[index].quantity * Number(product.price)
-      }
-    } else if (field === 'quantity' || field === 'unitPrice') {
-      newItems[index].subtotal = newItems[index].quantity * newItems[index].unitPrice
-    }
-    
-    setItems(newItems)
-  }
-
-  const calculateTotals = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0)
-    const total = subtotal - discount
-    return { subtotal, total }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!customerId) {
-      toast.error("Debe seleccionar un cliente")
+  const handleCustomerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isCustomerDropdownOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      setIsCustomerDropdownOpen(true)
       return
     }
 
-    if (items.length === 0) {
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setHighlightedCustomerIndex(prev => 
+          prev < filteredCustomers.length - 1 ? prev + 1 : prev
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setHighlightedCustomerIndex(prev => prev > 0 ? prev - 1 : prev)
+        break
+      case 'Enter':
+        e.preventDefault()
+        const trimmed = customerInputValue.trim()
+        if (isCustomerDropdownOpen && filteredCustomers[highlightedCustomerIndex]) {
+          selectCustomer(filteredCustomers[highlightedCustomerIndex])
+        } else if (trimmed.length > 0) {
+          handleManualCustomer(trimmed)
+        } else {
+          setIsCustomerDropdownOpen(false)
+        }
+        break
+      case 'Escape':
+        setIsCustomerDropdownOpen(false)
+        break
+    }
+  }
+
+  const handleCustomerPhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '')
+    const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
+      ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
+      : digitsOnly
+    setCustomerPhoneInput(localDigits ? `${DEFAULT_PHONE_PREFIX}${localDigits}` : DEFAULT_PHONE_PREFIX)
+  }
+
+  const handleCustomerPhoneBlur = () => {
+    setCustomerPhoneInput((prev) => {
+      if (!prev || prev === '+' || prev === DEFAULT_PHONE_PREFIX) return DEFAULT_PHONE_PREFIX
+      const normalized = normalizePhoneForState(prev)
+      const digitsOnly = normalized.replace(/\D/g, '')
+      if (!digitsOnly || digitsOnly.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
+        return DEFAULT_PHONE_PREFIX
+      }
+      return normalized
+    })
+  }
+
+  const selectCustomer = (customer: SalesCustomer & { lastName?: string | null }) => {
+    setSelectedCustomerId(customer.id)
+    const fullName = `${customer.name ?? ""} ${customer.lastName ?? ""}`.trim()
+    setCustomerInputValue(capitalizeWords(fullName))
+    setIsCustomerDropdownOpen(false)
+    setHighlightedCustomerIndex(0)
+    setCustomerPhoneInput(normalizePhoneForState(customer.phone))
+  }
+
+  const clearCustomer = () => {
+    setSelectedCustomerId(null)
+    setCustomerInputValue("")
+    customerInputRef.current?.focus()
+    setHighlightedCustomerIndex(0)
+    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+  }
+
+  const handleManualCustomer = (value: string) => {
+    const trimmed = value.trim()
+    if (trimmed.length === 0) return
+    setSelectedCustomerId(null)
+    const formatted = capitalizeWords(trimmed)
+    setCustomerInputValue(formatted)
+    setIsCustomerDropdownOpen(false)
+    setHighlightedCustomerIndex(0)
+    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+  }
+
+  const addItem = () => {
+    setItems((prev) => [...prev, createEmptyItem()])
+  }
+
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const normalizeNumber = (value: string | number, fallback = 0) => {
+    if (typeof value === "number" && !Number.isNaN(value)) return value
+    const parsed = parseFloat(value as string)
+    return Number.isNaN(parsed) ? fallback : parsed
+  }
+
+  const updateItem = (id: string, field: keyof QuotationItemRow, rawValue: any) => {
+     setItems((prev) => {
+       return prev.map((item) => {
+         if (item.id !== id) return item
+ 
+         const updated: QuotationItemRow = { ...item }
+ 
+         if (field === "productId") {
+          if (rawValue === "none") {
+            updated.productId = "none"
+            return updated
+          }
+          const product = products.find((p) => p.id === rawValue)
+          updated.productId = rawValue
+          if (product) {
+            const unitPrice = Number(product.price || 0)
+            const formattedName = capitalizeWords(product.name || "")
+            updated.productName = formattedName
+            updated.productInput = formattedName
+            updated.unitPrice = unitPrice
+            updated.subtotal = unitPrice * updated.quantity
+          }
+        } else if (field === "quantity") {
+          const quantity = Math.max(1, Math.floor(normalizeNumber(rawValue, 1)))
+          updated.quantity = quantity
+          updated.subtotal = quantity * updated.unitPrice
+        } else if (field === "unitPrice") {
+          const unitPrice = Math.max(0, normalizeNumber(rawValue, 0))
+          updated.unitPrice = unitPrice
+          updated.subtotal = unitPrice * updated.quantity
+        }
+ 
+         return updated
+       })
+     })
+   }
+
+  const handleProductPopoverChange = (id: string, open: boolean) => {
+    if (open) {
+      setOpenProductPopoverId(id)
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                productInput: item.productName,
+              }
+            : item,
+        ),
+      )
+    } else {
+      setOpenProductPopoverId((prev) => (prev === id ? null : prev))
+    }
+  }
+
+  const focusQuantityInput = (itemId: string) => {
+    requestAnimationFrame(() => {
+      const quantityInput = quantityInputRefs.current.get(itemId)
+      if (quantityInput) {
+        quantityInput.focus()
+        quantityInput.select()
+      }
+    })
+  }
+
+  const handleProductInputChange = (id: string, value: string) => {
+    const formatted = value.length === 0 ? "" : capitalizeWords(value)
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              productId: "none",
+              productInput: formatted,
+              productName: formatted,
+            }
+          : item,
+      ),
+    )
+  }
+
+  const handleProductInputKeyDown = (itemId: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      const current = items.find((item) => item.id === itemId)
+      const trimmed = current?.productInput.trim() ?? ""
+
+      if (trimmed.length === 0) {
+        setOpenProductPopoverId(null)
+        return
+      }
+
+      const matchingProduct = products.find(
+        (product) => product.name?.toLowerCase() === trimmed.toLowerCase(),
+      )
+
+      if (matchingProduct) {
+        handleProductSelect(itemId, matchingProduct)
+      } else {
+        handleProductManualSelection(itemId, trimmed)
+      }
+    } else if (event.key === "Escape") {
+      setOpenProductPopoverId(null)
+    }
+  }
+
+  const handleProductSelect = (itemId: string, product: SalesProduct) => {
+    const formattedName = capitalizeWords(product.name || "")
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              productId: product.id,
+              productName: formattedName,
+              productInput: formattedName,
+              unitPrice: Number(product.price || 0),
+              subtotal: Number(product.price || 0) * item.quantity,
+            }
+          : item,
+      ),
+    )
+    setOpenProductPopoverId(null)
+    focusQuantityInput(itemId)
+  }
+
+  const handleProductManualSelection = (itemId: string, value: string) => {
+    const trimmed = value.trim()
+    if (trimmed.length === 0) {
+      setOpenProductPopoverId(null)
+      return
+    }
+    const formatted = capitalizeWords(trimmed)
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              productId: "none",
+              productName: formatted,
+              productInput: formatted,
+            }
+          : item,
+      ),
+    )
+    setOpenProductPopoverId(null)
+    focusQuantityInput(itemId)
+  }
+
+  const totals = useMemo(() => {
+    const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0)
+    const total = Math.max(0, subtotal - Number(discount || 0))
+    return { subtotal, total }
+  }, [items, discount])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const trimmedCustomerName = customerInputValue.trim()
+
+    if (!selectedCustomerId && trimmedCustomerName.length === 0) {
+      toast.error("Debe ingresar el nombre del cliente")
+      return
+    }
+
+    const preparedItems = items
+      .filter((item) => (item.productId !== "none") || item.productName.trim().length > 0)
+      .map(({ productId, productName, quantity, unitPrice, subtotal }) => ({
+        productId: productId !== "none" ? productId : null,
+        productName: productName.trim().length > 0 ? capitalizeWords(productName.trim()) : undefined,
+        quantity,
+        unitPrice,
+        subtotal,
+      }))
+
+    if (preparedItems.length === 0) {
       toast.error("Debe agregar al menos un producto")
       return
     }
 
-    const { subtotal, total } = calculateTotals()
-
     setIsLoading(true)
     try {
+      const expiresAtIso = expiresAt ? toEndOfDayISO(expiresAt) : undefined
+      const normalizedCustomerPhone = sanitizePhoneForSubmit(customerPhoneInput)
+
       await onSave({
-        customerId,
-        subtotal,
+        customerId: selectedCustomerId,
+        customerName: selectedCustomerId ? undefined : trimmedCustomerName,
+        customerPhone: normalizedCustomerPhone,
+        subtotal: totals.subtotal,
         discount,
-        total,
-        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+        total: totals.total,
+        expiresAt: expiresAtIso,
         notes,
-        items
+        items: preparedItems
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const { subtotal, total } = calculateTotals()
+  const hasValidItems = items.some((item) => (item.productId !== "none") || item.productName.trim().length > 0)
+  const isSubmitDisabled =
+    customerInputValue.trim().length === 0 ||
+    !hasValidItems ||
+    isLoading ||
+    isLoadingData ||
+    isBusy
+  const isFormLocked = isLoading || isLoadingData || isBusy
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {quotation ? "Editar Cotización" : "Nueva Cotización"}
-          </DialogTitle>
-          <DialogDescription>
-            {quotation 
-              ? "Modifica los datos de la cotización" 
-              : "Completa los datos para crear una nueva cotización"}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            {/* Cliente */}
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Cliente <span className="text-red-500">*</span></Label>
-              <Select value={customerId} onValueChange={setCustomerId} disabled={isLoading || isLoadingData}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[900px] max-h-[92vh] flex flex-col overflow-hidden p-0">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
+              {quotation ? "Editar Cotización" : "Nueva Cotización"}
+            </DialogTitle>
+            <DialogDescription>
+              {quotation 
+                ? "Modifica los datos de la cotización" 
+                : "Completa los datos para crear una nueva cotización"}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gray-50/60 dark:bg-[#0c0c0c]">
+            <div className="space-y-6">
+              {/* Cliente con ComboBox */}
+              <div className="space-y-3" ref={customerContainerRef}>
+                <div className="flex flex-col md:flex-row md:items-end md:gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Cliente</Label>
+                    <div className="relative mt-2">
+                      <input
+                        ref={customerInputRef}
+                        type="text"
+                        value={customerInputValue}
+                        onChange={(e) => {
+                          const formatted = e.target.value.length === 0 ? "" : capitalizeWords(e.target.value)
+                          setCustomerInputValue(formatted)
+                          setIsCustomerDropdownOpen(true)
+                          setHighlightedCustomerIndex(0)
+                          setSelectedCustomerId(null)
+                        }}
+                        onFocus={() => setIsCustomerDropdownOpen(true)}
+                        onKeyDown={handleCustomerKeyDown}
+                        placeholder="Selecciona o escribe el nombre del cliente..."
+                        disabled={isFormLocked}
+                        className="w-full px-5 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                        {customerInputValue && (
+                          <button
+                            onClick={clearCustomer}
+                            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            type="button"
+                            disabled={isFormLocked}
+                          >
+                            <X size={16} className="text-gray-500" />
+                          </button>
+                        )}
 
-            {/* Items */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Productos</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Agregar Producto
-                </Button>
-              </div>
-              
-              <div className="space-y-2 border rounded-md p-4">
-                {items.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">No hay productos agregados</p>
-                ) : (
-                  items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-start p-2 border rounded bg-gray-50 dark:bg-[#2a2a2a]">
-                      <Select
-                        value={item.productId}
-                        onValueChange={(value) => updateItem(index, 'productId', value)}
-                        disabled={isLoading || isLoadingData}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Producto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - ${Number(product.price).toFixed(2)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="number"
-                        placeholder="Cant."
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                        className="w-20"
-                        min="1"
-                        disabled={isLoading}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Precio"
-                        value={item.unitPrice}
-                        onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="w-24"
-                        step="0.01"
-                        disabled={isLoading}
-                      />
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className="text-sm font-medium">${item.subtotal.toFixed(2)}</span>
-                        <Button
+                        <button
+                          onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+                          className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeItem(index)}
-                          disabled={isLoading}
+                          disabled={isFormLocked}
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
+                          <ChevronDown
+                            size={16}
+                            className={`text-gray-500 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`}
+                          />
+                        </button>
                       </div>
+
+                      {isCustomerDropdownOpen && (
+                        <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
+                          <div className="max-h-64 overflow-y-auto">
+                            {filteredCustomers.length > 0 ? (
+                              filteredCustomers.map((customer, index) => (
+                                <button
+                                  key={customer.id}
+                                  type="button"
+                                  onClick={() => selectCustomer(customer)}
+                                  onMouseEnter={() => setHighlightedCustomerIndex(index)}
+                                  className={`w-full text-left px-5 py-3 transition-colors ${
+                                    index === highlightedCustomerIndex
+                                      ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:text-white'
+                                      : 'hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-700 dark:text-gray-200'
+                                  }`}
+                                >
+                                  <div className="font-semibold">{capitalizeWords(`${customer.name ?? ""} ${customer.lastName ?? ""}`.trim())}</div>
+                                  {customer.email && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{customer.email}</div>
+                                  )}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-5 py-6 text-center text-gray-500 dark:text-gray-400">
+                                {customerInputValue.trim()
+                                  ? `Presiona Enter para usar "${capitalizeWords(customerInputValue.trim())}"`
+                                  : "No se encontraron clientes"}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))
+                  </div>
+
+                  <div className="mt-4 md:mt-0 md:w-[320px]">
+                    <Label htmlFor="customerPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Teléfono</Label>
+                    <div className="mt-2 grid grid-cols-[82px_minmax(0,1fr)] gap-2">
+                      <Input
+                        value={DEFAULT_PHONE_PREFIX}
+                        readOnly
+                        aria-hidden="true"
+                        className="rounded-2xl text-center font-semibold"
+                      />
+                      <Input
+                        id="customerPhone"
+                        type="tel"
+                        value={customerPhoneInput.replace(/[^0-9]/g, '').replace(new RegExp(`^${DEFAULT_PHONE_PREFIX_DIGITS}`), '')}
+                        onChange={(e) => handleCustomerPhoneChange(e.target.value)}
+                        onBlur={handleCustomerPhoneBlur}
+                        placeholder="70000000"
+                        disabled={isFormLocked}
+                        inputMode="numeric"
+                        className="rounded-2xl"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Se usará para enviar la cotización por WhatsApp.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div className="space-y-4">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Productos</Label>
+
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-[#2a2a2a] rounded-3xl">
+                    <Package2 className="h-10 w-10" />
+                    <p className="text-sm">No hay productos agregados</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={addItem}
+                      disabled={isFormLocked}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Agregar Producto
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {items.map((item) => {
+                      const productTriggerId = `quotation-product-${item.id}`
+                      const quantityInputId = `quotation-quantity-${item.id}`
+                      const priceInputId = `quotation-price-${item.id}`
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="grid gap-2 lg:gap-4 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))_auto] items-start border border-gray-200 dark:border-[#2f2f2f] rounded-2xl bg-white dark:bg-[#181818] px-4 py-4 shadow-sm"
+                        >
+                          <div className="space-y-1">
+                            <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Producto</Label>
+                            <Popover
+                              open={openProductPopoverId === item.id}
+                              onOpenChange={(open) => handleProductPopoverChange(item.id, open)}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  id={productTriggerId}
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between rounded-xl text-left h-[44px] border border-gray-200 dark:border-[#2f2f2f] bg-white dark:bg-[#1f1f1f]"
+                                  disabled={isFormLocked}
+                                  aria-haspopup="listbox"
+                                  aria-expanded={openProductPopoverId === item.id}
+                                >
+                                  <span className="truncate text-gray-900 dark:text-white">
+                                    {item.productName.trim().length > 0
+                                      ? capitalizeWords(item.productName)
+                                      : "Seleccionar o escribir producto"}
+                                  </span>
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0" align="start" sideOffset={6}>
+                                <Command>
+                                  <CommandInput
+                                    placeholder="Buscar o escribir producto..."
+                                    value={item.productInput}
+                                    onValueChange={(value) => handleProductInputChange(item.id, value)}
+                                    onKeyDown={(event) => handleProductInputKeyDown(item.id, event)}
+                                    autoFocus
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>
+                                      {item.productInput.trim().length > 0
+                                        ? `Presiona Enter para usar "${capitalizeWords(item.productInput.trim())}"`
+                                        : "No se encontraron productos"}
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {products
+                                        .filter((product) =>
+                                          item.productInput.trim().length === 0
+                                            ? true
+                                            : product.name
+                                                ?.toLowerCase()
+                                                .includes(item.productInput.toLowerCase()),
+                                        )
+                                        .map((product) => (
+                                          <CommandItem
+                                            key={product.id}
+                                            value={product.name}
+                                            onSelect={() => handleProductSelect(item.id, product)}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                item.productId === product.id ? "opacity-100" : "opacity-0",
+                                              )}
+                                            />
+                                            {product.name} · ${Number(product.price).toFixed(2)}
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label htmlFor={quantityInputId} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Cantidad
+                            </Label>
+                            <Input
+                              id={quantityInputId}
+                              type="number"
+                              placeholder="Cant."
+                              value={item.quantity}
+                              onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
+                              ref={(element) => {
+                                const map = quantityInputRefs.current
+                                if (element) {
+                                  map.set(item.id, element)
+                                } else {
+                                  map.delete(item.id)
+                                }
+                              }}
+                              className="rounded-xl h-11"
+                              min="1"
+                              disabled={isFormLocked}
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label htmlFor={priceInputId} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Precio
+                            </Label>
+                            <Input
+                              id={priceInputId}
+                              type="number"
+                              placeholder="Precio"
+                              value={item.unitPrice}
+                              onChange={(e) => updateItem(item.id, "unitPrice", e.target.value)}
+                              className="rounded-xl h-11"
+                              step="0.01"
+                              min="0"
+                              disabled={isFormLocked}
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                              Subtotal
+                            </Label>
+                            <div className="flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#242424] px-4 py-2 h-11">
+                              <span className="font-semibold text-gray-900 dark:text-white">${item.subtotal.toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-end justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-full h-10 w-10 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20"
+                              onClick={() => removeItem(item.id)}
+                              disabled={isFormLocked || items.length === 1}
+                              aria-label="Eliminar producto"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div className="flex justify-center pt-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full"
+                        onClick={addItem}
+                        disabled={isFormLocked}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Agregar Producto
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+              {/* Totales y extras */}
+              <div className="space-y-6">
+                <div className="grid gap-4 lg:grid-cols-2">
+                   <div className="space-y-2">
+                     <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Subtotal</Label>
+                    <Input
+                      type="text"
+                      value={`$${totals.subtotal.toFixed(2)}`}
+                      readOnly
+                      className="rounded-2xl font-semibold text-right bg-[color-mix(in_oklch,var(--primary)_8%,white)] dark:bg-[color-mix(in_oklch,var(--primary)_18%,black)] text-gray-900 dark:text-white border border-transparent"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discount" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Descuento</Label>
+                    <Input
+                      id="discount"
+                      type="number"
+                      value={discount}
+                      onChange={(e) => setDiscount(normalizeNumber(e.target.value, 0))}
+                      onFocus={(e) => {
+                        if (e.target.value === "0" || e.target.value === "0.0" || e.target.value === "0.00") {
+                          setDiscount(0)
+                          e.target.value = ""
+                        } else {
+                          e.target.select()
+                        }
+                      }}
+                      className="rounded-2xl"
+                      step="0.01"
+                      min="0"
+                      disabled={isFormLocked}
+                    />
+                  </div>
+                </div>
 
-            {/* Totales */}
-            <div className="space-y-2 border-t pt-4">
-              <div className="flex justify-between">
-                <span className="font-medium">Subtotal:</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="discount" className="w-32">Descuento:</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  value={discount}
-                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="flex-1"
-                  step="0.01"
-                  min="0"
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="flex justify-between text-lg font-bold border-t pt-2">
-                <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-            </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiresAt" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Fecha de Expiración</Label>
+                    <Input
+                      id="expiresAt"
+                      type="date"
+                      value={expiresAt}
+                      min={todayInputValue}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (!value) {
+                          setExpiresAt("")
+                          return
+                        }
+                        setExpiresAt(value < todayInputValue ? todayInputValue : value)
+                      }}
+                      className="rounded-2xl"
+                      disabled={isFormLocked}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="total" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Total</Label>
+                    <Input
+                      id="total"
+                      type="text"
+                      value={`$${totals.total.toFixed(2)}`}
+                      readOnly
+                      className="rounded-2xl font-semibold text-right bg-[color-mix(in_oklch,var(--primary)_12%,white)] dark:bg-[color-mix(in_oklch,var(--primary)_24%,black)] text-gray-900 dark:text-white border border-transparent"
+                    />
+                  </div>
+                </div>
 
-            {/* Fecha de expiración */}
-            <div className="space-y-2">
-              <Label htmlFor="expiresAt">Fecha de Expiración</Label>
-              <Input
-                id="expiresAt"
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Notas */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas</Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notas adicionales..."
-                disabled={isLoading}
-                rows={3}
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Notas</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Notas adicionales..."
+                    disabled={isFormLocked}
+                    rows={4}
+                    className="rounded-2xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex w-full justify-center sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
             <Button 
               type="button" 
               variant="outline" 
+              className="rounded-full"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={isFormLocked}
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading || !customerId || items.length === 0}
+              variant="new"
+              className="rounded-full px-6"
+              disabled={isSubmitDisabled}
             >
-              {isLoading ? "Guardando..." : quotation ? "Actualizar" : "Crear"}
+              {isLoading ? "Guardando..." : quotation ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>
@@ -331,4 +936,3 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     </Dialog>
   )
 }
-

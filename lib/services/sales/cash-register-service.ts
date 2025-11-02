@@ -5,6 +5,7 @@ export interface CreateCashRegisterData {
   name: string
   branchId?: string
   openingBalance?: number
+  openedById?: string
 }
 
 export interface UpdateCashRegisterData {
@@ -13,6 +14,8 @@ export interface UpdateCashRegisterData {
   openingBalance?: number
   currentBalance?: number
   isOpen?: boolean
+  openedById?: string | null
+  closedById?: string | null
 }
 
 export class CashRegisterService {
@@ -61,6 +64,20 @@ export class CashRegisterService {
               id: true,
               name: true
             }
+          },
+          openedBy: {
+            select: {
+              id: true,
+              nombre: true,
+              apellido: true
+            }
+          },
+          closedBy: {
+            select: {
+              id: true,
+              nombre: true,
+              apellido: true
+            }
           }
         },
         orderBy: { createdAt: 'desc' }
@@ -77,7 +94,21 @@ export class CashRegisterService {
       where: { id },
       include: {
         branch: true,
-        organization: true
+        organization: true,
+        openedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        },
+        closedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        }
       }
     })
   }
@@ -87,20 +118,40 @@ export class CashRegisterService {
     organizationId: string,
     data: CreateCashRegisterData
   ): Promise<CashRegister> {
+    const openingBalance = data.openingBalance || 0
+    const openedAt = new Date()
     return prisma.cashRegister.create({
       data: {
         organizationId,
         name: data.name,
         branchId: data.branchId,
-        openingBalance: data.openingBalance || 0,
-        currentBalance: data.openingBalance || 0,
-        isOpen: false
+        openingBalance,
+        currentBalance: openingBalance,
+        isOpen: true,
+        lastOpenAt: openedAt,
+        openedById: data.openedById || null,
+        closedById: null,
+        lastCloseAt: null
       },
       include: {
         branch: {
           select: {
             id: true,
             name: true
+          }
+        },
+        openedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        },
+        closedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
           }
         }
       }
@@ -121,6 +172,20 @@ export class CashRegisterService {
             id: true,
             name: true
           }
+        },
+        openedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        },
+        closedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
         }
       }
     })
@@ -134,7 +199,7 @@ export class CashRegisterService {
   }
 
   // Abrir caja
-  static async openCashRegister(id: string, openingBalance: number): Promise<CashRegister> {
+  static async openCashRegister(id: string, openingBalance: number, userId: string): Promise<CashRegister> {
     const cashRegister = await prisma.cashRegister.findUnique({
       where: { id }
     })
@@ -147,13 +212,18 @@ export class CashRegisterService {
       throw new Error('La caja ya está abierta')
     }
 
+    const openedAt = new Date()
+
     return prisma.cashRegister.update({
       where: { id },
       data: {
         isOpen: true,
         openingBalance,
         currentBalance: openingBalance,
-        lastOpenAt: new Date()
+        lastOpenAt: openedAt,
+        openedById: userId,
+        closedById: null,
+        lastCloseAt: null
       },
       include: {
         branch: {
@@ -161,13 +231,27 @@ export class CashRegisterService {
             id: true,
             name: true
           }
+        },
+        openedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        },
+        closedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
         }
       }
     })
   }
 
   // Cerrar caja
-  static async closeCashRegister(id: string): Promise<CashRegister> {
+  static async closeCashRegister(id: string, userId: string): Promise<CashRegister> {
     const cashRegister = await prisma.cashRegister.findUnique({
       where: { id }
     })
@@ -184,13 +268,28 @@ export class CashRegisterService {
       where: { id },
       data: {
         isOpen: false,
-        lastCloseAt: new Date()
+        lastCloseAt: new Date(),
+        closedById: userId
       },
       include: {
         branch: {
           select: {
             id: true,
             name: true
+          }
+        },
+        openedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        },
+        closedBy: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
           }
         }
       }

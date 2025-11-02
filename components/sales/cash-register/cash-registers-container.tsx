@@ -8,16 +8,22 @@ import { CashRegistersStats } from "./cash-registers-stats"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CashRegister } from "@prisma/client"
 
-interface CashRegistersContainerProps {
-  cashRegisters: Array<CashRegister & { branch?: any }>
-  isLoading?: boolean
-  onEdit?: (cashRegister: CashRegister) => void
-  onOpen?: (cashRegister: CashRegister) => void
-  onClose?: (cashRegister: CashRegister) => void
-  onDelete?: (cashRegister: CashRegister) => void
+type CashRegisterWithRelations = CashRegister & {
+  branch?: { id: string; name: string; address?: string | null } | null
+  openedBy?: { id: string; nombre: string; apellido: string } | null
+  closedBy?: { id: string; nombre: string; apellido: string } | null
 }
 
-export function CashRegistersContainer({ cashRegisters, isLoading = false, onEdit, onOpen, onClose, onDelete }: CashRegistersContainerProps) {
+interface CashRegistersContainerProps {
+  cashRegisters: CashRegisterWithRelations[]
+  isLoading?: boolean
+  onViewDetails?: (cashRegister: CashRegisterWithRelations) => void
+  onOpen?: (cashRegister: CashRegisterWithRelations) => void
+  onClose?: (cashRegister: CashRegisterWithRelations) => void
+  onDelete?: (cashRegister: CashRegisterWithRelations) => void
+}
+
+export function CashRegistersContainer({ cashRegisters, isLoading = false, onViewDetails, onOpen, onClose, onDelete }: CashRegistersContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -29,7 +35,11 @@ export function CashRegistersContainer({ cashRegisters, isLoading = false, onEdi
     cashRegisters
       .filter(cr => cr.branch)
       .map(cr => cr.branch!.id)
-  )).map(id => cashRegisters.find(cr => cr.branch?.id === id)?.branch).filter(Boolean)
+  ))
+    .map(id => cashRegisters.find(cr => cr.branch?.id === id)?.branch)
+    .filter(Boolean)
+  const branchCount = branches.length
+  const shouldShowBranchInfo = branchCount !== 1
 
   // Filtrar cajas por búsqueda, estado y sucursal
   const filteredCashRegisters = cashRegisters.filter(cashRegister => {
@@ -121,16 +131,15 @@ export function CashRegistersContainer({ cashRegisters, isLoading = false, onEdi
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <CashRegistersTable 
-              cashRegisters={currentCashRegisters} 
-              isLoading={isLoading}
-              onEditClick={onEdit} 
-              onOpenClick={onOpen}
-              onCloseClick={onClose}
-              onDeleteClick={onDelete} 
-            />
-          </div>
+          <CashRegistersTable 
+            cashRegisters={currentCashRegisters} 
+            isLoading={isLoading}
+            onViewDetails={onViewDetails}
+            onOpenClick={onOpen}
+            onCloseClick={onClose}
+            onDeleteClick={onDelete}
+            showBranchInfo={shouldShowBranchInfo}
+          />
         </CardContent>
       </Card>
 

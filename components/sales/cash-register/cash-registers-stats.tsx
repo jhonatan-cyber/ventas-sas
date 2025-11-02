@@ -4,8 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, Unlock, DollarSign, Building2 } from "lucide-react"
 import { CashRegister } from "@prisma/client"
 
+type CashRegisterWithRelations = CashRegister & {
+  branch?: { id: string; name: string; address?: string | null } | null
+  openedBy?: { id: string; nombre: string; apellido: string } | null
+  closedBy?: { id: string; nombre: string; apellido: string } | null
+}
+
 interface CashRegistersStatsProps {
-  cashRegisters: Array<CashRegister & { branch?: any }>
+  cashRegisters: CashRegisterWithRelations[]
 }
 
 export function CashRegistersStats({ cashRegisters }: CashRegistersStatsProps) {

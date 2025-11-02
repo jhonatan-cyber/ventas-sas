@@ -65,6 +65,7 @@ export async function PUT(
     const body = await request.json()
     const payload = {
       name: body.name?.trim(),
+      lastName: body.lastName?.trim(),
       email: body.email?.trim(),
       phone: body.phone?.trim(),
       address: body.address?.trim(),
