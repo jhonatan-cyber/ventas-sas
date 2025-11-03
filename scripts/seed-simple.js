@@ -6,9 +6,9 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Iniciando seed...')
   
-  // Super Admin único
-  const adminEmail = 'admin@gmail.com'
-  const adminPassword = 'admin'
+  // Super Admin único (Sistema de administración)
+  const adminEmail = 'jhonatanancasi@gmail.com'
+  const adminPassword = 'admin123'
   const adminHashed = await bcrypt.hash(adminPassword, 12)
 
   const admin = await prisma.profile.upsert({

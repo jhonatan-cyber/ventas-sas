@@ -32,7 +32,9 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
 
-      const response = await fetch(`/api/notifications?${params}`)
+      const response = await fetch(`/api/notifications?${params.toString()}` , {
+        credentials: 'include',
+      })
       if (!response.ok) return
 
       const data = await response.json()
@@ -55,6 +57,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ markAll: false }),
       })
 
@@ -77,9 +80,10 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
 
-      const response = await fetch(`/api/notifications/all?${params}`, {
+      const response = await fetch(`/api/notifications/all?${params.toString()}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       })
 
       if (!response.ok) return
@@ -98,7 +102,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
     const params = new URLSearchParams({ system })
     if (slug) params.append('slug', slug)
 
-    const eventSource = new EventSource(`/api/notifications/stream?${params}`)
+    const eventSource = new EventSource(`/api/notifications/stream?${params.toString()}`)
 
     eventSource.onopen = () => {
       setIsConnected(true)

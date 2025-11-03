@@ -206,15 +206,15 @@ export type UpdateSubscriptionPlanInput = z.infer<typeof updateSubscriptionPlanS
 // Suscripción
 const subscriptionBaseSchema = z.object({
   customerId: z
-    .string()
-    .uuid('El ID del cliente no es válido')
-    .optional()
-    .nullable(),
+    .preprocess(
+      (val) => (val === '' || val === undefined ? null : val),
+      z.string().uuid('El ID del cliente no es válido').nullable().optional()
+    ),
   organizationId: z
-    .string()
-    .uuid('El ID de organización no es válido')
-    .optional()
-    .nullable(),
+    .preprocess(
+      (val) => (val === '' || val === undefined ? null : val),
+      z.string().uuid('El ID de organización no es válido').nullable().optional()
+    ),
   planId: z
     .string()
     .uuid('El ID del plan no es válido'),

@@ -109,18 +109,25 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
 
     try {
       const data: any = {
-        customerId,
         planId,
         billingPeriod,
         autoRenew,
         status: subscription ? subscription.status : 'active', // Solo para edición, creación siempre activo
       }
 
+      // Solo incluir customerId si tiene valor
+      if (customerId && customerId.trim() !== "") {
+        data.customerId = customerId
+      }
+
+      // Convertir fechas a formato ISO datetime
       if (startDate) {
-        data.startDate = startDate
+        // Convertir YYYY-MM-DD a ISO datetime (agregar hora medianoche UTC)
+        data.startDate = new Date(startDate + 'T00:00:00.000Z').toISOString()
       }
       if (endDate) {
-        data.endDate = endDate
+        // Convertir YYYY-MM-DD a ISO datetime (agregar hora medianoche UTC)
+        data.endDate = new Date(endDate + 'T00:00:00.000Z').toISOString()
       }
 
       await onSave(data)

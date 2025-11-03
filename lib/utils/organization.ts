@@ -35,6 +35,38 @@ export async function getCustomerBySlug(slug: string) {
         { slug },
         { razonSocial: { equals: razonNormalized, mode: 'insensitive' } },
       ],
+      AND: [
+        {
+          OR: [
+            // Suscripción activa a nivel de cliente
+            {
+              subscriptions: {
+                some: {
+                  status: 'active',
+                  OR: [
+                    { endDate: null },
+                    { endDate: { gt: new Date() } },
+                  ],
+                },
+              },
+            },
+            // O suscripción activa a nivel de organización
+            {
+              organization: {
+                subscriptions: {
+                  some: {
+                    status: 'active',
+                    OR: [
+                      { endDate: null },
+                      { endDate: { gt: new Date() } },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
     include: {
       organization: true,
