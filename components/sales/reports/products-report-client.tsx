@@ -47,7 +47,7 @@ export function ProductsReportClient({ customerSlug }: ProductsReportClientProps
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
@@ -66,7 +66,7 @@ export function ProductsReportClient({ customerSlug }: ProductsReportClientProps
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

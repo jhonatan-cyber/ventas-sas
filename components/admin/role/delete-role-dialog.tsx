@@ -17,7 +17,7 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+      <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-gray-900 dark:text-white">
             ¿Eliminar rol?
@@ -29,16 +29,16 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-3">
+        <AlertDialogFooter className="flex-col sm:flex-row gap-3">
           <AlertDialogCancel
             onClick={() => onOpenChange(false)}
-            className="rounded-full"
+            className="w-full sm:w-auto rounded-lg"
           >
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-red-600 hover:bg-red-700 text-white rounded-full"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-lg"
           >
             Eliminar
           </AlertDialogAction>

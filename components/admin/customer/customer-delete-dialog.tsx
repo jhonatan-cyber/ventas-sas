@@ -28,7 +28,7 @@ export function CustomerDeleteDialog({ open, onOpenChange, customer, onDelete }:
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+      <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
             ¿Eliminar cliente?
@@ -37,11 +37,11 @@ export function CustomerDeleteDialog({ open, onOpenChange, customer, onDelete }:
             Esta acción no se puede deshacer. Se eliminará permanentemente la información de <strong>{customerName}</strong>.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex justify-center gap-4">
-          <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
+        <AlertDialogFooter className="flex flex-col sm:flex-row sm:justify-center gap-3">
+          <AlertDialogCancel className="w-full sm:w-auto rounded-lg">Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={onDelete}
-            className="rounded-full bg-red-600 hover:bg-red-700 text-white"
+            className="w-full sm:w-auto rounded-lg bg-red-600 hover:bg-red-700 text-white"
           >
             Eliminar
           </AlertDialogAction>

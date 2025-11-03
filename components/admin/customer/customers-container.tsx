@@ -4,8 +4,8 @@ import { useState } from "react"
 import { CustomersStats } from "./customers-stats"
 import { CustomersFilters } from "./customers-filters"
 import { CustomersTable } from "./customers-table"
+import { CustomersCards } from "./customers-cards"
 import { CustomersPagination } from "./customers-pagination"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Customer } from "@/lib/types"
 
 interface CustomersContainerProps {
@@ -81,7 +81,7 @@ export function CustomersContainer({ customers, onEdit, onToggleStatus, onDelete
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Estadísticas */}
       <CustomersStats customers={customers} />
 
@@ -92,33 +92,18 @@ export function CustomersContainer({ customers, onEdit, onToggleStatus, onDelete
         onSearchChange={handleSearchChange}
       />
 
-      {/* Tabla de clientes */}
-      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Clientes ({filteredCustomers.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredCustomers.length === customers.length 
-                  ? "Lista completa de clientes disponibles"
-                  : `Mostrando ${filteredCustomers.length} de ${customers.length} clientes`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <CustomersTable 
-              customers={currentCustomers} 
-              onEditClick={onEdit} 
-              onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Cards de clientes (solo móvil) */}
+      <CustomersCards customers={currentCustomers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+
+      {/* Tabla de clientes (solo desktop) */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        <CustomersTable 
+          customers={currentCustomers} 
+          onEditClick={onEdit} 
+          onToggleStatus={onToggleStatus} 
+          onDeleteClick={onDelete} 
+        />
+      </div>
 
       {/* Paginación */}
       <div className="flex justify-center">

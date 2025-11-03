@@ -31,7 +31,7 @@ export function CustomersFilters({ onPageSizeChange, onStatusChange, onSearchCha
     onSearchChange?.(value)
   }
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4 mb-6">
+    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4 mb-6 w-full">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Buscador */}
         <div className="flex-1">
@@ -40,7 +40,7 @@ export function CustomersFilters({ onPageSizeChange, onStatusChange, onSearchCha
             <Input
               type="text"
               placeholder="Buscar clientes..."
-              className="pl-10 bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              className="rounded-full pl-10 bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
@@ -49,7 +49,7 @@ export function CustomersFilters({ onPageSizeChange, onStatusChange, onSearchCha
 
         {/* Selector de estado */}
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full md:w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+          <SelectTrigger className="rounded-full w-full md:w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               <SelectValue placeholder="Estado" />
@@ -64,7 +64,7 @@ export function CustomersFilters({ onPageSizeChange, onStatusChange, onSearchCha
 
         {/* Selector de datos por página */}
         <Select value={pageSize} onValueChange={handlePageSizeChange}>
-          <SelectTrigger className="w-full md:w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+          <SelectTrigger className="rounded-full w-full md:w-[180px] bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
             <SelectValue placeholder="Por página" />
           </SelectTrigger>
           <SelectContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">

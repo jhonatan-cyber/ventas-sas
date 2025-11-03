@@ -183,7 +183,7 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
   }, [sales])
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       <SalesHeader
         title="Gestión de Ventas"
         description="Registra y supervisa las ventas realizadas"

@@ -4,8 +4,8 @@ import { useState } from "react"
 import { PlansStats } from "./plans-stats"
 import { PlansFilters } from "./plans-filters"
 import { PlansTable } from "./plans-table"
+import { PlansCards } from "./plans-cards"
 import { PlansPagination } from "./plans-pagination"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SerializedSubscriptionPlanWithStats } from "./types"
 
 interface PlansContainerProps {
@@ -77,7 +77,7 @@ export function PlansContainer({ plans, onEdit, onToggleStatus, onDelete }: Plan
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-0 md:p-6">
       {/* Estadísticas */}
       <PlansStats plans={plans} />
 
@@ -88,26 +88,13 @@ export function PlansContainer({ plans, onEdit, onToggleStatus, onDelete }: Plan
         onSearchChange={handleSearchChange}
       />
 
-      {/* Tabla de planes */}
-      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Planes ({filteredPlans.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredPlans.length === plans.length 
-                  ? "Lista completa de planes disponibles en el sistema"
-                  : `Mostrando ${filteredPlans.length} de ${plans.length} planes`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <PlansTable plans={currentPlans} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-        </CardContent>
-      </Card>
+      {/* Cards de planes (móvil) */}
+      <PlansCards plans={currentPlans} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+
+      {/* Tabla de planes (desktop) */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        <PlansTable plans={currentPlans} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      </div>
 
       {/* Paginación */}
       <PlansPagination

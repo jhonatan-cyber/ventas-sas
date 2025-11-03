@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { TwoFactorInput } from "@/components/auth/two-factor-input"
-
 export default function AdminLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
@@ -128,3 +127,4 @@ export default function AdminLoginPage() {
     </div>
   )
 }
+

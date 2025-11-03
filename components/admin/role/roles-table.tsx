@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Eye, Edit, Trash2, Power, PowerOff } from "lucide-react"
+import { Eye, Edit, Trash2, Power, PowerOff, Shield, FileText, Lock, Users } from "lucide-react"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 
 interface RolesTableProps {
@@ -19,12 +19,32 @@ export function RolesTable({ roles, onEdit, onToggleStatus, onDelete }: RolesTab
     <TooltipProvider>
       <Table>
       <TableHeader>
-        <TableRow className="bg-gray-50 dark:bg-[#2a2a2a]">
-          <TableHead className="text-gray-700 dark:text-gray-300">Rol</TableHead>
-          <TableHead className="text-gray-700 dark:text-gray-300">Descripción</TableHead>
-          <TableHead className="text-gray-700 dark:text-gray-300">Permisos</TableHead>
-          <TableHead className="text-gray-700 dark:text-gray-300">Usuarios</TableHead>
-          <TableHead className="text-gray-700 dark:text-gray-300">Acciones</TableHead>
+        <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
+          <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              Rol
+            </div>
+          </TableHead>
+          <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              Descripción
+            </div>
+          </TableHead>
+          <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              Permisos
+            </div>
+          </TableHead>
+          <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              Usuarios
+            </div>
+          </TableHead>
+          <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -36,27 +56,49 @@ export function RolesTable({ roles, onEdit, onToggleStatus, onDelete }: RolesTab
           </TableRow>
         ) : (
           roles.map((role) => (
-            <TableRow key={role.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a]">
-              <TableCell className="font-medium text-gray-900 dark:text-white">{role.name}</TableCell>
-              <TableCell className="text-gray-600 dark:text-gray-400">{role.description || "-"}</TableCell>
+            <TableRow key={role.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {(Array.isArray(role.permissions) ? role.permissions : []).slice(0, 2).map((permission, index) => (
-                    <Badge key={index} variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
-                      {String(permission)}
-                    </Badge>
-                  ))}
-                  {Array.isArray(role.permissions) && role.permissions.length > 2 && (
-                    <Badge variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
-                      +{role.permissions.length - 2} más
-                    </Badge>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-3.5 w-3.5 text-black dark:text-white" />
+                  <span className="font-medium text-gray-900 dark:text-white">{role.name}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {role.description ? (
+                    <>
+                      <FileText className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                      <span className="text-gray-600 dark:text-gray-400">{role.description}</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
                   )}
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                  {role._count.organizationMembers} usuarios
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Lock className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                  <div className="flex flex-wrap gap-1">
+                    {(Array.isArray(role.permissions) ? role.permissions : []).slice(0, 2).map((permission, index) => (
+                      <Badge key={index} variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
+                        {String(permission)}
+                      </Badge>
+                    ))}
+                    {Array.isArray(role.permissions) && role.permissions.length > 2 && (
+                      <Badge variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
+                        +{role.permissions.length - 2} más
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                  <Badge variant="secondary" className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                    {role._count.organizationMembers} usuarios
+                  </Badge>
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

@@ -68,68 +68,68 @@ export default async function DashboardPage({
   const pendingQuotations = recentQuotations.quotations.filter(q => q.status === 'pending').length
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-4 md:py-6 px-0 md:px-6 space-y-4 md:space-y-6">
       {/* Encabezado */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">
           Dashboard
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-xs md:text-base text-gray-600 dark:text-gray-400">
           Bienvenido, {fullName}
         </p>
       </div>
 
       {/* Estadísticas principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Ventas del Mes</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Ventas del Mes</CardTitle>
+            <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.salesThisMonth}</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{stats.salesThisMonth}</div>
+            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mt-1">
               {stats.totalSales} ventas totales
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Clientes</CardTitle>
-            <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Clientes</CardTitle>
+            <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalCustomers}</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{stats.totalCustomers}</div>
+            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mt-1">
               Clientes activos
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Productos</CardTitle>
-            <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Productos</CardTitle>
+            <Package className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalProducts}</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{stats.totalProducts}</div>
+            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mt-1">
               Productos activos
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Ingresos del Mes</CardTitle>
-            <DollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Ingresos del Mes</CardTitle>
+            <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">
               ${stats.revenueThisMonth.toLocaleString('es-BO', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mt-1">
               ${stats.totalRevenue.toLocaleString('es-BO', { minimumFractionDigits: 2 })} total
             </p>
           </CardContent>
@@ -137,41 +137,41 @@ export default async function DashboardPage({
       </div>
 
       {/* Estadísticas secundarias */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cotizaciones Pendientes</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Cotizaciones Pendientes</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingQuotations}</div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-2xl font-bold">{pendingQuotations}</div>
+            <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400">
               Requieren atención
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cotizaciones</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Cotizaciones</CardTitle>
             <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{recentQuotations.total}</div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-2xl font-bold">{recentQuotations.total}</div>
+            <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400">
               Todas las cotizaciones
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sucursales</CardTitle>
+        <Card className="col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Sucursales</CardTitle>
             <Building2 className="h-4 w-4 text-green-600 dark:text-green-400" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-xl md:text-2xl font-bold">-</div>
+            <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400">
               Sucursales activas
             </p>
           </CardContent>
@@ -179,24 +179,24 @@ export default async function DashboardPage({
       </div>
 
       {/* Analytics y Gráficos */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="space-y-3 md:space-y-4">
+        <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
           Analytics y Métricas
         </h2>
         <AnalyticsDashboardClient slug={slug} />
       </div>
 
       {/* Contenido secundario */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-2">
         {/* Cotizaciones recientes */}
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 md:p-6">
             <div className="flex items-center justify-between">
-              <CardTitle>Cotizaciones Pendientes</CardTitle>
-              <FileText className="h-5 w-5 text-gray-400" />
+              <CardTitle className="text-sm md:text-lg">Cotizaciones Pendientes</CardTitle>
+              <FileText className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6">
             {pendingQuotations === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <CheckCircle2 className="h-12 w-12 text-green-500 mb-2" />
@@ -205,31 +205,31 @@ export default async function DashboardPage({
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 {recentQuotations.quotations
                   .filter(q => q.status === 'pending')
                   .slice(0, 5)
                   .map((quotation) => (
                     <div
                       key={quotation.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a]"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2 md:p-3 rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a]"
                     >
-                      <div>
-                        <p className="font-medium text-sm text-gray-900 dark:text-white">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-xs md:text-sm text-gray-900 dark:text-white truncate">
                           {quotation.quotationNumber}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
                           {quotation.customer?.name || 'Cliente'}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(quotation.createdAt)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                      <div className="flex items-center gap-2 sm:flex-col sm:items-end self-end sm:self-auto">
+                        <p className="font-semibold text-xs md:text-sm text-gray-900 dark:text-white">
                           ${Number(quotation.total).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
                         </p>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                        <span className="inline-flex items-center px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
                           Pendiente
                         </span>
                       </div>
@@ -242,38 +242,38 @@ export default async function DashboardPage({
 
         {/* Accesos rápidos */}
         <Card>
-          <CardHeader>
-            <CardTitle>Accesos Rápidos</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-sm md:text-lg">Accesos Rápidos</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-2 gap-2 md:gap-3">
               <a
                 href={`/${slug}/ventas`}
-                className="flex flex-col items-center justify-center p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
               >
-                <ShoppingCart className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Ventas</span>
+                <ShoppingCart className="h-5 w-5 md:h-6 md:w-6 text-green-600 dark:text-green-400 mb-1 md:mb-2" />
+                <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Ventas</span>
               </a>
               <a
                 href={`/${slug}/cotizaciones`}
-                className="flex flex-col items-center justify-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
               >
-                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Cotizaciones</span>
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-blue-600 dark:text-blue-400 mb-1 md:mb-2" />
+                <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Cotizaciones</span>
               </a>
               <a
                 href={`/${slug}/productos`}
-                className="flex flex-col items-center justify-center p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
               >
-                <ShoppingBag className="h-6 w-6 text-purple-600 dark:text-purple-400 mb-2" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Productos</span>
+                <ShoppingBag className="h-5 w-5 md:h-6 md:w-6 text-purple-600 dark:text-purple-400 mb-1 md:mb-2" />
+                <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Productos</span>
               </a>
               <a
                 href={`/${slug}/clientes`}
-                className="flex flex-col items-center justify-center p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
               >
-                <Users className="h-6 w-6 text-orange-600 dark:text-orange-400 mb-2" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Clientes</span>
+                <Users className="h-5 w-5 md:h-6 md:w-6 text-orange-600 dark:text-orange-400 mb-1 md:mb-2" />
+                <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">Clientes</span>
               </a>
             </div>
           </CardContent>

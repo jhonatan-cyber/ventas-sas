@@ -4,8 +4,8 @@ import { useState } from "react"
 import { UsersStats } from "./users-stats"
 import { UsersFilters } from "./users-filters"
 import { UsersTable } from "./users-table"
+import { UsersCards } from "./users-cards"
 import { UsersPagination } from "./users-pagination"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 
 interface UsersContainerProps {
@@ -78,7 +78,7 @@ export function UsersContainer({ users, onEdit, onToggleStatus, onDelete }: User
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-0 md:p-6">
       {/* Estadísticas */}
       <UsersStats users={users} />
 
@@ -89,28 +89,13 @@ export function UsersContainer({ users, onEdit, onToggleStatus, onDelete }: User
         onSearchChange={handleSearchChange}
       />
 
-      {/* Tabla de usuarios */}
-      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Usuarios ({filteredUsers.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredUsers.length === users.length 
-                  ? "Lista completa de usuarios disponibles en el sistema"
-                  : `Mostrando ${filteredUsers.length} de ${users.length} usuarios`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <UsersTable users={currentUsers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Cards de usuarios (móvil) */}
+      <UsersCards users={currentUsers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+
+      {/* Tabla de usuarios (desktop) */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        <UsersTable users={currentUsers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      </div>
 
       {/* Paginación */}
       <UsersPagination

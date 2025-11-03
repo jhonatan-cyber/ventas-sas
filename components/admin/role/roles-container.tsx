@@ -4,8 +4,8 @@ import { useState } from "react"
 import { RolesStats } from "./roles-stats"
 import { RolesFilters } from "./roles-filters"
 import { RolesTable } from "./roles-table"
+import { RolesCards } from "./roles-cards"
 import { RolesPagination } from "./roles-pagination"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 
 interface RolesContainerProps {
@@ -77,7 +77,7 @@ export function RolesContainer({ roles, onEdit, onToggleStatus, onDelete }: Role
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 p-0 md:px-6">
       {/* Estadísticas */}
       <RolesStats roles={roles} />
 
@@ -88,28 +88,13 @@ export function RolesContainer({ roles, onEdit, onToggleStatus, onDelete }: Role
         onSearchChange={handleSearchChange}
       />
 
-      {/* Tabla de roles */}
-        <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-gray-900 dark:text-white">
-                  Roles ({filteredRoles.length})
-                </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredRoles.length === roles.length 
-                  ? "Lista completa de roles disponibles en el sistema"
-                  : `Mostrando ${filteredRoles.length} de ${roles.length} roles`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
+      {/* Cards de roles (solo móvil) */}
+      <RolesCards roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
 
-          <RolesTable roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-
-        </CardContent>
-      </Card>
+      {/* Tabla de roles (solo desktop) */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        <RolesTable roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      </div>
 
       {/* Paginación */}
       <RolesPagination

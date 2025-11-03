@@ -1,15 +1,18 @@
 "use client"
 
-import { Moon, Sun, Monitor, HelpCircle, Search, LogOut, User } from "lucide-react"
+import { Moon, Sun, Monitor, HelpCircle, Search, LogOut, User, Menu } from "lucide-react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
+import { useSidebar } from "./sidebar-context"
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { toggle } = useSidebar()
 
   useEffect(() => {
     setMounted(true)
@@ -22,11 +25,101 @@ export function AdminHeader() {
   const currentTheme = theme || 'system'
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2a2a2a] z-40">
-      <div className="flex items-center justify-between h-full px-6">
-        {/* Barra de búsqueda */}
-        <div className="flex-1 max-w-md">
-          <div className="relative">
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 z-30 lg:bg-white lg:dark:bg-[#1a1a1a] lg:border-b lg:border-gray-200 lg:dark:border-[#2a2a2a]">
+      {/* Header flotante en móvil */}
+      <div className="lg:hidden fixed top-4 left-4 right-4 h-14 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-[#2a2a2a]/50">
+        <div className="flex items-center justify-between h-full px-4">
+          {/* Botón hamburguesa para móvil */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2"
+            onClick={toggle}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          {/* Logo en móvil */}
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-xs font-bold">S</span>
+            </div>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">SalesHub</span>
+          </div>
+          
+          {/* Acciones en móvil */}
+          <div className="flex items-center gap-2">
+            {/* Notificaciones */}
+            <NotificationsDropdown system="admin" />
+            
+            {/* Toggle de tema */}
+            <button 
+              onClick={() => {
+                if (currentTheme === 'light') setTheme('dark')
+                else if (currentTheme === 'dark') setTheme('system')
+                else setTheme('light')
+              }}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+            >
+              {currentTheme === 'light' ? (
+                <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+              ) : currentTheme === 'dark' ? (
+                <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+              ) : (
+                <Monitor className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+              )}
+            </button>
+            
+            {/* Usuario */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback>SA</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Cuenta
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { window.location.href = '/administracion/perfil' }}>
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/administracion/logout', { method: 'POST', credentials: 'include' })
+                    } catch {}
+                    window.location.href = '/administracion/login'
+                  }}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Salir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+      
+      {/* Header normal en desktop */}
+      <div className="hidden lg:flex items-center justify-between h-full px-6">
+        {/* Botón hamburguesa para móvil */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden mr-2"
+          onClick={toggle}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        
+        {/* Barra de búsqueda - oculta en móvil */}
+        <div className="hidden md:flex flex-1 max-w-md">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <input
               type="text"

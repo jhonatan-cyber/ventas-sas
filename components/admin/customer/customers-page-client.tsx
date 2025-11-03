@@ -1,18 +1,20 @@
-"use client"
+"use client";
 
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { CustomersHeader } from "./customers-header"
-import { CustomersContainer } from "./customers-container"
-import { CustomerFormDialog } from "./customer-form-dialog"
-import { CustomerDeleteDialog } from "./customer-delete-dialog"
-import { Customer } from "@/lib/types"
-import { useCustomerActions } from "@/hooks/admin/customer/use-customer-actions"
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { CustomersHeader } from "./customers-header";
+import { CustomersContainer } from "./customers-container";
+import { CustomerFormDialog } from "./customer-form-dialog";
+import { CustomerDeleteDialog } from "./customer-delete-dialog";
+import { Customer } from "@/lib/types";
+import { useCustomerActions } from "@/hooks/admin/customer/use-customer-actions";
 
 interface CustomersPageClientProps {
-  initialCustomers: Customer[]
+  initialCustomers: Customer[];
 }
 
-export function CustomersPageClient({ initialCustomers }: CustomersPageClientProps) {
+export function CustomersPageClient({
+  initialCustomers,
+}: CustomersPageClientProps) {
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -23,23 +25,23 @@ export function CustomersPageClient({ initialCustomers }: CustomersPageClientPro
     closeDialogs,
     handleSave,
     handleDelete,
-    handleToggleStatus
-  } = useCustomerActions()
+    handleToggleStatus,
+  } = useCustomerActions();
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <CustomersHeader
           title="Gestión de Clientes"
           description="Administra todos los clientes de tu organización"
-          newButtonText="Nuevo "
+          newButtonText="Agregar Cliente"
           onNewClick={openCreateDialog}
         />
 
         {/* Contenedor con filtros, tabla y paginación */}
-        <CustomersContainer 
-          customers={initialCustomers} 
+        <CustomersContainer
+          customers={initialCustomers}
           onEdit={openEditDialog}
           onToggleStatus={handleToggleStatus}
           onDelete={openDeleteDialog}
@@ -62,5 +64,5 @@ export function CustomersPageClient({ initialCustomers }: CustomersPageClientPro
         />
       </div>
     </AdminLayout>
-  )
+  );
 }

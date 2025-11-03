@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, Power, PowerOff, Calendar, Building2 } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, Calendar, Building2, User, Package, CreditCard, CheckCircle } from "lucide-react"
 
 interface SubscriptionWithDetails {
   id: string
@@ -82,11 +82,36 @@ export function SubscriptionsTable({ subscriptions, onEdit, onToggleStatus, onDe
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
-                  <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cliente</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Plan</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Período</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Vigencia</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Cliente
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Plan
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Estado
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Período
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Vigencia
+                </div>
+              </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -111,9 +136,12 @@ export function SubscriptionsTable({ subscriptions, onEdit, onToggleStatus, onDe
                         <Building2 className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {subscription.customer.razonSocial || `${subscription.customer.nombre || ''} ${subscription.customer.apellido || ''}`.trim() || subscription.customer.email || 'Cliente sin nombre'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-black dark:text-white" />
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {subscription.customer.razonSocial || `${subscription.customer.nombre || ''} ${subscription.customer.apellido || ''}`.trim() || subscription.customer.email || 'Cliente sin nombre'}
+                          </span>
+                        </div>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {subscription.customer.nit || subscription.customer.email || 'Sin identificador'}
                         </span>
@@ -121,19 +149,28 @@ export function SubscriptionsTable({ subscriptions, onEdit, onToggleStatus, onDe
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                      {subscription.plan.name}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Package className="h-3.5 w-3.5 text-black dark:text-white" />
+                      <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                        {subscription.plan.name}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(subscription.status)}>
-                      {getStatusLabel(subscription.status)}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                      <Badge className={getStatusColor(subscription.status)}>
+                        {getStatusLabel(subscription.status)}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {subscription.billingPeriod === 'monthly' ? 'Mensual' : 'Anual'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                      <Badge variant="outline">
+                        {subscription.billingPeriod === 'monthly' ? 'Mensual' : 'Anual'}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1 py-2">

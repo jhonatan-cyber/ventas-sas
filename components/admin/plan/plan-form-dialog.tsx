@@ -40,6 +40,9 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
   const [maxProducts, setMaxProducts] = useState("")
   const [selectedModules, setSelectedModules] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Validar si el formulario es válido
+  const isFormValid = name.trim() !== "" && (hasMonthly || hasYearly)
 
   // Resetear el formulario cuando el modal se abre o se cambia el plan
   useEffect(() => {
@@ -102,21 +105,23 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
               {plan ? "Editar Plan" : "Nuevo Plan"}
             </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
+            <DialogDescription>
               {plan ? "Actualiza la información del plan" : "Completa la información para crear un nuevo plan de suscripción"}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
-                Nombre del Plan *
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gray-50/60 dark:bg-[#0c0c0c]">
+            <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                Nombre del Plan <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -124,12 +129,12 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                 value={name}
                 onChange={(e) => setName(capitalizeFirstLetter(e.target.value))}
                 required
-                className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Descripción
               </Label>
               <Textarea
@@ -138,13 +143,13 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                 value={description}
                 onChange={(e) => setDescription(capitalizeFirstLetter(e.target.value))}
                 rows={3}
-                className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                className="rounded-lg bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white resize-none"
               />
             </div>
 
             {/* Sección de Precios */}
-            <div className="grid gap-4 pt-4 border-t">
-              <Label className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="grid gap-4 pt-4 border-t border-gray-200 dark:border-[#2a2a2a]">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Períodos de Facturación
               </Label>
               
@@ -156,14 +161,14 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                     checked={hasMonthly}
                     onCheckedChange={(checked) => setHasMonthly(checked as boolean)}
                   />
-                  <Label htmlFor="hasMonthly" className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
+                  <Label htmlFor="hasMonthly" className="text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer">
                     Plan Mensual
                   </Label>
                 </div>
                 {hasMonthly && (
-                  <div className="ml-7">
-                    <Label htmlFor="priceMonthly" className="text-gray-600 dark:text-gray-400 text-sm">
-                      Precio Mensual *
+                  <div className="ml-7 space-y-2">
+                    <Label htmlFor="priceMonthly" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Precio Mensual <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="priceMonthly"
@@ -174,7 +179,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                       onChange={(e) => setPriceMonthly(parseFloat(e.target.value) ?? 0)}
                       required={hasMonthly}
                       min="0"
-                      className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                      className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                     />
                   </div>
                 )}
@@ -188,14 +193,14 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                     checked={hasYearly}
                     onCheckedChange={(checked) => setHasYearly(checked as boolean)}
                   />
-                  <Label htmlFor="hasYearly" className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
+                  <Label htmlFor="hasYearly" className="text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer">
                     Plan Anual
                   </Label>
                 </div>
                 {hasYearly && (
-                  <div className="ml-7">
-                    <Label htmlFor="priceYearly" className="text-gray-600 dark:text-gray-400 text-sm">
-                      Precio Anual *
+                  <div className="ml-7 space-y-2">
+                    <Label htmlFor="priceYearly" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Precio Anual <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="priceYearly"
@@ -206,7 +211,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                       onChange={(e) => setPriceYearly(parseFloat(e.target.value) ?? 0)}
                       required={hasYearly}
                       min="0"
-                      className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                      className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                     />
                   </div>
                 )}
@@ -214,9 +219,9 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
             </div>
 
             {/* Límites */}
-            <div className="grid grid-cols-2 gap-4 border-t pt-4">
-              <div className="grid gap-2">
-                <Label htmlFor="maxUsers" className="text-gray-700 dark:text-gray-300">
+            <div className="grid grid-cols-2 gap-4 border-t border-gray-200 dark:border-[#2a2a2a] pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="maxUsers" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   Máx. Usuarios
                 </Label>
                 <Input
@@ -226,12 +231,12 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                   value={maxUsers}
                   onChange={(e) => setMaxUsers(e.target.value)}
                   min="1"
-                  className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                  className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="maxProducts" className="text-gray-700 dark:text-gray-300">
+              <div className="space-y-2">
+                <Label htmlFor="maxProducts" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   Máx. Productos
                 </Label>
                 <Input
@@ -241,14 +246,14 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                   value={maxProducts}
                   onChange={(e) => setMaxProducts(e.target.value)}
                   min="1"
-                  className="bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                  className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                 />
               </div>
             </div>
 
             {/* Módulos */}
-            <div className="grid gap-4 border-t pt-4">
-              <Label className="text-gray-700 dark:text-gray-300 font-semibold">
+            <div className="grid gap-4 border-t border-gray-200 dark:border-[#2a2a2a] pt-4">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Módulos Incluidos
               </Label>
               <div className="grid gap-3">
@@ -273,25 +278,24 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                 ))}
               </div>
             </div>
+            </div>
           </div>
-
-          <DialogFooter className="bg-gray-50 dark:bg-[#2a2a2a] -mx-6 -mb-6 px-6 py-4 border-t border-gray-200 dark:border-[#2a2a2a] !flex !justify-center gap-3">
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
-              rounded="full"
+              className="w-full sm:w-auto rounded-full"
               onClick={() => onOpenChange(false)}
-              className="border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300"
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              rounded="full"
-              disabled={isLoading || !name.trim() || (!hasMonthly && !hasYearly)}
-              className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
+              className="w-full sm:w-auto rounded-full px-6"
+              disabled={isLoading || !isFormValid}
             >
-              {isLoading ? "Guardando..." : plan ? "Actualizar" : "Crear"}
+              {isLoading ? "Guardando..." : plan ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

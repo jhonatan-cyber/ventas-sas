@@ -55,7 +55,7 @@ export function SubscriptionsPageClient({ initialSubscriptions }: SubscriptionsP
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         <SubscriptionsHeader
           title="Gestión de Suscripciones"
           description="Administra todas las suscripciones del sistema"

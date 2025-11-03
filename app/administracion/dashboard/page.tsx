@@ -35,36 +35,36 @@ export default async function AdminPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Panel de Administración</h1>
-          <p className="text-gray-600 dark:text-gray-400">Gestiona organizaciones, usuarios, planes y configuración del sistema</p>
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-lg md:text-4xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">Panel de Administración</h1>
+          <p className="text-xs md:text-base text-gray-600 dark:text-gray-400">Gestiona organizaciones, usuarios, planes y configuración del sistema</p>
         </div>
 
         {/* Estadísticas principales */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Organizaciones</CardTitle>
-              <Zap className="h-5 w-5 text-blue-500" />
+              <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Organizaciones</CardTitle>
+              <Zap className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.total}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Organizaciones en el sistema</p>
+              <div className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.total}</div>
+              <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Organizaciones en el sistema</p>
             </CardContent>
           </Card>
 
           <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Activas</CardTitle>
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Activas</CardTitle>
+              <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.active}</div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded">Excelente</span>
-                <span className="text-xs text-gray-600 dark:text-gray-500">
+              <div className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.active}</div>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2 mt-1">
+                <span className="text-[10px] md:text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-1.5 md:px-2 py-0.5 rounded">Excelente</span>
+                <span className="text-[10px] md:text-xs text-gray-600 dark:text-gray-500">
                   {Math.round((dashboardStats.organizations.active / dashboardStats.organizations.total) * 100)}% del total
                 </span>
               </div>
@@ -79,12 +79,12 @@ export default async function AdminPage() {
 
           <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Inactivas</CardTitle>
-              <XCircle className="h-5 w-5 text-red-500" />
+              <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Inactivas</CardTitle>
+              <XCircle className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.suspended}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <div className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">{dashboardStats.organizations.suspended}</div>
+              <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">
                 {dashboardStats.organizations.suspended > 0 
                   ? Math.round((dashboardStats.organizations.suspended / dashboardStats.organizations.total) * 100) 
                   : 0}% del total
@@ -100,61 +100,58 @@ export default async function AdminPage() {
 
           <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Promedio</CardTitle>
-              <BarChart3 className="h-5 w-5 text-purple-500" />
+              <CardTitle className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Promedio</CardTitle>
+              <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">
                 {dashboardStats.organizations.total > 0 && systemMetrics.totalUsers > 0
                   ? Math.round(systemMetrics.totalUsers / dashboardStats.organizations.total) 
                   : 0}
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Usuarios por organización</p>
+              <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Usuarios por organización</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabla de datos */}
         <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-          <CardHeader>
+          <CardHeader className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-gray-900 dark:text-white">Resumen del Sistema</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">Métricas generales del SaaS</CardDescription>
+                <CardTitle className="text-sm md:text-lg text-gray-900 dark:text-white">Resumen del Sistema</CardTitle>
+                <CardDescription className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Métricas generales del SaaS</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
-                <Users className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardStats.users.total}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Total Usuarios</p>
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="text-center p-3 md:p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-500 mx-auto mb-2" />
+                <div className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{dashboardStats.users.total}</div>
+                <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Total Usuarios</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
-                <BarChart3 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{systemMetrics.totalProducts}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Productos</p>
+              <div className="text-center p-3 md:p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-green-500 mx-auto mb-2" />
+                <div className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{systemMetrics.totalProducts}</div>
+                <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Productos</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
-                <CreditCard className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{systemMetrics.totalOrders}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Órdenes</p>
+              <div className="text-center p-3 md:p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-yellow-500 mx-auto mb-2" />
+                <div className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{systemMetrics.totalOrders}</div>
+                <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Órdenes</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
-                <DollarSign className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">${dashboardStats.revenue.total.toLocaleString()}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Ingresos</p>
+              <div className="text-center p-3 md:p-4 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-purple-500 mx-auto mb-2" />
+                <div className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">${dashboardStats.revenue.total.toLocaleString()}</div>
+                <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mt-1">Ingresos</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Analytics */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Analytics del Sistema
-          </h2>
+        <div className="space-y-3 md:space-y-4">
           <AdminAnalyticsClient />
         </div>
       </div>

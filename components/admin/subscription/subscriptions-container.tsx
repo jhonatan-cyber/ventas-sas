@@ -4,8 +4,8 @@ import { useState } from "react"
 import { SubscriptionsStats } from "./subscriptions-stats"
 import { SubscriptionsFilters } from "./subscriptions-filters"
 import { SubscriptionsTable } from "./subscriptions-table"
+import { SubscriptionsCards } from "./subscriptions-cards"
 import { SubscriptionsPagination } from "./subscriptions-pagination"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SubscriptionWithDetails {
   id: string
@@ -105,34 +105,19 @@ export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, 
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-0 md:p-6">
       <SubscriptionsStats subscriptions={subscriptions} />
       <SubscriptionsFilters 
         onPageSizeChange={handlePageSizeChange}
         onStatusChange={handleStatusChange}
         onSearchChange={handleSearchChange}
       />
-      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Suscripciones ({filteredSubscriptions.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredSubscriptions.length === subscriptions.length 
-                  ? "Lista completa de suscripciones disponibles en el sistema"
-                  : `Mostrando ${filteredSubscriptions.length} de ${subscriptions.length}`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Cards de suscripciones (móvil) */}
+      <SubscriptionsCards subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      {/* Tabla de suscripciones (desktop) */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+        <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      </div>
       <SubscriptionsPagination
         totalItems={filteredSubscriptions.length}
         pageSize={pageSize}

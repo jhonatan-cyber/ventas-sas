@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Eye, Edit, Trash2, Power, PowerOff, MapPin, Phone } from "lucide-react"
+import { Eye, Edit, Trash2, Power, PowerOff, MapPin, Phone, User, CreditCard, Shield, CheckCircle } from "lucide-react"
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 
 interface UsersTableProps {
@@ -32,11 +32,36 @@ export function UsersTable({ users, onEdit, onToggleStatus, onDelete }: UsersTab
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Usuario</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">CI</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Rol</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Contacto</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Usuario
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  CI
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Rol
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Contacto
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Estado
+                </div>
+              </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -65,9 +90,12 @@ export function UsersTable({ users, onEdit, onToggleStatus, onDelete }: UsersTab
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {firstName || '-'} {lastName || ''}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-black dark:text-white" />
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {firstName || '-'} {lastName || ''}
+                            </span>
+                          </div>
                           {user.email && (
                             <span className="text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
                           )}
@@ -81,7 +109,8 @@ export function UsersTable({ users, onEdit, onToggleStatus, onDelete }: UsersTab
                     </TableCell>
                     
                     <TableCell>
-                      <div className="py-2">
+                      <div className="flex items-center gap-2 py-2">
+                        <CreditCard className="h-3.5 w-3.5 text-black dark:text-white" />
                         <span className="text-gray-900 dark:text-white font-mono text-sm">
                           {(user as any).ci || '-'}
                         </span>
@@ -89,12 +118,15 @@ export function UsersTable({ users, onEdit, onToggleStatus, onDelete }: UsersTab
                     </TableCell>
                     
                     <TableCell>
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                      >
-                        {user.role}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                        >
+                          {user.role}
+                        </Badge>
+                      </div>
                     </TableCell>
                     
                     <TableCell>
@@ -118,15 +150,18 @@ export function UsersTable({ users, onEdit, onToggleStatus, onDelete }: UsersTab
                     </TableCell>
                     
                     <TableCell>
-                      <Badge 
-                        className={
-                          user.isActive 
-                            ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' 
-                            : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800'
-                        }
-                      >
-                        {user.isActive ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                        <Badge 
+                          className={
+                            user.isActive 
+                              ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' 
+                              : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800'
+                          }
+                        >
+                          {user.isActive ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
                     </TableCell>
                     
                     <TableCell>

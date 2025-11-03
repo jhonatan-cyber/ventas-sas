@@ -1,4 +1,20 @@
 import { ThemeProvider } from "@/components/theme-provider"
+import { Metadata, Viewport } from "next"
+
+export const metadata: Metadata = {
+  applicationName: "Admin SAS",
+  description: "Sistema de administración para gestionar clientes, usuarios, planes y suscripciones",
+  keywords: ["administración", "gestión", "clientes", "ventas"],
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#2563eb",
+}
 
 export default function AdminSectionLayout({
   children,
@@ -11,5 +27,3 @@ export default function AdminSectionLayout({
     </ThemeProvider>
   )
 }
-
-

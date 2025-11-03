@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { RoleHeader } from "@/components/admin/role/role-header"
-import { RolesContainer } from "./roles-container"
-import { RoleFormDialog } from "./role-form-dialog"
-import { DeleteRoleDialog } from "./delete-role-dialog"
-import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
-import { useRoleActions } from "@/hooks/admin/role/use-role-actions"
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { RoleHeader } from "@/components/admin/role/role-header";
+import { RolesContainer } from "./roles-container";
+import { RoleFormDialog } from "./role-form-dialog";
+import { DeleteRoleDialog } from "./delete-role-dialog";
+import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
+import { useRoleActions } from "@/hooks/admin/role/use-role-actions";
 
 interface RolesPageClientProps {
-  initialRoles: RoleWithStats[]
+  initialRoles: RoleWithStats[];
 }
 
 export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
@@ -25,11 +25,11 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
     handleDeleteConfirm,
     deleteDialog,
     setDeleteDialog,
-  } = useRoleActions()
+  } = useRoleActions();
 
   return (
     <AdminLayout>
-      <div className="space-y-6 mt-6">
+      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <RoleHeader
           title="Gestión de Roles"
@@ -62,6 +62,5 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
         />
       </div>
     </AdminLayout>
-  )
+  );
 }
-

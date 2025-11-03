@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { Building2, LogOut, User, Sun, Moon, Monitor } from "lucide-react"
+import { Building2, LogOut, User, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
+import { useSidebar } from "./sidebar-context"
 
 interface SasSession {
   userId: string
@@ -92,12 +94,81 @@ export function SalesHeader() {
     window.location.href = `/${slug}/login`
   }
 
+  const { toggle } = useSidebar()
+
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2a2a2a] z-40">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          <span>{session?.customerSlug || 'SAS'}</span>
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 z-30 lg:bg-white lg:dark:bg-[#1a1a1a] lg:border-b lg:border-gray-200 lg:dark:border-[#2a2a2a]">
+      {/* Header flotante en móvil */}
+      <div className="lg:hidden fixed top-4 left-4 right-4 h-14 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-[#2a2a2a]/50">
+        <div className="flex items-center justify-between h-full px-4">
+          <div className="flex items-center gap-2">
+            {/* Botón hamburguesa para móvil */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={toggle}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              <span className="text-sm">{session?.customerSlug || 'SAS'}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Notificaciones */}
+            <NotificationsDropdown system="sas" slug={slug} />
+            {/* Toggle de tema */}
+            {mounted && (
+              <button
+                onClick={() => {
+                  const current = theme || 'system'
+                  if (current === 'light') applyTheme('dark')
+                  else if (current === 'dark') applyTheme('system')
+                  else applyTheme('light')
+                }}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                title="Tema"
+              >
+                {theme === 'light' ? (
+                  <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                ) : theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                ) : (
+                  <Monitor className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                )}
+              </button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties}>
+                    {(fullName || 'U').slice(0,2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]; window.location.href = `/${slug}/perfil` }}>Perfil</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" /> Salir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+      
+      {/* Header normal en desktop */}
+      <div className="hidden lg:flex items-center justify-between h-full px-6">
+        <div className="flex items-center gap-2">
+          <div className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            <span>{session?.customerSlug || 'SAS'}</span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Notificaciones */}
@@ -165,5 +236,3 @@ export function SalesHeader() {
     </header>
   )
 }
-
-

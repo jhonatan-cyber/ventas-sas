@@ -17,16 +17,24 @@ const edgeLogger = {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Crear respuesta base
-  let response = NextResponse.next()
-
-  // Aplicar security headers a todas las respuestas
-  response = addSecurityHeaders(response)
-
   // Rutas estáticas y API - no requieren autenticación del middleware
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
-    return response
+  // Excluir archivos estáticos del Service Worker y manifest
+  // IMPORTANTE: Debe estar ANTES de aplicar security headers para evitar redirects
+  const isStaticFile = 
+    pathname.startsWith('/_next') || 
+    pathname.startsWith('/api') || 
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/icon-') ||
+    pathname.startsWith('/uploads/') ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|json|js|woff|woff2|ttf|eot)$/i)
+
+  if (isStaticFile) {
+    return addSecurityHeaders(NextResponse.next())
   }
+
+  // Crear respuesta base y aplicar security headers a rutas dinámicas
+  let response = NextResponse.next()
+  response = addSecurityHeaders(response)
 
   // Admin zone protection
   if (pathname.startsWith('/administracion')) {
@@ -63,6 +71,12 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    /*
+     * Match all request paths except for:
+     * - api routes
+     * - _next static files
+     * - static file extensions (handled in middleware logic)
+     */
+    '/((?!api|_next).*)',
   ],
 }

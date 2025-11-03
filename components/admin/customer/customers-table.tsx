@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, Building, User, Receipt, CreditCard, Phone, MapPin } from "lucide-react"
 import { Customer } from "@/lib/types"
 
 interface CustomersTableProps {
@@ -31,10 +31,30 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cliente</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">NIT/CI</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Contacto</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Dirección</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Cliente
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  NIT/CI
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Contacto
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  Dirección
+                </div>
+              </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
             </TableRow>
@@ -81,38 +101,60 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {displayName}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {hasRazonSocial ? (
+                              <Building className="h-3.5 w-3.5 text-blue-500" />
+                            ) : (
+                              <User className="h-3.5 w-3.5 text-blue-500" />
+                            )}
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {displayName}
+                            </span>
+                          </div>
                           {secondaryName && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{secondaryName}</span>
+                            <div className="flex items-center gap-2 ml-5">
+                              <User className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{secondaryName}</span>
+                            </div>
                           )}
                           {!secondaryName && customer.email && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{customer.email}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-5">{customer.email}</span>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1.5">
                         {customer.nit && (
-                          <span className="text-sm text-gray-900 dark:text-white">NIT: {customer.nit}</span>
+                          <div className="flex items-center gap-2">
+                            <Receipt className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                            <span className="text-sm text-gray-900 dark:text-white">{customer.nit}</span>
+                          </div>
                         )}
                         {customer.ci && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">CI: {customer.ci}</span>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{customer.ci}</span>
+                          </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       {customer.telefono ? (
-                        <span className="text-sm text-gray-900 dark:text-white">{customer.telefono}</span>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-white">{customer.telefono}</span>
+                        </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}
                     </TableCell>
                     <TableCell>
                       {customer.direccion ? (
-                        <span className="text-sm text-gray-900 dark:text-white">{customer.direccion}</span>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-white">{customer.direccion}</span>
+                        </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}

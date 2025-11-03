@@ -45,7 +45,7 @@ export function UsuariosSasPageClient({
   } = useUsuarioSasActions(customerSlug)
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Header con título y botón */}
       <UsuariosSasHeader
         title="Gestión de Usuarios"

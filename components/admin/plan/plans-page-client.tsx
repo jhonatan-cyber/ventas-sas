@@ -29,7 +29,7 @@ export function PlansPageClient({ initialPlans }: PlansPageClientProps) {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <PlanHeader
           title="Gestión de Planes"

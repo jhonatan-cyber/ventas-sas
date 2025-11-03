@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "lucide-react"
 
 interface Customer {
   id: string
@@ -43,6 +44,9 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
   const [plans, setPlans] = useState<Plan[]>([])
   const [customersLoading, setCustomersLoading] = useState(false)
   const [plansLoading, setPlansLoading] = useState(false)
+  
+  // Validar si el formulario es válido
+  const isFormValid = customerId.trim() !== "" && planId.trim() !== ""
 
   useEffect(() => {
     if (open) {
@@ -137,25 +141,27 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
               {subscription ? "Editar Suscripción" : "Nueva Suscripción"}
             </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
+            <DialogDescription>
               {subscription ? "Actualiza la información de la suscripción" : "Completa la información para crear una nueva suscripción"}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="grid gap-4 py-4">
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gray-50/60 dark:bg-[#0c0c0c]">
+            <div className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="customer" className="text-gray-700 dark:text-gray-300">
-                  Cliente *
+              <div className="space-y-2">
+                <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Cliente <span className="text-red-500">*</span>
                 </Label>
                 <Select value={customerId} onValueChange={setCustomerId} disabled={customersLoading}>
-                  <SelectTrigger className="w-full bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+                  <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
                     <SelectValue placeholder={customersLoading ? "Cargando..." : "Selecciona un cliente"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
@@ -168,12 +174,12 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="plan" className="text-gray-700 dark:text-gray-300">
-                  Plan *
+              <div className="space-y-2">
+                <Label htmlFor="plan" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Plan <span className="text-red-500">*</span>
                 </Label>
                 <Select value={planId} onValueChange={setPlanId} disabled={plansLoading}>
-                  <SelectTrigger className="w-full bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+                  <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
                     <SelectValue placeholder={plansLoading ? "Cargando..." : "Selecciona un plan"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
@@ -188,12 +194,12 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="billingPeriod" className="text-gray-700 dark:text-gray-300">
-                  Período de Facturación *
+              <div className="space-y-2">
+                <Label htmlFor="billingPeriod" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Período de Facturación
                 </Label>
                 <Select value={billingPeriod} onValueChange={setBillingPeriod}>
-                  <SelectTrigger className="w-full bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
+                  <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
                     <SelectValue placeholder="Selecciona el período" />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
@@ -205,7 +211,7 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
-                  <Label className="text-gray-700 dark:text-gray-300">Renovación Automática</Label>
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">Renovación Automática</Label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">La suscripción se renovará automáticamente</p>
                 </div>
                 <Switch
@@ -217,50 +223,55 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="startDate" className="text-gray-700 dark:text-gray-300">
+              <div className="space-y-2">
+                <Label htmlFor="startDate" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   Fecha de Inicio
                 </Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="rounded-full w-full pl-10 bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="endDate" className="text-gray-700 dark:text-gray-300">
+              <div className="space-y-2">
+                <Label htmlFor="endDate" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   Fecha de Fin
                 </Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="rounded-full w-full pl-10 bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                  />
+                </div>
               </div>
             </div>
+            </div>
           </div>
-
-          <DialogFooter className="bg-gray-50 dark:bg-[#2a2a2a] -mx-6 -mb-6 px-6 py-4 border-t border-gray-200 dark:border-[#2a2a2a] !flex !justify-center gap-3">
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
-              rounded="full"
+              className="w-full sm:w-auto rounded-full"
               onClick={() => onOpenChange(false)}
-              className="border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300"
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              rounded="full"
-              disabled={isLoading || !customerId || !planId}
-              className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100"
+              className="w-full sm:w-auto rounded-full px-6"
+              disabled={isLoading || !isFormValid}
             >
-              {isLoading ? "Guardando..." : subscription ? "Actualizar" : "Crear"}
+              {isLoading ? "Guardando..." : subscription ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>
