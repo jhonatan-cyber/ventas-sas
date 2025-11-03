@@ -80,13 +80,22 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
         }
 
         toast.success("Sesión iniciada correctamente")
-        
-        // Esperar un momento para asegurar que las cookies se establezcan en el navegador
-        // Luego redirigir usando window.location.href para una navegación completa
-        setTimeout(() => {
-          const redirectUrl = data.redirect || `/${customerSlug}/dashboard`
-          window.location.href = redirectUrl
-        }, 150)
+
+        const redirectUrl = data.redirect || `/${customerSlug}/dashboard`
+        try {
+          // Redirección client-side
+          router.replace(redirectUrl)
+          // Fallback hard navigation
+          setTimeout(() => {
+            if (typeof window !== 'undefined' && window.location.pathname !== redirectUrl) {
+              window.location.href = redirectUrl
+            }
+          }, 100)
+        } catch {
+          if (typeof window !== 'undefined') {
+            window.location.href = redirectUrl
+          }
+        }
         
         return
       }

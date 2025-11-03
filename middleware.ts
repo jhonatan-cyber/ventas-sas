@@ -61,9 +61,9 @@ export function middleware(request: NextRequest) {
     if (!token) {
       return isLogin ? NextResponse.next() : NextResponse.redirect(new URL(`/${first}/login`, request.url))
     }
-    if (isLogin) {
-      return NextResponse.redirect(new URL(`/${first}/dashboard`, request.url))
-    }
+    // Permitir acceder a la página de login aunque exista token
+    // para evitar bucles cuando falte o sea inválida la sas-session
+    return NextResponse.next()
   }
 
   return NextResponse.next()

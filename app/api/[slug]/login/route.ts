@@ -174,8 +174,9 @@ export async function POST(
         sucursalId: result.user.sucursal?.id || null,
       }
 
-      // Establecer cookies con configuración mejorada
-      response.cookies.set('sas-session', JSON.stringify(sessionData), {
+      // Establecer cookies con configuración mejorada (valor codificado en base64 para evitar errores de parseo)
+      const sessionEncoded = Buffer.from(JSON.stringify(sessionData), 'utf8').toString('base64')
+      response.cookies.set('sas-session', sessionEncoded, {
         httpOnly: false, // Necesitamos acceder desde el cliente
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

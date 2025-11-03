@@ -38,11 +38,11 @@ export async function getCustomerBySlug(slug: string) {
       AND: [
         {
           OR: [
-            // Suscripción activa a nivel de cliente
+            // Suscripción activa o en trial a nivel de cliente
             {
               subscriptions: {
                 some: {
-                  status: 'active',
+                  status: { in: ['active', 'trial'] },
                   OR: [
                     { endDate: null },
                     { endDate: { gt: new Date() } },
@@ -50,12 +50,12 @@ export async function getCustomerBySlug(slug: string) {
                 },
               },
             },
-            // O suscripción activa a nivel de organización
+            // O suscripción activa o en trial a nivel de organización
             {
               organization: {
                 subscriptions: {
                   some: {
-                    status: 'active',
+                    status: { in: ['active', 'trial'] },
                     OR: [
                       { endDate: null },
                       { endDate: { gt: new Date() } },

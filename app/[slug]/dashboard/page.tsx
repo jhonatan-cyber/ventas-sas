@@ -42,7 +42,8 @@ export default async function DashboardPage({
 
   let session: any = null
   try {
-    session = JSON.parse(sessionCookie.value)
+    const decoded = Buffer.from(sessionCookie.value, 'base64').toString('utf8')
+    session = JSON.parse(decoded)
   } catch (e) {
     redirect(`/${slug}/login`)
   }
@@ -53,17 +54,19 @@ export default async function DashboardPage({
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/login`)
-  }
 
   const fullName = session.fullName || customer.razonSocial || "Usuario"
 
-  // Obtener estadísticas
-  const [stats, recentQuotations] = await Promise.all([
-    SalesDashboardService.getDashboardStats(organizationId),
-    QuotationService.getAllQuotations(organizationId, 0, 5, undefined, 'pending')
-  ])
+  // Obtener estadísticas (si no hay organización, usar valores por defecto)
+  const [stats, recentQuotations] = organizationId
+    ? await Promise.all([
+        SalesDashboardService.getDashboardStats(organizationId),
+        QuotationService.getAllQuotations(organizationId, 0, 5, undefined, 'pending')
+      ])
+    : [
+        { salesThisMonth: 0, totalSales: 0, totalCustomers: 0, totalProducts: 0, revenueThisMonth: 0, totalRevenue: 0 },
+        { quotations: [], total: 0 }
+      ] as any
 
   const pendingQuotations = recentQuotations.quotations.filter(q => q.status === 'pending').length
 

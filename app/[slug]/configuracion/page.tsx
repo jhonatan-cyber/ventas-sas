@@ -6,9 +6,55 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import ClientPersistence from "./client-persistence"
+import { RenewalDialogClient } from "./renewal-dialog-client"
 
 async function getCustomerBySlug(slug: string) {
-  return prisma.customer.findFirst({ where: { slug, isActive: true }, select: { id: true, razonSocial: true } })
+  return prisma.customer.findFirst({ 
+    where: { slug, isActive: true }, 
+    select: { 
+      id: true, 
+      razonSocial: true,
+      nombre: true,
+      apellido: true,
+      telefono: true,
+      email: true,
+      direccion: true
+    } 
+  })
+}
+
+async function getActiveSubscriptionForCustomer(customerId: string) {
+  // Buscar suscripción activa/trial por cliente; si no hay, intentar por organización asociada
+  const byCustomer = await prisma.subscription.findFirst({
+    where: {
+      customerId,
+      status: { in: ['active', 'trial'] },
+      OR: [ { endDate: null }, { endDate: { gt: new Date() } } ],
+    },
+    include: { plan: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  if (byCustomer) return byCustomer
+
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    select: { organizationId: true },
+  })
+
+  if (!customer?.organizationId) return null
+
+  const byOrg = await prisma.subscription.findFirst({
+    where: {
+      organizationId: customer.organizationId,
+      status: { in: ['active', 'trial'] },
+      OR: [ { endDate: null }, { endDate: { gt: new Date() } } ],
+    },
+    include: { plan: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return byOrg
 }
 
 async function getBranches(customerId: string) {
@@ -33,6 +79,14 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   if (!customer) redirect('/')
 
   const branches = await getBranches(customer.id)
+  const activeSubscription = await getActiveSubscriptionForCustomer(customer.id)
+
+  // Calcular precio del plan según período
+  const planPrice = activeSubscription?.plan 
+    ? (activeSubscription.billingPeriod === 'yearly' 
+        ? activeSubscription.plan.priceYearly 
+        : activeSubscription.plan.priceMonthly)
+    : null
 
   return (
     <div className="p-6 space-y-6">
@@ -41,6 +95,29 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
         <p className="text-gray-600 dark:text-gray-400">Preferencias personales y del entorno de trabajo.</p>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Plan de suscripción</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {activeSubscription ? (
+              <div className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
+                <p><span className="font-semibold">Plan:</span> {activeSubscription.plan?.name ?? '—'}</p>
+                <p><span className="font-semibold">Estado:</span> {activeSubscription.status}</p>
+                <p>
+                  <span className="font-semibold">Vence:</span>{' '}
+                  {activeSubscription.endDate ? new Date(activeSubscription.endDate).toLocaleDateString() : 'Sin fecha (renovación)'}
+                </p>
+                <p><span className="font-semibold">Período:</span> {activeSubscription.billingPeriod === 'yearly' ? 'Anual' : 'Mensual'}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 dark:text-gray-400">No hay un plan activo. Contacta a administración.</p>
+            )}
+          </CardContent>
+          <div className="px-6 pb-6">
+            <RenewalDialogClient customerSlug={slug} initialAmount={planPrice ? Number(planPrice).toFixed(2) : ""} />
+          </div>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Preferencias</CardTitle>
@@ -86,21 +163,25 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
               <div className="space-y-2 mt-4">
                 <Label>Nombre de la empresa</Label>
-                <Input name="companyName" placeholder="Razón social o nombre comercial" />
+                <Input name="companyName" placeholder="Razón social o nombre comercial" defaultValue={customer.razonSocial || ""} />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Nombre del contacto</Label>
-                  <Input name="companyContactName" placeholder="Ej: Ing. Edgar Martínez" />
+                  <Input 
+                    name="companyContactName" 
+                    placeholder="Ej: Ing. Edgar Martínez" 
+                    defaultValue={customer.nombre && customer.apellido ? `${customer.nombre} ${customer.apellido}`.trim() : customer.nombre || ""} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Teléfono de contacto</Label>
-                  <Input name="companyPhone" placeholder="Ej: +59170000000" />
+                  <Input name="companyPhone" placeholder="Ej: +59170000000" defaultValue={customer.telefono || ""} />
                 </div>
                 <div className="space-y-2">
                   <Label>Correo de contacto</Label>
-                  <Input name="companyEmail" type="email" placeholder="contacto@empresa.com" />
+                  <Input name="companyEmail" type="email" placeholder="contacto@empresa.com" defaultValue={customer.email || ""} />
                 </div>
                 <div className="space-y-2">
                   <Label>Sitio web (opcional)</Label>
@@ -110,7 +191,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
               <div className="space-y-2">
                 <Label>Dirección</Label>
-                <Input name="companyAddress" placeholder="Calle, ciudad, país" />
+                <Input name="companyAddress" placeholder="Calle, ciudad, país" defaultValue={customer.direccion || ""} />
               </div>
 
               <div className="space-y-2">
