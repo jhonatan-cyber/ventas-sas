@@ -5,8 +5,7 @@ import { PasswordService } from '@/lib/auth/password'
 import { createSlug } from '@/lib/utils/slug'
 
 export interface CreateCustomerData {
-  razonSocial?: string
-  nit?: string
+  // razonSocial y nit se movieron a Organization
   ci?: string
   nombre?: string
   apellido?: string
@@ -17,8 +16,7 @@ export interface CreateCustomerData {
 }
 
 export interface UpdateCustomerData {
-  razonSocial?: string
-  nit?: string
+  // razonSocial y nit se movieron a Organization
   ci?: string
   nombre?: string
   apellido?: string
@@ -31,16 +29,17 @@ export interface UpdateCustomerData {
 export class CustomerAdminService {
   // Obtener todos los clientes
   static async getAllCustomers(skip: number = 0, take: number = 10, search?: string, status?: string) {
-    const where: any = {}
+    const where: any = {
+      deletedAt: null // Excluir clientes eliminados (soft delete)
+    }
 
     if (search) {
       where.OR = [
         { nombre: { contains: search, mode: 'insensitive' } },
         { apellido: { contains: search, mode: 'insensitive' } },
-        { razonSocial: { contains: search, mode: 'insensitive' } },
-        { nit: { contains: search, mode: 'insensitive' } },
         { ci: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
+        { telefono: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -78,10 +77,13 @@ export class CustomerAdminService {
       hashedPassword = await PasswordService.hashPassword(data.ci)
     }
 
-    // Generar slug desde la razón social
+    // Generar slug desde nombre y apellido (o CI si no hay nombre)
     let slug: string | undefined = undefined
-    if (data.razonSocial) {
-      const baseSlug = createSlug(data.razonSocial)
+    const nameParts = [data.nombre, data.apellido].filter(Boolean).join(' ')
+    const slugSource = nameParts || data.ci || 'cliente'
+    
+    if (slugSource) {
+      const baseSlug = createSlug(slugSource)
       // Verificar si el slug ya existe
       const existing = await prisma.customer.findUnique({
         where: { slug: baseSlug },
@@ -110,13 +112,12 @@ export class CustomerAdminService {
       // 1. No creamos Organization; el sistema SAS se asocia por customerId
 
       // 2. Crear el cliente (usando UUID propio)
+      // NOTA: razonSocial y nit se movieron a Organization
       const customer = await tx.customer.create({
         data: {
           id: sharedId,
           userId: 'admin', // TODO: obtener del contexto de autenticación
-          razonSocial: data.razonSocial,
           slug,
-          nit: data.nit,
           ci: data.ci,
           nombre: data.nombre,
           apellido: data.apellido,
@@ -186,34 +187,49 @@ export class CustomerAdminService {
   static async updateCustomer(id: string, data: UpdateCustomerData): Promise<Customer> {
     const updateData: any = { ...data }
     
-    // Si se actualiza la razón social, actualizar el slug
-    if (data.razonSocial) {
-      const baseSlug = createSlug(data.razonSocial)
-      // Verificar si el slug ya existe (excluyendo el cliente actual)
-      const existing = await prisma.customer.findFirst({
-        where: { 
-          slug: baseSlug,
-          NOT: { id }
-        },
-        select: { id: true }
+    // Si se actualiza el nombre o apellido, actualizar el slug
+    if (data.nombre || data.apellido) {
+      // Obtener el cliente actual para combinar datos
+      const currentCustomer = await prisma.customer.findUnique({
+        where: { id },
+        select: { nombre: true, apellido: true, ci: true }
       })
       
-      if (existing) {
-        // Si existe, generar uno único agregando número
-        let counter = 1
-        let uniqueSlug = `${baseSlug}-${counter}`
-        while (await prisma.customer.findFirst({ 
+      const nameParts = [
+        data.nombre || currentCustomer?.nombre,
+        data.apellido || currentCustomer?.apellido
+      ].filter(Boolean).join(' ')
+      
+      const slugSource = nameParts || currentCustomer?.ci || 'cliente'
+      
+      if (slugSource) {
+        const baseSlug = createSlug(slugSource)
+        // Verificar si el slug ya existe (excluyendo el cliente actual)
+        const existing = await prisma.customer.findFirst({
           where: { 
-            slug: uniqueSlug,
+            slug: baseSlug,
             NOT: { id }
-          } 
-        })) {
-          counter++
-          uniqueSlug = `${baseSlug}-${counter}`
+          },
+          select: { id: true }
+        })
+        
+        if (existing) {
+          // Si existe, generar uno único agregando número
+          let counter = 1
+          let uniqueSlug = `${baseSlug}-${counter}`
+          while (await prisma.customer.findFirst({ 
+            where: { 
+              slug: uniqueSlug,
+              NOT: { id }
+            } 
+          })) {
+            counter++
+            uniqueSlug = `${baseSlug}-${counter}`
+          }
+          updateData.slug = uniqueSlug
+        } else {
+          updateData.slug = baseSlug
         }
-        updateData.slug = uniqueSlug
-      } else {
-        updateData.slug = baseSlug
       }
     }
     // Sincronizar con usuarios_sas dentro de una transacción
@@ -300,10 +316,29 @@ export class CustomerAdminService {
     return result
   }
 
-  // Eliminar cliente
+  // Eliminar cliente (soft delete)
   static async deleteCustomer(id: string): Promise<void> {
-    await prisma.customer.delete({
-      where: { id }
+    // Verificar que el cliente existe
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      select: { id: true, deletedAt: true }
+    })
+
+    if (!customer) {
+      throw new Error('Cliente no encontrado')
+    }
+
+    if (customer.deletedAt) {
+      throw new Error('El cliente ya fue eliminado')
+    }
+
+    // Soft delete - marcar como eliminado en lugar de borrar físicamente
+    await prisma.customer.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        isActive: false // También desactivar
+      }
     })
   }
 }

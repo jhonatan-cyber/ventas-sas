@@ -373,5 +373,267 @@ export class NotificationService {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
     })
   }
+
+  /**
+   * Enviar notificación masiva a todos los usuarios admin
+   */
+  static async sendBulkToAllAdmins(
+    type: NotificationType,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+    expiresAt?: Date
+  ) {
+    const startTime = Date.now()
+
+    // Obtener todos los usuarios admin activos
+    const adminUsers = await prisma.profile.findMany({
+      where: {
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (adminUsers.length === 0) {
+      return { count: 0 }
+    }
+
+    // Crear notificaciones para todos los usuarios admin
+    const notifications = adminUsers.map((user) => ({
+      type,
+      title,
+      message,
+      data: data || {},
+      userId: user.id,
+      expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días por defecto
+    }))
+
+    const result = await prisma.notification.createMany({
+      data: notifications,
+    })
+
+    const duration = Date.now() - startTime
+    logDatabase('CREATE_MANY', 'notifications', duration, undefined, {
+      count: result.count,
+      type: 'bulk_admin',
+    })
+
+    logBusinessOperation('CREATE_MANY', 'Notification', undefined, undefined, {
+      type: 'bulk_admin',
+      count: result.count,
+      title,
+    })
+
+    return result
+  }
+
+  /**
+   * Enviar notificación masiva a todos los usuarios de una organización
+   */
+  static async sendBulkToOrganization(
+    organizationId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+    expiresAt?: Date
+  ) {
+    const startTime = Date.now()
+
+    // Obtener todos los usuarios SAS de la organización
+    const orgUsers = await prisma.usuarioSas.findMany({
+      where: {
+        organizationId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (orgUsers.length === 0) {
+      return { count: 0 }
+    }
+
+    // Crear notificaciones para todos los usuarios de la organización
+    const notifications = orgUsers.map((user) => ({
+      type,
+      title,
+      message,
+      data: data || {},
+      usuarioSasId: user.id,
+      organizationId,
+      expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días por defecto
+    }))
+
+    const result = await prisma.notification.createMany({
+      data: notifications,
+    })
+
+    const duration = Date.now() - startTime
+    logDatabase('CREATE_MANY', 'notifications', duration, undefined, {
+      count: result.count,
+      type: 'bulk_organization',
+      organizationId,
+    })
+
+    logBusinessOperation('CREATE_MANY', 'Notification', undefined, undefined, {
+      type: 'bulk_organization',
+      count: result.count,
+      organizationId,
+      title,
+    })
+
+    return result
+  }
+
+  /**
+   * Enviar notificación masiva a múltiples organizaciones
+   */
+  static async sendBulkToOrganizations(
+    organizationIds: string[],
+    type: NotificationType,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+    expiresAt?: Date
+  ) {
+    const startTime = Date.now()
+
+    if (organizationIds.length === 0) {
+      return { count: 0 }
+    }
+
+    // Obtener todos los usuarios SAS de las organizaciones especificadas
+    const orgUsers = await prisma.usuarioSas.findMany({
+      where: {
+        organizationId: {
+          in: organizationIds,
+        },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        organizationId: true,
+      },
+    })
+
+    if (orgUsers.length === 0) {
+      return { count: 0 }
+    }
+
+    // Crear notificaciones para todos los usuarios de las organizaciones
+    const notifications = orgUsers.map((user) => ({
+      type,
+      title,
+      message,
+      data: data || {},
+      usuarioSasId: user.id,
+      organizationId: user.organizationId,
+      expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días por defecto
+    }))
+
+    const result = await prisma.notification.createMany({
+      data: notifications,
+    })
+
+    const duration = Date.now() - startTime
+    logDatabase('CREATE_MANY', 'notifications', duration, undefined, {
+      count: result.count,
+      type: 'bulk_organizations',
+      organizationCount: organizationIds.length,
+    })
+
+    logBusinessOperation('CREATE_MANY', 'Notification', undefined, undefined, {
+      type: 'bulk_organizations',
+      count: result.count,
+      organizationCount: organizationIds.length,
+      title,
+    })
+
+    return result
+  }
+
+  /**
+   * Enviar notificación masiva a usuarios específicos (admin o SAS)
+   */
+  static async sendBulkToUsers(
+    userIds: string[],
+    usuarioSasIds: string[],
+    type: NotificationType,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+    expiresAt?: Date
+  ) {
+    const startTime = Date.now()
+
+    const notifications: CreateNotificationData[] = []
+
+    // Agregar notificaciones para usuarios admin
+    if (userIds.length > 0) {
+      const adminNotifications = userIds.map((userId) => ({
+        type,
+        title,
+        message,
+        data: data || {},
+        userId,
+        expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }))
+      notifications.push(...adminNotifications)
+    }
+
+    // Agregar notificaciones para usuarios SAS
+    if (usuarioSasIds.length > 0) {
+      // Obtener información de las organizaciones de los usuarios SAS
+      const sasUsers = await prisma.usuarioSas.findMany({
+        where: {
+          id: {
+            in: usuarioSasIds,
+          },
+          isActive: true,
+        },
+        select: {
+          id: true,
+          organizationId: true,
+        },
+      })
+
+      const sasNotifications = sasUsers.map((user) => ({
+        type,
+        title,
+        message,
+        data: data || {},
+        usuarioSasId: user.id,
+        organizationId: user.organizationId,
+        expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      }))
+      notifications.push(...sasNotifications)
+    }
+
+    if (notifications.length === 0) {
+      return { count: 0 }
+    }
+
+    const result = await this.createNotifications(notifications)
+
+    const duration = Date.now() - startTime
+    logDatabase('CREATE_MANY', 'notifications', duration, undefined, {
+      count: result.count,
+      type: 'bulk_users',
+      userIdCount: userIds.length,
+      usuarioSasCount: usuarioSasIds.length,
+    })
+
+    logBusinessOperation('CREATE_MANY', 'Notification', undefined, undefined, {
+      type: 'bulk_users',
+      count: result.count,
+      title,
+    })
+
+    return result
+  }
 }
 

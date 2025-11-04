@@ -180,8 +180,10 @@ export async function DELETE(
           entityId: id,
           details: {
             action: 'deleted',
-            razonSocial: targetCustomer.razonSocial,
-            slug: targetCustomer.slug,
+            nombre: targetCustomer.nombre || undefined,
+            apellido: targetCustomer.apellido || undefined,
+            email: targetCustomer.email || undefined,
+            slug: targetCustomer.slug || undefined,
           },
         },
         request

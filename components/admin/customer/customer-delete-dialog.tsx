@@ -24,7 +24,7 @@ export function CustomerDeleteDialog({ open, onOpenChange, customer, onDelete }:
 
   const customerName = customer.nombre && customer.apellido
     ? `${customer.nombre} ${customer.apellido}`
-    : customer.razonSocial || "este cliente"
+    : customer.nombre || customer.apellido || customer.email || "este cliente"
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

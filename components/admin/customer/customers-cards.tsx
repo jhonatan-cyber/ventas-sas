@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Building, User, Receipt, CreditCard, Phone, MapPin, Mail, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
+import { User, CreditCard, Mail, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, MapPin, Phone, Building } from "lucide-react"
 import { Customer } from "@/lib/types"
 
 interface CustomersCardsProps {
@@ -30,21 +30,14 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
   return (
     <div className="grid grid-cols-1 gap-4 md:hidden">
       {customers.map((customer) => {
+        // Mostrar solo nombre + apellido
         const hasNombreApellido = customer.nombre?.trim() && customer.apellido?.trim()
-        const hasRazonSocial = customer.razonSocial?.trim()
-        
-        const displayName = hasRazonSocial 
-          ? customer.razonSocial
-          : hasNombreApellido
-            ? `${customer.nombre} ${customer.apellido}`
-            : "Cliente"
-        
-        const secondaryName = hasRazonSocial && hasNombreApellido
+        const displayName = hasNombreApellido
           ? `${customer.nombre} ${customer.apellido}`
-          : null
+          : customer.nombre || customer.apellido || "Cliente"
         
-        const initials = customer.razonSocial?.[0]?.toUpperCase() || 
-                       customer.nombre?.[0]?.toUpperCase() || 
+        const initials = customer.nombre?.[0]?.toUpperCase() || 
+                       customer.apellido?.[0]?.toUpperCase() || 
                        "C"
 
         return (
@@ -61,11 +54,7 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {hasRazonSocial ? (
-                          <Building className="h-3 w-3 text-blue-500 shrink-0" />
-                        ) : (
-                          <User className="h-3 w-3 text-blue-500 shrink-0" />
-                        )}
+                        <User className="h-3 w-3 text-blue-500 shrink-0" />
                         <span className="font-semibold text-gray-900 dark:text-white text-xs truncate">
                           {displayName}
                         </span>
@@ -79,13 +68,7 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                           {customer.isActive ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </div>
-                      {secondaryName && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <User className="h-2.5 w-2.5 text-gray-400 shrink-0" />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{secondaryName}</span>
-                        </div>
-                      )}
-                      {!secondaryName && customer.email && (
+                      {customer.email && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <Mail className="h-2.5 w-2.5 text-gray-400 shrink-0" />
                           <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{customer.email}</span>
@@ -139,38 +122,21 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                   </DropdownMenu>
                 </div>
 
-                {/* Información detallada en dos columnas */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 dark:border-[#2a2a2a]">
-                  {/* Columna izquierda */}
-                  <div className="space-y-1.5">
-                    {/* NIT */}
-                    {customer.nit && (
+                {/* Información detallada - CI, Dirección y Teléfono */}
+                {(customer.ci || customer.direccion || customer.telefono) && (
+                  <div className="pt-2 border-t border-gray-100 dark:border-[#2a2a2a] space-y-1.5">
+                    {customer.ci && (
                       <div className="flex items-center gap-1.5">
-                        <Receipt className="h-3 w-3 text-gray-400 shrink-0" />
-                        <span className="text-[10px] text-gray-700 dark:text-gray-300 font-mono truncate">{customer.nit}</span>
+                        <CreditCard className="h-3 w-3 text-gray-400 shrink-0" />
+                        <span className="text-[10px] text-gray-700 dark:text-gray-300 font-mono truncate">CI: {customer.ci}</span>
                       </div>
                     )}
-
-                    {/* Teléfono */}
                     {customer.telefono && (
                       <div className="flex items-center gap-1.5">
                         <Phone className="h-3 w-3 text-gray-400 shrink-0" />
                         <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">{customer.telefono}</span>
                       </div>
                     )}
-                  </div>
-
-                  {/* Columna derecha */}
-                  <div className="space-y-1.5">
-                    {/* CI */}
-                    {customer.ci && (
-                      <div className="flex items-center gap-1.5">
-                        <CreditCard className="h-3 w-3 text-gray-400 shrink-0" />
-                        <span className="text-[10px] text-gray-700 dark:text-gray-300 font-mono truncate">{customer.ci}</span>
-                      </div>
-                    )}
-
-                    {/* Dirección */}
                     {customer.direccion && (
                       <div className="flex items-start gap-1.5">
                         <MapPin className="h-3 w-3 text-gray-400 shrink-0 mt-0.5" />
@@ -178,7 +144,7 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

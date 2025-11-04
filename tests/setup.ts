@@ -1,21 +1,27 @@
-import '@testing-library/jest-dom'
-import { expect, afterEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
-// Limpiar después de cada test
-afterEach(() => {
-  cleanup()
-})
+// Cliente de test para APIs
+export const testClient = {
+  async get(url: string, options?: { headers?: Record<string, string> }) {
+    // Implementar cliente de test
+    return fetch(`http://localhost:3000${url}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    })
+  },
 
-// Mock de variables de entorno
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
-process.env.JWT_SECRET = 'test-jwt-secret'
-process.env.SAS_JWT_SECRET = 'test-sas-jwt-secret'
-process.env.ADMIN_JWT_SECRET = 'test-admin-jwt-secret'
-process.env.NODE_ENV = 'test'
-
-// Extender expect con matchers de testing-library
-expect.extend({
-  // Puedes agregar matchers personalizados aquí si los necesitas
-})
-
+  async post(url: string, body?: any, options?: { headers?: Record<string, string> }) {
+    return fetch(`http://localhost:3000${url}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      body: JSON.stringify(body),
+    })
+  },
+}

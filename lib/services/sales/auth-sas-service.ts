@@ -231,12 +231,19 @@ export class AuthSasService {
   // Verificar token y obtener usuario
   static async verifyToken(customerSlug: string, token: string) {
     try {
-      const decoded = SasJWTService.verifyToken(token)
-      if (!decoded) return null
+      // verifyToken es asíncrono, debemos esperarlo
+      const decoded = await SasJWTService.verifyToken(token)
+      if (!decoded) {
+        logger.debug('Token SAS no decodificado', { customerSlug })
+        return null
+      }
 
       // Verificar que el usuario pertenece al cliente
       const customer = await getCustomerBySlug(customerSlug)
-      if (!customer) return null
+      if (!customer) {
+        logger.debug('Cliente no encontrado al verificar token', { customerSlug })
+        return null
+      }
 
       const usuario = await prisma.usuarioSas.findUnique({
         where: { id: decoded.userId },
@@ -247,7 +254,23 @@ export class AuthSasService {
         }
       })
 
-      if (!usuario || usuario.customerId !== customer.id || !usuario.isActive) {
+      if (!usuario) {
+        logger.debug('Usuario no encontrado al verificar token', { userId: decoded.userId, customerSlug })
+        return null
+      }
+
+      if (usuario.customerId !== customer.id) {
+        logger.debug('Usuario no pertenece al cliente', { 
+          userId: decoded.userId, 
+          usuarioCustomerId: usuario.customerId,
+          customerId: customer.id,
+          customerSlug 
+        })
+        return null
+      }
+
+      if (!usuario.isActive) {
+        logger.debug('Usuario inactivo', { userId: decoded.userId, customerSlug })
         return null
       }
 
@@ -258,6 +281,7 @@ export class AuthSasService {
     } catch (error) {
       logger.error('Error verificando token SAS', error as Error, {
         customerSlug,
+        errorMessage: error instanceof Error ? error.message : String(error),
       })
       return null
     }

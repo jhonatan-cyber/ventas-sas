@@ -31,7 +31,8 @@ const saleItemSchema = z.object({
 const saleBaseSchema = z.object({
   userId: z
     .string()
-    .uuid('El ID del usuario no es válido'),
+    .uuid('El ID del usuario no es válido')
+    .optional(), // El userId se obtiene del usuario autenticado en el servidor
   customerId: z
     .string()
     .uuid('El ID del cliente no es válido')
@@ -77,17 +78,30 @@ const saleBaseSchema = z.object({
     .max(100, 'El máximo de items es 100')
 })
 
-export const createSaleSchema = saleBaseSchema.refine(
-  (data) => {
-    // Validar que el total sea consistente
-    const calculatedTotal = data.subtotal - data.discount
-    return Math.abs(calculatedTotal - data.total) < 0.01 // Permitir pequeñas diferencias por redondeo
-  },
-  {
-    message: 'El total no coincide con (subtotal - descuento)',
-    path: ['total']
-  }
-)
+export const createSaleSchema = saleBaseSchema
+  .refine(
+    (data) => {
+      // Al menos uno de customerId o customerName debe estar presente
+      const hasCustomerId = data.customerId !== null && data.customerId !== undefined && typeof data.customerId === 'string' && data.customerId.length > 0
+      const hasCustomerName = data.customerName !== null && data.customerName !== undefined && typeof data.customerName === 'string' && data.customerName.trim().length > 0
+      return hasCustomerId || hasCustomerName
+    },
+    {
+      message: 'Debe proporcionar un cliente (ID) o un nombre de cliente',
+      path: ['customerId']
+    }
+  )
+  .refine(
+    (data) => {
+      // Validar que el total sea consistente
+      const calculatedTotal = data.subtotal - data.discount
+      return Math.abs(calculatedTotal - data.total) < 0.01 // Permitir pequeñas diferencias por redondeo
+    },
+    {
+      message: 'El total no coincide con (subtotal - descuento)',
+      path: ['total']
+    }
+  )
 
 export type CreateSaleInput = z.infer<typeof createSaleSchema>
 
@@ -306,16 +320,29 @@ const quotationBaseSchema = z.object({
     .max(100, 'El máximo de items es 100')
 })
 
-export const createQuotationSchema = quotationBaseSchema.refine(
-  (data) => {
-    const calculatedTotal = data.subtotal - data.discount
-    return Math.abs(calculatedTotal - data.total) < 0.01
-  },
-  {
-    message: 'El total no coincide con (subtotal - descuento)',
-    path: ['total']
-  }
-)
+export const createQuotationSchema = quotationBaseSchema
+  .refine(
+    (data) => {
+      // Al menos uno de customerId o customerName debe estar presente
+      const hasCustomerId = data.customerId !== null && data.customerId !== undefined && typeof data.customerId === 'string' && data.customerId.length > 0
+      const hasCustomerName = data.customerName !== null && data.customerName !== undefined && typeof data.customerName === 'string' && data.customerName.trim().length > 0
+      return hasCustomerId || hasCustomerName
+    },
+    {
+      message: 'Debe proporcionar un cliente (ID) o un nombre de cliente',
+      path: ['customerId']
+    }
+  )
+  .refine(
+    (data) => {
+      const calculatedTotal = data.subtotal - data.discount
+      return Math.abs(calculatedTotal - data.total) < 0.01
+    },
+    {
+      message: 'El total no coincide con (subtotal - descuento)',
+      path: ['total']
+    }
+  )
 
 export type CreateQuotationInput = z.infer<typeof createQuotationSchema>
 

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           return new Response('Invalid session', { status: 401 })
         }
       } else if (token) {
-        const payload = SasJWTService.verifyToken(token)
+        const payload = await SasJWTService.verifyToken(token)
         if (!payload) {
           return new Response('Unauthorized', { status: 401 })
         }

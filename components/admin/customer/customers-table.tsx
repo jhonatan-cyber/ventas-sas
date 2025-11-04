@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff, Building, User, Receipt, CreditCard, Phone, MapPin } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone } from "lucide-react"
 import { Customer } from "@/lib/types"
 
 interface CustomersTableProps {
@@ -33,26 +33,26 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+
                   Cliente
                 </div>
               </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Receipt className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  NIT/CI
+
+                  CI
                 </div>
               </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  Contacto
-                </div>
-              </TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+ 
                   Dirección
+                </div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">
+ 
+                  Teléfono
                 </div>
               </TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
@@ -73,24 +73,16 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
               </TableRow>
             ) : (
               customers.map((customer) => {
-                // Priorizar razón social si existe, sino nombre + apellido
+                // Mostrar solo nombre + apellido
                 const hasNombreApellido = customer.nombre?.trim() && customer.apellido?.trim()
-                const hasRazonSocial = customer.razonSocial?.trim()
-                
-                const displayName = hasRazonSocial 
-                  ? customer.razonSocial
-                  : hasNombreApellido
-                    ? `${customer.nombre} ${customer.apellido}`
-                    : "Cliente"
-                
-                const secondaryName = hasRazonSocial && hasNombreApellido
+                const displayName = hasNombreApellido
                   ? `${customer.nombre} ${customer.apellido}`
-                  : null
-                
-                const initials = customer.razonSocial?.[0]?.toUpperCase() || 
-                               customer.nombre?.[0]?.toUpperCase() || 
-                               "C"
-                
+                  : customer.nombre || customer.apellido || "Cliente"
+
+                const initials = customer.nombre?.[0]?.toUpperCase() ||
+                  customer.apellido?.[0]?.toUpperCase() ||
+                  "C"
+
                 return (
                   <TableRow key={customer.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
                     <TableCell>
@@ -102,48 +94,22 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
                         </Avatar>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            {hasRazonSocial ? (
-                              <Building className="h-3.5 w-3.5 text-blue-500" />
-                            ) : (
-                              <User className="h-3.5 w-3.5 text-blue-500" />
-                            )}
+                            <User className="h-3.5 w-3.5 text-blue-500" />
                             <span className="font-semibold text-gray-900 dark:text-white">
                               {displayName}
                             </span>
                           </div>
-                          {secondaryName && (
-                            <div className="flex items-center gap-2 ml-5">
-                              <User className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-                              <span className="text-xs text-gray-500 dark:text-gray-400">{secondaryName}</span>
-                            </div>
-                          )}
-                          {!secondaryName && customer.email && (
+                          {customer.email && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 ml-5">{customer.email}</span>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1.5">
-                        {customer.nit && (
-                          <div className="flex items-center gap-2">
-                            <Receipt className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-                            <span className="text-sm text-gray-900 dark:text-white">{customer.nit}</span>
-                          </div>
-                        )}
-                        {customer.ci && (
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{customer.ci}</span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {customer.telefono ? (
+                      {customer.ci ? (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">{customer.telefono}</span>
+                          <CreditCard className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-white font-mono">{customer.ci}</span>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
@@ -154,6 +120,16 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                           <span className="text-sm text-gray-900 dark:text-white">{customer.direccion}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {customer.telefono ? (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-white">{customer.telefono}</span>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
@@ -188,7 +164,7 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onToggleStatus(customer)}
-                                className={customer.isActive 
+                                className={customer.isActive
                                   ? "hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
                                   : "hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
                                 }

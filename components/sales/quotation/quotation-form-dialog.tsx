@@ -558,7 +558,11 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
                         }}
                         onFocus={() => setIsCustomerDropdownOpen(true)}
                         onKeyDown={handleCustomerKeyDown}
-                        placeholder="Selecciona o escribe el nombre del cliente..."
+                        onBlur={() => {
+                          // No cerrar inmediatamente para permitir clics en el dropdown
+                          setTimeout(() => setIsCustomerDropdownOpen(false), 200)
+                        }}
+                        placeholder="Escribe el nombre del cliente (puede no estar registrado)..."
                         disabled={isFormLocked}
                         className="w-full px-5 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
                       />
@@ -610,10 +614,33 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
                                 </button>
                               ))
                             ) : (
-                              <div className="px-5 py-6 text-center text-gray-500 dark:text-gray-400">
-                                {customerInputValue.trim()
-                                  ? `Presiona Enter para usar "${capitalizeWords(customerInputValue.trim())}"`
-                                  : "No se encontraron clientes"}
+                              <div className="px-5 py-6 text-center">
+                                {customerInputValue.trim() ? (
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                      Usar cliente: <span className="font-semibold">"{capitalizeWords(customerInputValue.trim())}"</span>
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      Presiona Enter o haz clic aquí para usar este cliente sin registrarlo
+                                    </p>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="mt-2 rounded-full"
+                                      onClick={() => handleManualCustomer(customerInputValue.trim())}
+                                    >
+                                      Usar este cliente
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">No se encontraron clientes registrados</p>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                                      Escribe el nombre del cliente para crearlo automáticamente en la cotización
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

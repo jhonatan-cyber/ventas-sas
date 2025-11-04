@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SaleService, UpdateSaleData } from '@/lib/services/sales/sale-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
 import { serializeSale } from '@/lib/utils/serializers'
@@ -37,9 +37,10 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      return NextResponse.json({ error: 'Cliente no encontrado o inactivo' }, { status: 404 })
+      return NextResponse.json({ error: 'No se pudo obtener o crear la organización para el cliente' }, { status: 404 })
     }
 
     const sale = await SaleService.getSaleById(id)
@@ -62,9 +63,10 @@ export async function PUT(
     const { slug, id } = await params
     const body = await request.json()
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      return NextResponse.json({ error: 'Cliente no encontrado o inactivo' }, { status: 404 })
+      return NextResponse.json({ error: 'No se pudo obtener o crear la organización para el cliente' }, { status: 404 })
     }
 
     const existingSale = await SaleService.getSaleById(id)
@@ -127,9 +129,10 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      return NextResponse.json({ error: 'Cliente no encontrado o inactivo' }, { status: 404 })
+      return NextResponse.json({ error: 'No se pudo obtener o crear la organización para el cliente' }, { status: 404 })
     }
 
     const existingSale = await SaleService.getSaleById(id)

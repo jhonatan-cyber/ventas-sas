@@ -63,13 +63,10 @@ export default async function SalesPage({
 
   const customer = await getCustomerBySlug(slug)
   if (!customer) {
-    redirect(`/${slug}/dashboard`)
+    redirect(`/${slug}/login`)
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/dashboard`)
-  }
 
   const cookieStore = await cookies()
   const token = cookieStore.get('sas-auth-token')?.value
@@ -90,8 +87,10 @@ export default async function SalesPage({
       }
     : null
 
-  const result = await SaleService.getAllSales(organizationId, 0, 1000)
-  const sales = result.sales.map(serializeSale)
+  // Si no hay organizationId, usar array vacío en lugar de redirigir
+  const sales = organizationId
+    ? (await SaleService.getAllSales(organizationId, 0, 1000)).sales.map(serializeSale)
+    : []
 
   return (
     <SalesPageClient

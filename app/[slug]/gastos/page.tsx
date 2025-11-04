@@ -44,22 +44,20 @@ export default async function ExpensesPage({
   // Verificar que el cliente existe
   const customer = await getCustomerBySlug(slug)
   if (!customer) {
-    redirect(`/${slug}/dashboard`)
+    redirect(`/${slug}/login`)
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/dashboard`)
-  }
 
   const cookieStore = await cookies()
   const token = cookieStore.get('sas-auth-token')?.value
   const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
   const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
 
-  // Obtener gastos
-  const result = await ExpenseService.getAllExpenses(organizationId, 0, 1000)
-  const expenses = result.expenses.map(serializeExpense)
+  // Obtener gastos - Si no hay organizationId, usar array vacío en lugar de redirigir
+  const expenses = organizationId
+    ? (await ExpenseService.getAllExpenses(organizationId, 0, 1000)).expenses.map(serializeExpense)
+    : []
 
   const branches = await BranchService.getActiveBranches(customer.id)
 

@@ -52,6 +52,15 @@ export async function PUT(
 
     const validatedData = validation.data
 
+    // Obtener usuario actual y usuario objetivo ANTES de procesar actualizaciones
+    // (necesitamos el CI antiguo para comparar)
+    const currentUser = await getCurrentAdminUser(request)
+    const targetUser = await UserAdminService.getUserById(id)
+
+    if (!targetUser) {
+      throw AppError.notFound('Usuario no encontrado')
+    }
+
     const updateData: any = {}
     
     if (validatedData.email !== undefined) updateData.email = validatedData.email
@@ -65,22 +74,30 @@ export async function PUT(
     if (validatedData.isSuperAdmin !== undefined) updateData.isSuperAdmin = validatedData.isSuperAdmin
     if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive
 
-    // Si se proporciona una nueva contraseña, hashearla
-    if (validatedData.password && validatedData.password.trim() !== '') {
+    // Verificar si el CI cambió
+    const oldCi = targetUser.ci
+    const newCi = validatedData.ci !== undefined ? (validatedData.ci || null) : undefined
+    const ciChanged = newCi !== undefined && oldCi !== newCi
+
+    // Si el CI cambió, actualizar la contraseña automáticamente al nuevo CI
+    if (ciChanged && newCi) {
+      updateData.password = await PasswordService.hashPassword(newCi)
+    } else if (validatedData.password && validatedData.password.trim() !== '') {
+      // Si el CI no cambió pero se proporciona una contraseña explícita, usarla
       updateData.password = await PasswordService.hashPassword(validatedData.password)
     }
-
-    // Obtener usuario actual y usuario objetivo para auditoría
-    const currentUser = await getCurrentAdminUser(request)
-    const targetUser = await UserAdminService.getUserById(id)
+    // Si el CI no cambió y no se proporciona contraseña, no se actualiza la contraseña
 
     const updatedUser = await UserAdminService.updateUser(id, updateData)
 
-    // Registrar actualización de usuario en auditoría
+      // Registrar actualización de usuario en auditoría
     if (currentUser) {
       const changedFields: string[] = []
       if (validatedData.email !== undefined && targetUser?.email !== validatedData.email) {
         changedFields.push('email')
+      }
+      if (validatedData.ci !== undefined && oldCi !== newCi) {
+        changedFields.push('ci')
       }
       if (validatedData.role !== undefined && targetUser?.role !== validatedData.role) {
         changedFields.push('role')
@@ -91,8 +108,27 @@ export async function PUT(
       if (validatedData.isActive !== undefined && targetUser?.isActive !== validatedData.isActive) {
         changedFields.push('isActive')
       }
-      if (validatedData.password && validatedData.password.trim() !== '') {
+      // Registrar cambio de contraseña si cambió el CI o se proporcionó explícitamente
+      if (ciChanged || (validatedData.password && validatedData.password.trim() !== '')) {
         changedFields.push('password')
+        // Si cambió por CI, registrar en auditoría
+        if (ciChanged) {
+          await SecurityAuditLogger.logSensitiveAction(
+            {
+              userId: currentUser.id,
+              actionType: 'PASSWORD_AUTO_UPDATED_BY_CI',
+              entityType: 'User',
+              entityId: id,
+              details: {
+                reason: 'CI actualizado',
+                oldCi,
+                newCi,
+                targetUserEmail: targetUser?.email,
+              },
+            },
+            request
+          )
+        }
       }
 
       // Registrar cambio de rol específicamente

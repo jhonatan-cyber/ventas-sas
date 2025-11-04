@@ -15,15 +15,9 @@ interface RolesCardsProps {
 }
 
 export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCardsProps) {
+  // Si no hay roles, no renderizar nada (el contenedor padre maneja el estado vacío)
   if (roles.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4">
-          <Shield className="h-8 w-8 text-gray-400" />
-        </div>
-        <p className="text-gray-500 dark:text-gray-400">No hay roles registrados</p>
-      </div>
-    )
+    return null
   }
 
   return (

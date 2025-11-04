@@ -13,17 +13,15 @@ export default async function SalesCustomersPage({
   // Verificar que el cliente existe
   const customer = await getCustomerBySlug(slug)
   if (!customer) {
-    redirect(`/${slug}/dashboard`)
+    redirect(`/${slug}/login`)
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/dashboard`)
-  }
 
-  // Obtener clientes del sistema de ventas
-  const result = await SalesCustomerService.getAllCustomers(organizationId, 0, 1000)
-  const salesCustomers = result.customers
+  // Obtener clientes del sistema de ventas - Si no hay organizationId, usar array vacío en lugar de redirigir
+  const salesCustomers = organizationId
+    ? (await SalesCustomerService.getAllCustomers(organizationId, 0, 1000)).customers
+    : []
 
   return (
     <SalesCustomersPageClient 

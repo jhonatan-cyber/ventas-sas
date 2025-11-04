@@ -1,29 +1,40 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { Toaster } from '@/components/ui/sonner'
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import { Toaster as SonnerToaster } from '@/components/ui/sonner'
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SalesHub - Sistema de Ventas SAS',
-  description: 'Sistema de gestión de ventas multi-tenant',
-  generator: 'v0.app',
+  title: 'Sistema de Ventas SAS',
+  description: 'Sistema multi-tenant para gestión de ventas, inventario y clientes',
+  applicationName: 'Sistema Ventas SAS',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#2563eb',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
-        <Toaster />
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="app-theme">
+          {children}
+          <Toaster />
+          <SonnerToaster />
+          <ServiceWorkerRegistration />
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -95,3 +95,60 @@ export async function getOrganizationIdByCustomerSlug(slug: string): Promise<str
   return null
 }
 
+/**
+ * Obtiene o crea automáticamente una organización para un cliente
+ * Útil para crear cotizaciones, ventas, etc. cuando el cliente no tiene organización
+ */
+export async function getOrCreateOrganizationForCustomer(slug: string): Promise<string | null> {
+  const customer = await getCustomerBySlug(slug)
+  
+  if (!customer) {
+    return null
+  }
+  
+  // Si el cliente ya tiene organización asociada, retornarla
+  if (customer.organizationId) {
+    return customer.organizationId
+  }
+  
+  // Crear una organización automáticamente para el cliente
+  try {
+    const organization = await prisma.organization.create({
+      data: {
+        name: customer.razonSocial || customer.slug,
+        slug: customer.slug,
+        ownerId: customer.id,
+        subscriptionStatus: 'trial',
+      }
+    })
+    
+    // Asociar la organización al cliente
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { organizationId: organization.id }
+    })
+    
+    return organization.id
+  } catch (error: any) {
+    // Si la organización ya existe (por ejemplo, por slug duplicado), intentar obtenerla
+    if (error.code === 'P2002') {
+      const existingOrg = await prisma.organization.findUnique({
+        where: { slug: customer.slug },
+        select: { id: true }
+      })
+      
+      if (existingOrg) {
+        // Asociar la organización existente al cliente
+        await prisma.customer.update({
+          where: { id: customer.id },
+          data: { organizationId: existingOrg.id }
+        })
+        return existingOrg.id
+      }
+    }
+    
+    console.error('Error al crear organización para cliente:', error)
+    return null
+  }
+}
+

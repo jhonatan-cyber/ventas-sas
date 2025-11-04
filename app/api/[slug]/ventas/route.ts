@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SaleService } from '@/lib/services/sales/sale-service'
-import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrCreateOrganizationForCustomer, getCustomerBySlug } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
 import { createSaleSchema } from '@/lib/validators/sales-validators'
@@ -51,10 +51,11 @@ export async function GET(
     const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
 
     const customer = await getCustomerBySlug(slug)
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
 
     if (!customer || !organizationId) {
-      return NextResponse.json({ error: 'Cliente no encontrado o inactivo' }, { status: 404 })
+      return NextResponse.json({ error: 'No se pudo obtener o crear la organización para el cliente' }, { status: 404 })
     }
 
     const skip = (page - 1) * pageSize
@@ -88,16 +89,20 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
+  let organizationId: string | null = null
+  let currentUser: any = null
+  
   try {
     const { slug } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
-    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+    currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
       throw AppError.unauthorized('No autenticado')
@@ -148,7 +153,7 @@ export async function POST(
   } catch (error) {
     return handleApiError(error, createErrorContext(request, { 
       action: 'CREATE_SALE',
-      organizationId,
+      organizationId: organizationId || undefined,
       userId: currentUser?.id 
     }))
   }

@@ -4,8 +4,8 @@ import { Organization, SubscriptionPlan } from '@prisma/client'
 export interface OrganizationWithPlan extends Organization {
   subscriptionPlan?: SubscriptionPlan | null
   _count: {
-    profiles: number
-    customers: number
+    organizationMembers: number
+    customerOrganizations: number
     products: number
     orders: number
   }
@@ -13,6 +13,8 @@ export interface OrganizationWithPlan extends Organization {
 
 export interface CreateOrganizationData {
   name: string
+  razonSocial?: string // Razón social de la empresa/organización
+  nit?: string // NIT de la empresa/organización
   slug: string
   ownerId: string
   subscriptionPlanId?: string
@@ -24,6 +26,8 @@ export interface CreateOrganizationData {
 
 export interface UpdateOrganizationData {
   name?: string
+  razonSocial?: string // Razón social de la empresa/organización
+  nit?: string // NIT de la empresa/organización
   slug?: string
   subscriptionPlanId?: string
   subscriptionStatus?: string
@@ -40,8 +44,8 @@ export class OrganizationAdminService {
         subscriptionPlan: true,
         _count: {
           select: {
-            profiles: true,
-            customers: true,
+            organizationMembers: true,
+            customerOrganizations: true,
             products: true,
             orders: true
           }
@@ -59,8 +63,8 @@ export class OrganizationAdminService {
         subscriptionPlan: true,
         _count: {
           select: {
-            profiles: true,
-            customers: true,
+            organizationMembers: true,
+            customerOrganizations: true,
             products: true,
             orders: true
           }
@@ -178,8 +182,8 @@ export class OrganizationAdminService {
     return { total, active, suspended, trial }
   }
 
-  // Buscar organizaciones
-  static async searchOrganizations(query: string): Promise<OrganizationWithPlan[]> {
+    // Buscar organizaciones
+  static async searchOrganizations(query: string): Promise<OrganizationWithPlan[]> {                                                                            
     return prisma.organization.findMany({
       where: {
         OR: [
@@ -191,8 +195,8 @@ export class OrganizationAdminService {
         subscriptionPlan: true,
         _count: {
           select: {
-            profiles: true,
-            customers: true,
+            organizationMembers: true,
+            customerOrganizations: true,
             products: true,
             orders: true
           }

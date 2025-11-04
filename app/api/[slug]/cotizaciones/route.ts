@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { createQuotationSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
@@ -40,9 +40,10 @@ export async function GET(
     const status = searchParams.get('status') || undefined
     const customerId = searchParams.get('customerId') || undefined
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
     }
 
     const skip = (page - 1) * pageSize
@@ -76,9 +77,10 @@ export async function POST(
   try {
     const { slug } = await params
 
-    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    // Obtener o crear automáticamente la organización si no existe
+    const organizationId = await getOrCreateOrganizationForCustomer(slug)
     if (!organizationId) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
     }
 
     // Parsear y validar body

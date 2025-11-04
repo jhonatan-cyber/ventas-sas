@@ -4,20 +4,8 @@ import { z } from 'zod'
  * Validadores para el sistema de administración
  */
 
-// Cliente (Admin)
+// Cliente (Admin) - Solo datos personales. Razón social y NIT se manejan en Organization
 export const createCustomerSchema = z.object({
-  razonSocial: z
-    .string()
-    .min(1, 'La razón social es requerida')
-    .max(200, 'La razón social es demasiado larga')
-    .trim()
-    .optional()
-    .nullable(),
-  nit: z
-    .string()
-    .max(20, 'El NIT es demasiado largo')
-    .optional()
-    .nullable(),
   ci: z
     .string()
     .min(1, 'El CI es requerido')

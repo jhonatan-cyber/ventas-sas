@@ -72,17 +72,20 @@ export function useCustomerActions() {
       })
 
       if (!response.ok) {
-        throw new Error("Error al eliminar el cliente")
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.message || errorData.error || "Error al eliminar el cliente"
+        throw new Error(errorMessage)
       }
 
-      toast.success("Cliente eliminado")
+      toast.success("Cliente eliminado exitosamente")
       closeDialogs()
       
       startTransition(() => {
         router.refresh()
       })
-    } catch (error) {
-      toast.error("Error al eliminar el cliente")
+    } catch (error: any) {
+      console.error("Error al eliminar cliente:", error)
+      toast.error(error.message || "Error al eliminar el cliente")
     }
   }
 

@@ -13,25 +13,23 @@ export default async function CashRegistersPage({
   // Verificar que el cliente existe
   const customer = await getCustomerBySlug(slug)
   if (!customer) {
-    redirect(`/${slug}/dashboard`)
+    redirect(`/${slug}/login`)
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/dashboard`)
-  }
-
-  // Obtener cajas
-  const result = await CashRegisterService.getAllCashRegisters(organizationId, 0, 1000)
-  const cashRegisters = result.cashRegisters.map((register) => ({
-    ...register,
-    openingBalance: Number(register.openingBalance),
-    currentBalance: Number(register.currentBalance),
-    lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
-    lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
-    createdAt: register.createdAt.toISOString(),
-    updatedAt: register.updatedAt.toISOString(),
-  }))
+  
+  // Si no hay organizationId, usar array vacío en lugar de redirigir
+  const cashRegisters = organizationId
+    ? (await CashRegisterService.getAllCashRegisters(organizationId, 0, 1000)).cashRegisters.map((register) => ({
+        ...register,
+        openingBalance: Number(register.openingBalance),
+        currentBalance: Number(register.currentBalance),
+        lastOpenAt: register.lastOpenAt ? register.lastOpenAt.toISOString() : null,
+        lastCloseAt: register.lastCloseAt ? register.lastCloseAt.toISOString() : null,
+        createdAt: register.createdAt.toISOString(),
+        updatedAt: register.updatedAt.toISOString(),
+      }))
+    : []
 
   return (
     <CashRegistersPageClient 

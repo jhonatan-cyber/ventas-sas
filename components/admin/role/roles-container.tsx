@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Shield } from "lucide-react"
 import { RolesStats } from "./roles-stats"
 import { RolesFilters } from "./roles-filters"
 import { RolesTable } from "./roles-table"
@@ -88,23 +89,36 @@ export function RolesContainer({ roles, onEdit, onToggleStatus, onDelete }: Role
         onSearchChange={handleSearchChange}
       />
 
-      {/* Cards de roles (solo móvil) */}
-      <RolesCards roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      {/* Mostrar tabla y cards solo si hay roles */}
+      {roles.length > 0 ? (
+        <>
+          {/* Cards de roles (solo móvil) */}
+          <RolesCards roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
 
-      {/* Tabla de roles (solo desktop) */}
-      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-        <RolesTable roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-      </div>
+          {/* Tabla de roles (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+            <RolesTable roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+          </div>
 
-      {/* Paginación */}
-      <RolesPagination
-        totalItems={filteredRoles.length}
-        pageSize={pageSize}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-      />
+          {/* Paginación */}
+          <RolesPagination
+            totalItems={filteredRoles.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+          />
+        </>
+      ) : (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4">
+            <Shield className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-lg font-medium mb-2">No hay roles registrados</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Comienza creando tu primer rol en el sistema</p>
+        </div>
+      )}
     </div>
   )
 }

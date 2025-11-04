@@ -36,8 +36,6 @@ export function CustomerFormDialog({
   customer,
   onSave,
 }: CustomerFormDialogProps) {
-  const [razonSocial, setRazonSocial] = useState("");
-  const [nit, setNit] = useState("");
   const [ci, setCi] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -48,8 +46,6 @@ export function CustomerFormDialog({
 
   useEffect(() => {
     if (customer) {
-      setRazonSocial(customer.razonSocial || "");
-      setNit(customer.nit || "");
       setCi(customer.ci || "");
       setNombre(customer.nombre || "");
       setApellido(customer.apellido || "");
@@ -57,8 +53,6 @@ export function CustomerFormDialog({
       setTelefono(customer.telefono || "");
       setEmail(customer.email || "");
     } else {
-      setRazonSocial("");
-      setNit("");
       setCi("");
       setNombre("");
       setApellido("");
@@ -70,7 +64,6 @@ export function CustomerFormDialog({
 
   // Validar si todos los campos requeridos están llenos
   const isFormValid =
-    razonSocial.trim() !== "" &&
     ci.trim() !== "" &&
     nombre.trim() !== "" &&
     apellido.trim() !== "" &&
@@ -84,8 +77,6 @@ export function CustomerFormDialog({
     setIsLoading(true);
 
     const customerData = {
-      razonSocial,
-      nit,
       ci,
       nombre,
       apellido,
@@ -116,60 +107,23 @@ export function CustomerFormDialog({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="space-y-6">
-              {/* Razón Social */}
+              {/* CI */}
               <div className="space-y-2">
                 <Label
-                  htmlFor="razonSocial"
+                  htmlFor="ci"
                   className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                 >
-                  Razón Social <span className="text-red-500">*</span>
+                  CI (Cédula de Identidad){" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="razonSocial"
-                  placeholder="Nombre de la empresa"
-                  value={razonSocial}
+                  id="ci"
+                  placeholder="1234567"
+                  value={ci}
+                  onChange={(e) => setCi(e.target.value)}
                   required
-                  onChange={(e) => setRazonSocial(e.target.value)}
                   className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* NIT */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="nit"
-                    className="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                  >
-                    NIT
-                  </Label>
-                  <Input
-                    id="nit"
-                    placeholder="12345678-9"
-                    value={nit}
-                    onChange={(e) => setNit(e.target.value)}
-                    className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                {/* CI */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="ci"
-                    className="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                  >
-                    CI (Cédula de Identidad){" "}
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="ci"
-                    placeholder="1234567"
-                    value={ci}
-                    onChange={(e) => setCi(e.target.value)}
-                    required
-                    className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
-                  />
-                </div>
               </div>
 
               {/* Nombre y Apellido en una fila */}

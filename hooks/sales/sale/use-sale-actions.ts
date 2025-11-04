@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SalesSaleWithRelations } from "@/components/sales/sale/types"
+import { extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
 interface UseSaleActionsReturn {
   isFormDialogOpen: boolean
@@ -60,8 +61,8 @@ export function useSaleActions(customerSlug: string, onSalesChange?: () => Promi
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al guardar la venta")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success(selectedSale ? "Venta actualizada" : "Venta registrada")
@@ -76,7 +77,12 @@ export function useSaleActions(customerSlug: string, onSalesChange?: () => Promi
       })
 
       // Retornar la venta creada
-      return await response.json()
+      try {
+        return await response.json()
+      } catch (error) {
+        // Si no hay JSON en la respuesta, retornar undefined
+        return undefined
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al guardar la venta")
       throw error
@@ -92,8 +98,8 @@ export function useSaleActions(customerSlug: string, onSalesChange?: () => Promi
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al eliminar la venta")
+        const errorMessage = await extractErrorFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       toast.success("Venta eliminada")

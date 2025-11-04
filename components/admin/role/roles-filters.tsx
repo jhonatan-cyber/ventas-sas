@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Filter } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,11 @@ export function RolesFilters({ onPageSizeChange, onStatusChange, onSearchChange 
   const [searchTerm, setSearchTerm] = useState("")
   const [pageSize, setPageSize] = useState("5")
   const [status, setStatus] = useState("all")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const handlePageSizeChange = (value: string) => {
     setPageSize(value)
@@ -29,6 +34,30 @@ export function RolesFilters({ onPageSizeChange, onStatusChange, onSearchChange 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
     onSearchChange?.(value)
+  }
+
+  // Evitar renderizar Selects en el servidor para prevenir errores de hidratación
+  if (!isMounted) {
+    return (
+      <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4 mb-6 w-full">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Buscar roles..."
+                className="rounded-full pl-10 bg-gray-50 dark:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="w-full md:w-[180px] h-9 bg-gray-50 dark:bg-[#2a2a2a] rounded-full animate-pulse" />
+          <div className="w-full md:w-[180px] h-9 bg-gray-50 dark:bg-[#2a2a2a] rounded-full animate-pulse" />
+        </div>
+      </div>
+    )
   }
 
   return (

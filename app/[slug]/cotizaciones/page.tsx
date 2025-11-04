@@ -16,13 +16,10 @@ export default async function QuotationsPage({
   // Verificar que el cliente existe
   const customer = await getCustomerBySlug(slug)
   if (!customer) {
-    redirect(`/${slug}/dashboard`)
+    redirect(`/${slug}/login`)
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
-  if (!organizationId) {
-    redirect(`/${slug}/dashboard`)
-  }
 
   const branches = await BranchService.getActiveBranches(customer.id)
 
@@ -39,9 +36,9 @@ export default async function QuotationsPage({
   const isAdmin = currentRole?.toLowerCase() === 'administrador'
   const showBranchColumn = isAdmin && branches.length > 1
 
-  // Obtener cotizaciones
-  const result = await QuotationService.getAllQuotations(organizationId, 0, 1000)
-  const quotations: SalesQuotationWithRelations[] = result.quotations.map((quotation) => ({
+  // Obtener cotizaciones - Si no hay organizationId, usar array vacío en lugar de redirigir
+  const quotations: SalesQuotationWithRelations[] = organizationId
+    ? (await QuotationService.getAllQuotations(organizationId, 0, 1000)).quotations.map((quotation) => ({
     ...quotation,
     customerId: quotation.customerId ?? null,
     subtotal: Number(quotation.subtotal ?? 0),
@@ -84,6 +81,7 @@ export default async function QuotationsPage({
         : null,
     })) ?? [],
   }))
+    : []
 
   return (
     <QuotationsPageClient 

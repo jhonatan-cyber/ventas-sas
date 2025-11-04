@@ -75,10 +75,11 @@ export function useApiError(): UseApiErrorReturn {
 
       // Loggear error (si está habilitado)
       if (logError) {
-        logger.error('API Error en frontend', error instanceof Error ? error : new Error(errorMessage), {
-          code: errorCode,
-          details: errorDetails,
-        })
+        const logData: Record<string, any> = {}
+        if (errorCode) logData.code = errorCode
+        if (errorDetails) logData.details = errorDetails
+        
+        logger.error('API Error en frontend', error instanceof Error ? error : new Error(errorMessage), Object.keys(logData).length > 0 ? logData : undefined)
       }
 
       // Mostrar toast (si está habilitado)

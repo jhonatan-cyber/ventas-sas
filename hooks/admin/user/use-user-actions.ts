@@ -71,13 +71,16 @@ export function useUserActions() {
       setSelectedUser(undefined)
       
       // Mostrar toast de éxito
+      const userName = data.fullName || data.email || 'Usuario'
       if (selectedUser) {
         toast.success('Usuario actualizado', {
-          description: `${data.fullName || data.email} ha sido actualizado exitosamente.`,
+          description: `${userName} ha sido actualizado exitosamente.`,
+          duration: 3000,
         })
       } else {
         toast.success('Usuario creado', {
-          description: `${data.fullName || data.email} ha sido creado exitosamente.`,
+          description: `${userName} ha sido creado exitosamente.`,
+          duration: 3000,
         })
       }
       
@@ -86,8 +89,10 @@ export function useUserActions() {
       })
     } catch (error: any) {
       console.error("Error al guardar el usuario:", error)
+      const errorMessage = error.message || 'Ocurrió un error inesperado al guardar el usuario.'
       toast.error('Error al guardar el usuario', {
-        description: error.message || 'Ocurrió un error inesperado.',
+        description: errorMessage,
+        duration: 5000,
       })
       throw error
     }
@@ -109,7 +114,8 @@ export function useUserActions() {
       }
 
       toast.success(currentStatus ? 'Usuario desactivado' : 'Usuario activado', {
-        description: 'El estado del usuario ha sido actualizado exitosamente.',
+        description: `El usuario ha sido ${currentStatus ? 'desactivado' : 'activado'} exitosamente.`,
+        duration: 3000,
       })
 
       startTransition(() => {
@@ -118,7 +124,8 @@ export function useUserActions() {
     } catch (error: any) {
       console.error("Error al cambiar el estado del usuario:", error)
       toast.error('Error al cambiar estado', {
-        description: error.message || 'No se pudo activar/desactivar el usuario.',
+        description: error.message || 'No se pudo cambiar el estado del usuario.',
+        duration: 5000,
       })
     }
   }
@@ -135,7 +142,8 @@ export function useUserActions() {
       }
 
       toast.success('Usuario eliminado', {
-        description: `${deleteDialog.userName} ha sido eliminado exitosamente.`,
+        description: `${deleteDialog.userName || 'El usuario'} ha sido eliminado exitosamente.`,
+        duration: 3000,
       })
 
       setDeleteDialog({ open: false, userId: '', userName: '' })
@@ -145,9 +153,11 @@ export function useUserActions() {
       })
     } catch (error: any) {
       console.error("Error al eliminar el usuario:", error)
+      const errorMessage = error.message || 'No se pudo eliminar el usuario. Intente nuevamente.'
       setDeleteDialog({ open: false, userId: '', userName: '' })
       toast.error('Error al eliminar el usuario', {
-        description: error.message || 'No se pudo eliminar el usuario.',
+        description: errorMessage,
+        duration: 5000,
       })
       throw error
     }
