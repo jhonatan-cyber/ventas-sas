@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { updateProductSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
-import { logBusinessOperation, getRequestContext } from '@/lib/utils/logger'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener producto por ID
 export async function GET(
@@ -15,9 +15,9 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const product = await SalesProductService.getProductById(id)
@@ -26,15 +26,27 @@ export async function GET(
       throw AppError.notFound('Producto no encontrado')
     }
 
-    // Verificar que el producto pertenece al cliente
-    if (product.customerId !== customer.id) {
+    // Verificar que el producto pertenece a la organización
+    if (product.organizationId !== organizationId) {
       throw AppError.forbidden('No autorizado')
+    }
+
+    // Verificar que el producto pertenece a la sucursal del usuario (si el usuario tiene sucursal y NO es administrador)
+    const currentUser = await getCurrentSasUser(request, slug)
+    if (currentUser) {
+      const userRoleName = currentUser.rol?.nombre?.toLowerCase() || ''
+      const isAdmin = userRoleName.includes('administrador') || userRoleName === 'admin'
+      
+      // Solo verificar sucursal si NO es administrador
+      const productBranchId = (product as any).branchId as string | null | undefined
+      if (!isAdmin && currentUser.sucursalId && productBranchId !== currentUser.sucursalId) {
+        throw AppError.forbidden('No autorizado: El producto no pertenece a tu sucursal')
+      }
     }
 
     return NextResponse.json(product)
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'GET_PRODUCT', productId: id }))
+    return handleApiError(error, createErrorContext(request, { action: 'GET_PRODUCT' }))
   }
 }
 
@@ -46,15 +58,28 @@ export async function PUT(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que el producto existe y pertenece al cliente
+    // Verificar que el producto existe y pertenece a la organización
     const existingProduct = await SalesProductService.getProductById(id)
-    if (!existingProduct || existingProduct.customerId !== customer.id) {
+    if (!existingProduct || existingProduct.organizationId !== organizationId) {
       throw AppError.notFound('Producto no encontrado')
+    }
+
+    // Verificar que el producto pertenece a la sucursal del usuario (si el usuario tiene sucursal y NO es administrador)
+    const currentUser = await getCurrentSasUser(request, slug)
+    if (currentUser) {
+      const userRoleName = currentUser.rol?.nombre?.toLowerCase() || ''
+      const isAdmin = userRoleName.includes('administrador') || userRoleName === 'admin'
+      
+      // Solo verificar sucursal si NO es administrador
+      const existingProductBranchIdForUpdate = (existingProduct as any).branchId as string | null | undefined
+      if (!isAdmin && currentUser.sucursalId && existingProductBranchIdForUpdate !== currentUser.sucursalId) {
+        throw AppError.forbidden('No autorizado: El producto no pertenece a tu sucursal')
+      }
     }
 
     // Parsear y validar body
@@ -73,12 +98,19 @@ export async function PUT(
 
     const validatedData = validation.data
 
+    // Obtener usuario para determinar si puede cambiar branchId
+    const currentUserForUpdate = await getCurrentSasUser(request, slug)
+    const userRoleNameForUpdate = currentUserForUpdate?.rol?.nombre?.toLowerCase() || ''
+    const isAdminForUpdate = userRoleNameForUpdate.includes('administrador') || userRoleNameForUpdate === 'admin'
+
     const product = await SalesProductService.updateProduct(id, {
+      // Solo permitir cambiar branchId si es administrador
+      ...(isAdminForUpdate && validatedData.branchId ? { branchId: validatedData.branchId } : {}),
       categoryId: validatedData.categoryId || undefined,
       name: validatedData.name || undefined,
-      description: validatedData.description !== undefined ? validatedData.description : undefined,
-      brand: validatedData.brand || undefined,
-      model: validatedData.model || undefined,
+      description: validatedData.description ?? undefined,
+      brand: validatedData.brand ?? undefined,
+      model: validatedData.model ?? undefined,
       price: validatedData.price !== undefined ? validatedData.price : undefined,
       cost: validatedData.cost !== undefined ? validatedData.cost : undefined,
       stock: validatedData.stock !== undefined ? validatedData.stock : undefined,
@@ -91,8 +123,7 @@ export async function PUT(
 
     return NextResponse.json(product)
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_PRODUCT', productId: id }))
+    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_PRODUCT' }))
   }
 }
 
@@ -104,22 +135,34 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que el producto existe y pertenece al cliente
+    // Verificar que el producto existe y pertenece a la organización
     const existingProduct = await SalesProductService.getProductById(id)
-    if (!existingProduct || existingProduct.customerId !== customer.id) {
+    if (!existingProduct || existingProduct.organizationId !== organizationId) {
       throw AppError.notFound('Producto no encontrado')
     }
 
-    await SalesProductService.deleteProduct(id)
+    // Verificar que el producto pertenece a la sucursal del usuario (si el usuario tiene sucursal y NO es administrador)
+    const currentUser = await getCurrentSasUser(request, slug)
+    if (currentUser) {
+      const userRoleName = currentUser.rol?.nombre?.toLowerCase() || ''
+      const isAdmin = userRoleName.includes('administrador') || userRoleName === 'admin'
+      
+      // Solo verificar sucursal si NO es administrador
+      const existingProductBranchId = (existingProduct as any).branchId as string | null | undefined
+      if (!isAdmin && currentUser.sucursalId && existingProductBranchId !== currentUser.sucursalId) {
+        throw AppError.forbidden('No autorizado: El producto no pertenece a tu sucursal')
+      }
+    }
+
+    await SalesProductService.deleteProduct(id, slug)
     return NextResponse.json({ message: 'Producto eliminado correctamente' })
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'DELETE_PRODUCT', productId: id }))
+    return handleApiError(error, createErrorContext(request, { action: 'DELETE_PRODUCT' }))
   }
 }
 

@@ -4,6 +4,7 @@ import { Role, OrganizationMember } from '@prisma/client'
 export interface RoleWithStats extends Omit<Role, 'updatedAt'> {
   _count: {
     organizationMembers: number
+    adminUsers: number  // Usuarios del sistema de administración con este rol
   }
   isActive?: boolean
 }
@@ -32,7 +33,7 @@ export class RoleAdminService {
   }
   // Obtener todos los roles con estadísticas
   static async getAllRoles(): Promise<RoleWithStats[]> {
-    return prisma.role.findMany({
+    const roles = await prisma.role.findMany({
       include: {
         _count: {
           select: {
@@ -42,11 +43,32 @@ export class RoleAdminService {
       },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Contar usuarios del sistema de administración que tienen cada rol
+    const rolesWithUserCounts = await Promise.all(
+      roles.map(async (role) => {
+        const adminUserCount = await prisma.profile.count({
+          where: {
+            role: role.name
+          }
+        })
+
+        return {
+          ...role,
+          _count: {
+            ...role._count,
+            adminUsers: adminUserCount
+          }
+        }
+      })
+    )
+
+    return rolesWithUserCounts
   }
 
   // Obtener rol por ID
   static async getRoleById(id: string): Promise<RoleWithStats | null> {
-    return prisma.role.findUnique({
+    const role = await prisma.role.findUnique({
       where: { id },
       include: {
         _count: {
@@ -56,6 +78,23 @@ export class RoleAdminService {
         }
       }
     })
+
+    if (!role) return null
+
+    // Contar usuarios del sistema de administración con este rol
+    const adminUserCount = await prisma.profile.count({
+      where: {
+        role: role.name
+      }
+    })
+
+    return {
+      ...role,
+      _count: {
+        ...role._count,
+        adminUsers: adminUserCount
+      }
+    }
   }
 
   // Crear nuevo rol
@@ -156,10 +195,19 @@ export class RoleAdminService {
     ]
   }
 
-  // Validar permisos
-  static validatePermissions(permissions: string[]): { isValid: boolean; invalidPermissions: string[] } {
-    const availablePermissions = this.getAvailablePermissions()
-    const invalidPermissions = permissions.filter(permission => !availablePermissions.includes(permission))
+  // Validar permisos contra la tabla Permission
+  static async validatePermissions(permissions: string[]): Promise<{ isValid: boolean; invalidPermissions: string[] }> {
+    if (!permissions || permissions.length === 0) {
+      return { isValid: true, invalidPermissions: [] }
+    }
+
+    // Obtener todos los permisos de la tabla Permission
+    const allPermissions = await prisma.permission.findMany({
+      select: { name: true },
+    })
+    
+    const validPermissionNames = new Set(allPermissions.map(p => p.name))
+    const invalidPermissions = permissions.filter(permission => !validPermissionNames.has(permission))
     
     return {
       isValid: invalidPermissions.length === 0,

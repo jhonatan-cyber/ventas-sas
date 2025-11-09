@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getCustomerBySlug, getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createSalesCustomerSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -20,10 +20,14 @@ export async function GET(
     const status = searchParams.get('status') || undefined
 
     const customer = await getCustomerBySlug(slug)
-    // Obtener o crear automáticamente la organización si no existe
-    const organizationId = await getOrCreateOrganizationForCustomer(slug)
-    if (!customer || !organizationId) {
-      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
+    if (!customer) {
+      throw AppError.notFound('Cliente no encontrado')
+    }
+    
+    // Obtener organizationId - usar getOrganizationIdByCustomerSlug para consistencia
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const skip = (page - 1) * pageSize
@@ -57,10 +61,14 @@ export async function POST(
     const { slug } = await params
 
     const customer = await getCustomerBySlug(slug)
-    // Obtener o crear automáticamente la organización si no existe
-    const organizationId = await getOrCreateOrganizationForCustomer(slug)
-    if (!customer || !organizationId) {
-      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
+    if (!customer) {
+      throw AppError.notFound('Cliente no encontrado')
+    }
+    
+    // Obtener organizationId - usar getOrganizationIdByCustomerSlug para consistencia
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body

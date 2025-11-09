@@ -16,8 +16,8 @@ export default async function HealthPage() {
     redirect('/administracion/login')
   }
 
-  const profile = await AuthService.getProfileById(payload.userId)
-  if (!profile || !profile.isSuperAdmin) {
+  const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+  if (!hasAccess) {
     redirect('/administracion/login')
   }
 

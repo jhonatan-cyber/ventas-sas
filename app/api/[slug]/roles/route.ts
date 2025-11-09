@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RoleSasService } from '@/lib/services/sales/role-sas-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createRoleSasSchema } from '@/lib/validators/admin-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -20,15 +20,15 @@ export async function GET(
     const status = searchParams.get('status') || undefined
     const sucursalId = searchParams.get('sucursalId') || undefined
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const skip = (page - 1) * pageSize
 
     const { roles, total } = await RoleSasService.getAllRoles(
-      customer.id,
+      organizationId,
       skip,
       pageSize,
       search,
@@ -56,9 +56,9 @@ export async function POST(
   try {
     const { slug } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body
@@ -80,7 +80,7 @@ export async function POST(
     // Obtener sucursalId del body si está presente (no está en el schema, es opcional)
     const sucursalId = body.sucursalId ? String(body.sucursalId).trim() : undefined
 
-    const newRole = await RoleSasService.createRole(customer.id, {
+    const newRole = await RoleSasService.createRole(organizationId, {
       nombre: validatedData.nombre,
       descripcion: validatedData.descripcion || undefined,
       sucursalId: sucursalId || undefined

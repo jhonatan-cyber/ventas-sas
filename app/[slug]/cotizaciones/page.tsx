@@ -4,6 +4,7 @@ import { QuotationsPageClient } from "@/components/sales/quotation/quotations-pa
 import { QuotationService } from "@/lib/services/sales/quotation-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
 import { BranchService } from "@/lib/services/sales/branch-service"
+import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import type { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 
 export default async function QuotationsPage({
@@ -21,24 +22,45 @@ export default async function QuotationsPage({
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
-  const branches = await BranchService.getActiveBranches(customer.id)
-
   const cookieStore = await cookies()
-  const sessionRaw = cookieStore.get('sas-session')?.value
-  let currentRole: string | null = null
-  if (sessionRaw) {
-    try {
-      const session = JSON.parse(decodeURIComponent(sessionRaw))
-      currentRole = session?.rol ?? null
-    } catch {}
+  const token = cookieStore.get("sas-auth-token")?.value
+  let currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+
+  if (!currentUser) {
+    const sessionCookie = cookieStore.get("sas-session")?.value
+    if (sessionCookie) {
+      try {
+        const decoded = Buffer.from(sessionCookie, "base64").toString("utf8")
+        const session = JSON.parse(decoded)
+        currentUser = {
+          sucursalId: session.sucursalId ?? null,
+          sucursal: session.sucursalId ? { id: session.sucursalId } : null,
+          rol: session.rol ? { nombre: session.rol } : null,
+        } as any
+      } catch (error) {
+        console.error("No se pudo decodificar la cookie de sesión", error)
+      }
+    }
   }
 
-  const isAdmin = currentRole?.toLowerCase() === 'administrador'
-  const showBranchColumn = isAdmin && branches.length > 1
+  const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
+  const roleName = currentUser?.rol?.nombre?.toLowerCase() || ""
+  const isAdmin = roleName.includes("administrador") || roleName === "admin"
 
-  // Obtener cotizaciones - Si no hay organizationId, usar array vacío en lugar de redirigir
-  const quotations: SalesQuotationWithRelations[] = organizationId
-    ? (await QuotationService.getAllQuotations(organizationId, 0, 1000)).quotations.map((quotation) => ({
+  const rawBranches = organizationId
+    ? await BranchService.getActiveBranches(organizationId)
+    : []
+
+  const serializedBranches = rawBranches.map((branch) => ({
+    id: branch.id,
+    name: branch.name ?? "Sin sucursal",
+    address: branch.address ?? null,
+  }))
+
+  const showBranchColumn = isAdmin && serializedBranches.length > 1
+  const allowBranchFilter = isAdmin
+
+  const normalizeQuotation = (quotation: any): SalesQuotationWithRelations => ({
     ...quotation,
     customerId: quotation.customerId ?? null,
     subtotal: Number(quotation.subtotal ?? 0),
@@ -73,6 +95,7 @@ export default async function QuotationsPage({
       quantity: Number(item.quantity ?? 0),
       unitPrice: Number(item.unitPrice ?? 0),
       subtotal: Number(item.subtotal ?? 0),
+      productName: item.productName ?? null,
       product: item.product
         ? {
             ...item.product,
@@ -80,15 +103,23 @@ export default async function QuotationsPage({
           }
         : null,
     })) ?? [],
-  }))
+  })
+
+  // Obtener cotizaciones - Si no hay organizationId, usar array vacío en lugar de redirigir
+  const quotations: SalesQuotationWithRelations[] = organizationId
+    ? (await QuotationService.getAllQuotations(organizationId, 1, 1000)).quotations.map(normalizeQuotation)
     : []
 
   return (
-    <QuotationsPageClient 
-      initialQuotations={quotations} 
+    <QuotationsPageClient
+      initialQuotations={quotations}
       customerSlug={slug}
-      organizationId={slug}
+      organizationId={organizationId ?? slug}
       showBranchColumn={showBranchColumn}
+      canFilterByBranch={allowBranchFilter}
+      initialBranches={serializedBranches}
+      initialIsAdmin={isAdmin}
+      initialUserBranchId={currentUserBranchId}
     />
   )
 }

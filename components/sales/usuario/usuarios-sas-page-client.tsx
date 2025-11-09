@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { UsuariosSasHeader } from "./usuarios-sas-header"
 import { UsuariosSasContainer } from "./usuarios-sas-container"
 import { UsuarioSasFormDialog } from "./usuario-sas-form-dialog"
@@ -25,6 +26,8 @@ export function UsuariosSasPageClient({
   sucursales, 
   customerSlug 
 }: UsuariosSasPageClientProps) {
+  const [usuarios, setUsuarios] = useState(initialUsuarios)
+  
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -42,7 +45,32 @@ export function UsuariosSasPageClient({
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useUsuarioSasActions(customerSlug)
+  } = useUsuarioSasActions(customerSlug, setUsuarios)
+
+  // Actualizar usuarios cuando cambien los initialUsuarios (después de router.refresh)
+  useEffect(() => {
+    setUsuarios(initialUsuarios)
+  }, [initialUsuarios])
+
+  // Escuchar eventos de actualización de usuario para actualizar la tabla si el usuario está en la lista
+  useEffect(() => {
+    const handleUserUpdated = (event: CustomEvent) => {
+      const updatedUser = event.detail
+      if (updatedUser) {
+        setUsuarios((prevUsuarios) =>
+          prevUsuarios.map((usuario) =>
+            usuario.id === updatedUser.id ? { ...usuario, ...updatedUser } : usuario
+          )
+        )
+      }
+    }
+
+    window.addEventListener('sas-user-updated', handleUserUpdated as EventListener)
+    
+    return () => {
+      window.removeEventListener('sas-user-updated', handleUserUpdated as EventListener)
+    }
+  }, [])
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -56,7 +84,7 @@ export function UsuariosSasPageClient({
 
       {/* Contenedor con filtros, tabla y paginación */}
       <UsuariosSasContainer 
-        usuarios={initialUsuarios}
+        usuarios={usuarios}
         sucursalesCount={sucursales.length}
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}

@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  Edit,
+  Trash2,
+  Power,
+  PowerOff,
+  Package,
+  Building2,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,23 +20,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Edit,
-  Trash2,
-  Power,
-  PowerOff,
-  Package,
-  AlertTriangle,
-} from "lucide-react";
-import { SalesProduct, Category } from "@prisma/client";
 
 // Función para truncar nombre manteniendo el nombre más corto disponible
 function truncateProductName(name: string, maxLength: number = 40): string {
@@ -47,39 +47,60 @@ function truncateProductName(name: string, maxLength: number = 40): string {
   return truncated + "...";
 }
 
-function truncateText(text: string, maxLength: number = 80): string {
-  if (text.length <= maxLength) {
+// Función para truncar texto por palabras
+function truncateByWords(text: string, maxWords: number = 6): string {
+  if (!text) return "";
+
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) {
     return text;
   }
 
-  const truncated = text.substring(0, maxLength);
-  const lastSpace = truncated.lastIndexOf(" ");
-  const lastBreak = lastSpace > maxLength * 0.6 ? lastSpace : maxLength;
+  return words.slice(0, maxWords).join(" ") + "...";
+}
 
-  return truncated.substring(0, lastBreak).trimEnd() + "...";
+interface ProductWithRelations {
+  id: string;
+  name: string;
+  brand?: string | null;
+  model?: string | null;
+  description?: string | null;
+  price: number;
+  cost: number;
+  stock: number;
+  minStock: number;
+  sku?: string | null;
+  imageUrl?: string | null;
+  isActive: boolean;
+  category: { name: string } | null;
+  branch: { name: string } | null;
 }
 
 interface ProductsTableProps {
-  products: (SalesProduct & { category: Category | null })[];
+  products: ProductWithRelations[];
   isLoading?: boolean;
-  onEditClick?: (product: SalesProduct & { category: Category | null }) => void;
-  onDeleteClick?: (
-    product: SalesProduct & { category: Category | null }
-  ) => void;
-  onToggleStatus?: (
-    product: SalesProduct & { category: Category | null }
-  ) => void;
+  showBranchColumn?: boolean;
+  onEditClick?: (product: ProductWithRelations) => void;
+  onDeleteClick?: (product: ProductWithRelations) => void;
+  onToggleStatus?: (product: ProductWithRelations) => void;
 }
 
 export function ProductsTable({
   products,
   isLoading,
+  showBranchColumn = false,
   onEditClick,
   onDeleteClick,
   onToggleStatus,
 }: ProductsTableProps) {
   if (isLoading) {
-    return <TableSkeleton columns={10} rows={5} showActions={true} />;
+    return (
+      <TableSkeleton
+        columns={showBranchColumn ? 11 : 10}
+        rows={5}
+        showActions={true}
+      />
+    );
   }
 
   return (
@@ -112,6 +133,11 @@ export function ProductsTable({
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
                 Stock
               </TableHead>
+              {showBranchColumn && (
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                  Sucursal
+                </TableHead>
+              )}
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
                 Estado
               </TableHead>
@@ -124,7 +150,7 @@ export function ProductsTable({
             {products.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={showBranchColumn ? 11 : 10}
                   className="text-center text-muted-foreground py-12"
                 >
                   <div className="flex flex-col items-center gap-2">
@@ -146,7 +172,7 @@ export function ProductsTable({
                 const description = product.description?.trim() ?? "";
                 const hasDescription = description.length > 0;
                 const truncatedDescription = hasDescription
-                  ? truncateText(description, 60)
+                  ? truncateByWords(description, 6)
                   : "";
                 const shouldShowDescriptionTooltip =
                   hasDescription && truncatedDescription !== description;
@@ -159,7 +185,6 @@ export function ProductsTable({
                     <TableCell>
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center relative">
                         {product.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={product.imageUrl}
                             alt={product.name}
@@ -251,27 +276,30 @@ export function ProductsTable({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm font-semibold ${
-                            isLowStock
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-gray-900 dark:text-white"
-                          }`}
-                        >
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
                           {product.stock}
                         </span>
-                        {isLowStock && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Stock mínimo: {product.minStock}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                        {product.stock === 0 ? (
+                          <Badge className="rounded-full bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-300 border border-red-500/40 px-2 py-1 text-[11px] uppercase tracking-wide">
+                            Agotado
+                          </Badge>
+                        ) : isLowStock ? (
+                          <Badge className="rounded-full bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/40 px-2 py-1 text-[11px] uppercase tracking-wide">
+                            Unidades
+                          </Badge>
+                        ) : null}
                       </div>
                     </TableCell>
+                    {showBranchColumn && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {product.branch?.name || "-"}
+                          </span>
+                        </div>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge
                         className={

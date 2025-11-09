@@ -29,16 +29,16 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col sm:flex-row gap-3">
+        <AlertDialogFooter className="flex-col sm:flex-row gap-3 justify-center">
           <AlertDialogCancel
             onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto rounded-lg"
+            className="w-full sm:w-auto rounded-full"
           >
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-lg"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
             Eliminar
           </AlertDialogAction>

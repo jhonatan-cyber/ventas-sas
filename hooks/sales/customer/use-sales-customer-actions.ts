@@ -6,7 +6,11 @@ import { toast } from "sonner"
 import { SalesCustomer } from "@prisma/client"
 import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
-export function useSalesCustomerActions(customerSlug: string, onCustomersChange?: () => Promise<void> | void) {
+export function useSalesCustomerActions(
+  customerSlug: string, 
+  onCustomersChange?: () => Promise<void> | void,
+  setCustomers?: (customers: SalesCustomer[] | ((prev: SalesCustomer[]) => SalesCustomer[])) => void
+) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { handleError } = useApiError()
@@ -54,17 +58,33 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
         throw new Error(errorMessage)
       }
 
+      const savedCustomer = await response.json()
       const message = selectedCustomer ? "Cliente actualizado" : "Cliente creado"
       toast.success(message)
       closeDialogs()
-
-      if (onCustomersChange) {
+      
+      // Actualizar estado local en tiempo real
+      if (setCustomers) {
+        if (selectedCustomer) {
+          // Actualizar cliente existente
+          setCustomers((prevCustomers) =>
+            prevCustomers.map((customer) =>
+              customer.id === selectedCustomer.id ? { ...customer, ...savedCustomer } : customer
+            )
+          )
+        } else {
+          // Agregar nuevo cliente
+          setCustomers((prevCustomers) => [savedCustomer, ...prevCustomers])
+        }
+      } else if (onCustomersChange) {
         await Promise.resolve(onCustomersChange())
       }
 
-      startTransition(() => {
-        router.refresh()
-      })
+      if (!setCustomers) {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
     } catch (error) {
       handleError(error, {
         showToast: true,
@@ -89,13 +109,20 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
       toast.success("Cliente eliminado")
       closeDialogs()
 
-      if (onCustomersChange) {
+      // Actualizar estado local en tiempo real
+      if (setCustomers) {
+        setCustomers((prevCustomers) =>
+          prevCustomers.filter((customer) => customer.id !== selectedCustomer.id)
+        )
+      } else if (onCustomersChange) {
         await Promise.resolve(onCustomersChange())
       }
 
-      startTransition(() => {
-        router.refresh()
-      })
+      if (!setCustomers) {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
     } catch (error) {
       handleError(error, {
         showToast: true,
@@ -118,15 +145,25 @@ export function useSalesCustomerActions(customerSlug: string, onCustomersChange?
         throw new Error(errorMessage)
       }
 
+      const updatedCustomer = await response.json()
       toast.success(newStatus ? "Cliente activado" : "Cliente desactivado")
 
-      if (onCustomersChange) {
+      // Actualizar estado local en tiempo real
+      if (setCustomers) {
+        setCustomers((prevCustomers) =>
+          prevCustomers.map((c) =>
+            c.id === customer.id ? { ...c, ...updatedCustomer } : c
+          )
+        )
+      } else if (onCustomersChange) {
         await Promise.resolve(onCustomersChange())
       }
 
-      startTransition(() => {
-        router.refresh()
-      })
+      if (!setCustomers) {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
     } catch (error) {
       handleError(error, {
         showToast: true,

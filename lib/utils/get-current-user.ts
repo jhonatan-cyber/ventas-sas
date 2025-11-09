@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server'
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { AuthService } from '@/lib/services/auth-service'
 import { prisma } from '@/lib/prisma'
 
 /**
  * Obtiene el usuario autenticado del sistema Admin
+ * Verifica que tenga acceso de administrador (super admin o rol Administrador)
  */
 export async function getCurrentAdminUser(request: NextRequest) {
   try {
@@ -28,6 +30,10 @@ export async function getCurrentAdminUser(request: NextRequest) {
 
     if (!user || !user.isActive) return null
 
+    // Verificar que tenga acceso de administrador (super admin o rol Administrador)
+    const hasAccess = await AuthService.hasAdminAccess(user.id)
+    if (!hasAccess) return null
+
     return user
   } catch (error) {
     return null
@@ -40,10 +46,43 @@ export async function getCurrentAdminUser(request: NextRequest) {
 export async function getCurrentSasUser(request: NextRequest, slug: string) {
   try {
     const token = request.cookies.get('sas-auth-token')?.value
-    if (!token) return null
+    if (token) {
+      const user = await AuthSasService.verifyToken(slug, token)
+      if (user) return user
+    }
 
-    const user = await AuthSasService.verifyToken(slug, token)
-    return user
+    const sessionCookie = request.cookies.get('sas-session')?.value
+    if (sessionCookie) {
+      try {
+        let session: any = null
+        try {
+          const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8')
+          session = JSON.parse(decoded)
+        } catch (base64Error) {
+          session = JSON.parse(sessionCookie)
+        }
+
+        if (session?.userId) {
+          const usuario = await prisma.usuarioSas.findUnique({
+            where: { id: session.userId },
+            include: {
+              rol: true,
+              sucursal: true,
+              organization: true,
+            },
+          })
+
+          if (usuario && usuario.isActive && usuario.organization?.slug === slug) {
+            const { contraseña, ...usuarioSinPassword } = usuario as any
+            return usuarioSinPassword
+          }
+        }
+      } catch (_error) {
+        // ignorar errores de parseo y continuar
+      }
+    }
+
+    return null
   } catch (error) {
     return null
   }

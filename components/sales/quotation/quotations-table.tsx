@@ -1,13 +1,15 @@
 "use client"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Edit, Trash2, FileText, Eye, ShoppingCart } from "lucide-react"
+
+import type { FC } from "react"
+
+import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, FileText, Eye } from "lucide-react"
-import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
-import type { FC } from "react"
 
 const formatDate = (date: Date | string): string => {
   const d = new Date(date)
@@ -20,6 +22,7 @@ interface QuotationsTableProps {
   onEditClick?: (quotation: SalesQuotationWithRelations) => void
   onDeleteClick?: (quotation: SalesQuotationWithRelations) => void
   onViewDetails?: (quotation: SalesQuotationWithRelations) => void
+  onConvertClick?: (quotation: SalesQuotationWithRelations) => void | Promise<void>
   showBranchColumn?: boolean
 }
 
@@ -50,7 +53,7 @@ const statusTokens: Record<string, { label: string; className: string }> = {
   },
 }
 
-export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, showBranchColumn = false }) => {
+export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, onConvertClick, showBranchColumn = false }) => {
   if (isLoading) {
     return <TableSkeleton columns={showBranchColumn ? 6 : 5} rows={5} showActions={true} />
   }
@@ -93,6 +96,13 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                 const customerDisplayName = rawFullName || quotation.customerName || "Cliente sin registrar"
                 const branchName = quotation.branch?.name || "Sin sucursal"
                 const customerEmail = quotation.customer?.email || null
+                const hasMissingProductIds = quotation.items?.some((item) => !item.productId)
+                const isConverted = quotation.status === "converted"
+                const convertTooltip = isConverted
+                  ? "La cotización ya fue convertida"
+                  : hasMissingProductIds
+                    ? "Puedes asociar productos antes de convertir"
+                    : "Convertir en venta"
 
                 return (
                   <TableRow key={quotation.id} className="border-b border-gray-100 dark:border-[#2a2a2a]">
@@ -138,6 +148,22 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                     </TableCell>
                     <TableCell className="align-top py-5">
                       <div className="flex justify-end gap-2">
+                        {onConvertClick && !isConverted && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                                onClick={() => onConvertClick(quotation)}
+                              >
+                                <ShoppingCart className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{convertTooltip}</TooltipContent>
+                          </Tooltip>
+                        )}
+
                         {onViewDetails && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -154,7 +180,7 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                           </Tooltip>
                         )}
 
-                        {onEditClick && (
+                        {onEditClick && !isConverted && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button

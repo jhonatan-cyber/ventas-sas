@@ -18,9 +18,9 @@ export default async function LogsPage() {
     redirect('/administracion/login')
   }
 
-  // Validar super admin
-  const profile = await AuthService.getProfileById(payload.userId)
-  if (!profile || !profile.isSuperAdmin) {
+  // Validar acceso de administrador (super admin o rol Administrador)
+  const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+  if (!hasAccess) {
     redirect('/administracion/login')
   }
 

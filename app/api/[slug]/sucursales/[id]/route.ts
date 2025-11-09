@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
 
@@ -12,9 +12,9 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const branch = await BranchService.getBranchById(id)
@@ -23,8 +23,8 @@ export async function GET(
       throw AppError.notFound('Sucursal no encontrada')
     }
 
-    // Verificar que la sucursal pertenece al cliente
-    if (branch.customerId !== customer.id) {
+    // Verificar que la sucursal pertenece a la organización
+    if (branch.organizationId !== organizationId) {
       throw AppError.forbidden('No autorizado')
     }
 
@@ -50,14 +50,14 @@ export async function PUT(
       throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que la sucursal existe y pertenece al cliente
+    // Verificar que la sucursal existe y pertenece a la organización
     const existingBranch = await BranchService.getBranchById(id)
-    if (!existingBranch || existingBranch.customerId !== customer.id) {
+    if (!existingBranch || existingBranch.organizationId !== organizationId) {
       throw AppError.notFound('Sucursal no encontrada')
     }
 
@@ -84,14 +84,14 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que la sucursal existe y pertenece al cliente
+    // Verificar que la sucursal existe y pertenece a la organización
     const existingBranch = await BranchService.getBranchById(id)
-    if (!existingBranch || existingBranch.customerId !== customer.id) {
+    if (!existingBranch || existingBranch.organizationId !== organizationId) {
       throw AppError.notFound('Sucursal no encontrada')
     }
 

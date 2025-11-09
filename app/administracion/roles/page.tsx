@@ -1,19 +1,43 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { RolesPageClient } from "@/components/admin/role/roles-page-client"
 import { RoleAdminService } from "@/lib/services/admin/role-admin-service"
 import { AuthService } from "@/lib/services/auth-service"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
 
 export default async function RolesPage() {
-  // Verificar autenticación de super admin
-  const userId = "super-admin-id"
-  const profile = await AuthService.getProfileById(userId)
-  // Temporalmente desactivamos la validación
-  // if (!profile || !profile.isSuperAdmin) {
-  //   redirect("/administracion/login")
-  // }
+  // Validación de sesión Admin en el servidor
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin-auth-token')?.value
+  
+  if (!token) {
+    redirect('/administracion/login')
+  }
+  
+  try {
+    const payload = await AdminJWTService.verifyToken(token!)
+    if (!payload) {
+      redirect('/administracion/login')
+    }
+    
+    // Validar acceso de administrador
+    const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+    if (!hasAccess) {
+      redirect('/administracion/login?error=no_access')
+    }
 
-  // Obtener roles
-  const roles = await RoleAdminService.getAllRoles()
+    // Verificar permiso específico para listar roles
+    const canList = await PermissionCheckService.hasActivePermission(payload.userId, 'roles_listar')
+    if (!canList) {
+      redirect('/administracion/dashboard?error=no_permission')
+    }
 
-  return <RolesPageClient initialRoles={roles} />
+    // Obtener roles
+    const roles = await RoleAdminService.getAllRoles()
+
+    return <RolesPageClient initialRoles={roles} />
+  } catch (error) {
+    redirect('/administracion/login')
+  }
 }

@@ -696,8 +696,8 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
                   ${discount.toLocaleString("es-BO", { minimumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="space-y-1 rounded-2xl bg-[color-mix(in_oklch,var(--primary)_15%,white)] dark:bg-[color-mix(in_oklch,var(--primary)_25%,black/60)] px-4 py-3 text-white">
-                <p className="text-xs uppercase text-white/80">Total</p>
+              <div className="space-y-1 rounded-2xl bg-black text-white dark:bg-white dark:text-black px-4 py-3">
+                <p className="text-xs uppercase text-white/70 dark:text-gray-600">Total</p>
                 <p className="text-lg font-semibold">
                   ${total.toLocaleString("es-BO", { minimumFractionDigits: 2 })}
                 </p>

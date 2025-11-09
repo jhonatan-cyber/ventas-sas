@@ -19,8 +19,22 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
     setIsFormDialogOpen(true)
   }
 
-  const openEditDialog = (product: SalesProduct & { category: Category | null }) => {
-    setSelectedProduct(product)
+  const openEditDialog = async (product: SalesProduct & { category: Category | null }) => {
+    try {
+      // Obtener el producto completo desde el API para asegurar que tenemos todos los datos
+      const response = await fetch(`/api/${customerSlug}/productos/${product.id}`)
+      if (response.ok) {
+        const fullProduct = await response.json()
+        setSelectedProduct(fullProduct)
+      } else {
+        // Si falla, usar el producto de la tabla como fallback
+        setSelectedProduct(product)
+      }
+    } catch (error) {
+      console.error('Error al cargar producto completo:', error)
+      // Si falla, usar el producto de la tabla como fallback
+      setSelectedProduct(product)
+    }
     setIsFormDialogOpen(true)
   }
 
@@ -50,7 +64,15 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
       })
 
       if (!response.ok) {
-        const errorMessage = await extractErrorFromResponse(response)
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`
+        
+        // Si hay detalles de validación, mostrarlos
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const validationErrors = errorData.details.map((err: any) => `${err.field}: ${err.message}`).join(', ')
+          throw new Error(`${errorMessage}. ${validationErrors}`)
+        }
+        
         throw new Error(errorMessage)
       }
 

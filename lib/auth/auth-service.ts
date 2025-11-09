@@ -30,15 +30,9 @@ export class AuthService {
       const { email, password } = credentials
 
       // Buscar usuario en la tabla Profile (sistema de administración)
+      // NOTA: Los usuarios del sistema de administración NO tienen organizaciones
       const user = await prisma.profile.findUnique({
-        where: { email },
-        include: {
-          organizationMembers: {
-            include: {
-              organization: true
-            }
-          }
-        }
+        where: { email }
       })
 
       if (!user) {
@@ -92,8 +86,7 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
-        isSuperAdmin: user.isSuperAdmin,
-        organizationMembers: user.organizationMembers
+        isSuperAdmin: user.isSuperAdmin
       }
 
       return {

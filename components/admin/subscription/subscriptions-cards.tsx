@@ -8,7 +8,7 @@ import { User, Package, CheckCircle, Calendar, DollarSign, Edit, Trash2, Power, 
 
 interface SubscriptionWithDetails {
   id: string
-  customerId: string
+  customerId?: string | null
   planId: string
   status: string
   billingPeriod: string
@@ -24,7 +24,14 @@ interface SubscriptionWithDetails {
     nombre: string | null
     apellido: string | null
     email: string | null
-  }
+  } | null
+  organization: {
+    id: string
+    name: string
+    slug: string
+    razonSocial?: string | null
+    nit?: string | null
+  } | null
   plan: {
     id: string
     name: string
@@ -37,7 +44,7 @@ interface SubscriptionsCardsProps {
   subscriptions: SubscriptionWithDetails[]
   onEdit?: (subscription: SubscriptionWithDetails) => void
   onToggleStatus?: (subscriptionId: string, currentStatus: string) => void
-  onDelete?: (subscriptionId: string, customerName: string) => void
+  onDelete?: (subscriptionId: string, organizationName: string) => void
 }
 
 export function SubscriptionsCards({ subscriptions, onEdit, onToggleStatus, onDelete }: SubscriptionsCardsProps) {
@@ -76,7 +83,10 @@ export function SubscriptionsCards({ subscriptions, onEdit, onToggleStatus, onDe
     }
   }
 
-  const getCustomerName = (customer: SubscriptionWithDetails['customer']) => {
+  const getCustomerName = (customer: SubscriptionWithDetails['customer'], organization?: { name?: string | null; razonSocial?: string | null }) => {
+    if (!customer) {
+      return organization?.razonSocial || organization?.name || 'Sin cliente'
+    }
     return customer.razonSocial || `${customer.nombre || ''} ${customer.apellido || ''}`.trim() || customer.email || 'Sin nombre'
   }
 
@@ -104,7 +114,7 @@ export function SubscriptionsCards({ subscriptions, onEdit, onToggleStatus, onDe
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <User className="h-3 w-3 text-gray-500 dark:text-gray-400 shrink-0" />
                       <span className="font-semibold text-gray-900 dark:text-white text-xs truncate">
-                        {getCustomerName(subscription.customer)}
+                        {getCustomerName(subscription.customer, subscription.organization || undefined)}
                       </span>
                       <Badge
                         className={`${getStatusColor(subscription.status)} text-[10px] px-1 py-0.5 shrink-0`}
@@ -154,7 +164,7 @@ export function SubscriptionsCards({ subscriptions, onEdit, onToggleStatus, onDe
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => onDelete?.(subscription.id, getCustomerName(subscription.customer))}
+                      onClick={() => onDelete?.(subscription.id, subscription.organization?.razonSocial || subscription.organization?.name || getCustomerName(subscription.customer, subscription.organization || undefined) || 'Sin empresa')}
                       className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                     >
                       <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />

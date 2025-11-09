@@ -29,48 +29,20 @@ export function PaymentFormDialog({
   onSave,
 }: PaymentFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([])
 
   const [formData, setFormData] = useState({
     amount: "",
-    paymentMethodId: "",
-    paymentGateway: "manual",
-    paymentMethodType: "card",
-    last4: "",
-    brand: "",
+    paymentMethodType: "efectivo",
   })
 
   useEffect(() => {
     if (open && invoice) {
       setFormData({
         amount: invoice.total.toString(),
-        paymentMethodId: "",
-        paymentGateway: "manual",
-        paymentMethodType: "card",
-        last4: "",
-        brand: "",
+        paymentMethodType: "efectivo",
       })
-
-      // Cargar métodos de pago si hay organización
-      if (invoice.organizationId) {
-        fetchPaymentMethods(invoice.organizationId)
-      }
     }
   }, [open, invoice])
-
-  const fetchPaymentMethods = async (organizationId: string) => {
-    try {
-      const response = await fetch(
-        `/api/administracion/billing/payment-methods?organizationId=${organizationId}`
-      )
-      const data = await response.json()
-      if (data.success) {
-        setPaymentMethods(data.paymentMethods || [])
-      }
-    } catch (error) {
-      console.error("Error fetching payment methods:", error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,11 +57,8 @@ export function PaymentFormDialog({
         body: JSON.stringify({
           invoiceId: invoice.id,
           amount: parseFloat(formData.amount),
-          paymentMethodId: formData.paymentMethodId || undefined,
-          paymentGateway: formData.paymentGateway,
-          paymentMethodType: formData.paymentMethodType || undefined,
-          last4: formData.last4 || undefined,
-          brand: formData.brand || undefined,
+          paymentGateway: "manual",
+          paymentMethodType: formData.paymentMethodType,
         }),
       })
 
@@ -97,8 +66,11 @@ export function PaymentFormDialog({
 
       if (data.success || data.payment) {
         toast.success("Pago registrado exitosamente")
-        onOpenChange(false)
         onSave()
+        // Cerrar el modal después de un breve delay para permitir que se actualicen los datos
+        setTimeout(() => {
+          onOpenChange(false)
+        }, 300)
       } else {
         toast.error(data.error || "Error al registrar pago")
       }
@@ -126,15 +98,17 @@ export function PaymentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Registrar Pago</DialogTitle>
-          <DialogDescription>
-            Registrar un pago para la factura #{invoice.invoiceNumber}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>Registrar Pago</DialogTitle>
+            <DialogDescription>
+              Registrar un pago para la factura #{invoice.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 Total de la Factura
@@ -190,110 +164,32 @@ export function PaymentFormDialog({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="paymentGateway">
-                  Gateway de Pago <span className="text-red-500">*</span>
-                </Label>
-                <select
-                  id="paymentGateway"
-                  value={formData.paymentGateway}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentGateway: e.target.value })
-                  }
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-                  disabled={isSubmitting}
-                >
-                  <option value="manual">Manual</option>
-                  <option value="stripe">Stripe</option>
-                  <option value="paypal">PayPal</option>
-                  <option value="mercado_pago">Mercado Pago</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="paymentMethodType">Tipo de Método</Label>
-                <select
-                  id="paymentMethodType"
-                  value={formData.paymentMethodType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentMethodType: e.target.value })
-                  }
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  disabled={isSubmitting}
-                >
-                  <option value="card">Tarjeta</option>
-                  <option value="bank_transfer">Transferencia Bancaria</option>
-                  <option value="cash">Efectivo</option>
-                  <option value="paypal">PayPal</option>
-                  <option value="other">Otro</option>
-                </select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethodType">
+                Método de Pago <span className="text-red-500">*</span>
+              </Label>
+              <select
+                id="paymentMethodType"
+                value={formData.paymentMethodType}
+                onChange={(e) =>
+                  setFormData({ ...formData, paymentMethodType: e.target.value })
+                }
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                required
+                disabled={isSubmitting}
+              >
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="billetera_movil">Billetera Móvil</option>
+              </select>
             </div>
-
-            {paymentMethods.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor="paymentMethodId">Método de Pago Guardado (opcional)</Label>
-                <select
-                  id="paymentMethodId"
-                  value={formData.paymentMethodId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentMethodId: e.target.value })
-                  }
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  disabled={isSubmitting}
-                >
-                  <option value="">Seleccionar método guardado...</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method.id} value={method.id}>
-                      {method.label}
-                      {method.last4 && ` (****${method.last4})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {formData.paymentMethodType === "card" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="last4">Últimos 4 dígitos</Label>
-                  <Input
-                    id="last4"
-                    value={formData.last4}
-                    onChange={(e) =>
-                      setFormData({ ...formData, last4: e.target.value })
-                    }
-                    placeholder="1234"
-                    maxLength={4}
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="brand">Marca</Label>
-                  <select
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    disabled={isSubmitting}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="visa">Visa</option>
-                    <option value="mastercard">Mastercard</option>
-                    <option value="amex">American Express</option>
-                    <option value="discover">Discover</option>
-                  </select>
-                </div>
-              </div>
-            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
@@ -301,6 +197,7 @@ export function PaymentFormDialog({
             </Button>
             <Button
               type="submit"
+              className="w-full sm:w-auto rounded-full px-6"
               disabled={
                 isSubmitting ||
                 !formData.amount ||

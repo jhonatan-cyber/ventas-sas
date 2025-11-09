@@ -5,18 +5,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, Power, PowerOff, Shield } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, Shield, FileText } from "lucide-react"
 import { RoleSas } from "@prisma/client"
 
 interface RolesSasTableProps {
   roles: (RoleSas & {
-    customer: { razonSocial: string | null; nombre: string | null; apellido: string | null } | null
+    organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
     sucursal: { name: string } | null
   })[]
   isLoading?: boolean
-  onEditClick?: (role: RoleSas & { customer: any; sucursal: any }) => void
-  onDeleteClick?: (role: RoleSas & { customer: any; sucursal: any }) => void
-  onToggleStatus?: (role: RoleSas & { customer: any; sucursal: any }) => void
+  onEditClick?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onDeleteClick?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal: any }) => void
 }
 
 export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, onToggleStatus }: RolesSasTableProps) {
@@ -26,14 +26,22 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
 
   return (
     <TooltipProvider>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-1 sm:mx-0">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Rol</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Descripción</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Estado</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Acciones</TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold min-w-[200px]">
+                Rol
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold hidden sm:table-cell">
+                Descripción
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold min-w-[100px]">
+                Estado
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right min-w-[120px]">
+                Acciones
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -52,18 +60,28 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
               roles.map((role) => (
                 <TableRow key={role.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
                   <TableCell>
-                    <div className="flex items-center gap-3 py-2">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <div className="flex items-center gap-2 sm:gap-3 py-2">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+                        <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {role.nombre}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-semibold text-gray-900 dark:text-white block truncate">
+                          {role.nombre}
+                        </span>
+                        {role.descripcion && (
+                          <span className="text-xs sm:hidden text-gray-500 dark:text-gray-400 block truncate mt-1">
+                            {role.descripcion}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {role.descripcion ? (
-                      <span className="text-sm text-gray-900 dark:text-white">{role.descripcion}</span>
+                      <div className="flex items-start gap-2 text-sm text-gray-900 dark:text-white">
+                        <FileText className="h-3 w-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="line-clamp-2">{role.descripcion}</span>
+                      </div>
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
                     )}
@@ -74,7 +92,7 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1 sm:gap-2">
                       {onEditClick && (
                         <Tooltip>
                           <TooltipTrigger asChild>

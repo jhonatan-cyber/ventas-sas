@@ -143,6 +143,10 @@ export const createProductSchema = z.object({
     .nonnegative('El costo no puede ser negativo')
     .max(999999.99, 'El costo máximo es 999,999.99')
     .default(0),
+  branchId: z
+    .string()
+    .uuid('El ID de la sucursal no es válido')
+    .optional(),
   stock: z
     .number()
     .int('El stock debe ser un número entero')
@@ -166,11 +170,20 @@ export const createProductSchema = z.object({
   categoryId: z
     .string()
     .uuid('El ID de categoría no es válido')
-    .optional()
-    .nullable(),
+    .optional(),
   imageUrl: z
     .string()
-    .url('La URL de imagen no es válida')
+    .refine(
+      (val) => {
+        if (!val) return true // Permitir null/undefined
+        // Aceptar URLs HTTP/HTTPS o data URLs
+        return val.startsWith('http://') || 
+               val.startsWith('https://') || 
+               val.startsWith('data:image/') ||
+               val.startsWith('/')
+      },
+      { message: 'La URL de imagen debe ser una URL válida (http/https) o una data URL' }
+    )
     .optional()
     .nullable(),
   isActive: z

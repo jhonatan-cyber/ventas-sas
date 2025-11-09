@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { CategoriesPageClient } from "@/components/sales/category/categories-page-client"
 import { CategoryService } from "@/lib/services/sales/category-service"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 
 export default async function CategoriesPage({
   params,
@@ -10,14 +10,14 @@ export default async function CategoriesPage({
 }) {
   const { slug } = await params
 
-  // Verificar que el cliente existe
-  const customer = await getCustomerBySlug(slug)
-  if (!customer) {
+  // Obtener organizationId desde el slug
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
     redirect(`/${slug}/dashboard`)
   }
 
   // Obtener categorías
-  const result = await CategoryService.getAllCategories(customer.id, 0, 1000)
+  const result = await CategoryService.getAllCategories(organizationId, 0, 1000)
   const categories = result.categories
 
   return <CategoriesPageClient initialCategories={categories} customerSlug={slug} />

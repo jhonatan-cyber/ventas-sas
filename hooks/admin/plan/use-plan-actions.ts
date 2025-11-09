@@ -9,6 +9,7 @@ export function usePlanActions() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [openDialog, setOpenDialog] = useState(false)
+  const [detailDialog, setDetailDialog] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<SerializedSubscriptionPlanWithStats | undefined>(undefined)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, planId: '', planName: '' })
 
@@ -20,6 +21,11 @@ export function usePlanActions() {
   const handleEdit = (plan: SerializedSubscriptionPlanWithStats) => {
     setSelectedPlan(plan)
     setOpenDialog(true)
+  }
+
+  const handleView = (plan: SerializedSubscriptionPlanWithStats) => {
+    setSelectedPlan(plan)
+    setDetailDialog(true)
   }
 
   const handleDeleteClick = (planId: string, planName: string) => {
@@ -147,9 +153,12 @@ export function usePlanActions() {
   return {
     openDialog,
     setOpenDialog,
+    detailDialog,
+    setDetailDialog,
     selectedPlan,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,

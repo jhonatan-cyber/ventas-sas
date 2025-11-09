@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/layout/admin-layout"
 import { PlanHeader } from "@/components/admin/plan/plan-header"
 import { PlansContainer } from "./plans-container"
 import { PlanFormDialog } from "./plan-form-dialog"
+import { PlanDetailDialog } from "./plan-detail-dialog"
 import { DeletePlanDialog } from "./delete-plan-dialog"
 import { SerializedSubscriptionPlanWithStats } from "./types"
 import { usePlanActions } from "@/hooks/admin/plan/use-plan-actions"
@@ -16,9 +17,12 @@ export function PlansPageClient({ initialPlans }: PlansPageClientProps) {
   const {
     openDialog,
     setOpenDialog,
+    detailDialog,
+    setDetailDialog,
     selectedPlan,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,
@@ -41,6 +45,7 @@ export function PlansPageClient({ initialPlans }: PlansPageClientProps) {
         <PlansContainer 
           plans={initialPlans} 
           onEdit={handleEdit}
+          onViewDetails={handleView}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDeleteClick}
         />
@@ -51,6 +56,13 @@ export function PlansPageClient({ initialPlans }: PlansPageClientProps) {
           onOpenChange={setOpenDialog}
           plan={selectedPlan}
           onSave={handleSave}
+        />
+
+        {/* Modal de detalles del plan */}
+        <PlanDetailDialog
+          open={detailDialog}
+          onOpenChange={setDetailDialog}
+          plan={selectedPlan}
         />
 
         {/* Modal de confirmación de eliminar */}

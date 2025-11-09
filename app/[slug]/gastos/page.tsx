@@ -53,6 +53,10 @@ export default async function ExpensesPage({
   const token = cookieStore.get('sas-auth-token')?.value
   const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
   const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
+  const roleName = currentUser?.rol?.nombre?.toLowerCase() || ""
+  const isAdmin =
+    roleName.includes("administrador") ||
+    roleName === "admin"
 
   // Obtener gastos - Si no hay organizationId, usar array vacío en lugar de redirigir
   const expenses = organizationId
@@ -73,6 +77,7 @@ export default async function ExpensesPage({
       customerSlug={slug}
       currentUserBranchId={currentUserBranchId}
       branches={serializedBranches}
+      initialIsAdmin={isAdmin}
     />
   )
 }

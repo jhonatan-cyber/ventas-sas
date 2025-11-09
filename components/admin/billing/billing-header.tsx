@@ -1,0 +1,55 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+interface BillingHeaderProps {
+  title: string
+  description: string
+  newButtonText?: string
+  onNewClick: () => void
+}
+
+export function BillingHeader({
+  title,
+  description,
+  newButtonText = "Nueva Factura",
+  onNewClick
+}: BillingHeaderProps) {
+  const canCreate = useHasPermission("facturas_crear")
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0 mb-6 md:mb-8">
+      <div className="w-full">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{title}</h1>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">{description}</p>
+      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button 
+                variant="outline" 
+                rounded="full" 
+                onClick={onNewClick}
+                disabled={!canCreate}
+                className="w-full md:w-auto bg-black dark:bg-white text-white dark:text-black hover:bg-white dark:hover:bg-black hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="h-4 w-4" />
+                {newButtonText}
+              </Button>
+            </span>
+          </TooltipTrigger>
+          {!canCreate && (
+            <TooltipContent>
+              <p>No tiene permiso para crear facturas</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  )
+}
+

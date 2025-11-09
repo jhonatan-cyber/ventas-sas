@@ -6,10 +6,10 @@ interface DeleteSubscriptionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-  customerName?: string
+  organizationName?: string
 }
 
-export function DeleteSubscriptionDialog({ open, onOpenChange, onConfirm, customerName }: DeleteSubscriptionDialogProps) {
+export function DeleteSubscriptionDialog({ open, onOpenChange, onConfirm, organizationName }: DeleteSubscriptionDialogProps) {
   const handleConfirm = () => {
     onConfirm()
     onOpenChange(false)
@@ -23,8 +23,8 @@ export function DeleteSubscriptionDialog({ open, onOpenChange, onConfirm, custom
             ¿Eliminar suscripción?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
-            {customerName 
-              ? `Estás a punto de eliminar la suscripción del cliente "${customerName}". Esta acción no se puede deshacer.`
+            {organizationName 
+              ? `Estás a punto de eliminar la suscripción de la empresa "${organizationName}". Esta acción no se puede deshacer.`
               : "Estás a punto de eliminar esta suscripción. Esta acción no se puede deshacer."
             }
           </AlertDialogDescription>

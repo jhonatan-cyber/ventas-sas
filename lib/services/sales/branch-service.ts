@@ -18,9 +18,9 @@ export interface UpdateBranchData {
 }
 
 export class BranchService {
-  // Obtener todas las sucursales de un cliente
+  // Obtener todas las sucursales de una organización
   static async getAllBranches(
-    customerId: string,
+    organizationId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
@@ -28,7 +28,7 @@ export class BranchService {
     includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId,
+      organizationId,
       ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
@@ -53,12 +53,12 @@ export class BranchService {
         skip,
         take,
         include: {
-          customer: {
+          organization: {
             select: {
               id: true,
               razonSocial: true,
-              nombre: true,
-              apellido: true
+              name: true,
+              slug: true
             }
           },
           _count: {
@@ -80,12 +80,12 @@ export class BranchService {
     return prisma.branch.findUnique({
       where: { id },
       include: {
-        customer: {
+        organization: {
           select: {
             id: true,
             razonSocial: true,
-            nombre: true,
-            apellido: true
+            name: true,
+            slug: true
           }
         },
         _count: {
@@ -99,12 +99,12 @@ export class BranchService {
 
   // Crear nueva sucursal
   static async createBranch(
-    customerId: string,
+    organizationId: string,
     data: CreateBranchData
-  ): Promise<Branch> {
+  ) {
     return prisma.branch.create({
       data: {
-        customerId,
+        organizationId,
         name: data.name,
         address: data.address,
         phone: data.phone,
@@ -112,12 +112,17 @@ export class BranchService {
         isActive: true
       },
       include: {
-        customer: {
+        organization: {
           select: {
             id: true,
             razonSocial: true,
-            nombre: true,
-            apellido: true
+            name: true,
+            slug: true
+          }
+        },
+        _count: {
+          select: {
+            usuariosSas: true
           }
         }
       }
@@ -128,17 +133,22 @@ export class BranchService {
   static async updateBranch(
     id: string,
     data: UpdateBranchData
-  ): Promise<Branch> {
+  ) {
     return prisma.branch.update({
       where: { id },
       data,
       include: {
-        customer: {
+        organization: {
           select: {
             id: true,
             razonSocial: true,
-            nombre: true,
-            apellido: true
+            name: true,
+            slug: true
+          }
+        },
+        _count: {
+          select: {
+            usuariosSas: true
           }
         }
       }
@@ -170,12 +180,12 @@ export class BranchService {
         deletedAt: null
       },
       include: {
-        customer: {
+        organization: {
           select: {
             id: true,
             razonSocial: true,
-            nombre: true,
-            apellido: true
+            name: true,
+            slug: true
           }
         }
       }
@@ -190,10 +200,10 @@ export class BranchService {
   }
 
   // Obtener sucursales activas para selects
-  static async getActiveBranches(customerId: string) {
+  static async getActiveBranches(organizationId: string) {
     return prisma.branch.findMany({
       where: {
-        customerId,
+        organizationId,
         isActive: true,
         deletedAt: null // Excluir soft deleted
       },

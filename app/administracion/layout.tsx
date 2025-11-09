@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/theme-provider"
+import { PermissionsProvider } from "@/contexts/permissions-context"
 import { Metadata, Viewport } from "next"
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function AdminSectionLayout({
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="admin-theme">
-      {children}
+      <PermissionsProvider>
+        {children}
+      </PermissionsProvider>
     </ThemeProvider>
   )
 }

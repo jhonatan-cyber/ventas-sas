@@ -62,6 +62,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  let currentUser: Awaited<ReturnType<typeof AuthSasService.verifyToken>> | null = null
+
   try {
     const { slug } = await params
 
@@ -71,7 +73,7 @@ export async function POST(
     }
 
     const token = request.cookies.get('sas-auth-token')?.value
-    const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
+    currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
       throw AppError.unauthorized('No autenticado')

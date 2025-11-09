@@ -1,18 +1,35 @@
 "use client"
 
-import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
+
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+
+interface ConvertOptions {
+  paymentMethod: string
+  notes?: string | null
+  items: Array<{
+    productId: string
+    productName?: string | null
+    quantity: number
+    unitPrice: number
+    subtotal: number
+  }>
+  discount: number
+}
 
 export function useQuotationActions(customerSlug: string, onQuotationsChange?: () => Promise<void> | void) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedQuotation, setSelectedQuotation] = useState<SalesQuotationWithRelations | undefined>()
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [detailQuotation, setDetailQuotation] = useState<SalesQuotationWithRelations | undefined>()
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false)
+  const [convertQuotation, setConvertQuotation] = useState<SalesQuotationWithRelations | undefined>()
+  const [isConverting, setIsConverting] = useState(false)
 
   const openCreateDialog = () => {
     setSelectedQuotation(undefined)
@@ -34,6 +51,11 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
     setIsDetailsDialogOpen(true)
   }
 
+  const openConvertDialog = (quotation: SalesQuotationWithRelations) => {
+    setConvertQuotation(quotation)
+    setIsConvertDialogOpen(true)
+  }
+
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
@@ -43,6 +65,11 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
   const closeDetailsDialog = () => {
     setIsDetailsDialogOpen(false)
     setDetailQuotation(undefined)
+  }
+
+  const closeConvertDialog = () => {
+    setIsConvertDialogOpen(false)
+    setConvertQuotation(undefined)
   }
 
   const handleSave = async (data: any) => {
@@ -70,11 +97,11 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
 
       if (onQuotationsChange) {
         await Promise.resolve(onQuotationsChange())
+      } else {
+        startTransition(() => {
+          router.refresh()
+        })
       }
-
-      startTransition(() => {
-        router.refresh()
-      })
     } catch (error: any) {
       toast.error(error.message || "Error al guardar la cotización")
     }
@@ -98,13 +125,57 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
 
       if (onQuotationsChange) {
         await Promise.resolve(onQuotationsChange())
+      } else {
+        startTransition(() => {
+          router.refresh()
+        })
       }
-
-      startTransition(() => {
-        router.refresh()
-      })
     } catch (error: any) {
       toast.error(error.message || "Error al eliminar la cotización")
+    }
+  }
+
+  const handleConvert = async ({ paymentMethod, notes, items, discount }: ConvertOptions) => {
+    if (!convertQuotation) return
+
+    try {
+      setIsConverting(true)
+
+      const response = await fetch(`/api/${customerSlug}/cotizaciones/${convertQuotation.id}/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentMethod, notes, items, discount }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        const detail =
+          error?.details?.message ||
+          error?.message ||
+          error?.error ||
+          "No se pudo convertir la cotización"
+        throw new Error(detail)
+      }
+
+      const data = await response.json().catch(() => ({}))
+      const saleNumber = data?.sale?.saleNumber ?? data?.sale?.sale_number
+      const message = saleNumber
+        ? `Venta ${saleNumber} creada correctamente`
+        : "Cotización convertida en venta"
+      toast.success(message)
+      closeConvertDialog()
+
+      if (onQuotationsChange) {
+        await Promise.resolve(onQuotationsChange())
+      } else {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo convertir la cotización")
+    } finally {
+      setIsConverting(false)
     }
   }
 
@@ -112,16 +183,22 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
     isFormDialogOpen,
     isDeleteDialogOpen,
     isDetailsDialogOpen,
+    isConvertDialogOpen,
+    isConverting,
     selectedQuotation,
     detailQuotation,
+    convertQuotation,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
     openDetailsDialog,
+    openConvertDialog,
     closeDialogs,
     closeDetailsDialog,
+    closeConvertDialog,
     handleSave,
     handleDelete,
+    handleConvert,
   }
 }
 

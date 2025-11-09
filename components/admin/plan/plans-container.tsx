@@ -11,11 +11,12 @@ import { SerializedSubscriptionPlanWithStats } from "./types"
 interface PlansContainerProps {
   plans: SerializedSubscriptionPlanWithStats[]
   onEdit?: (plan: SerializedSubscriptionPlanWithStats) => void
+  onViewDetails?: (plan: SerializedSubscriptionPlanWithStats) => void
   onToggleStatus?: (planId: string, currentStatus: boolean) => void
   onDelete?: (planId: string, planName: string) => void
 }
 
-export function PlansContainer({ plans, onEdit, onToggleStatus, onDelete }: PlansContainerProps) {
+export function PlansContainer({ plans, onEdit, onViewDetails, onToggleStatus, onDelete }: PlansContainerProps) {
   const [pageSize, setPageSize] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -89,22 +90,26 @@ export function PlansContainer({ plans, onEdit, onToggleStatus, onDelete }: Plan
       />
 
       {/* Cards de planes (móvil) */}
-      <PlansCards plans={currentPlans} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      <PlansCards plans={currentPlans} onEdit={onEdit} onViewDetails={onViewDetails} onToggleStatus={onToggleStatus} onDelete={onDelete} />
 
-      {/* Tabla de planes (desktop) */}
-      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-        <PlansTable plans={currentPlans} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-      </div>
+      {/* Tabla de planes (desktop) - Solo mostrar si hay planes */}
+      {plans.length > 0 && (
+        <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+          <PlansTable plans={currentPlans} onEdit={onEdit} onViewDetails={onViewDetails} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+        </div>
+      )}
 
-      {/* Paginación */}
-      <PlansPagination
-        totalItems={filteredPlans.length}
-        pageSize={pageSize}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-      />
+      {/* Paginación - Solo mostrar si hay planes */}
+      {plans.length > 0 && (
+        <PlansPagination
+          totalItems={filteredPlans.length}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+        />
+      )}
     </div>
   )
 }

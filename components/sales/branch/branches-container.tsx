@@ -9,13 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Branch } from "@prisma/client"
 
 interface BranchesContainerProps {
-  branches: Branch[]
-  onEdit?: (branch: Branch) => void
-  onToggleStatus?: (branch: Branch) => void
-  onDelete?: (branch: Branch) => void
+  branches: (Branch & {
+    organization?: { id: string; razonSocial: string | null; name: string | null; slug: string | null } | null
+    _count?: { usuariosSas: number }
+  })[]
+  onEdit?: (branch: Branch & { organization?: any; _count?: any }) => void
+  onToggleStatus?: (branch: Branch & { organization?: any; _count?: any }) => void
+  onDelete?: (branch: Branch & { organization?: any; _count?: any }) => void
+  onViewDetails?: (branch: Branch & { organization?: any; _count?: any }) => void
 }
 
-export function BranchesContainer({ branches, onEdit, onToggleStatus, onDelete }: BranchesContainerProps) {
+export function BranchesContainer({ branches, onEdit, onToggleStatus, onDelete, onViewDetails }: BranchesContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -66,44 +70,32 @@ export function BranchesContainer({ branches, onEdit, onToggleStatus, onDelete }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Estadísticas */}
       <BranchesStats branches={branches} />
 
-      {/* Filtros */}
-      <BranchesFilters 
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de sucursales */}
+      {/* Filtros en Card */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Sucursales ({filteredBranches.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredBranches.length === branches.length 
-                  ? "Lista completa de sucursales disponibles"
-                  : `Mostrando ${filteredBranches.length} de ${branches.length} sucursales`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <BranchesTable 
+        <CardContent className="pt-6">
+          <BranchesFilters 
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
+            statusValue={statusFilter}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Tabla de sucursales sin Card */}
+      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+          <BranchesTable 
               branches={currentBranches} 
               onEditClick={onEdit} 
               onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
+              onDeleteClick={onDelete}
+              onViewDetails={onViewDetails}
             />
-          </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Paginación */}
       <div className="flex justify-center">

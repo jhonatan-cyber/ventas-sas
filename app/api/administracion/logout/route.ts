@@ -9,6 +9,9 @@ export async function POST() {
     path: '/',
     maxAge: 0,
   })
+  
+  // Nota: El cliente debe limpiar el caché de permisos en sessionStorage
+  // Esto se hace automáticamente cuando el PermissionsProvider detecta que no hay sesión
   return res
 }
 

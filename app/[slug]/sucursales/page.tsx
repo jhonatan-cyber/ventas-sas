@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { BranchesPageClient } from "@/components/sales/branch/branches-page-client"
-import { getCustomerBySlug } from "@/lib/utils/organization"
-import { prisma } from "@/lib/prisma"
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
+import { BranchService } from "@/lib/services/sales/branch-service"
 
 export default async function BranchesPage({
   params,
@@ -16,27 +16,18 @@ export default async function BranchesPage({
     redirect(`/${slug}/dashboard`)
   }
 
-  // Obtener sucursales
-  const branches = await prisma.branch.findMany({
-    where: { customerId: customer.id },
-    take: 1000,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      customer: {
-        select: {
-          id: true,
-          razonSocial: true,
-          nombre: true,
-          apellido: true
-        }
-      },
-      _count: {
-        select: {
-          usuariosSas: true
-        }
-      }
-    }
-  })
+  // Obtener organizationId
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
+    redirect(`/${slug}/dashboard`)
+  }
+
+  // Obtener sucursales usando el servicio
+  const { branches } = await BranchService.getAllBranches(
+    organizationId,
+    0,
+    1000
+  )
 
   return (
     <BranchesPageClient 

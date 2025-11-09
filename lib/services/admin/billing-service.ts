@@ -456,13 +456,15 @@ export class BillingService {
     }
 
     // Crear el pago
+    // Para pagos manuales, marcarlos como completados automáticamente
+    const isManualPayment = data.paymentGateway === 'manual'
     const payment = await (prisma as any).payment.create({
       data: {
         invoiceId: data.invoiceId,
         paymentMethodId: data.paymentMethodId || null,
         amount: data.amount,
         currency: invoice.currency,
-        status: data.paymentGatewayId ? 'completed' : 'pending',
+        status: isManualPayment || data.paymentGatewayId ? 'completed' : 'pending',
         paymentGateway: data.paymentGateway,
         paymentGatewayId: data.paymentGatewayId || null,
         paymentIntentId: data.paymentIntentId || null,
@@ -470,7 +472,7 @@ export class BillingService {
         last4: data.last4 || null,
         brand: data.brand || null,
         metadata: data.metadata || {},
-        paidAt: data.paymentGatewayId ? new Date() : null,
+        paidAt: isManualPayment || data.paymentGatewayId ? new Date() : null,
       }
     })
 

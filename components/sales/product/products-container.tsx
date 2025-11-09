@@ -5,25 +5,60 @@ import { ProductsTable } from "./products-table"
 import { ProductsFilters } from "./products-filters"
 import { ProductsPagination } from "./products-pagination"
 import { ProductsStats } from "./products-stats"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SalesProduct, Category } from "@prisma/client"
+import { Card, CardContent } from "@/components/ui/card"
+import { SalesProduct, Category, Branch } from "@prisma/client"
+import { ProductsGrid } from "./products-grid"
 
 interface ProductsContainerProps {
-  products: (SalesProduct & { category: Category | null })[]
+  products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
   categoryName?: string
-  onEdit?: (product: SalesProduct & { category: Category | null }) => void
-  onToggleStatus?: (product: SalesProduct & { category: Category | null }) => void
-  onDelete?: (product: SalesProduct & { category: Category | null }) => void
+  showBranchColumn?: boolean
+  isAdmin?: boolean
+  branches?: Branch[]
+  selectedBranchId?: string | null
+  onBranchChange?: (branchId: string | null) => void
+  userBranchId?: string | null
+  onEdit?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
+  onToggleStatus?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
+  onDelete?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
 }
 
-export function ProductsContainer({ products, categoryName, onEdit, onToggleStatus, onDelete }: ProductsContainerProps) {
+export function ProductsContainer({ 
+  products, 
+  categoryName, 
+  showBranchColumn = false, 
+  isAdmin = false,
+  branches = [],
+  selectedBranchId = null,
+  onBranchChange,
+  userBranchId = null,
+  onEdit, 
+  onToggleStatus, 
+  onDelete 
+}: ProductsContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table")
 
-  // Filtrar productos por búsqueda y estado
+  // Determinar el branchId a usar para filtrar
+  const effectiveBranchId = (() => {
+    if (!isAdmin) {
+      // Si no es admin, filtrar por su sucursal
+      return userBranchId
+    }
+    // Si es admin, usar la sucursal seleccionada (puede ser null para "todas")
+    return selectedBranchId
+  })()
+
+  // Filtrar productos por sucursal, búsqueda y estado
   const filteredProducts = products.filter(product => {
+    // Filtrar por sucursal
+    if (effectiveBranchId !== null && effectiveBranchId !== undefined) {
+      if (product.branchId !== effectiveBranchId) return false
+    }
+
     // Filtrar por búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase()
@@ -66,51 +101,58 @@ export function ProductsContainer({ products, categoryName, onEdit, onToggleStat
     setCurrentPage(page)
   }
 
-  const cardTitle = categoryName
-    ? `Productos ${categoryName} (${filteredProducts.length})`
-    : `Productos (${filteredProducts.length})`
-
-  const cardDescription = filteredProducts.length === products.length
-    ? (categoryName ? `Productos pertenecientes a la categoría ${categoryName}` : "Lista completa de productos disponibles")
-    : `Mostrando ${filteredProducts.length} de ${products.length} productos`
+  const handleBranchChange = (branchId: string | null) => {
+    if (onBranchChange) {
+      onBranchChange(branchId)
+    }
+    setCurrentPage(1) // Resetear a la primera página cuando cambia la sucursal
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Estadísticas */}
-      <ProductsStats products={products} />
+      <ProductsStats products={filteredProducts} />
 
-      {/* Filtros */}
-      <ProductsFilters 
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de productos */}
+      {/* Filtros en Card */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                {cardTitle}
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {cardDescription}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-        
-            <ProductsTable 
-              products={currentProducts} 
-              onEditClick={onEdit} 
-              onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
-            />
-       
+        <CardContent className="pt-6">
+          <ProductsFilters 
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
+            statusValue={statusFilter}
+            isAdmin={isAdmin}
+            branches={branches}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={handleBranchChange}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => {
+              setViewMode(mode)
+              setCurrentPage(1)
+            }}
+          />
         </CardContent>
       </Card>
+
+      {viewMode === "table" ? (
+        <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+          <ProductsTable 
+            products={currentProducts} 
+            showBranchColumn={showBranchColumn}
+            onEditClick={onEdit} 
+            onToggleStatus={onToggleStatus} 
+            onDeleteClick={onDelete} 
+          />
+        </div>
+      ) : (
+        <ProductsGrid
+          products={currentProducts}
+          showBranchColumn={showBranchColumn}
+          onEdit={onEdit}
+          onToggleStatus={onToggleStatus}
+          onDelete={onDelete}
+        />
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

@@ -7,15 +7,22 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { User, CreditCard, Mail, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, MapPin, Phone, Building } from "lucide-react"
 import { Customer } from "@/lib/types"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface CustomersCardsProps {
   customers: Customer[]
   onEdit?: (customer: Customer) => void
+  onViewDetails?: (customer: Customer) => void
   onToggleStatus?: (customer: Customer) => void
   onDelete?: (customer: Customer) => void
 }
 
-export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: CustomersCardsProps) {
+export function CustomersCards({ customers, onEdit, onViewDetails, onToggleStatus, onDelete }: CustomersCardsProps) {
+  const canViewDetails = useHasPermission("clientes_ver_detalles")
+  const canEdit = useHasPermission("clientes_editar")
+  const canDelete = useHasPermission("clientes_eliminar")
+  const canActivate = useHasPermission("clientes_activar")
+  const canDeactivate = useHasPermission("clientes_desactivar")
   if (customers.length === 0) {
     return (
       <div className="text-center py-12">
@@ -85,12 +92,20 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => {}} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                      <DropdownMenuItem 
+                        onClick={() => onViewDetails?.(customer)} 
+                        className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!canViewDetails}
+                      >
                         <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                         <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onEdit?.(customer)} className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400">
+                      <DropdownMenuItem 
+                        onClick={() => onEdit?.(customer)} 
+                        className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!canEdit}
+                      >
                         <Edit className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
                         <span className="text-yellow-600 dark:text-yellow-400">Editar</span>
                       </DropdownMenuItem>
@@ -100,7 +115,11 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                           customer.isActive 
                             ? 'text-orange-600 focus:text-orange-600 dark:text-orange-400 dark:focus:text-orange-400'
                             : 'text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
-                        }`}
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        disabled={
+                          (customer.isActive && !canDeactivate) || 
+                          (!customer.isActive && !canActivate)
+                        }
                       >
                         {customer.isActive 
                           ? <PowerOff className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
@@ -113,7 +132,8 @@ export function CustomersCards({ customers, onEdit, onToggleStatus, onDelete }: 
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         onClick={() => onDelete?.(customer)} 
-                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!canDelete}
                       >
                         <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
                         <span className="text-red-600 dark:text-red-400">Eliminar</span>

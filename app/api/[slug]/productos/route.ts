@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createProductSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -8,6 +8,8 @@ import { AppError } from '@/lib/errors/app-error'
 import { requireCSRF } from '@/lib/utils/csrf-protection'
 import { logBusinessOperation } from '@/lib/utils/logger'
 import { getRequestContext } from '@/lib/utils/request-context'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { prisma } from '@/lib/prisma'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(
@@ -25,21 +27,35 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
     const categoryId = searchParams.get('categoryId') || undefined
+    const queryBranchId = searchParams.get('branchId') || undefined
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Obtener usuario logueado para filtrar por sucursal
+    const currentUser = await getCurrentSasUser(request, slug)
+    
+    // Verificar si el usuario es administrador
+    const userRoleName = currentUser?.rol?.nombre?.toLowerCase() || ''
+    const isAdmin = userRoleName.includes('administrador') || userRoleName === 'admin'
+    
+    // Solo filtrar por sucursal si NO es administrador
+    const branchId = isAdmin
+      ? (queryBranchId && queryBranchId !== 'null' ? queryBranchId : undefined)
+      : (currentUser?.sucursalId || undefined)
 
     const skip = (page - 1) * pageSize
 
     const { products, total } = await SalesProductService.getAllProducts(
-      customer.id,
+      organizationId,
       skip,
       pageSize,
       search,
       status,
-      categoryId
+      categoryId,
+      branchId // Filtrar por sucursal solo si no es administrador
     )
 
     const duration = Date.now() - startTime
@@ -77,9 +93,9 @@ export async function POST(
 
     const { slug } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body
@@ -98,8 +114,46 @@ export async function POST(
 
     const validatedData = validation.data
 
-    const newProduct = await SalesProductService.createProduct(customer.id, {
-      categoryId: validatedData.categoryId || undefined,
+    // Obtener usuario logueado para asignar sucursal al producto
+    const currentUser = await getCurrentSasUser(request, slug)
+    if (!currentUser) {
+      throw AppError.unauthorized('Usuario no autenticado')
+    }
+    
+    // Verificar si el usuario es administrador
+    const userRoleName = currentUser.rol?.nombre?.toLowerCase() || ""
+    const isAdmin = userRoleName.includes("administrador") || userRoleName === "admin"
+    
+    // Si es administrador, puede usar el branchId del body, si no, usar el del usuario
+    let branchId: string | undefined
+    if (isAdmin && validatedData.branchId) {
+      // Verificar que la sucursal pertenece a la organización
+      const branch = await prisma.branch.findFirst({
+        where: {
+          id: validatedData.branchId,
+          organizationId: organizationId
+        }
+      })
+      if (!branch) {
+        throw AppError.badRequest('La sucursal seleccionada no pertenece a la organización')
+      }
+      branchId = validatedData.branchId
+    } else {
+      // Si no es admin o no se envió branchId, usar la sucursal del usuario
+      branchId = currentUser.sucursalId || undefined
+      if (!branchId) {
+        throw AppError.badRequest('El usuario debe tener una sucursal asignada para crear productos')
+      }
+    }
+
+    // Validar que categoryId esté presente
+    if (!validatedData.categoryId) {
+      throw AppError.badRequest('La categoría es requerida')
+    }
+
+    const newProduct = await SalesProductService.createProduct(organizationId, {
+      branchId, // Asignar sucursal del usuario logueado o seleccionada por admin
+      categoryId: validatedData.categoryId,
       name: validatedData.name,
       description: validatedData.description || undefined,
       brand: validatedData.brand || undefined,
@@ -116,7 +170,7 @@ export async function POST(
     // Log de operación de negocio
     logBusinessOperation('CREATE', 'Product', newProduct.id, undefined, {
       correlationId: requestContext.correlationId,
-      customerId: customer.id,
+      organizationId: organizationId,
       productName: newProduct.name,
       slug,
     })

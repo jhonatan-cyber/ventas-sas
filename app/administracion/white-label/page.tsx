@@ -19,8 +19,8 @@ export default async function WhiteLabelPage() {
     redirect('/administracion/login')
   }
 
-  const user = await AuthService.getProfileById(payload.userId)
-  if (!user || !user.isSuperAdmin) {
+  const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+  if (!hasAccess) {
     redirect('/administracion/login')
   }
 

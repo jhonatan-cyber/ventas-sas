@@ -26,14 +26,15 @@ import {
   Users,
   Package,
   Building2,
-  CheckCircle,
   Settings,
 } from "lucide-react";
 import { SerializedSubscriptionPlanWithStats } from "./types";
+import { useHasPermission } from "@/hooks/admin/use-user-permissions";
 
 interface PlansTableProps {
   plans: SerializedSubscriptionPlanWithStats[];
   onEdit?: (plan: SerializedSubscriptionPlanWithStats) => void;
+  onViewDetails?: (plan: SerializedSubscriptionPlanWithStats) => void;
   onToggleStatus?: (planId: string, currentStatus: boolean) => void;
   onDelete?: (planId: string, planName: string) => void;
 }
@@ -41,43 +42,34 @@ interface PlansTableProps {
 export function PlansTable({
   plans,
   onEdit,
+  onViewDetails,
   onToggleStatus,
   onDelete,
 }: PlansTableProps) {
+  const canViewDetails = useHasPermission("planes_ver_detalles");
+  const canEdit = useHasPermission("planes_editar");
+  const canDelete = useHasPermission("planes_eliminar");
+  const canActivate = useHasPermission("planes_activar");
+  const canDeactivate = useHasPermission("planes_desactivar");
   return (
     <TooltipProvider>
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                Plan
-              </div>
+              <div className="flex items-center gap-2">Plan</div>
             </TableHead>
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                Precio
-              </div>
+              <div className="flex items-center gap-2">Precio</div>
             </TableHead>
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                Organizaciones
-              </div>
+              <div className="flex items-center gap-2">Organizaciones</div>
             </TableHead>
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-              <div className="flex items-center gap-2">
-                <Settings className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                Límites
-              </div>
+              <div className="flex items-center gap-2">Límites</div>
             </TableHead>
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                Estado
-              </div>
+              <div className="flex items-center gap-2">Estado</div>
             </TableHead>
             <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">
               Acciones
@@ -117,25 +109,23 @@ export function PlansTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-2">
-                    {plan.hasMonthly && plan.priceMonthly && (
+                    {plan.hasMonthly && (
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {plan.priceMonthly.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          /mes
+                          {plan.priceMonthly && plan.priceMonthly > 0
+                            ? `${plan.priceMonthly.toLocaleString()} /mes`
+                            : "Gratis"}
                         </span>
                       </div>
                     )}
-                    {plan.hasYearly && plan.priceYearly && (
+                    {plan.hasYearly && (
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {plan.priceYearly.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          /año
+                          {plan.priceYearly && plan.priceYearly > 0
+                            ? `${plan.priceYearly.toLocaleString()} /año`
+                            : "Gratis"}
                         </span>
                       </div>
                     )}
@@ -177,7 +167,6 @@ export function PlansTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                     <Badge
                       className={
                         plan.isActive
@@ -193,72 +182,105 @@ export function PlansTable({
                   <div className="flex items-center justify-end gap-1">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                        >
-                          <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Ver detalles</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-                          onClick={() => onEdit?.(plan)}
-                        >
-                          <Edit className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Editar plan</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`h-8 w-8 p-0 ${
-                            plan.isActive
-                              ? "hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                              : "hover:bg-green-50 dark:hover:bg-green-900/20"
-                          }`}
-                          onClick={() =>
-                            onToggleStatus?.(plan.id, plan.isActive ?? false)
-                          }
-                        >
-                          {plan.isActive ? (
-                            <PowerOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                          ) : (
-                            <Power className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          )}
-                        </Button>
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={() => onViewDetails?.(plan)}
+                            disabled={!canViewDetails}
+                          >
+                            <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </Button>
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {plan.isActive ? "Desactivar plan" : "Activar plan"}
+                        {canViewDetails
+                          ? "Ver detalles"
+                          : "No tiene permiso para ver detalles"}
                       </TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          disabled={plan._count.organizations > 0}
-                          onClick={() => onDelete?.(plan.id, plan.name)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-                        </Button>
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={() => onEdit?.(plan)}
+                            disabled={!canEdit}
+                          >
+                            <Edit className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {canEdit
+                          ? "Editar plan"
+                          : "No tiene permiso para editar planes"}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-8 w-8 p-0 ${
+                              plan.isActive
+                                ? "hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                : "hover:bg-green-50 dark:hover:bg-green-900/20"
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            onClick={() =>
+                              onToggleStatus?.(plan.id, plan.isActive ?? false)
+                            }
+                            disabled={
+                              (plan.isActive && !canDeactivate) ||
+                              (!plan.isActive && !canActivate)
+                            }
+                          >
+                            {plan.isActive ? (
+                              <PowerOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                            ) : (
+                              <Power className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            )}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {plan.isActive
+                          ? canDeactivate
+                            ? "Desactivar plan"
+                            : "No tiene permiso para desactivar planes"
+                          : canActivate
+                          ? "Activar plan"
+                          : "No tiene permiso para activar planes"}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={
+                              plan._count.organizations > 0 || !canDelete
+                            }
+                            onClick={() => onDelete?.(plan.id, plan.name)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          </Button>
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent>
                         {plan._count.organizations > 0
                           ? "No se puede eliminar: tiene organizaciones asignadas"
+                          : !canDelete
+                          ? "No tiene permiso para eliminar planes"
                           : "Eliminar plan"}
                       </TooltipContent>
                     </Tooltip>

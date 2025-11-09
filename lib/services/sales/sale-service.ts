@@ -247,11 +247,11 @@ export class SaleService {
     })
 
     return prisma.$transaction(async (tx) => {
-      const productMap = new Map<string, { id: string; stock: number; minStock: number | null; name: string; organizationId: string | null; customerId: string | null }>()
+      const productMap = new Map<string, { id: string; stock: number; minStock: number | null; name: string; organizationId: string | null }>()
       const productIds = normalizedItems.map((item) => item.productId)
       const products = await tx.salesProduct.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, stock: true, minStock: true, name: true, organizationId: true, customerId: true },
+        select: { id: true, stock: true, minStock: true, name: true, organizationId: true },
       })
 
       products.forEach((product) => productMap.set(product.id, product))
@@ -349,7 +349,7 @@ export class SaleService {
               product.name,
               newStock,
               minStock,
-              product.customerId || undefined
+              undefined
             ).catch((error) => {
               logDatabase('NOTIFICATION_ERROR', 'notifications', undefined, error as Error, {
                 productId: product.id,

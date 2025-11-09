@@ -12,11 +12,13 @@ import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 interface RolesContainerProps {
   roles: RoleWithStats[]
   onEdit?: (role: RoleWithStats) => void
-  onToggleStatus?: (roleId: string, currentStatus: boolean) => void
+  onView?: (role: RoleWithStats) => void
+  onToggleStatus?: (roleId: string, roleName: string, currentStatus: boolean, userCount: number) => void
   onDelete?: (roleId: string, roleName: string) => void
+  onManagePermissions?: (role: RoleWithStats) => void
 }
 
-export function RolesContainer({ roles, onEdit, onToggleStatus, onDelete }: RolesContainerProps) {
+export function RolesContainer({ roles, onEdit, onView, onToggleStatus, onDelete, onManagePermissions }: RolesContainerProps) {
   const [pageSize, setPageSize] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -93,11 +95,11 @@ export function RolesContainer({ roles, onEdit, onToggleStatus, onDelete }: Role
       {roles.length > 0 ? (
         <>
           {/* Cards de roles (solo móvil) */}
-          <RolesCards roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+          <RolesCards roles={currentRoles} onEdit={onEdit} onView={onView} onToggleStatus={onToggleStatus} onDelete={onDelete} onManagePermissions={onManagePermissions} />
 
           {/* Tabla de roles (solo desktop) */}
           <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <RolesTable roles={currentRoles} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+            <RolesTable roles={currentRoles} onEdit={onEdit} onView={onView} onToggleStatus={onToggleStatus} onDelete={onDelete} onManagePermissions={onManagePermissions} />
           </div>
 
           {/* Paginación */}

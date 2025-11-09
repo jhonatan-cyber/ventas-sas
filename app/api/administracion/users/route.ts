@@ -7,10 +7,22 @@ import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener todos los usuarios
 export async function GET(request: NextRequest) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para listar usuarios
+    const canList = await PermissionCheckService.hasActivePermission(currentUser.id, 'usuarios_listar')
+    if (!canList) {
+      return NextResponse.json({ error: 'No tiene permiso para listar usuarios' }, { status: 403 })
+    }
+
     const users = await UserAdminService.getAllUsers()
     return NextResponse.json(users)
   } catch (error) {
@@ -21,6 +33,21 @@ export async function GET(request: NextRequest) {
 // POST - Crear nuevo usuario
 export async function POST(request: NextRequest) {
   try {
+    // Obtener usuario actual para verificar permisos
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      throw AppError.unauthorized('No autorizado')
+    }
+
+    // Verificar permiso de crear usuarios
+    const hasPermission = await PermissionCheckService.hasActivePermission(
+      currentUser.id,
+      'usuarios_crear'
+    )
+    if (!hasPermission) {
+      throw AppError.forbidden('No tienes permiso para crear usuarios')
+    }
+
     // Parsear y validar body
     let body: any
     try {
@@ -37,9 +64,6 @@ export async function POST(request: NextRequest) {
 
     const validatedData = validation.data
 
-    // Obtener usuario actual para auditoría
-    const currentUser = await getCurrentAdminUser(request)
-
     const hashedPassword = await PasswordService.hashPassword(validatedData.password)
 
     const newUser = await UserAdminService.createUser({
@@ -51,7 +75,8 @@ export async function POST(request: NextRequest) {
       phone: validatedData.phone || undefined,
       role: validatedData.role,
       roleId: undefined, // TODO: agregar roleId al schema si es necesario
-      isSuperAdmin: validatedData.isSuperAdmin || false
+      isSuperAdmin: validatedData.isSuperAdmin || false,
+      photo: validatedData.photo || undefined
     })
 
     // Registrar creación de usuario en auditoría

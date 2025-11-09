@@ -14,16 +14,16 @@ export interface UpdateCategoryData {
 }
 
 export class CategoryService {
-  // Obtener todas las categorías de un cliente
+  // Obtener todas las categorías de una organización
   static async getAllCategories(
-    customerId: string,
+    organizationId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
     status?: string
   ) {
     const where: any = {
-      customerId,
+      organizationId,
       deletedAt: null // Excluir soft deleted por defecto
     }
 
@@ -76,20 +76,27 @@ export class CategoryService {
 
   // Crear nueva categoría
   static async createCategory(
-    customerId: string,
+    organizationId: string,
     data: CreateCategoryData
-  ): Promise<Category> {
+  ): Promise<Category & { _count?: { products: number } }> {
     const category = await prisma.category.create({
       data: {
-        customerId,
+        organizationId,
         name: data.name,
         description: data.description,
         isActive: true
+      },
+      include: {
+        _count: {
+          select: {
+            products: true
+          }
+        }
       }
     })
 
-    // Invalidar caché de categorías de este cliente
-    invalidateCachePattern(`category:${customerId}*`)
+    // Invalidar caché de categorías de esta organización
+    invalidateCachePattern(`category:${organizationId}*`)
 
     return category
   }
@@ -98,18 +105,25 @@ export class CategoryService {
   static async updateCategory(
     id: string,
     data: UpdateCategoryData
-  ): Promise<Category> {
-    // Obtener categoría para saber el customerId
+  ): Promise<Category & { _count?: { products: number } }> {
+    // Obtener categoría para saber el organizationId
     const category = await this.getCategoryById(id)
     
     const updated = await prisma.category.update({
       where: { id },
-      data
+      data,
+      include: {
+        _count: {
+          select: {
+            products: true
+          }
+        }
+      }
     })
 
     // Invalidar caché de categorías si existe
     if (category) {
-      invalidateCachePattern(`category:${category.customerId}*`)
+      invalidateCachePattern(`category:${category.organizationId}*`)
     }
 
     return updated
@@ -117,7 +131,7 @@ export class CategoryService {
 
   // Eliminar categoría (soft delete)
   static async deleteCategory(id: string): Promise<void> {
-    // Obtener categoría para saber el customerId antes de eliminar
+    // Obtener categoría para saber el organizationId antes de eliminar
     const category = await this.getCategoryById(id)
     
     // Soft delete en lugar de eliminación física
@@ -130,7 +144,7 @@ export class CategoryService {
 
     // Invalidar caché de categorías si existe
     if (category) {
-      invalidateCachePattern(`category:${category.customerId}*`)
+      invalidateCachePattern(`category:${category.organizationId}*`)
     }
   }
 
@@ -154,21 +168,23 @@ export class CategoryService {
 
     // Invalidar caché
     if (category) {
-      invalidateCachePattern(`category:${category.customerId}*`)
+      invalidateCachePattern(`category:${category.organizationId}*`)
     }
 
     return restored
   }
 
   // Obtener categorías activas (para selects) - CON CACHÉ
-  static async getActiveCategories(customerId: string) {
-    const cacheKey = CacheKeys.category(customerId, 'active')
+  // Siempre retorna todas las categorías activas de la organización
+  // El filtrado por sucursal se aplica solo a los productos, no a las categorías
+  static async getActiveCategories(organizationId: string, branchId?: string) {
+    const cacheKey = CacheKeys.category(organizationId, 'active')
     
     return getCachedData(
       cacheKey,
       () => prisma.category.findMany({
         where: {
-          customerId,
+          organizationId,
           isActive: true,
           deletedAt: null // Excluir soft deleted
         },

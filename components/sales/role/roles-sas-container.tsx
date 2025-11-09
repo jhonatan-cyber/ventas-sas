@@ -10,12 +10,13 @@ import { RoleSas } from "@prisma/client"
 
 interface RolesSasContainerProps {
   roles: (RoleSas & {
-    customer: { razonSocial: string | null; nombre: string | null; apellido: string | null } | null
+    organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
     sucursal: { name: string } | null
+    _count?: { usuariosSas: number }
   })[]
-  onEdit?: (role: RoleSas & { customer: any; sucursal: any }) => void
-  onToggleStatus?: (role: RoleSas & { customer: any; sucursal: any }) => void
-  onDelete?: (role: RoleSas & { customer: any; sucursal: any }) => void
+  onEdit?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onDelete?: (role: RoleSas & { organization?: any; sucursal: any }) => void
 }
 
 export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete }: RolesSasContainerProps) {
@@ -67,44 +68,31 @@ export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete }: R
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Estadísticas */}
       <RolesSasStats roles={roles} />
 
-      {/* Filtros */}
-      <RolesSasFilters 
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de roles */}
+      {/* Filtros en Card */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Roles ({filteredRoles.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredRoles.length === roles.length 
-                  ? "Lista completa de roles disponibles"
-                  : `Mostrando ${filteredRoles.length} de ${roles.length} roles`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <RolesSasTable 
-              roles={currentRoles} 
-              onEditClick={onEdit} 
-              onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
-            />
-          </div>
+        <CardContent className="pt-6">
+          <RolesSasFilters 
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
+            statusValue={statusFilter}
+          />
         </CardContent>
       </Card>
+
+      {/* Tabla de roles sin Card */}
+      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+        <RolesSasTable 
+          roles={currentRoles} 
+          onEditClick={onEdit} 
+          onToggleStatus={onToggleStatus} 
+          onDeleteClick={onDelete} 
+        />
+      </div>
 
       {/* Paginación */}
       <div className="flex justify-center">

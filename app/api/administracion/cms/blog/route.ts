@@ -6,6 +6,7 @@ import { CmsService } from '@/lib/services/admin/cms-service'
 import { z } from 'zod'
 
 const createPostSchema = z.object({
+  organizationId: z.string().uuid().optional(),
   slug: z.string().min(1),
   title: z.string().min(1),
   content: z.string().min(1),
@@ -38,13 +39,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    const organizationId = searchParams.get('organizationId') || undefined
     const category = searchParams.get('category') || undefined
     const isPublishedParam = searchParams.get('isPublished')
     const isPublished = isPublishedParam ? isPublishedParam === 'true' : undefined
     const limitParam = searchParams.get('limit')
     const limit = limitParam ? parseInt(limitParam, 10) : undefined
 
-    const { posts, total } = await CmsService.getBlogPosts({ category, isPublished, limit })
+    const { posts, total } = await CmsService.getBlogPosts({ organizationId, category, isPublished, limit })
 
     return NextResponse.json({ success: true, posts, total })
   } catch (error: any) {

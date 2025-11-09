@@ -14,85 +14,115 @@ export async function getOrganizationIdBySlug(slug: string): Promise<string | nu
 
 /**
  * Obtiene una organización completa a partir de su slug
+ * Solo retorna la organización si tiene suscripción activa o en trial
+ * y la relación con el cliente está activa
+ * 
+ * @param slug - Slug de la organización
+ * @param options - Opciones adicionales
+ * @param options.includeExpired - Si es true, incluye organizaciones con suscripción vencida
  */
-export async function getOrganizationBySlug(slug: string) {
-  return prisma.organization.findUnique({
-    where: { slug }
-  })
-}
-
-/**
- * Obtiene un cliente por su slug (razón social normalizada)
- * Retorna null si no existe o si el cliente está inactivo o eliminado
- */
-export async function getCustomerBySlug(slug: string) {
-  const razonNormalized = slug.replace(/-/g, ' ')
-  return prisma.customer.findFirst({
-    where: {
-      isActive: true,
-      deletedAt: null, // Excluir soft deleted
-      OR: [
-        { slug },
-        { razonSocial: { equals: razonNormalized, mode: 'insensitive' } },
-      ],
-      AND: [
-        {
-          OR: [
-            // Suscripción activa o en trial a nivel de cliente
-            {
-              subscriptions: {
-                some: {
-                  status: { in: ['active', 'trial'] },
-                  OR: [
-                    { endDate: null },
-                    { endDate: { gt: new Date() } },
-                  ],
-                },
-              },
-            },
-            // O suscripción activa o en trial a nivel de organización
-            {
-              organization: {
-                subscriptions: {
-                  some: {
-                    status: { in: ['active', 'trial'] },
-                    OR: [
-                      { endDate: null },
-                      { endDate: { gt: new Date() } },
-                    ],
-                  },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
+export async function getOrganizationBySlug(
+  slug: string,
+  options?: { includeExpired?: boolean }
+) {
+  const organization = await prisma.organization.findUnique({
+    where: { slug },
     include: {
-      organization: true,
-    },
+      customerOrganizations: {
+        where: {
+          isActive: true
+        },
+        include: {
+          customer: true
+        }
+      }
+    }
   })
-}
 
-/**
- * Obtiene el organizationId a partir del slug del cliente
- * Si el cliente tiene organización asociada, retorna ese ID
- * Si no tiene organización, retorna null
- */
-export async function getOrganizationIdByCustomerSlug(slug: string): Promise<string | null> {
-  const customer = await getCustomerBySlug(slug)
-  
-  if (!customer) {
+  if (!organization) {
     return null
   }
-  
-  // Si el cliente tiene organización asociada, usarla
-  if (customer.organizationId) {
-    return customer.organizationId
+
+  // Validar que tenga al menos una relación activa con un cliente activo
+  const activeCustomerOrgs = organization.customerOrganizations.filter(
+    co => co.isActive && co.customer && co.customer.isActive && !co.customer.deletedAt
+  )
+
+  if (activeCustomerOrgs.length === 0) {
+    return null
   }
+
+  // Si includeExpired es true, retornar la organización sin validar suscripción
+  if (options?.includeExpired) {
+    return organization
+  }
+
+  // Validar que existe al menos una suscripción activa en la tabla Subscription
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      organizationId: organization.id,
+      status: {
+        in: ['active', 'trial']
+      },
+      OR: [
+        { endDate: null },
+        { endDate: { gt: new Date() } }
+      ]
+    }
+  })
+
+  // Si no tiene suscripción activa, retornar null
+  if (!activeSubscription) {
+    return null
+  }
+
+  return organization
+}
+
+/**
+ * Obtiene un cliente por el slug de la organización
+ * El slug ahora es el de la organización, no del cliente
+ * Retorna null si no existe, si la organización está inactiva o no tiene suscripción activa
+ */
+export async function getCustomerBySlug(slug: string) {
+  // Buscar organización por slug
+  const organization = await getOrganizationBySlug(slug)
   
-  // Si no tiene organización, retornar null (o podrías crear una por defecto)
-  return null
+  if (!organization) {
+    return null
+  }
+
+  // Obtener el cliente dueño (owner) de la organización
+  const ownerCustomer = await prisma.customer.findFirst({
+    where: {
+      id: organization.ownerId,
+      isActive: true,
+      deletedAt: null
+    },
+    include: {
+      organizations: {
+        where: {
+          organizationId: organization.id,
+          isActive: true
+        }
+      }
+    }
+  })
+
+  if (!ownerCustomer) {
+    return null
+  }
+
+  return ownerCustomer
+}
+
+/**
+ * Obtiene el organizationId a partir del slug de la organización
+ * El slug ahora es el de la organización directamente
+ */
+export async function getOrganizationIdByCustomerSlug(slug: string): Promise<string | null> {
+  const organization = await getOrganizationBySlug(slug)
+  return organization?.id || null
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import { Moon, Sun, Monitor, HelpCircle, Search, LogOut, User, Menu } from "lucide-react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
@@ -10,13 +10,50 @@ import { NotificationsDropdown } from "@/components/common/notifications-dropdow
 import { useSidebar } from "./sidebar-context"
 import { GlobalSearch } from "@/components/admin/global-search"
 
+interface AdminUser {
+  id: string
+  email: string
+  fullName: string
+  role: string
+  isSuperAdmin: boolean
+  isActive: boolean
+  photo?: string | null
+}
+
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<AdminUser | null>(null)
   const { toggle } = useSidebar()
 
   useEffect(() => {
     setMounted(true)
+    
+    const loadUser = async () => {
+      try {
+        const res = await fetch('/api/administracion/me', {
+          credentials: 'include'
+        })
+        const data = await res.json()
+        if (data.id) {
+          setUser(data)
+        }
+      } catch {
+        // Si falla, no mostrar error, solo dejar valores por defecto
+      }
+    }
+    
+    loadUser()
+    
+    // Recargar usuario cuando se actualice el perfil
+    const handleProfileUpdate = () => {
+      loadUser()
+    }
+    window.addEventListener('profile-updated', handleProfileUpdate)
+    
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+    }
   }, [])
 
   if (!mounted) {
@@ -75,7 +112,10 @@ export function AdminHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                 <Avatar className="w-7 h-7">
-                  <AvatarFallback>SA</AvatarFallback>
+                  <AvatarImage src={user?.photo || undefined} alt={user?.fullName || user?.email || 'Usuario'} />
+                  <AvatarFallback>
+                    {(user?.fullName || user?.email || 'U').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -92,6 +132,11 @@ export function AdminHeader() {
                   onClick={async () => {
                     try {
                       await fetch('/api/administracion/logout', { method: 'POST', credentials: 'include' })
+                      // Limpiar caché de permisos
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('admin-permissions-cache')
+                        sessionStorage.removeItem('admin-permissions-cache-timestamp')
+                      }
                     } catch {}
                     window.location.href = '/administracion/login'
                   }}
@@ -189,11 +234,18 @@ export function AdminHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-3 outline-none">
               <Avatar className="w-8 h-8">
-                <AvatarFallback>SA</AvatarFallback>
+                <AvatarImage src={user?.photo || undefined} alt={user?.fullName || user?.email || 'Usuario'} />
+                <AvatarFallback>
+                  {(user?.fullName || user?.email || 'U').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Super Administrador</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">super_administrador</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user?.fullName || user?.email || 'Usuario'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user?.isSuperAdmin ? 'Super Administrador' : user?.role || 'Usuario'}
+                </p>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

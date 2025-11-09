@@ -5,6 +5,22 @@ import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { SasJWTService } from '@/lib/auth/sas-jwt'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 
+function decodeSasSession(raw?: string | null) {
+  if (!raw) return null
+  try {
+    let parsed: any = null
+    try {
+      const decoded = Buffer.from(raw, 'base64').toString('utf8')
+      parsed = JSON.parse(decoded)
+    } catch (base64Error) {
+      parsed = JSON.parse(raw)
+    }
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * GET /api/notifications
  * Obtener notificaciones del usuario actual
@@ -36,17 +52,19 @@ export async function GET(request: NextRequest) {
 
       filters.userId = payload.userId
     } else if (system === 'sas' && slug) {
-      const sessionCookie = cookieStore.get('sas-session')?.value
-      if (!sessionCookie) {
+      const session = decodeSasSession(cookieStore.get('sas-session')?.value)
+      if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      try {
-        const session = JSON.parse(sessionCookie)
-        filters.usuarioSasId = session.usuarioId
-        filters.organizationId = session.organizationId
-        filters.customerId = session.customerId
-      } catch {
+      if (session.organizationSlug && session.organizationSlug !== slug) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      filters.usuarioSasId = session.userId || session.usuarioId
+      filters.organizationId = session.organizationId
+
+      if (!filters.usuarioSasId || !filters.organizationId) {
         return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
       }
     } else {
@@ -106,17 +124,19 @@ export async function PATCH(
 
         filters.userId = payload.userId
       } else if (system === 'sas' && slug) {
-        const sessionCookie = cookieStore.get('sas-session')?.value
-        if (!sessionCookie) {
+        const session = decodeSasSession(cookieStore.get('sas-session')?.value)
+        if (!session) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        try {
-          const session = JSON.parse(sessionCookie)
-          filters.usuarioSasId = session.usuarioId
-          filters.organizationId = session.organizationId
-          filters.customerId = session.customerId
-        } catch {
+        if (session.organizationSlug && session.organizationSlug !== slug) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        filters.usuarioSasId = session.userId || session.usuarioId
+        filters.organizationId = session.organizationId
+
+        if (!filters.usuarioSasId || !filters.organizationId) {
           return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
         }
       }

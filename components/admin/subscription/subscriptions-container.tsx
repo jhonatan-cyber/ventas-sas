@@ -38,7 +38,7 @@ interface SubscriptionsContainerProps {
   subscriptions: SubscriptionWithDetails[]
   onEdit?: (subscription: SubscriptionWithDetails) => void
   onToggleStatus?: (subscriptionId: string, currentStatus: string) => void
-  onDelete?: (subscriptionId: string, customerName: string) => void
+  onDelete?: (subscriptionId: string, organizationName: string) => void
 }
 
 export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, onDelete }: SubscriptionsContainerProps) {
@@ -50,12 +50,15 @@ export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, 
   const filteredSubscriptions = subscriptions.filter(subscription => {
     if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase()
+      const customer = subscription.customer
       const matchesSearch = 
-        (subscription.customer.razonSocial?.toLowerCase().includes(searchLower)) ||
-        (subscription.customer.nombre?.toLowerCase().includes(searchLower)) ||
-        (subscription.customer.apellido?.toLowerCase().includes(searchLower)) ||
-        (subscription.customer.email?.toLowerCase().includes(searchLower)) ||
-        (subscription.customer.nit?.toLowerCase().includes(searchLower)) ||
+        (customer?.razonSocial?.toLowerCase().includes(searchLower)) ||
+        (customer?.nombre?.toLowerCase().includes(searchLower)) ||
+        (customer?.apellido?.toLowerCase().includes(searchLower)) ||
+        (customer?.email?.toLowerCase().includes(searchLower)) ||
+        (customer?.nit?.toLowerCase().includes(searchLower)) ||
+        subscription.organization?.name?.toLowerCase().includes(searchLower) ||
+        subscription.organization?.razonSocial?.toLowerCase().includes(searchLower) ||
         subscription.plan.name.toLowerCase().includes(searchLower)
       
       if (!matchesSearch) return false
@@ -114,18 +117,23 @@ export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, 
       />
       {/* Cards de suscripciones (móvil) */}
       <SubscriptionsCards subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-      {/* Tabla de suscripciones (desktop) */}
-      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-        <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
-      </div>
-      <SubscriptionsPagination
-        totalItems={filteredSubscriptions.length}
-        pageSize={pageSize}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-      />
+      {/* Tabla de suscripciones (desktop) - Solo mostrar si hay suscripciones */}
+      {subscriptions.length > 0 && (
+        <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+          <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+        </div>
+      )}
+      {/* Paginación - Solo mostrar si hay suscripciones */}
+      {subscriptions.length > 0 && (
+        <SubscriptionsPagination
+          totalItems={filteredSubscriptions.length}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+        />
+      )}
     </div>
   )
 }

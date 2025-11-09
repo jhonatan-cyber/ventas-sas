@@ -29,7 +29,7 @@ export function SalesCustomersContainer({ customers, isLoading = false, onEdit, 
       const searchLower = searchTerm.toLowerCase()
       const matchesSearch = 
         (customer.name ? customer.name.toLowerCase().includes(searchLower) : false) ||
-        ((customer as any).lastName ? (customer as any).lastName.toLowerCase().includes(searchLower) : false) ||
+        (customer.lastName ? customer.lastName.toLowerCase().includes(searchLower) : false) ||
         customer.email?.toLowerCase().includes(searchLower) ||
         customer.phone?.toLowerCase().includes(searchLower) ||
         customer.ruc?.toLowerCase().includes(searchLower)
@@ -67,49 +67,33 @@ export function SalesCustomersContainer({ customers, isLoading = false, onEdit, 
     setCurrentPage(page)
   }
 
-  const cardTitle = `Clientes (${filteredCustomers.length})`
-  const cardDescription = filteredCustomers.length === customers.length
-    ? "Lista completa de clientes disponibles"
-    : `Mostrando ${filteredCustomers.length} de ${customers.length} clientes`
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Estadísticas */}
       <SalesCustomersStats customers={customers} />
 
-      {/* Filtros */}
-      <SalesCustomersFilters 
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de clientes */}
+      {/* Filtros en Card */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                {cardTitle}
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {cardDescription}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <SalesCustomersTable 
-              customers={currentCustomers} 
-              isLoading={isLoading}
-              onEditClick={onEdit} 
-              onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
-            />
-          </div>
+        <CardContent className="pt-6">
+          <SalesCustomersFilters 
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
+            statusValue={statusFilter}
+          />
         </CardContent>
       </Card>
+
+      {/* Tabla de clientes sin Card */}
+      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+        <SalesCustomersTable 
+          customers={currentCustomers} 
+          isLoading={isLoading}
+          onEditClick={onEdit} 
+          onToggleStatus={onToggleStatus} 
+          onDeleteClick={onDelete} 
+        />
+      </div>
 
       {/* Paginación */}
       <div className="flex justify-center">

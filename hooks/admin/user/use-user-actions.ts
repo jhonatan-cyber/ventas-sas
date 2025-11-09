@@ -8,6 +8,7 @@ export function useUserActions() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [openDialog, setOpenDialog] = useState(false)
+  const [detailDialog, setDetailDialog] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(undefined)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, userId: '', userName: '' })
 
@@ -19,6 +20,11 @@ export function useUserActions() {
   const handleEdit = (user: any) => {
     setSelectedUser(user)
     setOpenDialog(true)
+  }
+
+  const handleView = (user: any) => {
+    setSelectedUser(user)
+    setDetailDialog(true)
   }
 
   const handleDeleteClick = (userId: string, userName: string) => {
@@ -44,6 +50,7 @@ export function useUserActions() {
         roleId: data.roleId || null,
         isSuperAdmin: data.isSuperAdmin || false,
         isActive: data.isActive !== undefined ? data.isActive : true, // Crear como activo por defecto
+        photo: data.photo || null,
       }
 
       // Solo incluir password si estamos creando un nuevo usuario o si se especificó uno
@@ -67,8 +74,31 @@ export function useUserActions() {
         throw new Error(errorData.error || 'Error al guardar el usuario')
       }
 
+      const updatedUser = await response.json()
+      
       setOpenDialog(false)
       setSelectedUser(undefined)
+      
+      // Disparar evento para recargar usuarios
+      window.dispatchEvent(new Event('user-updated'))
+      
+      // Si se actualizó el usuario logueado, recargar su información en el header
+      if (selectedUser) {
+        try {
+          const currentUserResponse = await fetch('/api/administracion/me', {
+            credentials: 'include'
+          })
+          if (currentUserResponse.ok) {
+            const currentUser = await currentUserResponse.json()
+            // Si el usuario actualizado es el usuario logueado, actualizar el header
+            if (currentUser.id === updatedUser.id) {
+              window.dispatchEvent(new Event('profile-updated'))
+            }
+          }
+        } catch (error) {
+          console.error('Error verificando usuario actual:', error)
+        }
+      }
       
       // Mostrar toast de éxito
       const userName = data.fullName || data.email || 'Usuario'
@@ -166,9 +196,12 @@ export function useUserActions() {
   return {
     openDialog,
     setOpenDialog,
+    detailDialog,
+    setDetailDialog,
     selectedUser,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,

@@ -16,9 +16,9 @@ export interface UpdateRoleSasData {
 }
 
 export class RoleSasService {
-  // Obtener todos los roles de un cliente
+  // Obtener todos los roles de una organización
   static async getAllRoles(
-    customerId: string,
+    organizationId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
@@ -27,7 +27,7 @@ export class RoleSasService {
     includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId,
+      organizationId,
       ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
@@ -54,11 +54,12 @@ export class RoleSasService {
         skip,
         take,
         include: {
-          customer: {
+          organization: {
             select: {
+              id: true,
               razonSocial: true,
-              nombre: true,
-              apellido: true
+              name: true,
+              slug: true
             }
           },
           sucursal: {
@@ -81,7 +82,7 @@ export class RoleSasService {
     const role = await prisma.roleSas.findUnique({
       where: { id },
       include: {
-        customer: true,
+        organization: true,
         sucursal: true
       }
     })
@@ -96,16 +97,36 @@ export class RoleSasService {
 
   // Crear nuevo rol
   static async createRole(
-    customerId: string,
+    organizationId: string,
     data: CreateRoleSasData
-  ): Promise<RoleSas> {
+  ) {
     return prisma.roleSas.create({
       data: {
-        customerId,
+        organizationId,
         nombre: data.nombre,
         descripcion: data.descripcion,
         sucursalId: data.sucursalId,
         isActive: true
+      },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            razonSocial: true,
+            name: true,
+            slug: true
+          }
+        },
+        sucursal: {
+          select: {
+            name: true
+          }
+        },
+        _count: {
+          select: {
+            usuariosSas: true
+          }
+        }
       }
     })
   }
@@ -114,10 +135,30 @@ export class RoleSasService {
   static async updateRole(
     id: string,
     data: UpdateRoleSasData
-  ): Promise<RoleSas> {
+  ) {
     return prisma.roleSas.update({
       where: { id },
-      data
+      data,
+      include: {
+        organization: {
+          select: {
+            id: true,
+            razonSocial: true,
+            name: true,
+            slug: true
+          }
+        },
+        sucursal: {
+          select: {
+            name: true
+          }
+        },
+        _count: {
+          select: {
+            usuariosSas: true
+          }
+        }
+      }
     })
   }
 
@@ -146,7 +187,7 @@ export class RoleSasService {
         deletedAt: null
       },
       include: {
-        customer: true,
+        organization: true,
         sucursal: true
       }
     })
@@ -159,10 +200,10 @@ export class RoleSasService {
     return restored
   }
 
-  // Obtener roles activos por cliente (para selects)
-  static async getActiveRolesByCustomer(customerId: string, sucursalId?: string) {
+  // Obtener roles activos por organización (para selects)
+  static async getActiveRolesByOrganization(organizationId: string, sucursalId?: string) {
     const where: any = {
-      customerId,
+      organizationId,
       isActive: true
     }
 

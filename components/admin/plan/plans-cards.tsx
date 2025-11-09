@@ -6,15 +6,22 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Package, DollarSign, Building2, Settings, CheckCircle, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
 import { SerializedSubscriptionPlanWithStats } from "./types"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface PlansCardsProps {
   plans: SerializedSubscriptionPlanWithStats[]
   onEdit?: (plan: SerializedSubscriptionPlanWithStats) => void
+  onViewDetails?: (plan: SerializedSubscriptionPlanWithStats) => void
   onToggleStatus?: (planId: string, currentStatus: boolean) => void
   onDelete?: (planId: string, planName: string) => void
 }
 
-export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCardsProps) {
+export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDelete }: PlansCardsProps) {
+  const canViewDetails = useHasPermission("planes_ver_detalles")
+  const canEdit = useHasPermission("planes_editar")
+  const canDelete = useHasPermission("planes_eliminar")
+  const canActivate = useHasPermission("planes_activar")
+  const canDeactivate = useHasPermission("planes_desactivar")
   if (plans.length === 0) {
     return (
       <div className="text-center py-12">
@@ -67,12 +74,20 @@ export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCar
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => {}} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                    <DropdownMenuItem 
+                      onClick={() => onViewDetails?.(plan)} 
+                      className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canViewDetails}
+                    >
                       <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                       <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onEdit?.(plan)} className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400">
+                    <DropdownMenuItem 
+                      onClick={() => onEdit?.(plan)} 
+                      className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canEdit}
+                    >
                       <Edit className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
                       <span className="text-yellow-600 dark:text-yellow-400">Editar</span>
                     </DropdownMenuItem>
@@ -82,7 +97,11 @@ export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCar
                         plan.isActive
                           ? 'text-orange-600 focus:text-orange-600 dark:text-orange-400 dark:focus:text-orange-400'
                           : 'text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400'
-                      }`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      disabled={
+                        (plan.isActive && !canDeactivate) || 
+                        (!plan.isActive && !canActivate)
+                      }
                     >
                       {plan.isActive
                         ? <PowerOff className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
@@ -95,8 +114,8 @@ export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCar
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onDelete?.(plan.id, plan.name)}
-                      className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                      disabled={plan._count.organizations > 0}
+                      className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={plan._count.organizations > 0 || !canDelete}
                     >
                       <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
                       <span className="text-red-600 dark:text-red-400">Eliminar</span>
@@ -110,11 +129,13 @@ export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCar
                 {/* Columna izquierda */}
                 <div className="space-y-1.5">
                   {/* Precio Mensual */}
-                  {plan.hasMonthly && plan.priceMonthly && (
+                  {plan.hasMonthly && (
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 shrink-0" />
                       <span className="text-[10px] text-gray-700 dark:text-gray-300 font-semibold truncate">
-                        ${plan.priceMonthly.toLocaleString()}/mes
+                        {plan.priceMonthly && plan.priceMonthly > 0
+                          ? `$${plan.priceMonthly.toLocaleString()}/mes`
+                          : "Gratis"}
                       </span>
                     </div>
                   )}
@@ -134,11 +155,13 @@ export function PlansCards({ plans, onEdit, onToggleStatus, onDelete }: PlansCar
                 {/* Columna derecha */}
                 <div className="space-y-1.5">
                   {/* Precio Anual */}
-                  {plan.hasYearly && plan.priceYearly && (
+                  {plan.hasYearly && (
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span className="text-[10px] text-gray-700 dark:text-gray-300 font-semibold truncate">
-                        ${plan.priceYearly.toLocaleString()}/año
+                        {plan.priceYearly && plan.priceYearly > 0
+                          ? `$${plan.priceYearly.toLocaleString()}/año`
+                          : "Gratis"}
                       </span>
                     </div>
                   )}

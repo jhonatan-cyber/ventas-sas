@@ -42,14 +42,20 @@ export default async function DashboardPage({
 
   let session: any = null
   try {
-    const decoded = Buffer.from(sessionCookie.value, 'base64').toString('utf8')
-    session = JSON.parse(decoded)
+    const value = sessionCookie.value
+    let decoded: string
+    try {
+      decoded = Buffer.from(value, 'base64').toString('utf8')
+      session = JSON.parse(decoded)
+    } catch (base64Error) {
+      session = JSON.parse(value)
+    }
   } catch (e) {
     redirect(`/${slug}/login`)
   }
 
-  // Verificar que la sesión corresponde al cliente correcto
-  if (session.customerSlug !== slug) {
+  // Verificar que la sesión corresponde a la organización correcta
+  if (session.organizationSlug !== slug) {
     redirect(`/${slug}/login`)
   }
 

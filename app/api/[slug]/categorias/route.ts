@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createCategorySchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -19,15 +19,15 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const skip = (page - 1) * pageSize
 
     const { categories, total } = await CategoryService.getAllCategories(
-      customer.id,
+      organizationId,
       skip,
       pageSize,
       search,
@@ -54,9 +54,9 @@ export async function POST(
   try {
     const { slug } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body
@@ -75,7 +75,7 @@ export async function POST(
 
     const validatedData = validation.data
 
-    const newCategory = await CategoryService.createCategory(customer.id, {
+    const newCategory = await CategoryService.createCategory(organizationId, {
       name: validatedData.name,
       description: validatedData.description || undefined
     })

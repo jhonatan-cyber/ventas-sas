@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BranchService } from '@/lib/services/sales/branch-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createBranchSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -19,15 +19,15 @@ export async function GET(
     const search = searchParams.get('search') || undefined
     const status = searchParams.get('status') || undefined
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const skip = (page - 1) * pageSize
 
     const { branches, total } = await BranchService.getAllBranches(
-      customer.id,
+      organizationId,
       skip,
       pageSize,
       search,
@@ -54,9 +54,9 @@ export async function POST(
   try {
     const { slug } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body
@@ -75,7 +75,7 @@ export async function POST(
 
     const validatedData = validation.data
 
-    const branch = await BranchService.createBranch(customer.id, {
+    const branch = await BranchService.createBranch(organizationId, {
       name: validatedData.name,
       address: validatedData.address || undefined,
       phone: validatedData.phone || undefined,

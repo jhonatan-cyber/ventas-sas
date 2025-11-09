@@ -1,21 +1,46 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { SubscriptionsPageClient } from "@/components/admin/subscription/subscriptions-page-client"
 import { SubscriptionManagementService } from "@/lib/services/admin/subscription-management-service"
 import { AuthService } from "@/lib/services/auth-service"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
 import { prisma } from "@/lib/prisma"
 
 export default async function SubscriptionsPage() {
   try {
+    // Validación de sesión Admin en el servidor
+    const cookieStore = await cookies()
+    const token = cookieStore.get('admin-auth-token')?.value
+    
+    if (!token) {
+      redirect('/administracion/login')
+    }
+    
+    const payload = await AdminJWTService.verifyToken(token!)
+    if (!payload) {
+      redirect('/administracion/login')
+    }
+    
+    // Validar acceso de administrador
+    const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+    if (!hasAccess) {
+      redirect('/administracion/login?error=no_access')
+    }
+
+    // Verificar permiso específico para listar suscripciones
+    const canList = await PermissionCheckService.hasActivePermission(payload.userId, 'suscripciones_listar')
+    if (!canList) {
+      redirect('/administracion/dashboard?error=no_permission')
+    }
+
     // Verificar conexión a la base de datos
     await prisma.$connect()
-    
-    const userId = "super-admin-id"
-    const profile = await AuthService.getProfileById(userId)
 
     const result = await SubscriptionManagementService.getAllSubscriptions(0, 1000)
     const subscriptions = result.subscriptions.map(sub => ({
       ...sub,
-      customer: sub.customer,
+      customer: sub.organization?.customerOrganizations?.[0]?.customer || null,
       organization: sub.organization,
       plan: {
         ...sub.plan,
@@ -27,6 +52,10 @@ export default async function SubscriptionsPage() {
     return <SubscriptionsPageClient initialSubscriptions={subscriptions} />
   } catch (error) {
     console.error("Error loading subscriptions:", error)
+    // Si es error de autenticación, redirigir
+    if (error instanceof Error && error.message.includes('token')) {
+      redirect('/administracion/login')
+    }
     return (
       <div className="p-4">
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">

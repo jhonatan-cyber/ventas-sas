@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff, User } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard, Shield, Building2 } from "lucide-react"
 import { UsuarioSas } from "@prisma/client"
 
 interface UsuariosSasTableProps {
@@ -30,7 +30,7 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
 
   return (
     <TooltipProvider>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-1 sm:mx-0">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
@@ -66,7 +66,11 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                       <div className="flex items-center gap-3 py-2">
                         <Avatar className="w-10 h-10">
                           {usuario.foto ? (
-                            <AvatarImage src={usuario.foto} alt={fullName} />
+                            <AvatarImage 
+                              src={usuario.foto} 
+                              alt={fullName}
+                              key={usuario.foto} // Forzar actualización cuando cambia la foto
+                            />
                           ) : null}
                           <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold">
                             {initials || <User className="h-5 w-5" />}
@@ -77,33 +81,51 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                             {fullName}
                           </span>
                           {usuario.correo && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{usuario.correo}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                              <Mail className="h-3 w-3" />
+                              <span>{usuario.correo}</span>
+                            </div>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       {usuario.ci ? (
-                        <span className="text-sm text-gray-900 dark:text-white">{usuario.ci}</span>
+                        <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                          <CreditCard className="h-3 w-3 text-gray-400" />
+                          <span>{usuario.ci}</span>
+                        </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1">
                         {usuario.telefono && (
-                          <span className="text-sm text-gray-900 dark:text-white">{usuario.telefono}</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                            <Phone className="h-3 w-3 text-gray-400" />
+                            <span>{usuario.telefono}</span>
+                          </div>
                         )}
                         {usuario.direccion && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{usuario.direccion}</span>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <MapPin className="h-3 w-3" />
+                            <span>{usuario.direccion}</span>
+                          </div>
+                        )}
+                        {!usuario.telefono && !usuario.direccion && (
+                          <span className="text-sm text-gray-400">-</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       {usuario.rol ? (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                          {usuario.rol.nombre}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-3 w-3 text-blue-500 dark:text-blue-400" />
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                            {usuario.rol.nombre}
+                          </Badge>
+                        </div>
                       ) : (
                         <span className="text-sm text-gray-400">Sin rol</span>
                       )}
@@ -111,9 +133,12 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                     {showSucursalColumn && (
                       <TableCell>
                         {usuario.sucursal ? (
-                          <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
-                            {usuario.sucursal.name}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                            <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400">
+                              {usuario.sucursal.name}
+                            </Badge>
+                          </div>
                         ) : (
                           <span className="text-sm text-gray-400">Todas</span>
                         )}

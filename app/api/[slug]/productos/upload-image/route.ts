@@ -63,8 +63,8 @@ export async function POST(
         // Procesar y convertir a WebP
         const processedBuffer = await processImageToWebP(imageBuffer)
         
-        // Crear directorio si no existe
-        const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products')
+        // Crear directorio si no existe (con slug)
+        const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products', slug)
         if (!existsSync(uploadsDir)) {
           await mkdir(uploadsDir, { recursive: true })
         }
@@ -78,7 +78,7 @@ export async function POST(
         // Guardar imagen procesada
         await writeFile(filePath, processedBuffer)
         
-        const imageUrl = `/uploads/products/${fileName}`
+        const imageUrl = `/uploads/products/${slug}/${fileName}`
         return NextResponse.json({ imageUrl }, { status: 200 })
       }
 
@@ -116,8 +116,8 @@ export async function POST(
       )
     }
 
-    // Crear directorio si no existe
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products')
+    // Crear directorio si no existe (con slug)
+    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'products', slug)
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
@@ -138,8 +138,8 @@ export async function POST(
     // Guardar imagen procesada
     await writeFile(filePath, processedBuffer)
 
-    // Retornar URL pública de la imagen
-    const imageUrl = `/uploads/products/${fileName}`
+    // Retornar URL pública de la imagen (con slug)
+    const imageUrl = `/uploads/products/${slug}/${fileName}`
 
     return NextResponse.json({ imageUrl }, { status: 200 })
   } catch (error) {

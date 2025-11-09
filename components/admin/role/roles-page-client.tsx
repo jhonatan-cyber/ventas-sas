@@ -5,6 +5,9 @@ import { RoleHeader } from "@/components/admin/role/role-header";
 import { RolesContainer } from "./roles-container";
 import { RoleFormDialog } from "./role-form-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
+import { ToggleStatusDialog } from "./toggle-status-dialog";
+import { RoleDetailDialog } from "./role-detail-dialog";
+import { RolePermissionsDialog } from "./role-permissions-dialog";
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
 import { useRoleActions } from "@/hooks/admin/role/use-role-actions";
 
@@ -17,14 +20,24 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
     openDialog,
     setOpenDialog,
     selectedRole,
+    detailDialog,
+    setDetailDialog,
+    permissionsDialog,
+    setPermissionsDialog,
     handleNewClick,
     handleEdit,
+    handleView,
+    handleManagePermissions,
+    handleSavePermissions,
     handleSave,
     handleToggleStatus,
+    handleToggleStatusConfirm,
     handleDeleteClick,
     handleDeleteConfirm,
     deleteDialog,
     setDeleteDialog,
+    toggleStatusDialog,
+    setToggleStatusDialog,
   } = useRoleActions();
 
   return (
@@ -41,8 +54,10 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
         <RolesContainer
           roles={initialRoles}
           onEdit={handleEdit}
+          onView={handleView}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDeleteClick}
+          onManagePermissions={handleManagePermissions}
         />
 
         {/* Modal de crear/editar rol */}
@@ -59,6 +74,30 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
           onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
           onConfirm={handleDeleteConfirm}
           roleName={deleteDialog.roleName}
+        />
+
+        {/* Modal de confirmación de activar/desactivar */}
+        <ToggleStatusDialog
+          open={toggleStatusDialog.open}
+          onOpenChange={(open) => setToggleStatusDialog({ ...toggleStatusDialog, open })}
+          onConfirm={handleToggleStatusConfirm}
+          roleName={toggleStatusDialog.roleName}
+          currentStatus={toggleStatusDialog.currentStatus}
+        />
+
+        {/* Modal de detalles del rol */}
+        <RoleDetailDialog
+          open={detailDialog}
+          onOpenChange={setDetailDialog}
+          role={selectedRole}
+        />
+
+        {/* Modal de gestión de permisos */}
+        <RolePermissionsDialog
+          open={permissionsDialog}
+          onOpenChange={setPermissionsDialog}
+          role={selectedRole}
+          onSave={handleSavePermissions}
         />
       </div>
     </AdminLayout>

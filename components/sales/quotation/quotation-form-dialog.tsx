@@ -1,16 +1,38 @@
 "use client"
 
-import { useMemo, useState, useEffect, useRef } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Quotation, SalesCustomer, SalesProduct } from "@prisma/client"
-import { X, Plus, Package2, ChevronsUpDown, Check, ChevronDown } from "lucide-react"
+import { Check, ChevronsUpDown, ChevronDown, Package2, Plus, X } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
 const capitalizeWords = (value: string) =>
@@ -18,37 +40,28 @@ const capitalizeWords = (value: string) =>
     .toLowerCase()
     .replace(/\b\p{L}/gu, (char) => char.toUpperCase())
 
-const DEFAULT_PHONE_PREFIX = "+591"
-const DEFAULT_PHONE_PREFIX_DIGITS = DEFAULT_PHONE_PREFIX.replace(/\D/g, '')
-
-const normalizePhoneForState = (value?: string | null) => {
-  if (!value) return DEFAULT_PHONE_PREFIX
-  const trimmed = value.trim()
-  if (!trimmed) return DEFAULT_PHONE_PREFIX
-  const digitsOnly = trimmed.replace(/\D/g, '')
-  const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
-    ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
-    : digitsOnly
-  if (!localDigits) return DEFAULT_PHONE_PREFIX
-  return `${DEFAULT_PHONE_PREFIX}${localDigits}`
-}
-
-const sanitizePhoneForSubmit = (value: string) => {
-  const sanitized = normalizePhoneForState(value)
-  const digits = sanitized.replace(/\D/g, '')
-  if (digits.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
-    return undefined
-  }
-  return sanitized
+interface BranchOption {
+  id: string
+  name: string | null
 }
 
 interface QuotationFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  quotation?: Quotation & { items?: any[]; customer?: any; customerName?: string | null }
+  quotation?: Quotation & {
+    items?: any[]
+    customer?: any
+    customerName?: string | null
+    branchId?: string | null
+    branch?: { id?: string | null } | null
+  }
   organizationId: string
+  customerSlug: string
   onSave: (data: any) => void
   isBusy?: boolean
+  branches?: BranchOption[]
+  isAdmin?: boolean
+  currentUserBranchId?: string | null
 }
 
 interface QuotationItemRow {
@@ -87,14 +100,27 @@ const toEndOfDayISO = (dateString: string): string => {
   return date.toISOString()
 }
 
-export function QuotationFormDialog({ open, onOpenChange, quotation, organizationId, onSave, isBusy = false }: QuotationFormDialogProps) {
+export function QuotationFormDialog({
+  open,
+  onOpenChange,
+  quotation,
+  organizationId: _organizationId,
+  customerSlug,
+  onSave,
+  isBusy = false,
+  branches = [],
+  isAdmin = false,
+  currentUserBranchId = null,
+}: QuotationFormDialogProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [customerInputValue, setCustomerInputValue] = useState("")
-  const [customerPhoneInput, setCustomerPhoneInput] = useState(DEFAULT_PHONE_PREFIX)
+  const [customerPhoneInput, setCustomerPhoneInput] = useState("")
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
   const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0)
   const customerContainerRef = useRef<HTMLDivElement>(null)
   const customerInputRef = useRef<HTMLInputElement>(null)
+  const PLACEHOLDER_BRANCH_VALUE = "__placeholder__"
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(PLACEHOLDER_BRANCH_VALUE)
   
   const [customers, setCustomers] = useState<(SalesCustomer & { lastName?: string | null })[]>([])
   const [products, setProducts] = useState<SalesProduct[]>([])
@@ -107,6 +133,139 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const todayInputValue = useMemo(() => getTodayInputValue(), [])
+  const branchOptions = useMemo<BranchOption[]>(() => {
+    return (branches ?? []).map((branch) => ({
+      id: branch.id,
+      name: branch.name ?? "Sin sucursal",
+    }))
+  }, [branches])
+  const normalizedSelectedBranchId =
+    selectedBranchId === PLACEHOLDER_BRANCH_VALUE ? "" : selectedBranchId
+  const renderCustomerInput = (wrapperClassName: string) => (
+    <div className={cn("w-full", wrapperClassName)}>
+      <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Cliente</Label>
+      <div className="relative mt-2">
+        <input
+          ref={customerInputRef}
+          type="text"
+          value={customerInputValue}
+          onChange={(e) => {
+            const formatted = e.target.value.length === 0 ? "" : capitalizeWords(e.target.value)
+            setCustomerInputValue(formatted)
+            setIsCustomerDropdownOpen(true)
+            setHighlightedCustomerIndex(0)
+            setSelectedCustomerId(null)
+          }}
+          onFocus={() => setIsCustomerDropdownOpen(true)}
+          onKeyDown={handleCustomerKeyDown}
+          onBlur={() => {
+            // No cerrar inmediatamente para permitir clics en el dropdown
+            setTimeout(() => setIsCustomerDropdownOpen(false), 200)
+          }}
+          placeholder="Escribe el nombre del cliente (puede no estar registrado)..."
+          disabled={isFormLocked}
+          className="w-full px-5 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+          {customerInputValue && (
+            <button
+              onClick={clearCustomer}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+              type="button"
+              disabled={isFormLocked}
+            >
+              <X size={16} className="text-gray-500" />
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+            type="button"
+            disabled={isFormLocked}
+          >
+            <ChevronDown
+              size={16}
+              className={`text-gray-500 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+
+        {isCustomerDropdownOpen && (
+          <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
+            <div className="max-h-64 overflow-y-auto">
+              {filteredCustomers.length > 0 ? (
+                filteredCustomers.map((customer, index) => (
+                  <button
+                    key={customer.id}
+                    type="button"
+                    onClick={() => selectCustomer(customer)}
+                    onMouseEnter={() => setHighlightedCustomerIndex(index)}
+                    className={`w-full text-left px-5 py-3 transition-colors ${
+                      index === highlightedCustomerIndex
+                        ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:bg-white/10 dark:text-white'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="font-semibold">{capitalizeWords(`${customer.name ?? ""} ${customer.lastName ?? ""}`.trim())}</div>
+                    {customer.email && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{customer.email}</div>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  {customerInputValue.trim() ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Usar cliente: <span className="font-semibold">"{capitalizeWords(customerInputValue.trim())}"</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Presiona Enter o haz clic aquí para usar este cliente sin registrarlo
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 rounded-full"
+                        onClick={() => handleManualCustomer(customerInputValue.trim())}
+                      >
+                        Usar este cliente
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No se encontraron clientes registrados</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        Nombre del cliente para crearlo automáticamente en la cotización
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderPhoneInput = (wrapperClassName: string) => (
+    <div className={cn("w-full", wrapperClassName)}>
+      <Label htmlFor="customerPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Teléfono</Label>
+      <div className="mt-2 relative">
+        <Input
+          id="customerPhone"
+          type="tel"
+          value={customerPhoneInput}
+          onChange={(e) => setCustomerPhoneInput(e.target.value)}
+          placeholder="Teléfono del cliente"
+          disabled={isFormLocked}
+          className="rounded-2xl"
+        />
+      </div>
+    </div>
+  )
 
   // Filtrar clientes basados en el input
   const filteredCustomers = useMemo(() => {
@@ -133,9 +292,17 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
   useEffect(() => {
     if (open) {
       loadCustomers()
-      loadProducts()
+      const initialBranchId = isAdmin
+        ? selectedBranchId
+        : currentUserBranchId
+      loadProducts(initialBranchId)
     }
-  }, [open, organizationId])
+  }, [open, customerSlug, isAdmin, selectedBranchId, currentUserBranchId])
+
+  useEffect(() => {
+    if (!open || !isAdmin) return
+    loadProducts(selectedBranchId)
+  }, [open, isAdmin, selectedBranchId])
 
   // Cargar datos de la cotización si existe
   useEffect(() => {
@@ -144,8 +311,14 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
       setSelectedCustomerId(quotation.customerId ?? null)
       const combinedName = `${quotation.customer?.name ?? ""} ${(quotation.customer as any)?.lastName ?? ""}`.trim()
       setCustomerInputValue(capitalizeWords(combinedName || initialName))
-      const phoneValue = (quotation.customer?.phone as string | undefined) ?? (quotation as any)?.customerPhone ?? DEFAULT_PHONE_PREFIX
-      setCustomerPhoneInput(normalizePhoneForState(phoneValue))
+      const phoneValue = (quotation.customer?.phone as string | undefined) ?? (quotation as any)?.customerPhone ?? ""
+      setCustomerPhoneInput(phoneValue ?? "")
+      const branchIdFromQuotation =
+        (quotation as any)?.branchId ??
+        quotation.branchId ??
+        quotation.branch?.id ??
+        null
+      setSelectedBranchId(branchIdFromQuotation ?? currentUserBranchId ?? PLACEHOLDER_BRANCH_VALUE)
       setDiscount(Number(quotation.discount) || 0)
       if (quotation.expiresAt) {
         const formatted = formatDateForInput(quotation.expiresAt)
@@ -173,18 +346,25 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     } else if (!quotation && open) {
       setSelectedCustomerId(null)
       setCustomerInputValue("")
-      setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+      setCustomerPhoneInput("")
+      if (isAdmin) {
+        setSelectedBranchId(currentUserBranchId ?? PLACEHOLDER_BRANCH_VALUE)
+      } else {
+        setSelectedBranchId(currentUserBranchId ?? PLACEHOLDER_BRANCH_VALUE)
+      }
       setDiscount(0)
       setExpiresAt("")
       setNotes("")
       setItems([createEmptyItem()])
     }
-  }, [quotation, open])
+  }, [branchOptions, currentUserBranchId, isAdmin, open, quotation])
 
   const loadCustomers = async () => {
     try {
       setIsLoadingData(true)
-      const response = await fetch(`/api/${organizationId}/clientes`)
+      const response = await fetch(`/api/${customerSlug}/clientes?page=1&pageSize=1000`, {
+        cache: "no-store",
+      })
       if (response.ok) {
         const data = await response.json()
         const normalized = (data.customers || []).map((customer: any) => ({
@@ -200,10 +380,20 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     }
   }
 
-  const loadProducts = async () => {
+  const loadProducts = async (branchIdOverride?: string | null) => {
     try {
       setIsLoadingData(true)
-      const response = await fetch(`/api/${organizationId}/productos`)
+      const effectiveBranchId = isAdmin
+        ? branchIdOverride && branchIdOverride !== PLACEHOLDER_BRANCH_VALUE
+          ? branchIdOverride
+          : null
+        : currentUserBranchId ?? null
+
+      const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : ""
+
+      const response = await fetch(`/api/${customerSlug}/productos?page=1&pageSize=1000${branchQuery}`, {
+        cache: "no-store",
+      })
       if (response.ok) {
         const data = await response.json()
         setProducts(data.products || [])
@@ -249,33 +439,13 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     }
   }
 
-  const handleCustomerPhoneChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '')
-    const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
-      ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
-      : digitsOnly
-    setCustomerPhoneInput(localDigits ? `${DEFAULT_PHONE_PREFIX}${localDigits}` : DEFAULT_PHONE_PREFIX)
-  }
-
-  const handleCustomerPhoneBlur = () => {
-    setCustomerPhoneInput((prev) => {
-      if (!prev || prev === '+' || prev === DEFAULT_PHONE_PREFIX) return DEFAULT_PHONE_PREFIX
-      const normalized = normalizePhoneForState(prev)
-      const digitsOnly = normalized.replace(/\D/g, '')
-      if (!digitsOnly || digitsOnly.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
-        return DEFAULT_PHONE_PREFIX
-      }
-      return normalized
-    })
-  }
-
   const selectCustomer = (customer: SalesCustomer & { lastName?: string | null }) => {
     setSelectedCustomerId(customer.id)
     const fullName = `${customer.name ?? ""} ${customer.lastName ?? ""}`.trim()
     setCustomerInputValue(capitalizeWords(fullName))
     setIsCustomerDropdownOpen(false)
     setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(normalizePhoneForState(customer.phone))
+    setCustomerPhoneInput(customer.phone ?? "")
   }
 
   const clearCustomer = () => {
@@ -283,7 +453,7 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     setCustomerInputValue("")
     customerInputRef.current?.focus()
     setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+    setCustomerPhoneInput("")
   }
 
   const handleManualCustomer = (value: string) => {
@@ -294,7 +464,7 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     setCustomerInputValue(formatted)
     setIsCustomerDropdownOpen(false)
     setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+    setCustomerPhoneInput("")
   }
 
   const addItem = () => {
@@ -476,6 +646,10 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
       return
     }
 
+    const branchIdForSubmit = isAdmin
+      ? (normalizedSelectedBranchId || null)
+      : currentUserBranchId ?? (normalizedSelectedBranchId || null)
+
     const preparedItems = items
       .filter((item) => (item.productId !== "none") || item.productName.trim().length > 0)
       .map(({ productId, productName, quantity, unitPrice, subtotal }) => ({
@@ -494,12 +668,13 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
     setIsLoading(true)
     try {
       const expiresAtIso = expiresAt ? toEndOfDayISO(expiresAt) : undefined
-      const normalizedCustomerPhone = sanitizePhoneForSubmit(customerPhoneInput)
+      const normalizedCustomerPhone = customerPhoneInput.trim() || undefined
 
       await onSave({
         customerId: selectedCustomerId,
         customerName: selectedCustomerId ? undefined : trimmedCustomerName,
         customerPhone: normalizedCustomerPhone,
+        branchId: branchIdForSubmit,
         subtotal: totals.subtotal,
         discount,
         total: totals.total,
@@ -513,9 +688,12 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
   }
 
   const hasValidItems = items.some((item) => (item.productId !== "none") || item.productName.trim().length > 0)
+  const isBranchInvalid =
+    isAdmin && (!normalizedSelectedBranchId || normalizedSelectedBranchId.trim().length === 0)
   const isSubmitDisabled =
     customerInputValue.trim().length === 0 ||
     !hasValidItems ||
+    isBranchInvalid ||
     isLoading ||
     isLoadingData ||
     isBusy
@@ -540,141 +718,45 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="space-y-6">
               {/* Cliente con ComboBox */}
-              <div className="space-y-3" ref={customerContainerRef}>
-                <div className="flex flex-col md:flex-row md:items-end md:gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Cliente</Label>
-                    <div className="relative mt-2">
-                      <input
-                        ref={customerInputRef}
-                        type="text"
-                        value={customerInputValue}
-                        onChange={(e) => {
-                          const formatted = e.target.value.length === 0 ? "" : capitalizeWords(e.target.value)
-                          setCustomerInputValue(formatted)
-                          setIsCustomerDropdownOpen(true)
-                          setHighlightedCustomerIndex(0)
-                          setSelectedCustomerId(null)
-                        }}
-                        onFocus={() => setIsCustomerDropdownOpen(true)}
-                        onKeyDown={handleCustomerKeyDown}
-                        onBlur={() => {
-                          // No cerrar inmediatamente para permitir clics en el dropdown
-                          setTimeout(() => setIsCustomerDropdownOpen(false), 200)
-                        }}
-                        placeholder="Escribe el nombre del cliente (puede no estar registrado)..."
-                        disabled={isFormLocked}
-                        className="w-full px-5 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
-                      />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
-                        {customerInputValue && (
-                          <button
-                            onClick={clearCustomer}
-                            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                            type="button"
-                            disabled={isFormLocked}
-                          >
-                            <X size={16} className="text-gray-500" />
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
-                          className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                          type="button"
+              <div className="space-y-5" ref={customerContainerRef}>
+                {isAdmin ? (
+                  <>
+                    {renderCustomerInput("")}
+                    <div className="flex flex-col md:flex-row md:items-end md:gap-4 gap-4">
+                      <div className="md:flex-1">
+                        <Label htmlFor="quotation-branch" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+                          Sucursal
+                        </Label>
+                        <Select
+                          value={selectedBranchId}
+                          onValueChange={(value) => {
+                            setSelectedBranchId(value)
+                          }}
                           disabled={isFormLocked}
                         >
-                          <ChevronDown
-                            size={16}
-                            className={`text-gray-500 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`}
-                          />
-                        </button>
+                          <SelectTrigger id="quotation-branch" className="mt-2 w-full rounded-2xl">
+                            <SelectValue placeholder="Selecciona una sucursal" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={PLACEHOLDER_BRANCH_VALUE}>Selecciona una sucursal</SelectItem>
+                            {branchOptions.map((branch) => (
+                              <SelectItem key={branch.id} value={branch.id}>
+                                {branch.name ?? "Sin sucursal"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-
-                      {isCustomerDropdownOpen && (
-                        <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
-                          <div className="max-h-64 overflow-y-auto">
-                            {filteredCustomers.length > 0 ? (
-                              filteredCustomers.map((customer, index) => (
-                                <button
-                                  key={customer.id}
-                                  type="button"
-                                  onClick={() => selectCustomer(customer)}
-                                  onMouseEnter={() => setHighlightedCustomerIndex(index)}
-                                  className={`w-full text-left px-5 py-3 transition-colors ${
-                                    index === highlightedCustomerIndex
-                                      ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:text-white'
-                                      : 'hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-700 dark:text-gray-200'
-                                  }`}
-                                >
-                                  <div className="font-semibold">{capitalizeWords(`${customer.name ?? ""} ${customer.lastName ?? ""}`.trim())}</div>
-                                  {customer.email && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{customer.email}</div>
-                                  )}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-5 py-6 text-center">
-                                {customerInputValue.trim() ? (
-                                  <div className="space-y-2">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                      Usar cliente: <span className="font-semibold">"{capitalizeWords(customerInputValue.trim())}"</span>
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                      Presiona Enter o haz clic aquí para usar este cliente sin registrarlo
-                                    </p>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="mt-2 rounded-full"
-                                      onClick={() => handleManualCustomer(customerInputValue.trim())}
-                                    >
-                                      Usar este cliente
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">No se encontraron clientes registrados</p>
-                                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                                      Escribe el nombre del cliente para crearlo automáticamente en la cotización
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      {renderPhoneInput("md:flex-1")}
                     </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col md:flex-row md:items-end md:gap-4 gap-4">
+                    {renderCustomerInput("md:flex-1")}
+                    {renderPhoneInput("md:w-[320px]")}
                   </div>
-
-                  <div className="mt-4 md:mt-0 md:w-[320px]">
-                    <Label htmlFor="customerPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Teléfono</Label>
-                    <div className="mt-2 grid grid-cols-[82px_minmax(0,1fr)] gap-2">
-                      <Input
-                        value={DEFAULT_PHONE_PREFIX}
-                        readOnly
-                        aria-hidden="true"
-                        className="rounded-2xl text-center font-semibold"
-                      />
-                      <Input
-                        id="customerPhone"
-                        type="tel"
-                        value={customerPhoneInput.replace(/[^0-9]/g, '').replace(new RegExp(`^${DEFAULT_PHONE_PREFIX_DIGITS}`), '')}
-                        onChange={(e) => handleCustomerPhoneChange(e.target.value)}
-                        onBlur={handleCustomerPhoneBlur}
-                        placeholder="70000000"
-                        disabled={isFormLocked}
-                        inputMode="numeric"
-                        className="rounded-2xl"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Se usará para enviar la cotización por WhatsApp.</p>
-                  </div>
-                </div>
+                )}
               </div>
-
               {/* Items */}
               <div className="space-y-4">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Productos</Label>
@@ -747,17 +829,28 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
                                     </CommandEmpty>
                                     <CommandGroup>
                                       {products
-                                        .filter((product) =>
-                                          item.productInput.trim().length === 0
-                                            ? true
-                                            : product.name
-                                                ?.toLowerCase()
-                                                .includes(item.productInput.toLowerCase()),
-                                        )
+                                        .filter((product) => {
+                                          const isAlreadySelected = items.some(
+                                            (otherItem) =>
+                                              otherItem.id !== item.id && otherItem.productId === product.id,
+                                          )
+
+                                          if (isAlreadySelected) {
+                                            return false
+                                          }
+
+                                          if (item.productInput.trim().length === 0) {
+                                            return true
+                                          }
+
+                                          return product.name
+                                            ?.toLowerCase()
+                                            .includes(item.productInput.toLowerCase())
+                                        })
                                         .map((product) => (
                                           <CommandItem
                                             key={product.id}
-                                            value={product.name}
+                                            value={product.name || ""}
                                             onSelect={() => handleProductSelect(item.id, product)}
                                           >
                                             <Check
@@ -766,7 +859,9 @@ export function QuotationFormDialog({ open, onOpenChange, quotation, organizatio
                                                 item.productId === product.id ? "opacity-100" : "opacity-0",
                                               )}
                                             />
-                                            {product.name} · ${Number(product.price).toFixed(2)}
+                                            <span className="truncate">
+                                              {product.name} · ${Number(product.price).toFixed(2)}
+                                            </span>
                                           </CommandItem>
                                         ))}
                                     </CommandGroup>

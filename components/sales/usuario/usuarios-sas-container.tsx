@@ -72,45 +72,32 @@ export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onTogg
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Estadísticas */}
       <UsuariosSasStats usuarios={usuarios} />
 
-      {/* Filtros */}
-      <UsuariosSasFilters 
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de usuarios */}
+      {/* Filtros en Card */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Usuarios ({filteredUsuarios.length})
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {filteredUsuarios.length === usuarios.length 
-                  ? "Lista completa de usuarios disponibles"
-                  : `Mostrando ${filteredUsuarios.length} de ${usuarios.length} usuarios`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-            <UsuariosSasTable 
-              usuarios={currentUsuarios}
-              sucursalesCount={sucursalesCount}
-              onEditClick={onEdit} 
-              onToggleStatus={onToggleStatus} 
-              onDeleteClick={onDelete} 
-            />
-          </div>
+        <CardContent className="pt-6">
+          <UsuariosSasFilters 
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onSearchChange={handleSearchChange}
+            statusValue={statusFilter}
+          />
         </CardContent>
       </Card>
+
+      {/* Tabla de usuarios sin Card */}
+      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+        <UsuariosSasTable 
+          usuarios={currentUsuarios}
+          sucursalesCount={sucursalesCount}
+          onEditClick={onEdit} 
+          onToggleStatus={onToggleStatus} 
+          onDeleteClick={onDelete} 
+        />
+      </div>
 
       {/* Paginación */}
       <div className="flex justify-center">

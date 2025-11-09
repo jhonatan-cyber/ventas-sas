@@ -4,7 +4,6 @@ import { logBusinessOperation } from "@/lib/utils/logger"
 export interface CustomerOrganizationData {
   customerId: string
   organizationId: string
-  isPrimary?: boolean
   isActive?: boolean
 }
 
@@ -17,7 +16,6 @@ export interface CustomerWithOrganizations {
   organizations: Array<{
     id: string
     organizationId: string
-    isPrimary: boolean
     isActive: boolean
     joinedAt: Date
     organization: {
@@ -56,7 +54,6 @@ export class CustomerOrganizationService {
               },
             },
             orderBy: [
-              { isPrimary: "desc" },
               { joinedAt: "desc" },
             ],
           },
@@ -97,7 +94,6 @@ export class CustomerOrganizationService {
               },
             },
             orderBy: [
-              { isPrimary: "desc" },
               { joinedAt: "desc" },
             ],
           },
@@ -158,7 +154,6 @@ export class CustomerOrganizationService {
             where: { id: existing.id },
             data: {
               isActive: true,
-              isPrimary: data.isPrimary ?? false,
             },
           })
 
@@ -177,24 +172,11 @@ export class CustomerOrganizationService {
         }
       }
 
-      // Si se marca como principal, desmarcar otras organizaciones principales del cliente
-      if (data.isPrimary) {
-        await prisma.customerOrganization.updateMany({
-          where: {
-            customerId: data.customerId,
-            isPrimary: true,
-          },
-          data: {
-            isPrimary: false,
-          },
-        })
-      }
-
+      // Crear la relación cliente-organización
       const customerOrganization = await prisma.customerOrganization.create({
         data: {
           customerId: data.customerId,
           organizationId: data.organizationId,
-          isPrimary: data.isPrimary ?? false,
           isActive: data.isActive ?? true,
         },
         include: {
@@ -223,7 +205,6 @@ export class CustomerOrganizationService {
         metadata: {
           customerId: data.customerId,
           organizationId: data.organizationId,
-          isPrimary: data.isPrimary ?? false,
         },
       })
 
@@ -256,25 +237,8 @@ export class CustomerOrganizationService {
         throw new Error("La relación no existe")
       }
 
-      // Si es la organización principal y hay otras, asignar una nueva como principal
-      if (customerOrganization.isPrimary) {
-        const otherOrganizations = await prisma.customerOrganization.findMany({
-          where: {
-            customerId,
-            organizationId: { not: organizationId },
-            isActive: true,
-          },
-          orderBy: { joinedAt: "asc" },
-          take: 1,
-        })
-
-        if (otherOrganizations.length > 0) {
-          await prisma.customerOrganization.update({
-            where: { id: otherOrganizations[0].id },
-            data: { isPrimary: true },
-          })
-        }
-      }
+      // No se necesita asignar una nueva organización principal
+      // Un cliente puede tener múltiples empresas sin una principal
 
       const updated = await prisma.customerOrganization.update({
         where: { id: customerOrganization.id },
@@ -297,54 +261,6 @@ export class CustomerOrganizationService {
     }
   }
 
-  /**
-   * Establecer una organización como principal para un cliente
-   */
-  static async setPrimaryOrganization(
-    customerId: string,
-    organizationId: string,
-    adminId: string
-  ) {
-    try {
-      // Desmarcar todas las organizaciones principales del cliente
-      await prisma.customerOrganization.updateMany({
-        where: {
-          customerId,
-          isPrimary: true,
-        },
-        data: {
-          isPrimary: false,
-        },
-      })
-
-      // Marcar la nueva organización como principal
-      const updated = await prisma.customerOrganization.update({
-        where: {
-          customerId_organizationId: {
-            customerId,
-            organizationId,
-          },
-        },
-        data: {
-          isPrimary: true,
-        },
-      })
-
-      await logBusinessOperation({
-        action: "CUSTOMER_PRIMARY_ORGANIZATION_CHANGED",
-        adminId,
-        metadata: {
-          customerId,
-          organizationId,
-        },
-      })
-
-      return updated
-    } catch (error) {
-      console.error("Error al establecer organización principal:", error)
-      throw error
-    }
-  }
 
   /**
    * Obtener todos los clientes con sus organizaciones (para el panel de administración)
@@ -386,7 +302,13 @@ export class CustomerOrganizationService {
       const [customers, total] = await Promise.all([
         prisma.customer.findMany({
           where,
-          include: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            razonSocial: true,
+            ci: true,
             organizations: {
               where: { isActive: true },
               include: {
@@ -394,12 +316,21 @@ export class CustomerOrganizationService {
                   select: {
                     id: true,
                     name: true,
+                    razonSocial: true,
+                    nit: true,
+                    direccion: true,
+                    telefono: true,
                     slug: true,
+                    subscriptionStatus: true,
+                    whiteLabelBranding: {
+                      select: {
+                        logoUrl: true,
+                      },
+                    },
                   },
                 },
               },
               orderBy: [
-                { isPrimary: "desc" },
                 { joinedAt: "desc" },
               ],
             },

@@ -10,7 +10,10 @@ export function useCustomerActions() {
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>()
+  const [customerDetails, setCustomerDetails] = useState<any>(null)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
 
   const openCreateDialog = () => {
     setSelectedCustomer(undefined)
@@ -27,10 +30,33 @@ export function useCustomerActions() {
     setIsDeleteDialogOpen(true)
   }
 
+  const openDetailDialog = async (customer: Customer) => {
+    setSelectedCustomer(customer)
+    setIsDetailDialogOpen(true)
+    setIsLoadingDetails(true)
+    
+    try {
+      const response = await fetch(`/api/administracion/customers/${customer.id}`)
+      if (response.ok) {
+        const details = await response.json()
+        setCustomerDetails(details)
+      } else {
+        toast.error("Error al cargar los detalles del cliente")
+      }
+    } catch (error) {
+      console.error("Error al cargar detalles:", error)
+      toast.error("Error al cargar los detalles del cliente")
+    } finally {
+      setIsLoadingDetails(false)
+    }
+  }
+
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setIsDetailDialogOpen(false)
     setSelectedCustomer(undefined)
+    setCustomerDetails(null)
   }
 
   const handleSave = async (data: any) => {
@@ -115,10 +141,15 @@ export function useCustomerActions() {
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
+    setIsDetailDialogOpen,
     selectedCustomer,
+    customerDetails,
+    isLoadingDetails,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openDetailDialog,
     closeDialogs,
     handleSave,
     handleDelete,

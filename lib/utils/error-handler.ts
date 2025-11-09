@@ -182,10 +182,10 @@ export function handleApiError(
   }
 
   if (apiError instanceof Prisma.PrismaClientValidationError) {
-    return NextResponse.json(
-      AppError.validation('Error de validación en los datos enviados').toJSON(),
-      { status: 400 }
-    )
+    const validationError = AppError.validation('Error de validación en los datos enviados', {
+      message: apiError.message,
+    })
+    return NextResponse.json(validationError.toJSON(), { status: validationError.statusCode })
   }
 
   // Manejar errores de Zod

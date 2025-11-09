@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { updateSalesCustomerSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -13,11 +13,11 @@ export async function GET(
 ) {
   try {
     const { slug, id } = await params
-    // Obtener o crear automáticamente la organización si no existe
-    const organizationId = await getOrCreateOrganizationForCustomer(slug)
+    // Obtener organizationId
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const customer = await SalesCustomerService.getCustomerById(id)
@@ -40,11 +40,11 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
-    // Obtener o crear automáticamente la organización si no existe
-    const organizationId = await getOrCreateOrganizationForCustomer(slug)
+    // Obtener organizationId
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const existingCustomer = await SalesCustomerService.getCustomerById(id)
@@ -96,11 +96,11 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
-    // Obtener o crear automáticamente la organización si no existe
-    const organizationId = await getOrCreateOrganizationForCustomer(slug)
+    // Obtener organizationId
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
     if (!organizationId) {
-      throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const existingCustomer = await SalesCustomerService.getCustomerById(id)

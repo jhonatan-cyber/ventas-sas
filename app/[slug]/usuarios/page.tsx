@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { UsuariosSasPageClient } from "@/components/sales/usuario/usuarios-sas-page-client"
 import { UsuarioSasService } from "@/lib/services/sales/usuario-sas-service"
 import { RoleSasService } from "@/lib/services/sales/role-sas-service"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 import { prisma } from "@/lib/prisma"
 
 export default async function UsuariosPage({
@@ -12,22 +12,22 @@ export default async function UsuariosPage({
 }) {
   const { slug } = await params
 
-  // Verificar que el cliente existe
-  const customer = await getCustomerBySlug(slug)
-  if (!customer) {
+  // Obtener organizationId desde el slug
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
     redirect(`/${slug}/dashboard`)
   }
 
   // Obtener usuarios y roles
   const [usuariosResult, rolesResult] = await Promise.all([
-    UsuarioSasService.getAllUsuarios(customer.id, 0, 1000),
-    RoleSasService.getActiveRolesByCustomer(customer.id)
+    UsuarioSasService.getAllUsuarios(organizationId, 0, 1000),
+    RoleSasService.getActiveRolesByOrganization(organizationId)
   ])
 
   // Obtener sucursales activas
   const sucursales = await prisma.branch.findMany({
     where: { 
-      customerId: customer.id, 
+      organizationId, 
       isActive: true 
     },
     select: { id: true, name: true },

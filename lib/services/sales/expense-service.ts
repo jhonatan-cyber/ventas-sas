@@ -176,7 +176,15 @@ export class ExpenseService {
     // Si el userId es de UsuarioSas, buscar o crear el SalesUser correspondiente
     const usuarioSas = await prisma.usuarioSas.findUnique({
       where: { id: data.userId },
-      include: { customer: true }
+      select: {
+        id: true,
+        correo: true,
+        nombre: true,
+        apellido: true,
+        contraseña: true,
+        isActive: true,
+        sucursalId: true,
+      },
     })
 
     const branchProvided = Object.prototype.hasOwnProperty.call(data, "branchId")

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Building2, LogOut, User, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
 import { useSidebar } from "./sidebar-context"
@@ -17,6 +17,7 @@ interface SasSession {
   fullName?: string
   correo?: string
   rol?: string | null
+  foto?: string | null
   customerSlug: string
   customerId: string
   sucursalId?: string | null
@@ -43,16 +44,126 @@ export function SalesHeader() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
+  const fetchUserFromAPI = async () => {
     try {
-      const raw = getCookie('sas-session')
-      if (raw) {
-        const parsed = JSON.parse(decodeURIComponent(raw))
-        setSession(parsed)
+      const slug = pathname.split('/').filter(Boolean)[0]
+      if (!slug) return
+      
+      const response = await fetch(`/api/${slug}/auth/me`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const userData = await response.json()
+        if (userData) {
+          const newSession = {
+            userId: userData.id,
+            nombre: userData.nombre,
+            apellido: userData.apellido,
+            fullName: `${userData.nombre || ''} ${userData.apellido || ''}`.trim() || userData.correo || 'Usuario',
+            correo: userData.correo,
+            rol: userData.rol?.nombre || null,
+            foto: userData.foto || null,
+            customerSlug: slug,
+            customerId: userData.organizationId || '',
+            sucursalId: userData.sucursalId || null,
+          }
+          setSession(newSession)
+          
+          // Actualizar la cookie de sesión con la nueva información
+          const sessionData = {
+            ...newSession,
+            organizationSlug: slug,
+          }
+          const sessionEncoded = btoa(JSON.stringify(sessionData))
+          setCookie('sas-session', sessionEncoded)
+        }
       }
-    } catch {}
-    setMounted(true)
-  }, [])
+    } catch (error) {
+      console.error('Error obteniendo usuario desde API:', error)
+    }
+  }
+
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const raw = getCookie('sas-session')
+        if (raw) {
+          // La sesión está codificada en base64
+          try {
+            // Decodificar base64 en el navegador usando atob
+            const decoded = atob(raw)
+            const parsed = JSON.parse(decoded)
+            // Normalizar customerSlug (puede venir como organizationSlug)
+            if (parsed.organizationSlug && !parsed.customerSlug) {
+              parsed.customerSlug = parsed.organizationSlug
+            }
+            setSession(parsed)
+          } catch {
+            // Si falla el parseo base64, intentar como JSON directo (para compatibilidad)
+            try {
+              const parsed = JSON.parse(decodeURIComponent(raw))
+              // Normalizar customerSlug
+              if (parsed.organizationSlug && !parsed.customerSlug) {
+                parsed.customerSlug = parsed.organizationSlug
+              }
+              setSession(parsed)
+            } catch {
+              // Si ambos fallan, intentar obtener desde la API
+              await fetchUserFromAPI()
+            }
+          }
+        } else {
+          // Si no hay cookie, intentar obtener desde la API
+          await fetchUserFromAPI()
+        }
+      } catch (error) {
+        console.error('Error cargando sesión:', error)
+        // Intentar obtener desde la API como fallback
+        await fetchUserFromAPI()
+      }
+      setMounted(true)
+    }
+
+    loadSession()
+
+    // Escuchar eventos personalizados para actualizar la sesión cuando se actualice el usuario
+    const handleUserUpdated = (event: CustomEvent) => {
+      const updatedUser = event.detail
+      if (updatedUser) {
+        // Verificar si es el usuario logueado comparando con la cookie de sesión
+        const currentSession = getCookie('sas-session')
+        if (currentSession) {
+          try {
+            const decoded = atob(currentSession)
+            const parsed = JSON.parse(decoded)
+            if (parsed.userId === updatedUser.id) {
+              // Si el usuario actualizado es el usuario logueado, refrescar la sesión
+              fetchUserFromAPI()
+            }
+          } catch {
+            // Si no se puede parsear, intentar refrescar de todas formas
+            fetchUserFromAPI()
+          }
+        }
+      }
+    }
+
+    window.addEventListener('sas-user-updated', handleUserUpdated as EventListener)
+    
+    // Escuchar cambios en storage (por si se actualiza desde otra pestaña)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'sas-user-updated') {
+        fetchUserFromAPI()
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('sas-user-updated', handleUserUpdated as EventListener)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [pathname])
 
   const fullName = session?.fullName || `${session?.nombre || ''} ${session?.apellido || ''}`.trim() || 'Usuario'
   const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]
@@ -143,6 +254,7 @@ export function SalesHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                 <Avatar className="w-7 h-7">
+                  {session?.foto && <AvatarImage src={session.foto} alt={fullName} />}
                   <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties}>
                     {(fullName || 'U').slice(0,2).toUpperCase()}
                   </AvatarFallback>
@@ -216,6 +328,7 @@ export function SalesHeader() {
                 <span className="text-xs text-gray-500 dark:text-gray-400">{session?.rol || 'Usuario'}</span>
               </div>
               <Avatar className="w-8 h-8">
+                {session?.foto && <AvatarImage src={session.foto} alt={fullName} />}
                 <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties}>
                   {(fullName || 'U').slice(0,2).toUpperCase()}
                 </AvatarFallback>

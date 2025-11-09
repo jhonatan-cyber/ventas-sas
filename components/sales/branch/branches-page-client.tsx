@@ -1,22 +1,32 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { BranchesHeader } from "./branches-header"
 import { BranchesContainer } from "./branches-container"
 import { BranchFormDialog } from "./branch-form-dialog"
 import { BranchDeleteDialog } from "./branch-delete-dialog"
+import { BranchDetailDialog } from "./branch-detail-dialog"
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { Branch } from "@prisma/client"
 import { useBranchActions } from "@/hooks/sales/branch/use-branch-actions"
 
+type BranchWithRelations = Branch & {
+  organization?: { id: string; razonSocial: string | null; name: string | null; slug: string | null } | null
+  _count?: { usuariosSas: number }
+}
+
 interface BranchesPageClientProps {
-  initialBranches: Branch[]
+  initialBranches: BranchWithRelations[]
   customerSlug: string
 }
 
 export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPageClientProps) {
+  const [branches, setBranches] = useState(initialBranches)
+  
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
     selectedBranch,
     confirmOpen,
     confirmTitle,
@@ -27,11 +37,17 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDetailsDialog,
     closeDialogs,
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useBranchActions(customerSlug)
+  } = useBranchActions(customerSlug, setBranches)
+
+  // Actualizar branches cuando cambien los initialBranches (después de router.refresh)
+  useEffect(() => {
+    setBranches(initialBranches)
+  }, [initialBranches])
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -39,16 +55,17 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
       <BranchesHeader
         title="Gestión de Sucursales"
         description="Administra las sucursales de tu organización"
-        newButtonText="Nueva Sucursal"
+        newButtonText="Agregar Sucursal"
         onNewClick={openCreateDialog}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <BranchesContainer 
-        branches={initialBranches} 
+        branches={branches} 
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}
+        onViewDetails={openViewDetailsDialog}
       />
 
       {/* Modal de crear/editar sucursal */}
@@ -65,6 +82,14 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
         onOpenChange={closeDialogs}
         branch={selectedBranch}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de detalles de la sucursal */}
+      <BranchDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={closeDialogs}
+        branch={selectedBranch}
+        customerSlug={customerSlug}
       />
 
       {/* Modal de confirmación para acciones */}

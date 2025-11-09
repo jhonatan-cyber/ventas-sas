@@ -1,19 +1,22 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { ExpensesHeader } from "./expenses-header"
-import { ExpensesContainer } from "./expenses-container"
-import { ExpenseFormDialog } from "./expense-form-dialog"
-import { ExpenseDeleteDialog } from "./expense-delete-dialog"
-import { useExpenseActions } from "@/hooks/sales/expense/use-expense-actions"
-import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+
+import { ExpenseDeleteDialog } from "./expense-delete-dialog"
+import { ExpenseFormDialog } from "./expense-form-dialog"
+import { ExpensesContainer } from "./expenses-container"
+import { ExpensesHeader } from "./expenses-header"
+import { ExpenseBranchSummary, SalesExpenseWithRelations } from "./types"
+
+import { useExpenseActions } from "@/hooks/sales/expense/use-expense-actions"
 
 interface ExpensesPageClientProps {
   initialExpenses: SalesExpenseWithRelations[]
   customerSlug: string
   branches: ExpenseBranchSummary[]
   currentUserBranchId?: string | null
+  initialIsAdmin?: boolean
 }
 
 const normalizeExpense = (expense: any): SalesExpenseWithRelations => ({
@@ -44,10 +47,18 @@ const normalizeExpense = (expense: any): SalesExpenseWithRelations => ({
     : null,
 })
 
-export function ExpensesPageClient({ initialExpenses, customerSlug, branches, currentUserBranchId = null }: ExpensesPageClientProps) {
+export function ExpensesPageClient({
+  initialExpenses,
+  customerSlug,
+  branches,
+  currentUserBranchId = null,
+  initialIsAdmin = false,
+}: ExpensesPageClientProps) {
   const [expenses, setExpenses] = useState<SalesExpenseWithRelations[]>(() => initialExpenses.map(normalizeExpense))
   const [availableBranches, setAvailableBranches] = useState<ExpenseBranchSummary[]>(branches)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
+  const [userBranchId, setUserBranchId] = useState<string | null>(currentUserBranchId ?? null)
 
   useEffect(() => {
     setExpenses(initialExpenses.map(normalizeExpense))
@@ -56,6 +67,10 @@ export function ExpensesPageClient({ initialExpenses, customerSlug, branches, cu
   useEffect(() => {
     setAvailableBranches(branches)
   }, [branches])
+
+  useEffect(() => {
+    setUserBranchId(currentUserBranchId ?? null)
+  }, [currentUserBranchId])
 
   const loadBranches = useCallback(async () => {
     try {
@@ -72,6 +87,38 @@ export function ExpensesPageClient({ initialExpenses, customerSlug, branches, cu
       console.error("Error al cargar sucursales:", error)
     }
   }, [customerSlug])
+
+  useEffect(() => {
+    loadBranches()
+  }, [loadBranches])
+
+  useEffect(() => {
+    setIsAdmin(initialIsAdmin)
+  }, [initialIsAdmin])
+
+  useEffect(() => {
+    if (initialIsAdmin && currentUserBranchId !== null) return
+
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch(`/api/${customerSlug}/auth/me`, { cache: "no-store" })
+        if (!response.ok) return
+        const data = await response.json()
+
+        const roleName = data?.rol?.nombre?.toLowerCase() || ""
+        const admin = roleName.includes("administrador") || roleName === "admin"
+        setIsAdmin(admin)
+
+        if (data?.sucursalId) {
+          setUserBranchId(data.sucursalId)
+        }
+      } catch (error) {
+        console.error("Error al obtener información del usuario:", error)
+      }
+    }
+
+    fetchUserInfo()
+  }, [customerSlug, initialIsAdmin, currentUserBranchId])
 
   const loadExpenses = useCallback(async () => {
     try {
@@ -115,7 +162,7 @@ export function ExpensesPageClient({ initialExpenses, customerSlug, branches, cu
       <ExpensesHeader
         title="Gestión de Gastos"
         description="Administra los gastos de tu organización"
-        newButtonText="Nuevo Gasto"
+        newButtonText="Agregar Gasto"
         onNewClick={openCreateDialog}
       />
 
@@ -124,6 +171,8 @@ export function ExpensesPageClient({ initialExpenses, customerSlug, branches, cu
         expenses={expenses}
         branches={availableBranches}
         isLoading={isLoading}
+        isAdmin={isAdmin}
+        userBranchId={userBranchId}
         onEdit={openEditDialog}
         onDelete={openDeleteDialog}
       />
@@ -134,7 +183,8 @@ export function ExpensesPageClient({ initialExpenses, customerSlug, branches, cu
         onOpenChange={closeDialogs}
         expense={selectedExpense}
         branches={availableBranches}
-        currentUserBranchId={currentUserBranchId ?? undefined}
+        currentUserBranchId={userBranchId ?? undefined}
+        isAdmin={isAdmin}
         onSave={handleSave}
       />
 

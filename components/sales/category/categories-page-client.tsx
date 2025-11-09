@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { CategoriesHeader } from "./categories-header"
 import { CategoriesContainer } from "./categories-container"
 import { CategoryFormDialog } from "./category-form-dialog"
@@ -9,11 +10,15 @@ import { Category } from "@prisma/client"
 import { useCategoryActions } from "@/hooks/sales/category/use-category-actions"
 
 interface CategoriesPageClientProps {
-  initialCategories: Category[]
+  initialCategories: (Category & {
+    _count?: { products: number }
+  })[]
   customerSlug: string
 }
 
 export function CategoriesPageClient({ initialCategories, customerSlug }: CategoriesPageClientProps) {
+  const [categories, setCategories] = useState(initialCategories)
+  
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -31,7 +36,12 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useCategoryActions(customerSlug)
+  } = useCategoryActions(customerSlug, setCategories)
+
+  // Actualizar categorías cuando cambien los initialCategories (después de router.refresh)
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories])
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -45,7 +55,7 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
 
       {/* Contenedor con filtros, tabla y paginación */}
       <CategoriesContainer 
-        categories={initialCategories} 
+        categories={categories} 
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { createUsuarioSasSchema } from '@/lib/validators/sales-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
@@ -23,15 +23,15 @@ export async function GET(
     const rolId = searchParams.get('rolId') || undefined
     const sucursalId = searchParams.get('sucursalId') || undefined
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const skip = (page - 1) * pageSize
 
     const { usuarios, total } = await UsuarioSasService.getAllUsuarios(
-      customer.id,
+      organizationId,
       skip,
       pageSize,
       search,
@@ -60,9 +60,9 @@ export async function POST(
   try {
     const { slug } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     // Parsear y validar body
@@ -84,7 +84,7 @@ export async function POST(
     // Obtener usuario actual para auditoría
     const currentUser = await getCurrentSasUser(request, slug)
 
-    const newUsuario = await UsuarioSasService.createUsuario(customer.id, {
+    const newUsuario = await UsuarioSasService.createUsuario(organizationId, {
       ci: validatedData.ci || undefined,
       nombre: validatedData.nombre,
       apellido: validatedData.apellido,
@@ -102,7 +102,7 @@ export async function POST(
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: currentUser.id,
-          customerId: customer.id,
+          organizationId: organizationId,
           actionType: 'USER_CREATED',
           entityType: 'UsuarioSas',
           entityId: newUsuario.id,

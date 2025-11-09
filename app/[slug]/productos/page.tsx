@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { ProductsPageClient } from "@/components/sales/product/products-page-client"
-import { SalesProductService } from "@/lib/services/sales/sales-product-service"
 import { CategoryService } from "@/lib/services/sales/category-service"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 
 export default async function ProductsPage({
   params,
@@ -11,14 +11,35 @@ export default async function ProductsPage({
 }) {
   const { slug } = await params
 
-  // Verificar que el cliente existe
-  const customer = await getCustomerBySlug(slug)
-  if (!customer) {
+  // Obtener organizationId desde el slug
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
     redirect(`/${slug}/dashboard`)
   }
 
-  // Obtener categorías activas
-  const categories = await CategoryService.getActiveCategories(customer.id)
+  // Obtener sucursal del usuario logueado desde la sesión
+  let branchId: string | undefined = undefined
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("sas-session")
+    
+    if (sessionCookie) {
+      try {
+        const decoded = Buffer.from(sessionCookie.value, 'base64').toString('utf8')
+        const session = JSON.parse(decoded)
+        branchId = session.sucursalId || undefined
+      } catch (e) {
+        // Si hay error al decodificar, continuar sin branchId
+      }
+    }
+  } catch (e) {
+    // Si hay error al obtener cookies, continuar sin branchId
+  }
+
+  // Obtener todas las categorías activas de la organización
+  // Las categorías se muestran todas, independientemente de si tienen productos en la sucursal
+  // El filtrado por sucursal se aplica solo a los productos, no a las categorías
+  const categories = await CategoryService.getActiveCategories(organizationId)
 
   return (
     <ProductsPageClient 

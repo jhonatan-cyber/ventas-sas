@@ -8,95 +8,94 @@ datasource db {
 }
 
 model Profile {
-  id                  String               @id @default(uuid())
-  email               String               @unique
-  password            String?
-  passwordChangedAt   DateTime?            @map("password_changed_at") // Para invalidar sesiones
-  fullName            String?              @map("full_name")
-  role                String               @default("user")
-  isSuperAdmin        Boolean              @default(false) @map("is_super_admin")
-  isActive            Boolean              @default(true) @map("is_active")
-  lastLoginAt         DateTime?            @map("last_login_at")
-  createdAt           DateTime             @default(now()) @map("created_at")
-  updatedAt           DateTime             @updatedAt @map("updated_at")
-  address             String?
-  phone               String?
-  ci                  String?              @unique
-  organizationMembers OrganizationMember[]
-  sessions            UserSession[]
-  passwordChanges     PasswordChange[]
-  notifications       Notification[]
-  // Tickets de soporte
-  createdTickets      SupportTicket[]       @relation("TicketCreatedBy")
-  assignedTickets     SupportTicket[]       @relation("TicketAssignedTo")
-  ticketAttachments   TicketAttachment[]    @relation("TicketAttachmentUploadedBy")
-  ticketHistory       TicketHistory[]       @relation("TicketHistoryChangedBy")
-  // CMS
-  cmsPagesCreated     CmsPage[]             @relation("CmsPageCreatedBy")
-  cmsPagesUpdated     CmsPage[]             @relation("CmsPageUpdatedBy")
-  cmsBlogPostsCreated CmsBlogPost[]         @relation("CmsBlogPostCreatedBy")
-  cmsBlogPostsUpdated CmsBlogPost[]         @relation("CmsBlogPostUpdatedBy")
-  // Versiones
-  systemVersionsCreated SystemVersion[]     @relation("SystemVersionCreatedBy")
-  // A/B Testing
-  abTestsCreated       AbTest[]             @relation("AbTestCreatedBy")
-  // Integraciones
-  integrationsCreated  Integration[]        @relation("IntegrationCreatedBy")
+  id                    String                    @id @default(uuid())
+  email                 String                    @unique
+  password              String?
+  passwordChangedAt     DateTime?                 @map("password_changed_at")
+  fullName              String?                   @map("full_name")
+  role                  String                    @default("user")
+  isSuperAdmin          Boolean                   @default(false) @map("is_super_admin")
+  isActive              Boolean                   @default(true) @map("is_active")
+  lastLoginAt           DateTime?                 @map("last_login_at")
+  createdAt             DateTime                  @default(now()) @map("created_at")
+  updatedAt             DateTime                  @updatedAt @map("updated_at")
+  address               String?
+  phone                 String?
+  ci                    String?                   @unique
+  twoFactorEnabled      Boolean                   @default(false) @map("two_factor_enabled")
+  twoFactorSecret       String?                   @map("two_factor_secret")
+  twoFactorBackupCodes  Json?                     @map("two_factor_backup_codes")
+  twoFactorEnabledAt    DateTime?                 @map("two_factor_enabled_at")
+  photo                 String?                   @map("photo")
+  abTestsCreated        AbTest[]                  @relation("AbTestCreatedBy")
+  cmsBlogPostsCreated   CmsBlogPost[]             @relation("CmsBlogPostCreatedBy")
+  cmsBlogPostsUpdated   CmsBlogPost[]             @relation("CmsBlogPostUpdatedBy")
+  cmsPagesCreated       CmsPage[]                 @relation("CmsPageCreatedBy")
+  cmsPagesUpdated       CmsPage[]                 @relation("CmsPageUpdatedBy")
+  integrationsCreated   Integration[]             @relation("IntegrationCreatedBy")
+  notifications         Notification[]
   integrationsInstalled OrganizationIntegration[] @relation("IntegrationInstalledBy")
+  passwordChanges       PasswordChange[]
+  assignedTickets       SupportTicket[]           @relation("TicketAssignedTo")
+  createdTickets        SupportTicket[]           @relation("TicketCreatedBy")
+  ticketAttachments     TicketAttachment[]        @relation("TicketAttachmentUploadedBy")
+  ticketHistory         TicketHistory[]           @relation("TicketHistoryChangedBy")
+  sessions              UserSession[]
+  systemVersionsCreated SystemVersion[]           @relation("SystemVersionCreatedBy")
 
-  // Autenticación de dos factores (2FA)
-  twoFactorEnabled     Boolean   @default(false) @map("two_factor_enabled")
-  twoFactorSecret      String?   @map("two_factor_secret") // Secret encriptado
-  twoFactorBackupCodes Json?     @map("two_factor_backup_codes") // Array de códigos hasheados
-  twoFactorEnabledAt   DateTime? @map("two_factor_enabled_at")
-
-  @@map("profiles")
+  @@map("system_users")
 }
 
 model Organization {
-  id                    String               @id @default(uuid())
-  name                  String
-  razonSocial           String?              @map("razon_social") // Razón social de la empresa/organización
-  nit                   String?              // NIT de la empresa/organización (opcional, puede haber duplicados durante migración)
-  slug                  String               @unique
-  ownerId               String               @map("owner_id")
-  subscriptionPlanId    String?              @map("subscription_plan_id")
-  subscriptionStatus    String               @default("trial") @map("subscription_status")
-  subscriptionStartDate DateTime?            @map("subscription_start_date")
-  subscriptionEndDate   DateTime?            @map("subscription_end_date")
-  settings              Json?
-  createdAt             DateTime             @default(now()) @map("created_at")
-  updatedAt             DateTime             @updatedAt @map("updated_at")
-  orders                Order[]
-  organizationMembers   OrganizationMember[]
-  subscriptionPlan      SubscriptionPlan?    @relation(fields: [subscriptionPlanId], references: [id])
-  products              Product[]
-  // Sistema de Ventas
-  categories            Category[]
-  salesRoles            SalesRole[]
-  salesUsers            SalesUser[]
-  salesProducts         SalesProduct[]
-  salesCustomers        SalesCustomer[]
-  sales                 Sale[]
-  quotations            Quotation[]
-  expenses              Expense[]
-  cashRegisters         CashRegister[]
-  branches              Branch[]
-  subscriptions         Subscription[]
-  notifications         Notification[]
-  invoices              Invoice[]
-  paymentMethods        PaymentMethod[]
-  supportTickets        SupportTicket[]
-  whiteLabelBranding    WhiteLabelBranding?
-  userFeedback          UserFeedback[]
-  versionNotifications  VersionNotification[]
-  abTests               AbTest[]
-  customDomains         CustomDomain[]
+  id                       String                    @id @default(uuid())
+  name                     String
+  slug                     String                    @unique
+  ownerId                  String                    @map("owner_id")
+  subscriptionPlanId       String?                   @map("subscription_plan_id")
+  subscriptionStatus       String                    @default("trial") @map("subscription_status")
+  subscriptionStartDate    DateTime?                 @map("subscription_start_date")
+  subscriptionEndDate      DateTime?                 @map("subscription_end_date")
+  settings                 Json?
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  nit                      String?
+  razonSocial              String?                   @map("razon_social")
+  direccion                String?
+  telefono                 String?
+  branches                 Branch[]
+  cashRegisters            CashRegister[]
+  categories               Category[]
+  primaryCustomers         Customer[]                @relation("CustomerPrimaryOrganization")
+  customerOrganizations    CustomerOrganization[]    @relation("CustomerOrganizations")
+  salesCustomers           SalesCustomer[]
+  expenses                 Expense[]
+  orders                   Order[]
+  organizationMembers      OrganizationMember[]
+  salesProducts            SalesProduct[]
+  products                 Product[]
+  quotations               Quotation[]
+  salesRoles               SalesRole[]
+  rolesSas                 RoleSas[]
+  sales                    Sale[]
+  sasSessions              SasSession[]
+  salesUsers               SalesUser[]
+  usuariosSas              UsuarioSas[]
+  abTests                  AbTest[]
+  cmsBlogPosts             CmsBlogPost[]
+  cmsPages                 CmsPage[]
+  customDomains            CustomDomain[]
+  invoices                 Invoice[]
+  notifications            Notification[]
   organizationIntegrations OrganizationIntegration[]
-  customerOrganizations CustomerOrganization[] @relation("CustomerOrganizations")
-  primaryCustomers      Customer[] @relation("CustomerPrimaryOrganization") // Legacy
+  subscriptionPlan         SubscriptionPlan?         @relation(fields: [subscriptionPlanId], references: [id])
+  paymentMethods           PaymentMethod[]
+  subscriptions            Subscription[]
+  supportTickets           SupportTicket[]
+  userFeedback             UserFeedback[]
+  versionNotifications     VersionNotification[]
+  whiteLabelBranding       WhiteLabelBranding?
 
-  @@map("organizations")
+  @@map("system_organizations")
 }
 
 model SubscriptionPlan {
@@ -115,35 +114,32 @@ model SubscriptionPlan {
   isActive      Boolean        @default(true) @map("is_active")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  invoices      Invoice[]
   organizations Organization[]
   subscriptions Subscription[]
-  invoices      Invoice[]
 
-  @@map("subscription_plans")
+  @@map("system_subscription_plans")
 }
 
 model Subscription {
   id             String           @id @default(uuid())
-  organizationId String?          @map("organization_id")
-  customerId     String?          @map("customer_id")
+  organizationId String           @map("organization_id")
   planId         String           @map("plan_id")
-  status         String           @default("active") // active, cancelled, expired, trial
-  billingPeriod  String           @default("monthly") @map("billing_period") // monthly, yearly
+  status         String           @default("active")
+  billingPeriod  String           @default("monthly") @map("billing_period")
   startDate      DateTime         @default(now()) @map("start_date")
   endDate        DateTime?        @map("end_date")
   autoRenew      Boolean          @default(true) @map("auto_renew")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
-  organization   Organization?    @relation(fields: [organizationId], references: [id])
-  customer       Customer?        @relation(fields: [customerId], references: [id])
-  plan           SubscriptionPlan @relation(fields: [planId], references: [id])
   invoices       Invoice[]
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  plan           SubscriptionPlan @relation(fields: [planId], references: [id])
 
-  @@index([customerId, status])
   @@index([organizationId, status])
   @@index([endDate])
   @@index([status, endDate])
-  @@map("subscriptions")
+  @@map("system_subscriptions")
 }
 
 model Role {
@@ -155,7 +151,23 @@ model Role {
   isActive            Boolean              @default(true) @map("is_active")
   organizationMembers OrganizationMember[]
 
-  @@map("roles")
+  @@map("system_roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  module      String
+  action      String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([module])
+  @@index([isActive])
+  @@index([module, action])
+  @@map("system_permissions")
 }
 
 model OrganizationMember {
@@ -167,20 +179,19 @@ model OrganizationMember {
   joinedAt       DateTime     @default(now()) @map("joined_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
   role           Role?        @relation(fields: [roleId], references: [id])
-  profile        Profile      @relation(fields: [userId], references: [id])
 
   @@unique([organizationId, userId])
-  @@map("organization_members")
+  @@map("sales_organization_members")
 }
 
 model Customer {
-  id             String         @id @default(uuid())
-  userId         String         @map("user_id")
-  organizationId String?        @map("organization_id") // Organización principal (legacy, mantener para compatibilidad)
-  razonSocial    String?        @map("razon_social") // DEPRECATED: Mover a Organization. Mantener solo para compatibilidad
-  slug           String?        @unique
-  nit            String?        @unique // DEPRECATED: Mover a Organization. Mantener solo para compatibilidad
-  ci             String?        @unique
+  id             String                 @id @default(uuid())
+  userId         String                 @map("user_id")
+  organizationId String?                @map("organization_id")
+  razonSocial    String?                @map("razon_social")
+  slug           String?                @unique
+  nit            String?                @unique
+  ci             String?                @unique
   nombre         String?
   apellido       String?
   direccion      String?
@@ -189,45 +200,32 @@ model Customer {
   password       String?
   city           String?
   country        String?
-  isActive       Boolean        @default(true) @map("is_active")
-  deletedAt      DateTime?      @map("deleted_at") // Soft delete
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  organization   Organization?  @relation("CustomerPrimaryOrganization", fields: [organizationId], references: [id]) // Organización principal (legacy)
-  organizations  CustomerOrganization[] // Relación muchos-a-muchos con organizaciones
-  orders         Order[]
-  subscriptions  Subscription[]
-  rolesSas       RoleSas[]
-  usuariosSas    UsuarioSas[]
-  branches       Branch[]
-  categories     Category[]
-  salesProducts  SalesProduct[]
-      notifications  Notification[]
+  isActive       Boolean                @default(true) @map("is_active")
+  deletedAt      DateTime?              @map("deleted_at")
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  organization   Organization?          @relation("CustomerPrimaryOrganization", fields: [organizationId], references: [id])
+  organizations  CustomerOrganization[]
 
   @@index([deletedAt])
-  @@map("customers")
+  @@map("sales_customer_accounts")
 }
 
-// Relación muchos-a-muchos entre Customer y Organization
 model CustomerOrganization {
   id             String       @id @default(uuid())
   customerId     String       @map("customer_id")
   organizationId String       @map("organization_id")
-  isPrimary      Boolean      @default(false) @map("is_primary") // Organización principal del cliente
   isActive       Boolean      @default(true) @map("is_active")
   joinedAt       DateTime     @default(now()) @map("joined_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
-  
-  // Relaciones
   customer       Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   organization   Organization @relation("CustomerOrganizations", fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   @@unique([customerId, organizationId])
-  @@index([customerId, isPrimary])
   @@index([organizationId])
   @@index([customerId, isActive])
-  @@map("customer_organizations")
+  @@map("sales_customer_organizations")
 }
 
 model Product {
@@ -249,14 +247,13 @@ model Product {
   @@index([organizationId, stock])
   @@index([organizationId, createdAt])
   @@index([sku])
-  @@map("products")
+  @@map("sales_products_legacy")
 }
 
 model Order {
   id             String        @id @default(uuid())
   userId         String        @map("user_id")
   organizationId String?       @map("organization_id")
-  customerId     String        @map("customer_id")
   orderNumber    String        @unique @map("order_number")
   status         String        @default("pending")
   total          Decimal       @db.Decimal(10, 2)
@@ -264,14 +261,12 @@ model Order {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   orderItems     OrderItem[]
-  customer       Customer      @relation(fields: [customerId], references: [id])
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, createdAt])
-  @@index([customerId, createdAt])
   @@index([status, createdAt])
   @@index([orderNumber])
-  @@map("orders")
+  @@map("sales_orders")
 }
 
 model OrderItem {
@@ -287,34 +282,25 @@ model OrderItem {
 
   @@index([productId, orderId])
   @@index([orderId])
-  @@map("order_items")
+  @@map("sales_order_items")
 }
 
-// ========================================
-// SISTEMA DE VENTAS (Separado del Admin)
-// ========================================
-
-// Categorías de productos
 model Category {
   id             String         @id @default(uuid())
   organizationId String?        @map("organization_id")
-  customerId     String?        @map("customer_id")
   name           String
   description    String?
   isActive       Boolean        @default(true) @map("is_active")
-  deletedAt      DateTime?      @map("deleted_at") // Soft delete
+  deletedAt      DateTime?      @map("deleted_at")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
   organization   Organization?  @relation(fields: [organizationId], references: [id])
-  customer       Customer?      @relation(fields: [customerId], references: [id])
   products       SalesProduct[]
 
-  @@index([customerId])
   @@index([deletedAt])
-  @@map("categories")
+  @@map("sales_categories")
 }
 
-// Roles para el sistema de ventas (separado del admin)
 model SalesRole {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -322,18 +308,17 @@ model SalesRole {
   description    String?
   permissions    Json?
   isActive       Boolean      @default(true) @map("is_active")
-  deletedAt      DateTime?    @map("deleted_at") // Soft delete
+  deletedAt      DateTime?    @map("deleted_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
-  users          SalesUser[]
   organization   Organization @relation(fields: [organizationId], references: [id])
+  users          SalesUser[]
 
   @@index([deletedAt])
   @@index([organizationId, isActive])
   @@map("sales_roles")
 }
 
-// Usuarios del sistema de ventas
 model SalesUser {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -344,21 +329,19 @@ model SalesUser {
   isActive       Boolean      @default(true) @map("is_active")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
+  expenses       Expense[]
+  sales          Sale[]
   organization   Organization @relation(fields: [organizationId], references: [id])
   role           SalesRole?   @relation(fields: [roleId], references: [id])
-  sales          Sale[]
-  expenses       Expense[]
 
   @@index([organizationId, isActive])
   @@index([email, organizationId])
   @@map("sales_users")
 }
 
-// Productos del sistema de ventas
 model SalesProduct {
   id             String          @id @default(uuid())
   organizationId String?         @map("organization_id")
-  customerId     String?         @map("customer_id")
   categoryId     String?         @map("category_id")
   name           String
   description    String?
@@ -372,26 +355,27 @@ model SalesProduct {
   barcode        String?
   imageUrl       String?         @map("image_url")
   isActive       Boolean         @default(true) @map("is_active")
-  deletedAt      DateTime?       @map("deleted_at") // Soft delete
+  deletedAt      DateTime?       @map("deleted_at")
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
-  organization   Organization?   @relation(fields: [organizationId], references: [id])
-  customer       Customer?       @relation(fields: [customerId], references: [id])
+  branchId       String?         @map("branch_id")
+  branch         Branch?         @relation(fields: [branchId], references: [id])
   category       Category?       @relation(fields: [categoryId], references: [id])
-  saleItems      SaleItem[]
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
   quotationItems QuotationItem[]
+  saleItems      SaleItem[]
 
-  @@index([customerId])
   @@index([organizationId, isActive])
   @@index([organizationId, stock])
-  @@index([sku, customerId])
-  @@index([barcode, customerId])
+  @@index([branchId, isActive])
+  @@index([branchId, stock])
+  @@index([sku, organizationId])
+  @@index([barcode, organizationId])
   @@index([categoryId])
   @@index([deletedAt])
   @@map("sales_products")
 }
 
-// Clientes del sistema de ventas
 model SalesCustomer {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -402,14 +386,14 @@ model SalesCustomer {
   address        String?
   city           String?
   country        String?
-  ruc            String? // Número de identificación fiscal
+  ruc            String?
   isActive       Boolean      @default(true) @map("is_active")
-  deletedAt      DateTime?    @map("deleted_at") // Soft delete
+  deletedAt      DateTime?    @map("deleted_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  sales          Sale[]
   quotations     Quotation[]
+  sales          Sale[]
 
   @@index([organizationId, isActive])
   @@index([email, organizationId])
@@ -418,7 +402,6 @@ model SalesCustomer {
   @@map("sales_customers")
 }
 
-// Ventas
 model Sale {
   id             String         @id @default(uuid())
   organizationId String         @map("organization_id")
@@ -434,19 +417,18 @@ model Sale {
   notes          String?
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
+  items          SaleItem[]
+  customer       SalesCustomer? @relation(fields: [customerId], references: [id])
   organization   Organization   @relation(fields: [organizationId], references: [id])
   user           SalesUser      @relation(fields: [userId], references: [id])
-  customer       SalesCustomer? @relation(fields: [customerId], references: [id])
-  items          SaleItem[]
 
   @@index([organizationId, createdAt])
   @@index([customerId, createdAt])
   @@index([userId, createdAt])
   @@index([saleNumber])
-  @@map("sales")
+  @@map("sales_sales")
 }
 
-// Items de venta
 model SaleItem {
   id            String       @id @default(uuid())
   saleId        String       @map("sale_id")
@@ -456,15 +438,14 @@ model SaleItem {
   subtotal      Decimal      @db.Decimal(10, 2)
   trackingCodes Json?        @map("tracking_codes")
   createdAt     DateTime     @default(now()) @map("created_at")
-  sale          Sale         @relation(fields: [saleId], references: [id])
   product       SalesProduct @relation(fields: [productId], references: [id])
+  sale          Sale         @relation(fields: [saleId], references: [id])
 
   @@index([productId, saleId])
   @@index([saleId])
-  @@map("sale_items")
+  @@map("sales_sale_items")
 }
 
-// Cotizaciones
 model Quotation {
   id              String          @id @default(uuid())
   organizationId  String          @map("organization_id")
@@ -481,19 +462,18 @@ model Quotation {
   notes           String?
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
-  organization    Organization    @relation(fields: [organizationId], references: [id])
-  customer        SalesCustomer?  @relation(fields: [customerId], references: [id])
-  branch          Branch?         @relation(fields: [branchId], references: [id])
   items           QuotationItem[]
+  branch          Branch?         @relation(fields: [branchId], references: [id])
+  customer        SalesCustomer?  @relation(fields: [customerId], references: [id])
+  organization    Organization    @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, createdAt])
   @@index([customerId, createdAt])
   @@index([status, createdAt])
   @@index([quotationNumber])
-  @@map("quotations")
+  @@map("sales_quotations")
 }
 
-// Items de cotización
 model QuotationItem {
   id          String        @id @default(uuid())
   quotationId String        @map("quotation_id")
@@ -503,15 +483,14 @@ model QuotationItem {
   unitPrice   Decimal       @map("unit_price") @db.Decimal(10, 2)
   subtotal    Decimal       @db.Decimal(10, 2)
   createdAt   DateTime      @default(now()) @map("created_at")
-  quotation   Quotation     @relation(fields: [quotationId], references: [id])
   product     SalesProduct? @relation(fields: [productId], references: [id])
+  quotation   Quotation     @relation(fields: [quotationId], references: [id])
 
   @@index([quotationId])
   @@index([productId, quotationId])
-  @@map("quotation_items")
+  @@map("sales_quotation_items")
 }
 
-// Gastos
 model Expense {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -524,18 +503,17 @@ model Expense {
   date           DateTime     @db.Date
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
+  branch         Branch?      @relation(fields: [branchId], references: [id])
   organization   Organization @relation(fields: [organizationId], references: [id])
   user           SalesUser    @relation(fields: [userId], references: [id])
-  branch         Branch?      @relation(fields: [branchId], references: [id])
 
   @@index([organizationId, date])
   @@index([userId, date])
   @@index([branchId, date])
   @@index([category, date])
-  @@map("expenses")
+  @@map("sales_expenses")
 }
 
-// Cajas
 model CashRegister {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -550,139 +528,127 @@ model CashRegister {
   closedById     String?      @map("closed_by_id")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
-  organization   Organization @relation(fields: [organizationId], references: [id])
   branch         Branch?      @relation(fields: [branchId], references: [id])
-  openedBy       UsuarioSas?  @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
   closedBy       UsuarioSas?  @relation("CashRegisterClosedBy", fields: [closedById], references: [id])
+  openedBy       UsuarioSas?  @relation("CashRegisterOpenedBy", fields: [openedById], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, isOpen])
   @@index([branchId, isOpen])
-  @@map("cash_registers")
+  @@map("sales_cash_registers")
 }
 
-// Sucursales
 model Branch {
   id             String         @id @default(uuid())
   organizationId String?        @map("organization_id")
-  customerId     String?        @map("customer_id")
   name           String
   address        String?
   phone          String?
   email          String?
   isActive       Boolean        @default(true) @map("is_active")
-  deletedAt      DateTime?      @map("deleted_at") // Soft delete
+  deletedAt      DateTime?      @map("deleted_at")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
   organization   Organization?  @relation(fields: [organizationId], references: [id])
-  customer       Customer?      @relation(fields: [customerId], references: [id])
   cashRegisters  CashRegister[]
+  expenses       Expense[]
+  products       SalesProduct[]
+  quotations     Quotation[]
   rolesSas       RoleSas[]
   usuariosSas    UsuarioSas[]
-  quotations     Quotation[]
-  expenses       Expense[]
 
-  @@index([customerId])
   @@index([deletedAt])
-  @@map("branches")
+  @@map("sales_branches")
 }
 
-// Roles para el Sistema SAS (separado del admin y sales)
 model RoleSas {
-  id          String       @id @default(uuid())
-  nombre      String       @map("nombre")
-  descripcion String?      @map("descripcion")
-  customerId  String       @map("customer_id")
-  sucursalId  String?      @map("sucursal_id")
-  isActive    Boolean      @default(true) @map("is_active")
-  deletedAt   DateTime?    @map("deleted_at") // Soft delete
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-  customer    Customer     @relation(fields: [customerId], references: [id])
-  sucursal    Branch?      @relation(fields: [sucursalId], references: [id])
-  usuariosSas UsuarioSas[]
+  id             String       @id @default(uuid())
+  nombre         String       @map("nombre")
+  descripcion    String?      @map("descripcion")
+  sucursalId     String?      @map("sucursal_id")
+  isActive       Boolean      @default(true) @map("is_active")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sucursal       Branch?      @relation(fields: [sucursalId], references: [id])
+  usuariosSas    UsuarioSas[]
 
-  @@index([customerId])
+  @@index([organizationId])
   @@index([deletedAt])
-  @@map("roles_sas")
+  @@map("sales_roles_sas")
 }
 
-// Usuarios para el Sistema SAS (separado del admin)
 model UsuarioSas {
-  id                  String         @id @default(uuid())
-  ci                  String?        @unique
-  nombre              String
-  apellido            String
-  direccion           String?        @map("direccion")
-  telefono            String?        @map("telefono")
-  correo              String?        @unique @map("correo")
-  contraseña         String?        @map("contraseña")
-  passwordChangedAt   DateTime?      @map("password_changed_at")
-  rolId               String?        @map("rol_id")
-  foto                String?        @map("foto")
-  sucursalId          String?        @map("sucursal_id")
-  customerId          String         @map("customer_id")
-  isActive            Boolean        @default(true) @map("is_active")
-  deletedAt           DateTime?      @map("deleted_at") // Soft delete
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
-  rol                 RoleSas?       @relation(fields: [rolId], references: [id])
-  sucursal            Branch?        @relation(fields: [sucursalId], references: [id])
-  customer            Customer       @relation(fields: [customerId], references: [id])
-  openedCashRegisters CashRegister[] @relation("CashRegisterOpenedBy")
-  closedCashRegisters CashRegister[] @relation("CashRegisterClosedBy")
-  sasSessions         SasSession[]
-  notifications       Notification[]
+  id                   String         @id @default(uuid())
+  ci                   String?        @unique
+  nombre               String
+  apellido             String
+  direccion            String?        @map("direccion")
+  telefono             String?        @map("telefono")
+  correo               String?        @unique @map("correo")
+  contraseña          String?        @map("contraseña")
+  passwordChangedAt    DateTime?      @map("password_changed_at")
+  rolId                String?        @map("rol_id")
+  foto                 String?        @map("foto")
+  sucursalId           String?        @map("sucursal_id")
+  isActive             Boolean        @default(true) @map("is_active")
+  deletedAt            DateTime?      @map("deleted_at")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+  twoFactorEnabled     Boolean        @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?        @map("two_factor_secret")
+  twoFactorBackupCodes Json?          @map("two_factor_backup_codes")
+  twoFactorEnabledAt   DateTime?      @map("two_factor_enabled_at")
+  organizationId       String         @map("organization_id")
+  closedCashRegisters  CashRegister[] @relation("CashRegisterClosedBy")
+  openedCashRegisters  CashRegister[] @relation("CashRegisterOpenedBy")
+  sasSessions          SasSession[]
+  organization         Organization   @relation(fields: [organizationId], references: [id])
+  rol                  RoleSas?       @relation(fields: [rolId], references: [id])
+  sucursal             Branch?        @relation(fields: [sucursalId], references: [id])
+  notifications        Notification[]
 
-  // Autenticación de dos factores (2FA)
-  twoFactorEnabled     Boolean   @default(false) @map("two_factor_enabled")
-  twoFactorSecret      String?   @map("two_factor_secret") // Secret encriptado
-  twoFactorBackupCodes Json?     @map("two_factor_backup_codes") // Array de códigos hasheados
-  twoFactorEnabledAt   DateTime? @map("two_factor_enabled_at")
-
-  @@index([customerId, isActive])
-  @@index([correo, customerId])
-  @@index([ci, customerId])
+  @@index([organizationId, isActive])
+  @@index([correo, organizationId])
+  @@index([ci, organizationId])
   @@index([deletedAt])
-  @@map("usuarios_sas")
+  @@map("sales_usuarios_sas")
 }
 
-// Sesiones para sistema SAS (UsuarioSas)
 model SasSession {
-  id             String     @id @default(uuid())
-  userId         String     @map("user_id")
-  customerId     String     @map("customer_id")
-  sessionToken   String     @unique @map("session_token")
-  ipAddress      String?    @map("ip_address")
-  userAgent      String?    @map("user_agent")
-  deviceInfo     Json?      @map("device_info")
-  lastActivityAt DateTime   @default(now()) @map("last_activity_at")
-  expiresAt      DateTime   @map("expires_at")
-  isActive       Boolean    @default(true) @map("is_active")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  user           UsuarioSas @relation(fields: [userId], references: [id])
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  sessionToken   String       @unique @map("session_token")
+  ipAddress      String?      @map("ip_address")
+  userAgent      String?      @map("user_agent")
+  deviceInfo     Json?        @map("device_info")
+  lastActivityAt DateTime     @default(now()) @map("last_activity_at")
+  expiresAt      DateTime     @map("expires_at")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           UsuarioSas   @relation(fields: [userId], references: [id])
 
   @@index([userId, isActive])
-  @@index([customerId, isActive])
+  @@index([organizationId, isActive])
   @@index([sessionToken])
   @@index([lastActivityAt])
   @@index([expiresAt])
-  @@map("sas_sessions")
+  @@map("sales_sas_sessions")
 }
 
-// ========================================
-// SEGURIDAD Y AUDITORÍA
-// ========================================
-
-// Logs de seguridad para auditoría
 model SecurityLog {
   id             String   @id @default(uuid())
-  type           String // LOGIN_ATTEMPT, LOGIN_SUCCESS, LOGIN_FAILED, SENSITIVE_ACTION, etc.
+  type           String
   userId         String?  @map("user_id")
   customerId     String?  @map("customer_id")
   organizationId String?  @map("organization_id")
   ipAddress      String?  @map("ip_address")
   userAgent      String?  @map("user_agent")
-  details        Json? // Información adicional del evento
+  details        Json?
   success        Boolean  @default(false)
   errorMessage   String?  @map("error_message")
   createdAt      DateTime @default(now()) @map("created_at")
@@ -693,36 +659,34 @@ model SecurityLog {
   @@index([type, createdAt])
   @@index([ipAddress, createdAt])
   @@index([success, createdAt])
-  @@map("security_logs")
+  @@map("system_security_logs")
 }
 
-// Rotación de Secrets JWT
 model JwtSecret {
   id         String    @id @default(uuid())
-  systemType String // 'admin' | 'sas' | 'general'
-  secretKey  String    @map("secret_key") // Encriptado o hasheado
+  systemType String
+  secretKey  String    @map("secret_key")
   version    Int       @default(1)
   isActive   Boolean   @default(true) @map("is_active")
   createdAt  DateTime  @default(now()) @map("created_at")
-  expiresAt  DateTime? @map("expires_at") // Fecha de expiración (opcional)
-  rotatedAt  DateTime? @map("rotated_at") // Fecha de última rotación
+  expiresAt  DateTime? @map("expires_at")
+  rotatedAt  DateTime? @map("rotated_at")
 
   @@unique([systemType, version])
   @@index([systemType, isActive])
   @@index([expiresAt])
-  @@map("jwt_secrets")
+  @@map("system_jwt_secrets")
 }
 
-// Sesiones de usuario activas
 model UserSession {
   id             String   @id @default(uuid())
   userId         String   @map("user_id")
-  sessionToken   String   @unique @map("session_token") // JWT token ID o hash
-  systemType     String   @map("system_type") // 'admin' | 'sas'
-  customerId     String?  @map("customer_id") // Para sistema SAS
+  sessionToken   String   @unique @map("session_token")
+  systemType     String   @map("system_type")
+  customerId     String?  @map("customer_id")
   ipAddress      String?  @map("ip_address")
   userAgent      String?  @map("user_agent")
-  deviceInfo     Json?    @map("device_info") // Información del dispositivo
+  deviceInfo     Json?    @map("device_info")
   lastActivityAt DateTime @default(now()) @map("last_activity_at")
   expiresAt      DateTime @map("expires_at")
   isActive       Boolean  @default(true) @map("is_active")
@@ -735,599 +699,496 @@ model UserSession {
   @@index([customerId, isActive])
   @@index([lastActivityAt])
   @@index([expiresAt])
-  @@map("user_sessions")
+  @@map("system_user_sessions")
 }
 
-// Tracking de cambios de contraseña (para invalidar sesiones)
 model PasswordChange {
   id                  String   @id @default(uuid())
   userId              String   @map("user_id")
-  systemType          String   @map("system_type") // 'admin' | 'sas'
+  systemType          String   @map("system_type")
   changedAt           DateTime @default(now()) @map("changed_at")
-  invalidatedSessions Int      @default(0) @map("invalidated_sessions") // Cantidad de sesiones invalidadas
+  invalidatedSessions Int      @default(0) @map("invalidated_sessions")
   user                Profile  @relation(fields: [userId], references: [id])
 
   @@index([userId, changedAt])
   @@index([systemType, changedAt])
-  @@map("password_changes")
+  @@map("system_password_changes")
 }
 
-// Notificaciones en tiempo real
 model Notification {
-  id            String    @id @default(uuid())
-  type          String    // 'stock_low', 'new_sale', 'new_quotation', 'system', etc.
-  title         String
-  message       String
-  data          Json?     // Datos adicionales (IDs, URLs, etc.)
-  
-  // Destinatarios
-  userId        String?   @map("user_id") // Para usuarios admin
-  usuarioSasId  String?   @map("usuario_sas_id") // Para usuarios SAS
-  organizationId String?  @map("organization_id") // Para toda la organización
-  customerId    String?   @map("customer_id") // Para un customer específico
-  
-  // Estado
-  isRead        Boolean   @default(false) @map("is_read")
-  readAt        DateTime? @map("read_at")
-  
-  // Metadata
-  createdAt     DateTime  @default(now()) @map("created_at")
-  expiresAt     DateTime? @map("expires_at") // Auto-eliminar después de esta fecha
-  
-  // Relaciones
-  user          Profile?  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  usuarioSas    UsuarioSas? @relation(fields: [usuarioSasId], references: [id], onDelete: Cascade)
-  organization  Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  type           String
+  title          String
+  message        String
+  data           Json?
+  userId         String?       @map("user_id")
+  usuarioSasId   String?       @map("usuario_sas_id")
+  organizationId String?       @map("organization_id")
+  isRead         Boolean       @default(false) @map("is_read")
+  readAt         DateTime?     @map("read_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  expiresAt      DateTime?     @map("expires_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           Profile?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usuarioSas     UsuarioSas?   @relation(fields: [usuarioSasId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
   @@index([usuarioSasId, isRead, createdAt])
   @@index([organizationId, isRead, createdAt])
-  @@index([customerId, isRead, createdAt])
   @@index([type, createdAt])
   @@index([expiresAt])
-  @@map("notifications")
+  @@map("system_notifications")
 }
 
-// ========================================
-// SISTEMA DE CONFIGURACIONES DE ADMINISTRACIÓN
-// (Separado del sistema SAS)
-// ========================================
-
-// Configuración principal del sistema de administración
 model AdminSystemConfig {
-  id                String   @id @default(uuid())
-  key               String   @unique // Clave única de configuración
-  value             Json     // Valor de la configuración (flexible)
-  description       String?  // Descripción de la configuración
-  category          String   // Categoría: 'general', 'security', 'maintenance', 'notifications', etc.
-  isEditable        Boolean  @default(true) @map("is_editable") // Si se puede editar desde UI
-  updatedBy         String?  @map("updated_by") // ID del usuario que actualizó
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  description String?
+  category    String
+  isEditable  Boolean  @default(true) @map("is_editable")
+  updatedBy   String?  @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([category])
   @@index([key, category])
-  @@map("admin_system_configs")
+  @@map("system_configs")
 }
 
-// Historial de cambios en configuraciones
 model AdminSystemConfigHistory {
-  id          String   @id @default(uuid())
-  configKey   String   @map("config_key")
-  oldValue    Json?    @map("old_value")
-  newValue    Json     @map("new_value")
-  changedBy   String   @map("changed_by") // ID del usuario
-  reason      String?  // Razón del cambio
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  configKey String   @map("config_key")
+  oldValue  Json?    @map("old_value")
+  newValue  Json     @map("new_value")
+  changedBy String   @map("changed_by")
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([configKey, createdAt])
   @@index([changedBy, createdAt])
-  @@map("admin_system_config_history")
+  @@map("system_config_history")
 }
 
-// Gestión de backups del sistema
 model AdminBackup {
-  id              String    @id @default(uuid())
-  name            String    // Nombre del backup
-  type            String    // 'manual', 'automatic', 'scheduled'
-  status          String    @default("pending") // 'pending', 'running', 'completed', 'failed'
-  filePath        String?   @map("file_path") // Ruta del archivo de backup
-  fileSize        BigInt?   @map("file_size") // Tamaño en bytes
-  databaseName    String    @map("database_name")
-  schemaOnly      Boolean   @default(false) @map("schema_only") // Solo schema o datos también
-  compressed      Boolean   @default(true) // Si está comprimido
-  errorMessage    String?   @map("error_message")
-  scheduledAt     DateTime? @map("scheduled_at") // Para backups programados
-  startedAt       DateTime? @map("started_at")
-  completedAt     DateTime? @map("completed_at")
-  createdBy       String?   @map("created_by") // ID del usuario
-  retentionDays   Int?      @map("retention_days") // Días de retención
-  expiresAt       DateTime? @map("expires_at") // Fecha de expiración
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id            String    @id @default(uuid())
+  name          String
+  type          String
+  status        String    @default("pending")
+  filePath      String?   @map("file_path")
+  fileSize      BigInt?   @map("file_size")
+  databaseName  String    @map("database_name")
+  schemaOnly    Boolean   @default(false) @map("schema_only")
+  compressed    Boolean   @default(true)
+  errorMessage  String?   @map("error_message")
+  scheduledAt   DateTime? @map("scheduled_at")
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  createdBy     String?   @map("created_by")
+  retentionDays Int?      @map("retention_days")
+  expiresAt     DateTime? @map("expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
   @@index([status, createdAt])
   @@index([type, createdAt])
   @@index([createdBy, createdAt])
   @@index([expiresAt])
-  @@map("admin_backups")
+  @@map("system_backups")
 }
 
-// Configuración de Email/SMTP
 model AdminEmailConfig {
-  id              String   @id @default(uuid())
-  name            String   // Nombre de la configuración (ej: "Principal", "Soporte")
-  host            String   // SMTP host
-  port            Int      @default(587)
-  secure          Boolean  @default(false) // SSL/TLS
-  user            String   // Usuario SMTP
-  password        String   // Contraseña encriptada
-  fromEmail       String   @map("from_email") // Email remitente
-  fromName        String?  @map("from_name") // Nombre remitente
-  replyTo         String?  @map("reply_to")
-  isActive        Boolean  @default(false) @map("is_active")
-  isDefault       Boolean  @default(false) @map("is_default")
-  lastTestedAt    DateTime? @map("last_tested_at")
-  lastTestResult  String?  @map("last_test_result") // 'success', 'failed'
-  lastTestError   String?  @map("last_test_error")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  updatedBy       String?  @map("updated_by")
+  id             String    @id @default(uuid())
+  name           String
+  host           String
+  port           Int       @default(587)
+  secure         Boolean   @default(false)
+  user           String
+  password       String
+  fromEmail      String    @map("from_email")
+  fromName       String?   @map("from_name")
+  replyTo        String?   @map("reply_to")
+  isActive       Boolean   @default(false) @map("is_active")
+  isDefault      Boolean   @default(false) @map("is_default")
+  lastTestedAt   DateTime? @map("last_tested_at")
+  lastTestResult String?   @map("last_test_result")
+  lastTestError  String?   @map("last_test_error")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  updatedBy      String?   @map("updated_by")
 
   @@index([isActive, isDefault])
-  @@map("admin_email_configs")
+  @@map("system_email_configs")
 }
 
-// Configuración de alertas del sistema
 model AdminAlertConfig {
-  id              String   @id @default(uuid())
-  name            String   // Nombre de la alerta
-  type            String   // 'security', 'performance', 'business', 'system'
-  enabled         Boolean  @default(true)
-  threshold       Json?    // Umbrales de la alerta (ej: { cpu: 80, memory: 90 })
-  conditions      Json     // Condiciones para disparar la alerta
-  channels        Json     // Canales: ['email', 'sms', 'webhook', 'in_app']
-  recipients      Json?    // Destinatarios: { emails: [], userIds: [] }
-  frequency       String   @default("immediate") // 'immediate', 'hourly', 'daily'
+  id              String    @id @default(uuid())
+  name            String
+  type            String
+  enabled         Boolean   @default(true)
+  threshold       Json?
+  conditions      Json
+  channels        Json
+  recipients      Json?
+  frequency       String    @default("immediate")
   lastTriggeredAt DateTime? @map("last_triggered_at")
-  triggerCount    Int      @default(0) @map("trigger_count")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  triggerCount    Int       @default(0) @map("trigger_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([type, enabled])
   @@index([enabled, type])
-  @@map("admin_alert_configs")
+  @@map("system_alert_configs")
 }
 
-// Configuración de integraciones externas
 model AdminIntegrationConfig {
-  id              String   @id @default(uuid())
-  name            String   // Nombre de la integración
-  type            String   // 'payment', 'api', 'webhook', 'oauth', 'sso'
-  provider        String   // Proveedor (ej: 'stripe', 'paypal', 'custom')
-  enabled         Boolean  @default(false)
-  config          Json     // Configuración específica (API keys, endpoints, etc.)
-  credentials     Json?    // Credenciales encriptadas
-  webhookUrl      String?  @map("webhook_url")
-  webhookSecret   String?  @map("webhook_secret") // Secret para validar webhooks
-  testMode        Boolean  @default(true) @map("test_mode")
-  lastTestedAt    DateTime? @map("last_tested_at")
-  lastTestResult  String?  @map("last_test_result")
-  metadata        Json?    // Metadata adicional
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  updatedBy       String?  @map("updated_by")
+  id             String    @id @default(uuid())
+  name           String
+  type           String
+  provider       String
+  enabled        Boolean   @default(false)
+  config         Json
+  credentials    Json?
+  webhookUrl     String?   @map("webhook_url")
+  webhookSecret  String?   @map("webhook_secret")
+  testMode       Boolean   @default(true) @map("test_mode")
+  lastTestedAt   DateTime? @map("last_tested_at")
+  lastTestResult String?   @map("last_test_result")
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  updatedBy      String?   @map("updated_by")
 
   @@index([type, enabled])
   @@index([provider, type])
-  @@map("admin_integration_configs")
+  @@map("system_integration_configs")
 }
 
-// ========================================
-// SISTEMA DE FACTURACIÓN Y PAGOS
-// ========================================
-
-// Facturas (Invoices)
 model Invoice {
-  id                String    @id @default(uuid())
-  invoiceNumber     String    @unique @map("invoice_number") // Número de factura único
-  organizationId    String?   @map("organization_id")
-  subscriptionId    String?   @map("subscription_id")
-  subscriptionPlanId String?  @map("subscription_plan_id")
-  
-  // Información de facturación
-  billingName       String    @map("billing_name") // Nombre o razón social
-  billingEmail      String    @map("billing_email")
-  billingAddress    String?   @map("billing_address")
-  billingTaxId      String?   @map("billing_tax_id") // NIT, CUIT, etc.
-  
-  // Montos
-  subtotal          Decimal   @db.Decimal(10, 2)
-  tax               Decimal   @default(0) @db.Decimal(10, 2)
-  discount          Decimal   @default(0) @db.Decimal(10, 2)
-  total             Decimal   @db.Decimal(10, 2)
-  currency          String    @default("USD") @map("currency")
-  
-  // Estado y fechas
-  status            String    @default("pending") // pending, paid, overdue, cancelled, refunded
-  issueDate         DateTime  @default(now()) @map("issue_date")
-  dueDate           DateTime  @map("due_date")
-  paidAt            DateTime? @map("paid_at")
-  
-  // Información de pago
-  paymentMethodId   String?   @map("payment_method_id")
-  paymentGateway    String?   @map("payment_gateway") // stripe, paypal, mercado_pago, manual
-  paymentGatewayId  String?   @map("payment_gateway_id") // ID en el gateway externo
-  paymentLink       String?   @map("payment_link") // Link de pago del gateway
-  
-  // Recordatorios
-  reminderSentAt    DateTime? @map("reminder_sent_at")
-  reminderCount     Int       @default(0) @map("reminder_count")
-  
-  // Metadata
-  description       String?   @map("description")
-  notes             String?   @map("notes")
-  metadata          Json?     @map("metadata") // Información adicional
-  
-  // Relaciones
-  organization      Organization?    @relation(fields: [organizationId], references: [id])
-  subscription      Subscription?    @relation(fields: [subscriptionId], references: [id])
-  subscriptionPlan  SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
-  paymentMethod     PaymentMethod?   @relation(fields: [paymentMethodId], references: [id])
-  payments          Payment[]
-  
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  
+  id                 String            @id @default(uuid())
+  invoiceNumber      String            @unique @map("invoice_number")
+  organizationId     String?           @map("organization_id")
+  subscriptionId     String?           @map("subscription_id")
+  subscriptionPlanId String?           @map("subscription_plan_id")
+  billingName        String            @map("billing_name")
+  billingEmail       String            @map("billing_email")
+  billingAddress     String?           @map("billing_address")
+  billingTaxId       String?           @map("billing_tax_id")
+  subtotal           Decimal           @db.Decimal(10, 2)
+  tax                Decimal           @default(0) @db.Decimal(10, 2)
+  discount           Decimal           @default(0) @db.Decimal(10, 2)
+  total              Decimal           @db.Decimal(10, 2)
+  currency           String            @default("USD") @map("currency")
+  status             String            @default("pending")
+  issueDate          DateTime          @default(now()) @map("issue_date")
+  dueDate            DateTime          @map("due_date")
+  paidAt             DateTime?         @map("paid_at")
+  paymentMethodId    String?           @map("payment_method_id")
+  paymentGateway     String?           @map("payment_gateway")
+  paymentGatewayId   String?           @map("payment_gateway_id")
+  paymentLink        String?           @map("payment_link")
+  reminderSentAt     DateTime?         @map("reminder_sent_at")
+  reminderCount      Int               @default(0) @map("reminder_count")
+  description        String?           @map("description")
+  notes              String?           @map("notes")
+  metadata           Json?             @map("metadata")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  organization       Organization?     @relation(fields: [organizationId], references: [id])
+  paymentMethod      PaymentMethod?    @relation(fields: [paymentMethodId], references: [id])
+  subscription       Subscription?     @relation(fields: [subscriptionId], references: [id])
+  subscriptionPlan   SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  payments           Payment[]
+
   @@index([organizationId, status, createdAt])
   @@index([subscriptionId, status])
   @@index([status, dueDate])
   @@index([invoiceNumber])
   @@index([dueDate])
   @@index([issueDate])
-  @@map("invoices")
+  @@map("system_invoices")
 }
 
-// Pagos (Payments)
 model Payment {
-  id                String    @id @default(uuid())
-  invoiceId         String    @map("invoice_id")
-  paymentMethodId   String?   @map("payment_method_id")
-  
-  // Monto
-  amount            Decimal   @db.Decimal(10, 2)
-  currency          String    @default("USD") @map("currency")
-  
-  // Estado
-  status            String    @default("pending") // pending, processing, completed, failed, refunded
-  paymentGateway    String    @map("payment_gateway") // stripe, paypal, mercado_pago, manual
-  paymentGatewayId  String?   @map("payment_gateway_id") // ID de transacción en el gateway
-  paymentIntentId   String?   @map("payment_intent_id") // ID del intent (Stripe)
-  
-  // Información de pago
-  paymentMethodType String?   @map("payment_method_type") // card, bank_transfer, cash, etc.
-  last4             String?   @map("last4") // Últimos 4 dígitos de tarjeta
-  brand             String?   @map("brand") // visa, mastercard, etc.
-  
-  // Fechas
-  paidAt            DateTime? @map("paid_at")
-  processedAt       DateTime? @map("processed_at")
-  failedAt          DateTime? @map("failed_at")
-  
-  // Información de error (si falló)
-  errorCode         String?   @map("error_code")
-  errorMessage      String?   @map("error_message")
-  
-  // Metadata
-  receiptUrl        String?   @map("receipt_url")
-  metadata          Json?     @map("metadata")
-  
-  // Relaciones
-  invoice           Invoice       @relation(fields: [invoiceId], references: [id])
+  id                String         @id @default(uuid())
+  invoiceId         String         @map("invoice_id")
+  paymentMethodId   String?        @map("payment_method_id")
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String         @default("USD") @map("currency")
+  status            String         @default("pending")
+  paymentGateway    String         @map("payment_gateway")
+  paymentGatewayId  String?        @map("payment_gateway_id")
+  paymentIntentId   String?        @map("payment_intent_id")
+  paymentMethodType String?        @map("payment_method_type")
+  last4             String?        @map("last4")
+  brand             String?        @map("brand")
+  paidAt            DateTime?      @map("paid_at")
+  processedAt       DateTime?      @map("processed_at")
+  failedAt          DateTime?      @map("failed_at")
+  errorCode         String?        @map("error_code")
+  errorMessage      String?        @map("error_message")
+  receiptUrl        String?        @map("receipt_url")
+  metadata          Json?          @map("metadata")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  invoice           Invoice        @relation(fields: [invoiceId], references: [id])
   paymentMethod     PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-  
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  
+
   @@index([invoiceId, status])
   @@index([paymentGateway, paymentGatewayId])
   @@index([status, createdAt])
   @@index([paidAt])
-  @@map("payments")
+  @@map("system_payments")
 }
 
-// Métodos de Pago (Payment Methods)
 model PaymentMethod {
-  id                String    @id @default(uuid())
-  organizationId    String?   @map("organization_id")
-  
-  // Tipo de método
-  type              String    @map("type") // card, bank_account, paypal, etc.
-  provider          String    @map("provider") // stripe, paypal, mercado_pago, manual
-  
-  // Información del método
-  label             String    @map("label") // Alias del usuario (ej: "Tarjeta Principal")
-  last4             String?   @map("last4") // Últimos 4 dígitos
-  brand             String?   @map("brand") // visa, mastercard, amex, etc.
-  expiryMonth       Int?      @map("expiry_month")
-  expiryYear        Int?      @map("expiry_year")
-  
-  // ID en el gateway externo
-  gatewayId         String?   @unique @map("gateway_id") // ID del método en Stripe/PayPal/etc.
-  
-  // Estado
-  isDefault         Boolean   @default(false) @map("is_default")
-  isActive          Boolean   @default(true) @map("is_active")
-  
-  // Metadata
-  metadata          Json?     @map("metadata")
-  
-  // Relaciones
-  organization      Organization? @relation(fields: [organizationId], references: [id])
-  invoices          Invoice[]
-  payments          Payment[]
-  
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  
+  id             String        @id @default(uuid())
+  organizationId String?       @map("organization_id")
+  type           String        @map("type")
+  provider       String        @map("provider")
+  label          String        @map("label")
+  last4          String?       @map("last4")
+  brand          String?       @map("brand")
+  expiryMonth    Int?          @map("expiry_month")
+  expiryYear     Int?          @map("expiry_year")
+  gatewayId      String?       @unique @map("gateway_id")
+  isDefault      Boolean       @default(false) @map("is_default")
+  isActive       Boolean       @default(true) @map("is_active")
+  metadata       Json?         @map("metadata")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  invoices       Invoice[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  payments       Payment[]
+
   @@index([organizationId, isActive, isDefault])
   @@index([type, provider])
-  @@map("payment_methods")
+  @@map("system_payment_methods")
 }
 
-// ========================================
-// SISTEMA DE TICKETS DE SOPORTE
-// ========================================
-
 model SupportTicket {
-  id              String            @id @default(uuid())
-  ticketNumber    String            @unique @map("ticket_number")
-  organizationId  String            @map("organization_id")
-  createdById     String?           @map("created_by_id") // Usuario que creó el ticket (de la organización)
-  assignedToId    String?           @map("assigned_to_id") // Administrador asignado
+  id              String             @id @default(uuid())
+  ticketNumber    String             @unique @map("ticket_number")
+  organizationId  String             @map("organization_id")
+  createdById     String?            @map("created_by_id")
+  assignedToId    String?            @map("assigned_to_id")
   title           String
   description     String
-  status          String            @default("open") // open, in_progress, resolved, closed
-  priority        String            @default("medium") // low, medium, high, urgent
-  category        String?           // bug, feature_request, question, billing, etc.
-  resolvedAt      DateTime?         @map("resolved_at")
-  closedAt        DateTime?         @map("closed_at")
-  firstResponseAt DateTime?         @map("first_response_at") // Tiempo de primera respuesta
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  
-  // Relaciones
-  organization    Organization      @relation(fields: [organizationId], references: [id])
-  createdBy       Profile?          @relation("TicketCreatedBy", fields: [createdById], references: [id])
-  assignedTo      Profile?          @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
-  comments        TicketComment[]
+  status          String             @default("open")
+  priority        String             @default("medium")
+  category        String?
+  resolvedAt      DateTime?          @map("resolved_at")
+  closedAt        DateTime?          @map("closed_at")
+  firstResponseAt DateTime?          @map("first_response_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  assignedTo      Profile?           @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  createdBy       Profile?           @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  organization    Organization       @relation(fields: [organizationId], references: [id])
   attachments     TicketAttachment[]
+  comments        TicketComment[]
   history         TicketHistory[]
-  
+
   @@index([organizationId, status, createdAt])
   @@index([assignedToId, status])
   @@index([status, priority, createdAt])
   @@index([ticketNumber])
-  @@map("support_tickets")
+  @@map("system_support_tickets")
 }
 
 model TicketComment {
-  id              String       @id @default(uuid())
-  ticketId        String       @map("ticket_id")
-  authorId        String       @map("author_id") // Usuario que escribió el comentario
-  authorType      String       @map("author_type") // 'admin' | 'organization' | 'system'
-  content         String
-  isInternal      Boolean      @default(false) @map("is_internal") // Solo visible para admins
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  
-  // Relaciones
-  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  attachments     TicketAttachment[]
-  
+  id          String             @id @default(uuid())
+  ticketId    String             @map("ticket_id")
+  authorId    String             @map("author_id")
+  authorType  String             @map("author_type")
+  content     String
+  isInternal  Boolean            @default(false) @map("is_internal")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  attachments TicketAttachment[]
+  ticket      SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
   @@index([ticketId, createdAt])
   @@index([authorId, authorType])
-  @@map("ticket_comments")
+  @@map("system_ticket_comments")
 }
 
 model TicketAttachment {
-  id              String        @id @default(uuid())
-  ticketId        String?       @map("ticket_id")
-  commentId       String?       @map("comment_id")
-  fileName        String        @map("file_name")
-  filePath        String        @map("file_path")
-  fileSize        Int           @map("file_size") // En bytes
-  mimeType        String        @map("mime_type")
-  uploadedById    String        @map("uploaded_by_id")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  
-  // Relaciones
-  ticket          SupportTicket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  comment         TicketComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  uploadedBy      Profile        @relation("TicketAttachmentUploadedBy", fields: [uploadedById], references: [id])
-  
+  id           String         @id @default(uuid())
+  ticketId     String?        @map("ticket_id")
+  commentId    String?        @map("comment_id")
+  fileName     String         @map("file_name")
+  filePath     String         @map("file_path")
+  fileSize     Int            @map("file_size")
+  mimeType     String         @map("mime_type")
+  uploadedById String         @map("uploaded_by_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  comment      TicketComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  ticket       SupportTicket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedBy   Profile        @relation("TicketAttachmentUploadedBy", fields: [uploadedById], references: [id])
+
   @@index([ticketId])
   @@index([commentId])
-  @@map("ticket_attachments")
+  @@map("system_ticket_attachments")
 }
 
 model TicketHistory {
-  id              String        @id @default(uuid())
-  ticketId        String        @map("ticket_id")
-  changedById     String?       @map("changed_by_id")
-  changeType      String        @map("change_type") // status_changed, priority_changed, assigned, etc.
-  oldValue        String?       @map("old_value")
-  newValue        String?       @map("new_value")
-  description     String?       // Descripción legible del cambio
-  createdAt       DateTime      @default(now()) @map("created_at")
-  
-  // Relaciones
-  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  changedBy       Profile?      @relation("TicketHistoryChangedBy", fields: [changedById], references: [id])
-  
+  id          String        @id @default(uuid())
+  ticketId    String        @map("ticket_id")
+  changedById String?       @map("changed_by_id")
+  changeType  String        @map("change_type")
+  oldValue    String?       @map("old_value")
+  newValue    String?       @map("new_value")
+  description String?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  changedBy   Profile?      @relation("TicketHistoryChangedBy", fields: [changedById], references: [id])
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
   @@index([ticketId, createdAt])
   @@index([changeType, createdAt])
-  @@map("ticket_history")
+  @@map("system_ticket_history")
 }
-
-// ========================================
-// SISTEMA DE WHITE LABEL
-// ========================================
 
 model WhiteLabelBranding {
-  id                  String       @id @default(uuid())
-  organizationId      String       @unique @map("organization_id")
-  logoUrl             String?      @map("logo_url")
-  faviconUrl          String?      @map("favicon_url")
-  primaryColor        String?      @map("primary_color")
-  secondaryColor      String?      @map("secondary_color")
-  customEmailDomain   String?      @map("custom_email_domain")
-  customEmailFrom     String?      @map("custom_email_from")
-  companyName         String?      @map("company_name")
-  companyWebsite      String?      @map("company_website")
-  customLandingPage   Json?        @map("custom_landing_page") // HTML/CSS personalizado
-  enabled             Boolean      @default(false)
-  createdAt           DateTime     @default(now()) @map("created_at")
-  updatedAt           DateTime     @updatedAt @map("updated_at")
-  
-  // Relaciones
-  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
-  @@map("white_label_branding")
+  id                String       @id @default(uuid())
+  organizationId    String       @unique @map("organization_id")
+  logoUrl           String?      @map("logo_url")
+  faviconUrl        String?      @map("favicon_url")
+  primaryColor      String?      @map("primary_color")
+  secondaryColor    String?      @map("secondary_color")
+  customEmailDomain String?      @map("custom_email_domain")
+  customEmailFrom   String?      @map("custom_email_from")
+  companyName       String?      @map("company_name")
+  companyWebsite    String?      @map("company_website")
+  customLandingPage Json?        @map("custom_landing_page")
+  enabled           Boolean      @default(false)
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("system_white_label_branding")
 }
 
-// ========================================
-// GESTIÓN DE CONTENIDO (CMS)
-// ========================================
-
 model CmsPage {
-  id              String       @id @default(uuid())
-  slug            String       @unique
+  id              String        @id @default(uuid())
+  slug            String
   title           String
-  content         String       @db.Text // HTML del editor WYSIWYG
-  excerpt         String?      @db.Text
-  metaTitle       String?      @map("meta_title")
-  metaDescription String?      @map("meta_description")
-  pageType        String       @default("page") @map("page_type") // page, terms, privacy, documentation
-  isPublished     Boolean      @default(false) @map("is_published")
-  publishedAt     DateTime?    @map("published_at")
-  order           Int          @default(0)
-  createdById     String?      @map("created_by_id")
-  updatedById     String?      @map("updated_by_id")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  
-  // Relaciones
-  createdBy       Profile?     @relation("CmsPageCreatedBy", fields: [createdById], references: [id])
-  updatedBy       Profile?     @relation("CmsPageUpdatedBy", fields: [updatedById], references: [id])
-  
+  content         String
+  excerpt         String?
+  metaTitle       String?       @map("meta_title")
+  metaDescription String?       @map("meta_description")
+  pageType        String        @default("page") @map("page_type")
+  isPublished     Boolean       @default(false) @map("is_published")
+  publishedAt     DateTime?     @map("published_at")
+  order           Int           @default(0)
+  createdById     String?       @map("created_by_id")
+  updatedById     String?       @map("updated_by_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  organizationId  String?       @map("organization_id")
+  template        String        @default("minimal") @map("template")
+  createdBy       Profile?      @relation("CmsPageCreatedBy", fields: [createdById], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedBy       Profile?      @relation("CmsPageUpdatedBy", fields: [updatedById], references: [id])
+
+  @@unique([organizationId, slug])
   @@index([slug, isPublished])
   @@index([pageType, isPublished])
-  @@map("cms_pages")
+  @@index([organizationId, isPublished])
+  @@index([organizationId, pageType])
+  @@map("system_cms_pages")
 }
 
 model CmsBlogPost {
-  id              String       @id @default(uuid())
-  slug            String       @unique
+  id              String        @id @default(uuid())
+  slug            String
   title           String
-  content         String       @db.Text // HTML del editor WYSIWYG
-  excerpt         String?      @db.Text
-  featuredImage   String?      @map("featured_image")
-  metaTitle       String?      @map("meta_title")
-  metaDescription String?      @map("meta_description")
-  tags            String[]     @default([])
+  content         String
+  excerpt         String?
+  featuredImage   String?       @map("featured_image")
+  metaTitle       String?       @map("meta_title")
+  metaDescription String?       @map("meta_description")
+  tags            String[]      @default([])
   category        String?
-  isPublished     Boolean      @default(false) @map("is_published")
-  publishedAt     DateTime?    @map("published_at")
-  viewCount       Int          @default(0) @map("view_count")
-  createdById     String?      @map("created_by_id")
-  updatedById     String?      @map("updated_by_id")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  
-  // Relaciones
-  createdBy       Profile?     @relation("CmsBlogPostCreatedBy", fields: [createdById], references: [id])
-  updatedBy       Profile?     @relation("CmsBlogPostUpdatedBy", fields: [updatedById], references: [id])
-  
+  isPublished     Boolean       @default(false) @map("is_published")
+  publishedAt     DateTime?     @map("published_at")
+  viewCount       Int           @default(0) @map("view_count")
+  createdById     String?       @map("created_by_id")
+  updatedById     String?       @map("updated_by_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  organizationId  String?       @map("organization_id")
+  createdBy       Profile?      @relation("CmsBlogPostCreatedBy", fields: [createdById], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedBy       Profile?      @relation("CmsBlogPostUpdatedBy", fields: [updatedById], references: [id])
+
+  @@unique([organizationId, slug])
   @@index([slug, isPublished])
   @@index([category, isPublished])
   @@index([publishedAt])
-  @@map("cms_blog_posts")
+  @@index([organizationId, isPublished])
+  @@index([organizationId, category])
+  @@map("system_cms_blog_posts")
 }
 
-// ========================================
-// SISTEMA DE FEEDBACK DE USUARIOS
-// ========================================
-
 model UserFeedback {
-  id                String          @id @default(uuid())
-  organizationId    String?         @map("organization_id")
-  userId            String?         @map("user_id") // Usuario que envió el feedback
-  userType          String          @default("admin") @map("user_type") // admin, organization, customer
-  category          String          @default("general") // bug, feature_request, question, general
-  title             String
-  description       String          @db.Text
-  status            String          @default("open") // open, reviewing, planned, in_progress, completed, rejected
-  priority          String          @default("medium") // low, medium, high, urgent
-  votes             Int             @default(0)
-  adminNotes        String?         @db.Text @map("admin_notes")
-  completedAt       DateTime?       @map("completed_at")
-  completedBy       String?         @map("completed_by") // Admin que marcó como completado
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
-  
-  // Relaciones
-  organization      Organization?   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  feedbackVotes     FeedbackVote[]
-  
+  id             String         @id @default(uuid())
+  organizationId String?        @map("organization_id")
+  userId         String?        @map("user_id")
+  userType       String         @default("admin") @map("user_type")
+  category       String         @default("general")
+  title          String
+  description    String
+  status         String         @default("open")
+  priority       String         @default("medium")
+  votes          Int            @default(0)
+  adminNotes     String?        @map("admin_notes")
+  completedAt    DateTime?      @map("completed_at")
+  completedBy    String?        @map("completed_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  feedbackVotes  FeedbackVote[]
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([category, status])
   @@index([status, createdAt])
   @@index([organizationId, status])
-  @@map("user_feedback")
+  @@map("system_user_feedback")
 }
 
 model FeedbackVote {
-  id                String        @id @default(uuid())
-  feedbackId        String        @map("feedback_id")
-  userId            String        @map("user_id") // Usuario que votó
-  userType          String        @map("user_type") // admin, organization, customer
-  createdAt         DateTime      @default(now()) @map("created_at")
-  
-  // Relaciones
-  feedback          UserFeedback  @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
-  
+  id         String       @id @default(uuid())
+  feedbackId String       @map("feedback_id")
+  userId     String       @map("user_id")
+  userType   String       @map("user_type")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  feedback   UserFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
   @@unique([feedbackId, userId, userType])
   @@index([feedbackId])
-  @@map("feedback_votes")
+  @@map("system_feedback_votes")
 }
 
-// ========================================
-// GESTIÓN DE VERSIONES Y RELEASES
-// ========================================
-
 model SystemVersion {
-  id                String            @id @default(uuid())
-  version           String            @unique // SemVer: 1.0.0
-  versionName       String?           @map("version_name") // Nombre descriptivo
-  releaseType       String            @default("patch") @map("release_type") // major, minor, patch
-  changelog         String            @db.Text
-  releaseNotes      String?           @db.Text @map("release_notes")
-  isReleased        Boolean           @default(false) @map("is_released")
-  isCurrent         Boolean           @default(false) @map("is_current") // Versión actual en producción
-  releasedAt        DateTime?         @map("released_at")
-  releaseUrl        String?           @map("release_url")
-  downloadUrl       String?           @map("download_url")
-  rollbackAvailable Boolean           @default(false) @map("rollback_available")
-  breakingChanges   Boolean           @default(false) @map("breaking_changes")
-  migrationRequired Boolean           @default(false) @map("migration_required")
-  createdById       String?           @map("created_by_id")
-  createdAt         DateTime          @default(now()) @map("created_at")
-  updatedAt         DateTime          @updatedAt @map("updated_at")
-  
-  // Relaciones
-  createdBy         Profile?          @relation("SystemVersionCreatedBy", fields: [createdById], references: [id])
+  id                String                @id @default(uuid())
+  version           String                @unique
+  versionName       String?               @map("version_name")
+  releaseType       String                @default("patch") @map("release_type")
+  changelog         String
+  releaseNotes      String?               @map("release_notes")
+  isReleased        Boolean               @default(false) @map("is_released")
+  isCurrent         Boolean               @default(false) @map("is_current")
+  releasedAt        DateTime?             @map("released_at")
+  releaseUrl        String?               @map("release_url")
+  downloadUrl       String?               @map("download_url")
+  rollbackAvailable Boolean               @default(false) @map("rollback_available")
+  breakingChanges   Boolean               @default(false) @map("breaking_changes")
+  migrationRequired Boolean               @default(false) @map("migration_required")
+  createdById       String?               @map("created_by_id")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
   notifications     VersionNotification[]
-  
+  createdBy         Profile?              @relation("SystemVersionCreatedBy", fields: [createdById], references: [id])
+
   @@index([version])
   @@index([isReleased, releasedAt])
   @@index([isCurrent])
@@ -1335,239 +1196,207 @@ model SystemVersion {
 }
 
 model VersionNotification {
-  id                String            @id @default(uuid())
-  versionId         String            @map("version_id")
-  userId            String?           @map("user_id") // Usuario específico (opcional)
-  organizationId    String?           @map("organization_id") // Organización específica (opcional)
-  notificationType  String            @default("all") @map("notification_type") // all, admin, organization, specific
-  isRead            Boolean           @default(false) @map("is_read")
-  sentAt            DateTime?         @map("sent_at")
-  readAt            DateTime?         @map("read_at")
-  createdAt         DateTime          @default(now()) @map("created_at")
-  
-  // Relaciones
-  version           SystemVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  organization      Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+  id               String        @id @default(uuid())
+  versionId        String        @map("version_id")
+  userId           String?       @map("user_id")
+  organizationId   String?       @map("organization_id")
+  notificationType String        @default("all") @map("notification_type")
+  isRead           Boolean       @default(false) @map("is_read")
+  sentAt           DateTime?     @map("sent_at")
+  readAt           DateTime?     @map("read_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  version          SystemVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
   @@index([versionId, isRead])
   @@index([userId, isRead])
   @@index([organizationId, isRead])
-  @@map("version_notifications")
+  @@map("system_version_notifications")
 }
 
-// ========================================
-// SISTEMA DE PRUEBAS A/B
-// ========================================
-
 model AbTest {
-  id                  String            @id @default(uuid())
-  name                String
-  description         String?
-  testType            String            @map("test_type") // 'subscription_plan', 'pricing', 'feature'
-  status              String            @default("draft") // 'draft', 'running', 'paused', 'completed'
-  organizationId      String?           @map("organization_id") // Si es null, es global
-  startDate           DateTime?         @map("start_date")
-  endDate              DateTime?        @map("end_date")
-  targetAudience      Json?             @map("target_audience") // Criterios de segmentación
-  successMetrics      Json              @map("success_metrics") // Métricas a medir
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  createdById         String            @map("created_by_id")
-  
-  // Relaciones
-  organization        Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy           Profile           @relation("AbTestCreatedBy", fields: [createdById], references: [id])
-  variants            AbTestVariant[]
-  participants        AbTestParticipant[]
-  events              AbTestEvent[]
-  
+  id             String              @id @default(uuid())
+  name           String
+  description    String?
+  testType       String              @map("test_type")
+  status         String              @default("draft")
+  organizationId String?             @map("organization_id")
+  startDate      DateTime?           @map("start_date")
+  endDate        DateTime?           @map("end_date")
+  targetAudience Json?               @map("target_audience")
+  successMetrics Json                @map("success_metrics")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  createdById    String              @map("created_by_id")
+  events         AbTestEvent[]
+  participants   AbTestParticipant[]
+  variants       AbTestVariant[]
+  createdBy      Profile             @relation("AbTestCreatedBy", fields: [createdById], references: [id])
+  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([testType, status])
   @@index([organizationId, status])
   @@index([status, startDate])
-  @@map("ab_tests")
+  @@map("system_ab_tests")
 }
 
 model AbTestVariant {
-  id                  String            @id @default(uuid())
-  abTestId            String            @map("ab_test_id")
-  name                String
-  description         String?
-  variantData         Json              @map("variant_data") // Datos específicos de la variante
-  trafficPercentage   Decimal           @default(50) @map("traffic_percentage") @db.Decimal(5, 2) // 0-100
-  isControl           Boolean           @default(false) @map("is_control")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  
-  // Relaciones
-  abTest              AbTest            @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-  participants        AbTestParticipant[]
-  
+  id                String              @id @default(uuid())
+  abTestId          String              @map("ab_test_id")
+  name              String
+  description       String?
+  variantData       Json                @map("variant_data")
+  trafficPercentage Decimal             @default(50) @map("traffic_percentage") @db.Decimal(5, 2)
+  isControl         Boolean             @default(false) @map("is_control")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  participants      AbTestParticipant[]
+  abTest            AbTest              @relation(fields: [abTestId], references: [id], onDelete: Cascade)
+
   @@index([abTestId])
-  @@map("ab_test_variants")
+  @@map("system_ab_test_variants")
 }
 
 model AbTestParticipant {
-  id                  String            @id @default(uuid())
-  abTestId            String            @map("ab_test_id")
-  variantId            String            @map("variant_id")
-  userId              String?           @map("user_id") // Usuario admin
-  organizationId      String?           @map("organization_id")
-  customerId          String?           @map("customer_id")
-  joinedAt            DateTime          @default(now()) @map("joined_at")
-  convertedAt         DateTime?         @map("converted_at") // Cuando se cumplió la métrica de éxito
-  converted           Boolean           @default(false)
-  
-  // Relaciones
-  abTest              AbTest            @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-  variant             AbTestVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  
+  id             String        @id @default(uuid())
+  abTestId       String        @map("ab_test_id")
+  variantId      String        @map("variant_id")
+  userId         String?       @map("user_id")
+  organizationId String?       @map("organization_id")
+  customerId     String?       @map("customer_id")
+  joinedAt       DateTime      @default(now()) @map("joined_at")
+  convertedAt    DateTime?     @map("converted_at")
+  converted      Boolean       @default(false)
+  abTest         AbTest        @relation(fields: [abTestId], references: [id], onDelete: Cascade)
+  variant        AbTestVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
   @@unique([abTestId, userId, organizationId, customerId])
   @@index([abTestId, variantId])
   @@index([abTestId, converted])
-  @@map("ab_test_participants")
+  @@map("system_ab_test_participants")
 }
 
 model AbTestEvent {
-  id                  String            @id @default(uuid())
-  abTestId            String            @map("ab_test_id")
-  participantId       String?           @map("participant_id")
-  eventType           String            @map("event_type") // 'view', 'click', 'conversion', 'custom'
-  eventData           Json?             @map("event_data")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  
-  // Relaciones
-  abTest              AbTest            @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-  
+  id            String   @id @default(uuid())
+  abTestId      String   @map("ab_test_id")
+  participantId String?  @map("participant_id")
+  eventType     String   @map("event_type")
+  eventData     Json?    @map("event_data")
+  createdAt     DateTime @default(now()) @map("created_at")
+  abTest        AbTest   @relation(fields: [abTestId], references: [id], onDelete: Cascade)
+
   @@index([abTestId, eventType, createdAt])
   @@index([participantId, createdAt])
-  @@map("ab_test_events")
+  @@map("system_ab_test_events")
 }
 
-// ========================================
-// GESTIÓN DE DOMINIOS PERSONALIZADOS
-// ========================================
-
 model CustomDomain {
-  id                  String            @id @default(uuid())
-  organizationId      String            @map("organization_id")
-  domain              String            @unique // ej: "miempresa.com"
-  subdomain           String?           // ej: "app", "admin", etc.
-  status              String            @default("pending") // 'pending', 'verifying', 'verified', 'failed', 'active'
-  verificationToken   String?           @map("verification_token")
-  verificationMethod  String?           @map("verification_method") // 'dns', 'file'
-  verifiedAt          DateTime?         @map("verified_at")
-  sslEnabled          Boolean           @default(false) @map("ssl_enabled")
-  sslCertificate      Json?             @map("ssl_certificate") // Info del certificado SSL
-  sslIssuedAt         DateTime?         @map("ssl_issued_at")
-  sslExpiresAt        DateTime?         @map("ssl_expires_at")
-  redirectUrl         String?           @map("redirect_url") // URL de redirección
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  
-  // Relaciones
-  organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  dnsRecords          CustomDomainDnsRecord[]
-  
+  id                 String                  @id @default(uuid())
+  organizationId     String                  @map("organization_id")
+  domain             String                  @unique
+  subdomain          String?
+  status             String                  @default("pending")
+  verificationToken  String?                 @map("verification_token")
+  verificationMethod String?                 @map("verification_method")
+  verifiedAt         DateTime?               @map("verified_at")
+  sslEnabled         Boolean                 @default(false) @map("ssl_enabled")
+  sslCertificate     Json?                   @map("ssl_certificate")
+  sslIssuedAt        DateTime?               @map("ssl_issued_at")
+  sslExpiresAt       DateTime?               @map("ssl_expires_at")
+  redirectUrl        String?                 @map("redirect_url")
+  createdAt          DateTime                @default(now()) @map("created_at")
+  updatedAt          DateTime                @updatedAt @map("updated_at")
+  dnsRecords         CustomDomainDnsRecord[]
+  organization       Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId, status])
   @@index([status, verifiedAt])
-  @@map("custom_domains")
+  @@map("system_custom_domains")
 }
 
 model CustomDomainDnsRecord {
-  id                  String            @id @default(uuid())
-  customDomainId      String            @map("custom_domain_id")
-  recordType          String            @map("record_type") // 'A', 'AAAA', 'CNAME', 'TXT', 'MX'
-  name                String            // Nombre del registro
-  value               String            // Valor del registro
-  ttl                 Int               @default(3600)
-  verified            Boolean           @default(false)
-  verifiedAt          DateTime?         @map("verified_at")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  
-  // Relaciones
-  customDomain        CustomDomain      @relation(fields: [customDomainId], references: [id], onDelete: Cascade)
-  
+  id             String       @id @default(uuid())
+  customDomainId String       @map("custom_domain_id")
+  recordType     String       @map("record_type")
+  name           String
+  value          String
+  ttl            Int          @default(3600)
+  verified       Boolean      @default(false)
+  verifiedAt     DateTime?    @map("verified_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  customDomain   CustomDomain @relation(fields: [customDomainId], references: [id], onDelete: Cascade)
+
   @@index([customDomainId, recordType])
   @@index([customDomainId, verified])
-  @@map("custom_domain_dns_records")
+  @@map("system_custom_domain_dns_records")
 }
 
-// ========================================
-// MARKETPLACE DE INTEGRACIONES
-// ========================================
-
 model Integration {
-  id                  String            @id @default(uuid())
-  name                String
-  slug                String            @unique
-  description         String?
-  category            String            // 'payment', 'shipping', 'accounting', 'marketing', 'crm', etc.
-  iconUrl             String?           @map("icon_url")
-  logoUrl             String?           @map("logo_url")
-  documentationUrl    String?           @map("documentation_url")
-  isActive            Boolean           @default(true) @map("is_active")
-  isPublic            Boolean           @default(true) @map("is_public")
-  requiresConfig      Boolean           @default(true) @map("requires_config") // Si necesita configuración
-  configSchema        Json?             @map("config_schema") // Schema de configuración (JSON Schema)
-  installationSteps   Json?             @map("installation_steps") // Pasos de instalación
-  version             String            @default("1.0.0")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  createdById         String?           @map("created_by_id")
-  
-  // Relaciones
-  createdBy           Profile?          @relation("IntegrationCreatedBy", fields: [createdById], references: [id])
-  installations       OrganizationIntegration[]
-  events              IntegrationEvent[]
-  
+  id                String                    @id @default(uuid())
+  name              String
+  slug              String                    @unique
+  description       String?
+  category          String
+  iconUrl           String?                   @map("icon_url")
+  logoUrl           String?                   @map("logo_url")
+  documentationUrl  String?                   @map("documentation_url")
+  isActive          Boolean                   @default(true) @map("is_active")
+  isPublic          Boolean                   @default(true) @map("is_public")
+  requiresConfig    Boolean                   @default(true) @map("requires_config")
+  configSchema      Json?                     @map("config_schema")
+  installationSteps Json?                     @map("installation_steps")
+  version           String                    @default("1.0.0")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+  createdById       String?                   @map("created_by_id")
+  events            IntegrationEvent[]
+  createdBy         Profile?                  @relation("IntegrationCreatedBy", fields: [createdById], references: [id])
+  installations     OrganizationIntegration[]
+
   @@index([category, isActive])
   @@index([isPublic, isActive])
-  @@map("integrations")
+  @@map("system_integrations")
 }
 
 model OrganizationIntegration {
-  id                  String            @id @default(uuid())
-  organizationId      String            @map("organization_id")
-  integrationId       String            @map("integration_id")
-  status              String            @default("installed") // 'installed', 'configured', 'active', 'error', 'disabled'
-  config              Json?             // Configuración específica de la organización
-  credentials         Json?             // Credenciales encriptadas
-  lastTestedAt        DateTime?         @map("last_tested_at")
-  lastTestResult      String?           @map("last_test_result") // 'success', 'error', 'warning'
-  lastTestMessage     String?           @map("last_test_message")
-  installedAt         DateTime          @default(now()) @map("installed_at")
-  activatedAt         DateTime?         @map("activated_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  installedById       String?           @map("installed_by_id")
-  
-  // Relaciones
-  organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  integration         Integration      @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  installedBy         Profile?          @relation("IntegrationInstalledBy", fields: [installedById], references: [id])
-  events              IntegrationEvent[]
-  
+  id              String             @id @default(uuid())
+  organizationId  String             @map("organization_id")
+  integrationId   String             @map("integration_id")
+  status          String             @default("installed")
+  config          Json?
+  credentials     Json?
+  lastTestedAt    DateTime?          @map("last_tested_at")
+  lastTestResult  String?            @map("last_test_result")
+  lastTestMessage String?            @map("last_test_message")
+  installedAt     DateTime           @default(now()) @map("installed_at")
+  activatedAt     DateTime?          @map("activated_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  installedById   String?            @map("installed_by_id")
+  events          IntegrationEvent[]
+  installedBy     Profile?           @relation("IntegrationInstalledBy", fields: [installedById], references: [id])
+  integration     Integration        @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([organizationId, integrationId])
   @@index([organizationId, status])
   @@index([integrationId, status])
-  @@map("organization_integrations")
+  @@map("system_organization_integrations")
 }
 
 model IntegrationEvent {
-  id                          String                  @id @default(uuid())
-  organizationIntegrationId   String?                 @map("organization_integration_id")
-  integrationId               String?                 @map("integration_id") // Para eventos globales
-  eventType                   String                  @map("event_type") // 'install', 'uninstall', 'test', 'error', 'usage'
-  eventData                   Json?                   @map("event_data")
-  metadata                    Json?                   // Metadata adicional
-  createdAt                   DateTime                @default(now()) @map("created_at")
-  
-  // Relaciones
-  organizationIntegration     OrganizationIntegration? @relation(fields: [organizationIntegrationId], references: [id], onDelete: Cascade)
-  integration                 Integration?             @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  
+  id                        String                   @id @default(uuid())
+  organizationIntegrationId String?                  @map("organization_integration_id")
+  integrationId             String?                  @map("integration_id")
+  eventType                 String                   @map("event_type")
+  eventData                 Json?                    @map("event_data")
+  metadata                  Json?
+  createdAt                 DateTime                 @default(now()) @map("created_at")
+  integration               Integration?             @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  organizationIntegration   OrganizationIntegration? @relation(fields: [organizationIntegrationId], references: [id], onDelete: Cascade)
+
   @@index([organizationIntegrationId, eventType, createdAt])
   @@index([integrationId, eventType, createdAt])
   @@index([eventType, createdAt])
-  @@map("integration_events")
+  @@map("system_integration_events")
 }

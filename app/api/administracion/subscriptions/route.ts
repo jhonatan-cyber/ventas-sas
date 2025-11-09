@@ -6,10 +6,22 @@ import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener todas las suscripciones con paginación y filtros
 export async function GET(request: NextRequest) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para listar suscripciones
+    const canList = await PermissionCheckService.hasActivePermission(currentUser.id, 'suscripciones_listar')
+    if (!canList) {
+      return NextResponse.json({ error: 'No tiene permiso para listar suscripciones' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '10')
@@ -20,11 +32,11 @@ export async function GET(request: NextRequest) {
 
     const { subscriptions, total } = await SubscriptionManagementService.getAllSubscriptions(skip, pageSize, search, status)
 
-    // Convertir Decimal a número para serialización
+    // Convertir Decimal a número para serialización y mapear customer desde organization
     const serializedSubscriptions = subscriptions.map(sub => ({
       ...sub,
       organization: sub.organization,
-      customer: sub.customer,
+      customer: sub.organization?.customerOrganizations?.[0]?.customer || null,
       plan: {
         ...sub.plan,
         priceMonthly: sub.plan.priceMonthly ? Number(sub.plan.priceMonthly) : null,
@@ -47,6 +59,17 @@ export async function GET(request: NextRequest) {
 // POST - Crear nueva suscripción
 export async function POST(request: NextRequest) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para crear suscripciones
+    const canCreate = await PermissionCheckService.hasActivePermission(currentUser.id, 'suscripciones_crear')
+    if (!canCreate) {
+      return NextResponse.json({ error: 'No tiene permiso para crear suscripciones' }, { status: 403 })
+    }
+
     // Parsear y validar body
     let body: any
     try {
@@ -63,12 +86,8 @@ export async function POST(request: NextRequest) {
 
     const validatedData = validation.data
 
-    // Obtener usuario actual para auditoría
-    const currentUser = await getCurrentAdminUser(request)
-
     const newSubscription = await SubscriptionManagementService.createSubscription({
       organizationId: validatedData.organizationId || undefined,
-      customerId: validatedData.customerId || undefined,
       planId: validatedData.planId,
       billingPeriod: validatedData.billingPeriod,
       status: validatedData.status || 'active',
@@ -83,7 +102,6 @@ export async function POST(request: NextRequest) {
         {
           userId: currentUser.id,
           organizationId: newSubscription.organizationId || undefined,
-          customerId: newSubscription.customerId || undefined,
           actionType: 'SUBSCRIPTION_CREATED',
           entityType: 'Subscription',
           entityId: newSubscription.id,

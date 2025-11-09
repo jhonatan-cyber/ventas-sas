@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import {
   Dialog,
@@ -16,8 +16,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SalesProduct, Category } from "@prisma/client";
 import { BrowserMultiFormatReader } from "@zxing/library";
-import { Camera, X, Upload } from "lucide-react";
+import { Camera, X, Upload, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Función para capitalizar cada palabra (primera letra de cada palabra en mayúscula)
+const capitalizeWords = (text: string) => {
+  // Preservar espacio(s) al final para no bloquear la escritura
+  const trailing = /\s+$/.exec(text)?.[0] || ""
+  const core = text.replace(/\s+$/, '')
+  if (!core) return trailing
+  const cap = core
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+  return cap + trailing
+}
 
 interface ProductFormDialogProps {
   open: boolean;
@@ -57,8 +72,41 @@ export function ProductFormDialog({
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   const lastScannedCode = useRef<string | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+
+  const stopScanning = useCallback(() => {
+    if (videoStream) {
+      videoStream.getTracks().forEach((track) => track.stop());
+      setVideoStream(null);
+    }
+    setIsScanning(false);
+
+    const videoElement = document.getElementById("scanner-video") as HTMLVideoElement | null;
+    if (videoElement) {
+      try {
+        videoElement.pause();
+      } catch (error) {
+        console.warn("No se pudo pausar el video del escáner:", error);
+      }
+      videoElement.srcObject = null;
+      videoElement.remove();
+    }
+  }, [videoStream]);
 
   useEffect(() => {
+    if (!open) {
+      stopScanning();
+      lastScannedCode.current = null;
+      setBarcode("");
+      setIsFetchingProduct(false);
+      return;
+    }
+
+    lastScannedCode.current = null;
+
     if (product) {
       setName(product.name || "");
       setCategoryId(product.categoryId || "");
@@ -70,9 +118,12 @@ export function ProductFormDialog({
       setStock(product.stock?.toString() || "0");
       setMinStock(product.minStock?.toString() || "0");
       setSku(product.sku || "");
-      setBarcode(product.barcode || "");
+      setBarcode(""); // Resetear el campo al abrir incluso en modo edición
       setImagePreview(product.imageUrl || null);
       setImageFile(null);
+      if ((product as any).branchId) {
+        setSelectedBranchId((product as any).branchId);
+      }
     } else {
       setName("");
       setCategoryId(defaultCategoryId || "");
@@ -87,30 +138,88 @@ export function ProductFormDialog({
       setBarcode("");
       setImagePreview(null);
       setImageFile(null);
-    }
-  }, [product, open, defaultCategoryId]);
-
-  // Limpiar el stream de video cuando se cierra el modal
-  useEffect(() => {
-    return () => {
-      if (videoStream) {
-        videoStream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [videoStream]);
-
-  // Resetear el código escaneado cuando se abre el modal
-  useEffect(() => {
-    if (open) {
-      lastScannedCode.current = null;
+      setSelectedBranchId("");
+      setIsScanning(false);
       setIsFetchingProduct(false);
     }
-  }, [open]);
+  }, [product, open, defaultCategoryId, stopScanning]);
+
+  useEffect(() => {
+    if (!open) {
+      stopScanning();
+    }
+
+    return () => {
+      stopScanning();
+    };
+  }, [open, stopScanning]);
+
+  useEffect(() => {
+    if (open && !product && defaultCategoryId && !categoryId) {
+      setCategoryId(defaultCategoryId);
+    }
+  }, [open, product, defaultCategoryId, categoryId]);
+
+  // Obtener información del usuario y sucursales al abrir el modal
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchUserAndBranches = async () => {
+      try {
+        // Obtener usuario actual
+        const userResponse = await fetch(`/api/${customerSlug}/auth/me`);
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          const userRoleName = userData.rol?.nombre?.toLowerCase() || "";
+          const isUserAdmin = userRoleName.includes("administrador") || userRoleName === "admin";
+          
+          setIsAdmin(isUserAdmin);
+          
+          // Si es administrador, obtener sucursales
+          if (isUserAdmin) {
+            const branchesResponse = await fetch(`/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`);
+            if (branchesResponse.ok) {
+              const branchesData = await branchesResponse.json();
+              setBranches(branchesData.branches?.map((b: any) => ({ id: b.id, name: b.name })) || []);
+              // Solo establecer sucursal por defecto si no hay producto (modo creación)
+              // Si hay producto, el branchId ya fue establecido en el useEffect anterior
+              if (!product && userData.sucursalId) {
+                setSelectedBranchId(userData.sucursalId);
+              }
+            }
+          } else {
+            // Si no es administrador, usar automáticamente la sucursal del usuario
+            // Solo si no hay producto (modo creación)
+            if (!product && userData.sucursalId) {
+              setSelectedBranchId(userData.sucursalId);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error al obtener información del usuario:", error);
+      }
+    };
+
+    fetchUserAndBranches();
+  }, [open, customerSlug, product]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim() || !price || !cost) {
+      toast.error("Por favor, complete todos los campos obligatorios");
+      return;
+    }
+
+    // Validar que haya categoría seleccionada
+    if (!categoryId) {
+      toast.error("Debe seleccionar una categoría");
+      return;
+    }
+
+    // Validar que haya sucursal (para administradores)
+    if (isAdmin && !selectedBranchId) {
+      toast.error("Debe seleccionar una sucursal");
       return;
     }
 
@@ -170,20 +279,47 @@ export function ProductFormDialog({
         }
       }
 
-      await onSave({
-        categoryId: categoryId || undefined,
+      const dataToSave: any = {
+        categoryId: categoryId,
         name: name.trim(),
-        description: description.trim() || undefined,
-        brand: brand.trim() || undefined,
-        model: model.trim() || undefined,
         price: Number(price),
         cost: Number(cost),
         stock: stock ? Number(stock) : 0,
         minStock: minStock ? Number(minStock) : 0,
-        sku: sku.trim() || undefined,
-        barcode: barcode.trim() || undefined,
-        imageUrl: finalImageUrl,
-      });
+      };
+
+      // Agregar campos opcionales solo si tienen valor
+      if (description && description.trim()) {
+        dataToSave.description = description.trim();
+      }
+      if (brand && brand.trim()) {
+        dataToSave.brand = brand.trim();
+      }
+      if (model && model.trim()) {
+        dataToSave.model = model.trim();
+      }
+      if (sku && sku.trim()) {
+        dataToSave.sku = sku.trim();
+      }
+      if (barcode && barcode.trim()) {
+        dataToSave.barcode = barcode.trim();
+      }
+      if (finalImageUrl) {
+        dataToSave.imageUrl = finalImageUrl;
+      }
+
+      // Solo enviar branchId si es administrador y tiene una sucursal seleccionada
+      // Si no es admin, el backend usará automáticamente la sucursal del usuario
+      if (isAdmin && selectedBranchId) {
+        dataToSave.branchId = selectedBranchId;
+      }
+
+      console.log('Datos a enviar:', dataToSave);
+      
+      // Detener la cámara antes de guardar
+      stopScanning();
+      
+      await onSave(dataToSave);
     } finally {
       setIsLoading(false);
     }
@@ -233,7 +369,15 @@ export function ProductFormDialog({
       video.style.maxHeight = "300px";
       document.body.appendChild(video);
       
-      await video.play();
+      try {
+        await video.play();
+      } catch (error: unknown) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          console.debug("Reproducción del video del escáner interrumpida (AbortError).");
+        } else {
+          console.error("No se pudo iniciar el video del escáner:", error);
+        }
+      }
       
       codeReader.decodeFromVideoDevice(null, video, async (result, err) => {
         if (result) {
@@ -261,20 +405,6 @@ export function ProductFormDialog({
     } catch (error) {
       console.error("Error al acceder a la cámara:", error);
       toast.error("No se pudo acceder a la cámara");
-    }
-  };
-
-  const stopScanning = () => {
-    if (videoStream) {
-      videoStream.getTracks().forEach((track) => track.stop());
-      setVideoStream(null);
-    }
-    setIsScanning(false);
-    
-    // Limpiar el video element
-    const video = document.getElementById("scanner-video");
-    if (video) {
-      video.remove();
     }
   };
 
@@ -342,21 +472,100 @@ export function ProductFormDialog({
     }
   };
 
+  const handleGenerateDescription = async () => {
+    if (!name.trim()) {
+      toast.error("Por favor, ingresa al menos el nombre del producto");
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    const loadingToastId = toast.loading("Generando descripción con IA...");
+
+    try {
+      const categoryName = categories.find(cat => cat.id === categoryId)?.name || null;
+
+      const response = await fetch(`/api/${customerSlug}/productos/generate-description`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          brand: brand.trim() || null,
+          model: model.trim() || null,
+          existingDescription: description.trim() || null,
+          category: categoryName,
+        }),
+      });
+
+      const result = await response.json();
+
+      toast.dismiss(loadingToastId);
+
+      if (result.success && result.description) {
+        setDescription(result.description);
+        
+        // Llenar marca si se encontró y el campo está vacío
+        if (result.brand && !brand.trim()) {
+          setBrand(result.brand);
+        }
+        
+        // Llenar modelo si se encontró y el campo está vacío
+        if (result.model && !model.trim()) {
+          setModel(result.model);
+        }
+        
+        // Si también se encontró una imagen, cargarla
+        if (result.imageUrl && !imagePreview) {
+          setImagePreview(result.imageUrl);
+        }
+        
+        // Mensaje de éxito según lo que se encontró
+        const foundItems = [];
+        if (result.description) foundItems.push("descripción");
+        if (result.brand && !brand.trim()) foundItems.push("marca");
+        if (result.model && !model.trim()) foundItems.push("modelo");
+        if (result.imageUrl && !imagePreview) foundItems.push("imagen");
+        
+        if (foundItems.length > 1) {
+          toast.success(`Información generada: ${foundItems.join(", ")}`);
+        } else if (foundItems.length === 1) {
+          toast.success(`${foundItems[0].charAt(0).toUpperCase() + foundItems[0].slice(1)} generada exitosamente`);
+        } else {
+          toast.success("Descripción generada exitosamente");
+        }
+      } else {
+        toast.error(result.error || "No se pudo generar la descripción");
+      }
+    } catch (error) {
+      console.error("Error al generar descripción:", error);
+      toast.dismiss(loadingToastId);
+      toast.error("Error al generar la descripción. Verifica que la API key esté configurada.");
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {product ? "Editar Producto" : "Nuevo Producto"}
-          </DialogTitle>
-          <DialogDescription>
-            {product
-              ? "Modifica los datos del producto"
-              : "Completa los datos para crear un nuevo producto"}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        {/* Header estático */}
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
+              {product ? "Editar Producto" : "Nuevo Producto"}
+            </DialogTitle>
+            <DialogDescription>
+              {product
+                ? "Modifica los datos del producto"
+                : "Completa los datos para crear un nuevo producto"}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             {/* Primera fila: Código de barras y Foto */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
@@ -402,11 +611,11 @@ export function ProductFormDialog({
                   <Input
                     id="name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => setName(capitalizeWords(e.target.value))}
                     placeholder="Nombre del producto"
                     required
                     disabled={isLoading}
-                    className="rounded-full"
+                    className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -528,17 +737,57 @@ export function ProductFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Descripción</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateDescription}
+                  disabled={isLoading || isGeneratingDescription || !name.trim()}
+                  className="rounded-full text-xs h-7 px-3 gap-1.5"
+                  title="Mejorar descripción con IA"
+                >
+                  <Sparkles className={`h-3 w-3 ${isGeneratingDescription ? 'animate-spin' : ''}`} />
+                  {isGeneratingDescription ? 'Generando...' : 'Mejorar con IA'}
+                </Button>
+              </div>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Descripción del producto..."
                 rows={3}
-                disabled={isLoading}
+                disabled={isLoading || isGeneratingDescription}
                 className="rounded-lg"
               />
             </div>
+
+            {/* Select de Sucursal (solo para administradores) */}
+            {isAdmin && branches.length > 0 && (
+              <div className="space-y-2 w-full">
+                <Label htmlFor="branch">
+                  Sucursal <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={selectedBranchId}
+                  onValueChange={setSelectedBranchId}
+                  required
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="branch" className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+                    <SelectValue placeholder="Seleccionar sucursal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -607,13 +856,15 @@ export function ProductFormDialog({
             </div>
 
           </div>
-          <DialogFooter className="justify-center sm:justify-center gap-3">
+          
+          {/* Footer estático */}
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="rounded-full"
+              className="w-full sm:w-auto rounded-full"
             >
               Cancelar
             </Button>
@@ -621,7 +872,7 @@ export function ProductFormDialog({
               type="submit"
               variant="new"
               disabled={isLoading || !name.trim() || !price || !cost}
-              className="rounded-full"
+              className="w-full sm:w-auto rounded-full"
             >
               {isLoading ? "Guardando..." : product ? "Actualizar" : "Agregar"}
             </Button>

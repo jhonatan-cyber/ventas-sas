@@ -31,9 +31,9 @@ export interface UpdateUsuarioSasData {
 }
 
 export class UsuarioSasService {
-  // Obtener todos los usuarios de un cliente
+  // Obtener todos los usuarios de una organización
   static async getAllUsuarios(
-    customerId: string,
+    organizationId: string,
     skip: number = 0,
     take: number = 10,
     search?: string,
@@ -43,7 +43,7 @@ export class UsuarioSasService {
     includeDeleted: boolean = false
   ) {
     const where: any = {
-      customerId,
+      organizationId,
       ...(includeDeleted ? {} : { deletedAt: null }) // Excluir soft deleted por defecto
     }
 
@@ -89,11 +89,12 @@ export class UsuarioSasService {
               name: true
             }
           },
-          customer: {
+          organization: {
             select: {
+              id: true,
               razonSocial: true,
-              nombre: true,
-              apellido: true
+              name: true,
+              slug: true
             }
           }
         },
@@ -112,7 +113,7 @@ export class UsuarioSasService {
       include: {
         rol: true,
         sucursal: true,
-        customer: true
+        organization: true
       }
     })
     
@@ -126,9 +127,9 @@ export class UsuarioSasService {
 
   // Crear nuevo usuario
   static async createUsuario(
-    customerId: string,
+    organizationId: string,
     data: CreateUsuarioSasData
-  ): Promise<UsuarioSas> {
+  ) {
     // Hashear contraseña si se proporciona
     let hashedPassword = null
     if (data.contraseña) {
@@ -140,7 +141,7 @@ export class UsuarioSasService {
 
     return prisma.usuarioSas.create({
       data: {
-        customerId,
+        organizationId,
         ci: data.ci,
         nombre: data.nombre,
         apellido: data.apellido,
@@ -152,6 +153,28 @@ export class UsuarioSasService {
         foto: data.foto,
         sucursalId: data.sucursalId,
         isActive: true
+      },
+      include: {
+        rol: {
+          select: {
+            id: true,
+            nombre: true
+          }
+        },
+        sucursal: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        organization: {
+          select: {
+            id: true,
+            razonSocial: true,
+            name: true,
+            slug: true
+          }
+        }
       }
     })
   }
@@ -171,11 +194,11 @@ export class UsuarioSasService {
       const { SessionManagement } = await import('@/lib/auth/session-management')
       const usuario = await prisma.usuarioSas.findUnique({
         where: { id },
-        select: { customerId: true }
+        select: { organizationId: true }
       })
       
-      if (usuario?.customerId) {
-        await SessionManagement.invalidateSessionsOnPasswordChange(id, 'sas', usuario.customerId)
+      if (usuario?.organizationId) {
+        await SessionManagement.invalidateSessionsOnPasswordChange(id, 'sas', usuario.organizationId)
       }
       
       // Marcar fecha de cambio de contraseña
@@ -187,7 +210,29 @@ export class UsuarioSasService {
 
     return prisma.usuarioSas.update({
       where: { id },
-      data: updateData
+      data: updateData,
+      include: {
+        rol: {
+          select: {
+            id: true,
+            nombre: true
+          }
+        },
+        sucursal: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        organization: {
+          select: {
+            id: true,
+            razonSocial: true,
+            name: true,
+            slug: true
+          }
+        }
+      }
     })
   }
 
@@ -218,7 +263,7 @@ export class UsuarioSasService {
       include: {
         rol: true,
         sucursal: true,
-        customer: true
+        organization: true
       }
     })
     
@@ -230,10 +275,10 @@ export class UsuarioSasService {
     return restored
   }
 
-  // Obtener usuarios activos por cliente (para selects)
-  static async getActiveUsuariosByCustomer(customerId: string, sucursalId?: string) {
+  // Obtener usuarios activos por organización (para selects)
+  static async getActiveUsuariosByOrganization(organizationId: string, sucursalId?: string) {
     const where: any = {
-      customerId,
+      organizationId,
       isActive: true
     }
 

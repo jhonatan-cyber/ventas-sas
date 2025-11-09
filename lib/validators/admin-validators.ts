@@ -100,6 +100,11 @@ export const createUserSchema = z.object({
     .max(20, 'El CI es demasiado largo')
     .regex(/^\d+$/, 'El CI solo puede contener números')
     .optional()
+    .nullable(),
+  photo: z
+    .string()
+    .max(500, 'La URL de la foto es demasiado larga')
+    .optional()
     .nullable()
 })
 
@@ -193,16 +198,9 @@ export type UpdateSubscriptionPlanInput = z.infer<typeof updateSubscriptionPlanS
 
 // Suscripción
 const subscriptionBaseSchema = z.object({
-  customerId: z
-    .preprocess(
-      (val) => (val === '' || val === undefined ? null : val),
-      z.string().uuid('El ID del cliente no es válido').nullable().optional()
-    ),
   organizationId: z
-    .preprocess(
-      (val) => (val === '' || val === undefined ? null : val),
-      z.string().uuid('El ID de organización no es válido').nullable().optional()
-    ),
+    .string()
+    .uuid('El ID de organización no es válido'),
   planId: z
     .string()
     .uuid('El ID del plan no es válido'),
@@ -230,13 +228,7 @@ const subscriptionBaseSchema = z.object({
     .nullable()
 })
 
-export const createSubscriptionSchema = subscriptionBaseSchema.refine(
-  (data) => data.customerId || data.organizationId,
-  {
-    message: 'Debe proporcionarse customerId u organizationId',
-    path: ['customerId']
-  }
-)
+export const createSubscriptionSchema = subscriptionBaseSchema
 
 export type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>
 

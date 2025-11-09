@@ -1,7 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { InvoiceWithRelations, InvoiceFilters } from "@/lib/services/admin/billing-service"
+import {
+  Eye,
+  Mail,
+  FileText,
+  Download,
+  Printer,
+  Building2,
+  DollarSign,
+  Calendar,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,38 +20,39 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Mail, FileText, Loader2 } from "lucide-react"
+} from "@/components/ui/table";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  InvoiceWithRelations,
+  InvoiceFilters,
+} from "@/lib/services/admin/billing-service";
 
 interface InvoicesTableProps {
-  invoices: InvoiceWithRelations[]
-  loading: boolean
-  onFiltersChange: (filters: InvoiceFilters) => void
-  onRefresh: () => void
-  onInvoiceClick?: (invoice: InvoiceWithRelations) => void
+  invoices: InvoiceWithRelations[];
+  loading: boolean;
+  onFiltersChange: (filters: InvoiceFilters) => void;
+  onRefresh: () => void;
+  onInvoiceClick?: (invoice: InvoiceWithRelations) => void;
+  onPrintInvoice?: (invoice: InvoiceWithRelations) => void;
+  onDownloadPDF?: (invoice: InvoiceWithRelations) => void;
+  onSendCredentials?: (invoice: InvoiceWithRelations) => void;
 }
 
-const getStatusBadge = (status: string) => {
+export const getStatusBadge = (status: string) => {
   const variants: Record<string, string> = {
     paid: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    pending:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     overdue: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     cancelled: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-    refunded: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  }
+    refunded:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  };
 
   const labels: Record<string, string> = {
     paid: "Pagada",
@@ -48,181 +60,250 @@ const getStatusBadge = (status: string) => {
     overdue: "Vencida",
     cancelled: "Cancelada",
     refunded: "Reembolsada",
-  }
+  };
 
   return (
     <Badge className={variants[status] || "bg-gray-100 text-gray-800"}>
       {labels[status] || status}
     </Badge>
-  )
-}
+  );
+};
 
-export const formatCurrency = (amount: number | string, currency: string = "USD") => { 
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount    
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
+export const formatCurrency = (
+  amount: number | string,
+  currency: string = "USD"
+) => {
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
     currency: currency,
-  }).format(numAmount)
-}
+  }).format(numAmount);
+};
 
 export const formatDate = (date: Date | string) => {
-  const d = typeof date === "string" ? new Date(date) : date
+  const d = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat("es-ES", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(d)
-}
+  }).format(d);
+};
 
 export function InvoicesTable({
   invoices,
   loading,
-  onFiltersChange,
-  onRefresh,
   onInvoiceClick,
+  onPrintInvoice,
+  onDownloadPDF,
+  onSendCredentials,
 }: InvoicesTableProps) {
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-
-  const handleSearch = () => {
-    onFiltersChange({
-      search: search || undefined,
-      status: statusFilter !== "all" ? statusFilter : undefined,
-    })
-  }
-
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value)
-    onFiltersChange({
-      search: search || undefined,
-      status: value !== "all" ? value : undefined,
-    })
-  }
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+        Cargando facturas...
       </div>
-    )
-  }
-
-  if (invoices.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-        <p className="text-gray-600 dark:text-gray-400">No se encontraron facturas</p>
-      </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filtros */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <Label htmlFor="search">Buscar</Label>
-          <Input
-            id="search"
-            placeholder="Número de factura, nombre, email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch()
-              }
-            }}
-          />
-        </div>
-        <div className="w-full md:w-48">
-          <Label htmlFor="status">Estado</Label>
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger id="status">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="paid">Pagada</SelectItem>
-              <SelectItem value="overdue">Vencida</SelectItem>
-              <SelectItem value="cancelled">Cancelada</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Tabla */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] overflow-x-auto">
+    <TooltipProvider>
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Organización</TableHead>
-              <TableHead>Monto</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha Emisión</TableHead>
-              <TableHead>Fecha Vencimiento</TableHead>
-              <TableHead>Acciones</TableHead>
+            <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Número</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Cliente</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Organización</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Monto</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                Estado
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Fecha Emisión</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">
+                <div className="flex items-center gap-2">Fecha Vencimiento</div>
+              </TableHead>
+              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">
+                Acciones
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium">
-                  {invoice.invoiceNumber}
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{invoice.billingName}</div>
-                    <div className="text-xs text-gray-500">{invoice.billingEmail}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {invoice.organization ? (
-                    <div>
-                      <div className="font-medium">{invoice.organization.name}</div>
-                      <div className="text-xs text-gray-500">{invoice.organization.slug}</div>
+            {invoices.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="text-center text-muted-foreground py-12"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-gray-400" />
                     </div>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatCurrency(invoice.total.toString(), invoice.currency)}
-                </TableCell>
-                <TableCell>
-                  {getStatusBadge(invoice.status)}
-                </TableCell>
-                <TableCell>
-                  {formatDate(invoice.issueDate)}
-                </TableCell>
-                <TableCell>
-                  <div className={invoice.dueDate < new Date() && invoice.status !== 'paid' ? 'text-red-600 dark:text-red-400' : ''}>
-                    {formatDate(invoice.dueDate)}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onInvoiceClick?.(invoice)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {invoice.status === 'pending' && (
-                      <Button variant="ghost" size="sm">
-                        <Mail className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No hay facturas registradas
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              invoices.map((invoice) => (
+                <TableRow
+                  key={invoice.id}
+                  className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                        {invoice.invoiceNumber}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {invoice.billingName}
+                        </span>
+                      </div>
+                      {invoice.billingEmail && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {invoice.billingEmail}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {invoice.organization ? (
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {invoice.organization.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {formatCurrency(
+                          Number(invoice.total),
+                          invoice.currency
+                        )}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {formatDate(invoice.issueDate)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <span
+                        className={`text-sm ${
+                          invoice.dueDate < new Date() &&
+                          invoice.status !== "paid"
+                            ? "text-red-600 dark:text-red-400 font-semibold"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
+                        {formatDate(invoice.dueDate)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {onInvoiceClick && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onInvoiceClick(invoice)}
+                                className="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver detalles</TooltipContent>
+                        </Tooltip>
+                      )}
+                      {invoice.payments && invoice.payments.length > 0 && (
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onDownloadPDF?.(invoice)}
+                                  className="hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Descargar PDF</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onPrintInvoice?.(invoice)}
+                                  className="hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Imprimir</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onSendCredentials?.(invoice)}
+                                  className="hover:bg-orange-50 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                                >
+                                  <Mail className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Enviar credenciales por Email</TooltipContent>
+                          </Tooltip>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
-    </div>
-  )
+    </TooltipProvider>
+  );
 }

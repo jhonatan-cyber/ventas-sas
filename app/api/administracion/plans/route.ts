@@ -4,10 +4,23 @@ import { createSubscriptionPlanSchema } from '@/lib/validators/admin-validators'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener todos los planes
 export async function GET(request: NextRequest) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para listar planes
+    const canList = await PermissionCheckService.hasActivePermission(currentUser.id, 'planes_listar')
+    if (!canList) {
+      return NextResponse.json({ error: 'No tiene permiso para listar planes' }, { status: 403 })
+    }
+
     const plans = await SubscriptionAdminService.getAllPlans()
     return NextResponse.json(plans)
   } catch (error) {
@@ -18,6 +31,16 @@ export async function GET(request: NextRequest) {
 // POST - Crear nuevo plan
 export async function POST(request: NextRequest) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para crear planes
+    const canCreate = await PermissionCheckService.hasActivePermission(currentUser.id, 'planes_crear')
+    if (!canCreate) {
+      return NextResponse.json({ error: 'No tiene permiso para crear planes' }, { status: 403 })
+    }
     // Parsear y validar body
     let body: any
     try {

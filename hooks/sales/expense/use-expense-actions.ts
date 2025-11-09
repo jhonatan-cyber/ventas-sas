@@ -46,11 +46,33 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       })
 
       if (!response.ok) {
+        let errorPayload: unknown = null
+        try {
+          const clone = response.clone()
+          errorPayload = await clone.json()
+        } catch {
+          errorPayload = null
+        }
         const errorMessage = await extractErrorFromResponse(response)
+        console.error(
+          `Error al guardar gasto - status: ${response.status}, statusText: ${response.statusText}, message: ${errorMessage}`,
+          errorPayload
+        )
+        if (errorPayload && typeof errorPayload === "object" && "details" in errorPayload) {
+          const details = (errorPayload as any).details
+          if (Array.isArray(details)) {
+            console.table(details)
+          } else if (details && typeof details === "object") {
+            console.log("Detalles de validación:", details)
+          } else {
+            console.log("Detalles de validación:", details)
+          }
+        }
         throw new Error(errorMessage)
       }
 

@@ -6,6 +6,7 @@ import { CmsService } from '@/lib/services/admin/cms-service'
 import { z } from 'zod'
 
 const updatePostSchema = z.object({
+  organizationId: z.string().uuid().optional(),
   title: z.string().min(1).optional(),
   content: z.string().min(1).optional(),
   excerpt: z.string().optional(),
@@ -19,7 +20,7 @@ const updatePostSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -39,8 +40,11 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { slug } = params
-    const post = await CmsService.getBlogPostBySlug(slug)
+    const { slug } = await params
+    const { searchParams } = new URL(request.url)
+    const organizationId = searchParams.get('organizationId') || undefined
+
+    const post = await CmsService.getBlogPostBySlug(slug, organizationId)
 
     if (!post) {
       return NextResponse.json({ error: 'Post no encontrado' }, { status: 404 })
@@ -58,7 +62,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -78,11 +82,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { slug } = params
+    const { slug } = await params
     const body = await request.json()
     const validatedData = updatePostSchema.parse(body)
 
-    const post = await CmsService.updateBlogPost(slug, validatedData, payload.userId)
+    const organizationId = validatedData.organizationId || body.organizationId || undefined
+    const post = await CmsService.updateBlogPost(slug, validatedData, payload.userId, organizationId)
 
     return NextResponse.json({ success: true, post })
   } catch (error: any) {
@@ -99,7 +104,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -119,8 +124,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { slug } = params
-    await CmsService.deleteBlogPost(slug)
+    const { slug } = await params
+    const { searchParams } = new URL(request.url)
+    const organizationId = searchParams.get('organizationId') || undefined
+
+    await CmsService.deleteBlogPost(slug, organizationId)
 
     return NextResponse.json({ success: true, message: 'Post eliminado' })
   } catch (error: any) {

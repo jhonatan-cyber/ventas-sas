@@ -4,6 +4,7 @@ import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener una suscripción por ID
 export async function GET(
@@ -11,6 +12,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para ver detalles de suscripciones
+    const canView = await PermissionCheckService.hasActivePermission(currentUser.id, 'suscripciones_ver_detalles')
+    if (!canView) {
+      return NextResponse.json({ error: 'No tiene permiso para ver detalles de suscripciones' }, { status: 403 })
+    }
+
     const { id } = await params
     const subscription = await SubscriptionManagementService.getSubscriptionById(id)
     
@@ -47,12 +59,22 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para editar suscripciones
+    const canEdit = await PermissionCheckService.hasActivePermission(currentUser.id, 'suscripciones_editar')
+    if (!canEdit) {
+      return NextResponse.json({ error: 'No tiene permiso para editar suscripciones' }, { status: 403 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const { planId, status, billingPeriod, startDate, endDate, autoRenew } = body
 
-    // Obtener usuario actual y suscripción objetivo para auditoría
-    const currentUser = await getCurrentAdminUser(request)
+    // Obtener suscripción objetivo para auditoría
     const targetSubscription = await SubscriptionManagementService.getSubscriptionById(id)
 
     if (!targetSubscription) {
@@ -164,10 +186,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para eliminar suscripciones
+    const canDelete = await PermissionCheckService.hasActivePermission(currentUser.id, 'suscripciones_eliminar')
+    if (!canDelete) {
+      return NextResponse.json({ error: 'No tiene permiso para eliminar suscripciones' }, { status: 403 })
+    }
+
     const { id } = await params
 
-    // Obtener usuario actual y suscripción objetivo para auditoría
-    const currentUser = await getCurrentAdminUser(request)
+    // Obtener suscripción objetivo para auditoría
     const targetSubscription = await SubscriptionManagementService.getSubscriptionById(id)
 
     if (!targetSubscription) {

@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Category } from "@prisma/client"
 
-export function useCategoryActions(customerSlug: string) {
+type CategoryWithRelations = Category & {
+  _count?: { products: number }
+}
+
+export function useCategoryActions(
+  customerSlug: string,
+  setCategories?: (categories: CategoryWithRelations[] | ((prev: CategoryWithRelations[]) => CategoryWithRelations[])) => void
+) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
@@ -15,19 +22,19 @@ export function useCategoryActions(customerSlug: string) {
   const [confirmDesc, setConfirmDesc] = useState<string>('')
   const [confirmColor, setConfirmColor] = useState<'red'|'orange'|'green'>('orange')
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>()
+  const [selectedCategory, setSelectedCategory] = useState<CategoryWithRelations | undefined>()
 
   const openCreateDialog = () => {
     setSelectedCategory(undefined)
     setIsFormDialogOpen(true)
   }
 
-  const openEditDialog = (category: Category) => {
+  const openEditDialog = (category: CategoryWithRelations) => {
     setSelectedCategory(category)
     setIsFormDialogOpen(true)
   }
 
-  const openDeleteDialog = (category: Category) => {
+  const openDeleteDialog = (category: CategoryWithRelations) => {
     setSelectedCategory(category)
     setIsDeleteDialogOpen(true)
   }
@@ -58,13 +65,30 @@ export function useCategoryActions(customerSlug: string) {
         throw new Error(error.error || "Error al guardar la categoría")
       }
 
+      const savedCategory = await response.json()
       const message = selectedCategory ? "Categoría actualizada" : "Categoría creada"
       toast.success(message)
       closeDialogs()
       
-      startTransition(() => {
-        router.refresh()
-      })
+      // Actualizar estado local en tiempo real
+      if (setCategories) {
+        if (selectedCategory) {
+          // Actualizar categoría existente manteniendo su posición
+          setCategories((prevCategories) =>
+            prevCategories.map((category) =>
+              category.id === selectedCategory.id ? { ...category, ...savedCategory } : category
+            )
+          )
+        } else {
+          // Agregar nueva categoría al principio (ordenado por createdAt desc)
+          setCategories((prevCategories) => [savedCategory, ...prevCategories])
+        }
+      } else {
+        // Fallback a router.refresh si no hay setCategories
+        startTransition(() => {
+          router.refresh()
+        })
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al guardar la categoría")
     }
@@ -86,86 +110,64 @@ export function useCategoryActions(customerSlug: string) {
       toast.success("Categoría eliminada")
       closeDialogs()
       
-      startTransition(() => {
-        router.refresh()
-      })
+      // Actualizar estado local en tiempo real
+      if (setCategories) {
+        setCategories((prevCategories) => prevCategories.filter((category) => category.id !== selectedCategory.id))
+      } else {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
     } catch (error: any) {
       toast.error(error.message || "Error al eliminar la categoría")
     }
   }
 
-  const handleToggleStatus = async (category: any) => {
+  const handleToggleStatus = async (category: CategoryWithRelations) => {
     const newStatus = !category.isActive
     const count = category?._count?.products || 0
     
-    // Si está desactivando y no tiene productos asociados, hacer la acción directamente sin confirmación
-    if (newStatus === false && count === 0) {
+    // Función para actualizar el estado de la categoría
+    const updateCategoryStatus = async () => {
+      const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al cambiar el estado de la categoría")
+      }
+      const updatedCategory = await response.json()
+      
+      // Actualizar estado local en tiempo real
+      if (setCategories) {
+        setCategories((prevCategories) =>
+          prevCategories.map((c) =>
+            c.id === category.id ? { ...c, isActive: newStatus, ...updatedCategory } : c
+          )
+        )
+      }
+      
+      toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
+    }
+    
+    // Si no tiene productos asociados, hacer la acción directamente sin confirmación
+    if (count === 0) {
       try {
-        const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: newStatus }),
-        })
-
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error || "Error al cambiar el estado de la categoría")
-        }
-
-        toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
-        
-        startTransition(() => {
-          router.refresh()
-        })
+        await updateCategoryStatus()
       } catch (error: any) {
         toast.error(error.message || "Error al cambiar el estado de la categoría")
       }
       return
     }
     
-    // Si está desactivando y tiene productos, mostrar confirmación
-    if (newStatus === false) {
-      setConfirmTitle('Desactivar categoría')
-      setConfirmColor('orange')
-      setConfirmDesc(`Se desactivará la categoría "${category.name}" y afectará a ${count} producto(s) asociados.`)
-      setPendingAction(() => async () => {
-        const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: newStatus }),
-        })
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error || "Error al cambiar el estado de la categoría")
-        }
-        toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
-        startTransition(() => router.refresh())
-      })
-      setConfirmOpen(true)
-      return
-    }
-    
-    // Si está activando, hacer la acción directamente
-    try {
-      const response = await fetch(`/api/${customerSlug}/categorias/${category.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: newStatus }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cambiar el estado de la categoría")
-      }
-
-      toast.success(newStatus ? "Categoría activada" : "Categoría desactivada")
-      
-      startTransition(() => {
-        router.refresh()
-      })
-    } catch (error: any) {
-      toast.error(error.message || "Error al cambiar el estado de la categoría")
-    }
+    // Si tiene productos, mostrar confirmación
+    setConfirmTitle(newStatus ? 'Activar categoría' : 'Desactivar categoría')
+    setConfirmColor(newStatus ? 'green' : 'orange')
+    setConfirmDesc(`Se ${newStatus ? 'activará' : 'desactivará'} la categoría "${category.name}" y afectará a ${count} producto(s) asociados.`)
+    setPendingAction(() => updateCategoryStatus)
+    setConfirmOpen(true)
   }
   
   const confirmPerform = async () => {

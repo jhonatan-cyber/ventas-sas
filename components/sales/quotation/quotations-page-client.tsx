@@ -6,20 +6,45 @@ import { QuotationsContainer } from "./quotations-container"
 import { QuotationFormDialog } from "./quotation-form-dialog"
 import { QuotationDeleteDialog } from "./quotation-delete-dialog"
 import { QuotationDetailsDialog } from "./quotation-details-dialog"
+import { QuotationConvertDialog } from "./quotation-convert-dialog"
 import { useQuotationActions } from "@/hooks/sales/quotation/use-quotation-actions"
 import { toast } from "sonner"
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+
+interface BranchSummary {
+  id: string
+  name: string | null
+  address?: string | null
+}
 
 interface QuotationsPageClientProps {
   initialQuotations: SalesQuotationWithRelations[]
   customerSlug: string
   organizationId: string
   showBranchColumn?: boolean
+  canFilterByBranch?: boolean
+  initialBranches?: BranchSummary[]
+  initialIsAdmin?: boolean
+  initialUserBranchId?: string | null
 }
 
-export function QuotationsPageClient({ initialQuotations, customerSlug, organizationId, showBranchColumn = false }: QuotationsPageClientProps) {
+export function QuotationsPageClient({
+  initialQuotations,
+  customerSlug,
+  organizationId,
+  showBranchColumn = false,
+  canFilterByBranch = false,
+  initialBranches,
+  initialIsAdmin = false,
+  initialUserBranchId = null,
+}: QuotationsPageClientProps) {
+  const initialBranchList = useMemo(() => initialBranches ?? [], [initialBranches])
+
   const [quotations, setQuotations] = useState<SalesQuotationWithRelations[]>(initialQuotations)
   const [isLoading, setIsLoading] = useState(false)
+  const [availableBranches, setAvailableBranches] = useState<BranchSummary[]>(initialBranchList)
+  const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
+  const [userBranchId, setUserBranchId] = useState<string | null>(initialUserBranchId)
 
   const normalizeQuotation = useCallback((quotation: any): SalesQuotationWithRelations => ({
     ...quotation,
@@ -63,6 +88,24 @@ export function QuotationsPageClient({ initialQuotations, customerSlug, organiza
     })) ?? [],
   }), [])
 
+  const loadBranches = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/${customerSlug}/sucursales?page=1&pageSize=1000&status=active`, {
+        cache: "no-store",
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      const normalized: BranchSummary[] = (data.branches || []).map((branch: any) => ({
+        id: branch.id,
+        name: branch.name ?? "Sucursal sin nombre",
+        address: branch.address ?? null,
+      }))
+      setAvailableBranches(normalized)
+    } catch (error) {
+      console.error("Error al cargar sucursales:", error)
+    }
+  }, [customerSlug])
+
   const loadQuotations = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -85,24 +128,51 @@ export function QuotationsPageClient({ initialQuotations, customerSlug, organiza
   }, [customerSlug, normalizeQuotation])
 
   useEffect(() => {
+    setAvailableBranches(initialBranchList)
+  }, [initialBranchList])
+
+  useEffect(() => {
     setQuotations(initialQuotations.map(normalizeQuotation))
   }, [initialQuotations, normalizeQuotation])
+
+  useEffect(() => {
+    setUserBranchId(initialUserBranchId ?? null)
+  }, [initialUserBranchId])
+
+  useEffect(() => {
+    setIsAdmin(initialIsAdmin)
+  }, [initialIsAdmin])
+
+  useEffect(() => {
+    if (initialBranchList.length === 0) {
+      loadBranches()
+    }
+  }, [initialBranchList.length, loadBranches])
 
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
     isDetailsDialogOpen,
+    isConvertDialogOpen,
+    isConverting,
     selectedQuotation,
     detailQuotation,
+    convertQuotation,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
     openDetailsDialog,
+    openConvertDialog,
     closeDialogs,
     closeDetailsDialog,
+    closeConvertDialog,
     handleSave,
-    handleDelete
-  } = useQuotationActions(customerSlug, loadQuotations)
+    handleDelete,
+    handleConvert
+  } = useQuotationActions(customerSlug, async () => {
+    await loadQuotations()
+    await loadBranches()
+  })
 
   const handleCreateClick = () => {
     openCreateDialog()
@@ -127,7 +197,10 @@ export function QuotationsPageClient({ initialQuotations, customerSlug, organiza
         onEdit={openEditDialog as any}
         onDelete={openDeleteDialog as any}
         onViewDetails={openDetailsDialog as any}
-        showBranchColumn={showBranchColumn}
+        showBranchColumn={showBranchColumn || isAdmin}
+        branches={availableBranches}
+        allowBranchFilter={canFilterByBranch}
+        onConvert={openConvertDialog}
       />
 
       {/* Modal de crear/editar cotización */}
@@ -136,6 +209,10 @@ export function QuotationsPageClient({ initialQuotations, customerSlug, organiza
         onOpenChange={closeDialogs}
         quotation={selectedQuotation}
         organizationId={organizationId}
+        customerSlug={customerSlug}
+        branches={availableBranches}
+        isAdmin={isAdmin}
+        currentUserBranchId={userBranchId}
         onSave={handleSave}
         isBusy={isLoading}
       />
@@ -153,6 +230,22 @@ export function QuotationsPageClient({ initialQuotations, customerSlug, organiza
         onOpenChange={closeDetailsDialog}
         quotation={detailQuotation}
         customerSlug={customerSlug}
+      />
+
+      <QuotationConvertDialog
+        open={isConvertDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeConvertDialog()
+          }
+        }}
+        quotation={convertQuotation}
+        onConfirm={handleConvert}
+        isSubmitting={isConverting}
+        customerSlug={customerSlug}
+        isAdmin={isAdmin}
+        selectedBranchId={convertQuotation?.branchId ?? null}
+        userBranchId={userBranchId}
       />
     </div>
   )

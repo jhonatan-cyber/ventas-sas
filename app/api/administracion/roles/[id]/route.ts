@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RoleAdminService } from '@/lib/services/admin/role-admin-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener rol por ID
 export async function GET(
@@ -7,6 +9,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para ver detalles de roles
+    const canView = await PermissionCheckService.hasActivePermission(currentUser.id, 'roles_ver_detalles')
+    if (!canView) {
+      return NextResponse.json({ error: 'No tiene permiso para ver detalles de roles' }, { status: 403 })
+    }
+
     const { id } = await params
     const role = await RoleAdminService.getRoleById(id)
     
@@ -33,13 +46,24 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para editar roles
+    const canEdit = await PermissionCheckService.hasActivePermission(currentUser.id, 'roles_editar')
+    if (!canEdit) {
+      return NextResponse.json({ error: 'No tiene permiso para editar roles' }, { status: 403 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const { name, description, permissions } = body
 
     // Validar permisos si se proporcionan
     if (permissions && Array.isArray(permissions) && permissions.length > 0) {
-      const validation = RoleAdminService.validatePermissions(permissions)
+      const validation = await RoleAdminService.validatePermissions(permissions)
       if (!validation.isValid) {
         return NextResponse.json(
           { error: `Permisos inválidos: ${validation.invalidPermissions.join(', ')}` },
@@ -88,11 +112,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
     const { id } = await params
-    console.log('PATCH /api/administracion/roles/[id] - id:', id)
     const body = await request.json()
     const { isActive } = body
-    console.log('PATCH /api/administracion/roles/[id] - body:', { isActive })
 
     if (typeof isActive !== 'boolean') {
       return NextResponse.json(
@@ -101,7 +128,15 @@ export async function PATCH(
       )
     }
 
-    console.log('Calling toggleRoleStatus with:', { id, isActive })
+    // Verificar permiso según la acción (activar o desactivar)
+    const requiredPermission = isActive ? 'roles_activar' : 'roles_desactivar'
+    const canToggle = await PermissionCheckService.hasActivePermission(currentUser.id, requiredPermission)
+    if (!canToggle) {
+      return NextResponse.json({ 
+        error: `No tiene permiso para ${isActive ? 'activar' : 'desactivar'} roles` 
+      }, { status: 403 })
+    }
+
     const updatedRole = await RoleAdminService.toggleRoleStatus(id, isActive)
 
     return NextResponse.json(updatedRole)
@@ -129,6 +164,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para eliminar roles
+    const canDelete = await PermissionCheckService.hasActivePermission(currentUser.id, 'roles_eliminar')
+    if (!canDelete) {
+      return NextResponse.json({ error: 'No tiene permiso para eliminar roles' }, { status: 403 })
+    }
+
     const { id } = await params
     // Verificar si el rol existe
     const role = await RoleAdminService.getRoleById(id)

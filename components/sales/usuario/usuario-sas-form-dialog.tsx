@@ -100,13 +100,32 @@ export function UsuarioSasFormDialog({
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Crear preview
+      // Validar tamaño del archivo (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("La imagen es demasiado grande. Por favor, selecciona una imagen menor a 5MB.");
+        e.target.value = "";
+        return;
+      }
+
+      // Validar tipo de archivo
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert("Tipo de archivo no válido. Por favor, selecciona una imagen (PNG, JPG, GIF o WEBP).");
+        e.target.value = "";
+        return;
+      }
+
+      // Crear preview y guardar data URL
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFotoPreview(reader.result as string);
+        const dataUrl = reader.result as string;
+        setFotoPreview(dataUrl);
+        setFoto(dataUrl); // Guardar el data URL para enviarlo
       };
       reader.readAsDataURL(file);
-      setFoto(file.name);
+    } else {
+      setFoto("");
+      setFotoPreview("");
     }
   };
 
@@ -127,17 +146,47 @@ export function UsuarioSasFormDialog({
     setIsLoading(true);
     try {
       const data: any = {
-        ci: ci.trim(),
         nombre: nombre.trim(),
         apellido: apellido.trim(),
-        telefono: telefono.trim(),
-        rolId: rolId,
       };
 
-      // Campos opcionales
-      if (correo) data.correo = correo.trim();
-      if (direccion) data.direccion = direccion.trim();
-      if (foto) data.foto = foto.trim();
+      // CI - solo si tiene valor y es válido
+      if (ci && ci.trim()) {
+        data.ci = ci.trim();
+      }
+
+      // Teléfono - solo si tiene valor
+      if (telefono && telefono.trim()) {
+        data.telefono = telefono.trim();
+      }
+
+      // Rol - solo si está seleccionado
+      if (rolId) {
+        data.rolId = rolId;
+      }
+
+      // Campos opcionales - solo si tienen valor válido
+      if (correo && correo.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(correo.trim())) {
+          data.correo = correo.trim().toLowerCase();
+        }
+      }
+      if (direccion && direccion.trim()) {
+        data.direccion = direccion.trim();
+      }
+      
+      // Foto - enviar si es una URL válida o un data URL (base64)
+      if (foto && foto.trim()) {
+        // Si es una URL http/https, enviarla directamente
+        if (foto.startsWith('http://') || foto.startsWith('https://')) {
+          data.foto = foto.trim();
+        } 
+        // Si es un data URL (base64), enviarlo también (el backend lo procesará)
+        else if (foto.startsWith('data:image/')) {
+          data.foto = foto.trim();
+        }
+      }
 
       // Para la sucursal: si solo hay una, usar la por defecto automáticamente
       // Si hay más de una, usar la seleccionada
@@ -155,19 +204,24 @@ export function UsuarioSasFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {usuario ? "Editar Usuario" : "Nuevo Usuario"}
-          </DialogTitle>
-          <DialogDescription>
-            {usuario
-              ? "Modifica los datos del usuario"
-              : "Completa los datos para crear un nuevo usuario"}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        {/* Header estático */}
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
+              {usuario ? "Editar Usuario" : "Nuevo Usuario"}
+            </DialogTitle>
+            <DialogDescription>
+              {usuario
+                ? "Modifica los datos del usuario"
+                : "Completa los datos para crear un nuevo usuario"}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="ci">
@@ -327,26 +381,41 @@ export function UsuarioSasFormDialog({
             </div>
 
             {!usuario && (
-              <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800 shadow-sm">
                 <CardContent className="pt-6">
-                  <div className="flex gap-3">
-                    <InfoIcon className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                    <CardDescription className="text-blue-900 dark:text-blue-100">
-                      <strong>Nota:</strong> La contraseña del usuario será
-                      automáticamente su número de CI.
-                    </CardDescription>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+                        <InfoIcon className="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Información importante
+                      </div>
+                      <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1.5">
+                        <p>
+                          <span className="font-medium">Contraseña automática:</span> La contraseña del usuario será automáticamente su número de CI.
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          El usuario podrá cambiar su contraseña después del primer inicio de sesión.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
           </div>
-          <DialogFooter className="justify-center sm:justify-center gap-3">
+          
+          {/* Footer estático */}
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="rounded-full"
+              className="w-full sm:w-auto rounded-full"
             >
               Cancelar
             </Button>
@@ -361,7 +430,7 @@ export function UsuarioSasFormDialog({
                 !telefono.trim() ||
                 !rolId
               }
-              className="rounded-full"
+              className="w-full sm:w-auto rounded-full"
             >
               {isLoading ? "Guardando..." : usuario ? "Actualizar" : "Agregar"}
             </Button>

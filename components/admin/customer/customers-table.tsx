@@ -5,18 +5,26 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone, Eye } from "lucide-react"
 import { Customer } from "@/lib/types"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface CustomersTableProps {
   customers: Customer[]
   isLoading?: boolean
+  onViewDetails?: (customer: Customer) => void
   onEditClick?: (customer: Customer) => void
   onDeleteClick?: (customer: Customer) => void
   onToggleStatus?: (customer: Customer) => void
 }
 
-export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClick, onToggleStatus }: CustomersTableProps) {
+export function CustomersTable({ customers, isLoading, onViewDetails, onEditClick, onDeleteClick, onToggleStatus }: CustomersTableProps) {
+  const canViewDetails = useHasPermission("clientes_ver_detalles")
+  const canEdit = useHasPermission("clientes_editar")
+  const canDelete = useHasPermission("clientes_eliminar")
+  const canActivate = useHasPermission("clientes_activar")
+  const canDeactivate = useHasPermission("clientes_desactivar")
+
   if (isLoading) {
     return (
       <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -142,54 +150,94 @@ export function CustomersTable({ customers, isLoading, onEditClick, onDeleteClic
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {onViewDetails && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onViewDetails(customer)}
+                                  disabled={!canViewDetails}
+                                  className="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {canViewDetails ? "Ver detalles" : "No tiene permiso para ver detalles"}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         {onEditClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onEditClick(customer)}
-                                className="hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onEditClick(customer)}
+                                  disabled={!canEdit}
+                                  className="hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </span>
                             </TooltipTrigger>
-                            <TooltipContent>Editar cliente</TooltipContent>
+                            <TooltipContent>
+                              {canEdit ? "Editar cliente" : "No tiene permiso para editar clientes"}
+                            </TooltipContent>
                           </Tooltip>
                         )}
                         {onToggleStatus && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onToggleStatus(customer)}
-                                className={customer.isActive
-                                  ? "hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
-                                  : "hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
-                                }
-                              >
-                                {customer.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                              </Button>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onToggleStatus(customer)}
+                                  disabled={
+                                    (customer.isActive && !canDeactivate) || 
+                                    (!customer.isActive && !canActivate)
+                                  }
+                                  className={`${
+                                    customer.isActive
+                                      ? "hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                                      : "hover:bg-green-100 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                  {customer.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                                </Button>
+                              </span>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {customer.isActive ? "Desactivar cliente" : "Activar cliente"}
+                              {customer.isActive 
+                                ? (canDeactivate ? "Desactivar cliente" : "No tiene permiso para desactivar clientes")
+                                : (canActivate ? "Activar cliente" : "No tiene permiso para activar clientes")
+                              }
                             </TooltipContent>
                           </Tooltip>
                         )}
                         {onDeleteClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onDeleteClick(customer)}
-                                className="hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onDeleteClick(customer)}
+                                  disabled={!canDelete}
+                                  className="hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </span>
                             </TooltipTrigger>
-                            <TooltipContent>Eliminar cliente</TooltipContent>
+                            <TooltipContent>
+                              {canDelete ? "Eliminar cliente" : "No tiene permiso para eliminar clientes"}
+                            </TooltipContent>
                           </Tooltip>
                         )}
                       </div>

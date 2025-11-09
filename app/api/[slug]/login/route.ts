@@ -88,14 +88,14 @@ export async function POST(
       }, { status: 200 })
     }
 
-    // Obtener customerId para logging y validación
-    const customerId = result.user?.customer?.id
+    // Obtener organizationId para logging y validación
+    const organizationId = result.user?.organization?.id
 
     // Registrar intento de login en auditoría
     await SecurityAuditLogger.logLoginAttempt(
       {
         userId: result.user?.id,
-        customerId: customerId,
+        organizationId: organizationId,
         method: ci ? 'CI' : 'email',
         identifier: ci || correo,
         success: result.success,
@@ -111,30 +111,11 @@ export async function POST(
       )
     }
 
-    // Validar suscripción activa del cliente asociado al usuario SAS
-    if (!customerId) {
+    // Validar que el usuario tenga organización asociada
+    // La validación de suscripción activa ya se hizo en getOrganizationBySlug dentro de AuthSasService
+    if (!organizationId) {
       return NextResponse.json(
-        { error: 'Cuenta sin cliente asociado. Contacta a soporte.' },
-        { status: 403 }
-      )
-    }
-
-    const activeSub = await prisma.subscription.findFirst({
-      where: {
-        customerId,
-        status: { in: ['active', 'trial'] },
-        OR: [
-          { endDate: null },
-          { endDate: { gt: new Date() } },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, status: true, endDate: true },
-    })
-
-    if (!activeSub) {
-      return NextResponse.json(
-        { error: 'Tu suscripción no está activa. Por favor, contacta a tu proveedor de servicio.' },
+        { error: 'Cuenta sin organización asociada. Contacta a soporte.' },
         { status: 403 }
       )
     }
@@ -161,6 +142,7 @@ export async function POST(
     )
 
     if (result.token) {
+      const isSecure = request.nextUrl.protocol === 'https:'
       // Guardar sesión en cookie
       const sessionData = {
         userId: result.user.id,
@@ -169,16 +151,17 @@ export async function POST(
         fullName: `${result.user.nombre} ${result.user.apellido}`,
         correo: result.user.correo,
         rol: result.user.rol?.nombre || null,
-        customerSlug: slug,
-        customerId,
+        organizationSlug: slug,
+        organizationId: organizationId,
         sucursalId: result.user.sucursal?.id || null,
+        lastUpdated: Date.now(),
       }
 
       // Establecer cookies con configuración mejorada (valor codificado en base64 para evitar errores de parseo)
       const sessionEncoded = Buffer.from(JSON.stringify(sessionData), 'utf8').toString('base64')
       response.cookies.set('sas-session', sessionEncoded, {
         httpOnly: false, // Necesitamos acceder desde el cliente
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 días
         path: '/',
@@ -187,7 +170,7 @@ export async function POST(
       // Token JWT para validaciones del servidor (SAS)
       response.cookies.set('sas-auth-token', result.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 días
         path: '/',
@@ -201,8 +184,12 @@ export async function POST(
       endpoint: `/api/${slug}/login`,
       slug,
     })
+    console.error('Error completo en login SAS:', error)
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack available')
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { 
+        error: error instanceof Error ? error.message : 'Error interno del servidor'
+      },
       { status: 500 }
     )
   }

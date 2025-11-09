@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { CustomersHeader } from "./customers-header";
 import { CustomersContainer } from "./customers-container";
 import { CustomerFormDialog } from "./customer-form-dialog";
+import { CustomerDetailDialog } from "./customer-detail-dialog";
 import { CustomerDeleteDialog } from "./customer-delete-dialog";
 import { Customer } from "@/lib/types";
 import { useCustomerActions } from "@/hooks/admin/customer/use-customer-actions";
@@ -18,10 +19,15 @@ export function CustomersPageClient({
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
+    setIsDetailDialogOpen,
     selectedCustomer,
+    customerDetails,
+    isLoadingDetails,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openDetailDialog,
     closeDialogs,
     handleSave,
     handleDelete,
@@ -43,6 +49,7 @@ export function CustomersPageClient({
         <CustomersContainer
           customers={initialCustomers}
           onEdit={openEditDialog}
+          onViewDetails={openDetailDialog}
           onToggleStatus={handleToggleStatus}
           onDelete={openDeleteDialog}
         />
@@ -53,6 +60,13 @@ export function CustomersPageClient({
           onOpenChange={closeDialogs}
           customer={selectedCustomer}
           onSave={handleSave}
+        />
+
+        {/* Modal de detalles del cliente */}
+        <CustomerDetailDialog
+          open={isDetailDialogOpen}
+          onOpenChange={setIsDetailDialogOpen}
+          customer={customerDetails}
         />
 
         {/* Modal de confirmación de eliminar */}

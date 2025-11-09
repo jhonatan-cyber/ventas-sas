@@ -20,30 +20,6 @@ const capitalizeWords = (value: string) =>
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase())
 
-const DEFAULT_PHONE_PREFIX = "+591"
-const DEFAULT_PHONE_PREFIX_DIGITS = DEFAULT_PHONE_PREFIX.replace(/\D/g, '')
-
-const normalizePhoneForState = (value?: string | null) => {
-  if (!value) return DEFAULT_PHONE_PREFIX
-  const trimmed = value.trim()
-  if (!trimmed) return DEFAULT_PHONE_PREFIX
-  const digitsOnly = trimmed.replace(/\D/g, '')
-  const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
-    ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
-    : digitsOnly
-  if (!localDigits) return DEFAULT_PHONE_PREFIX
-  return `${DEFAULT_PHONE_PREFIX}${localDigits}`
-}
-
-const sanitizePhoneForSubmit = (value: string) => {
-  const sanitized = normalizePhoneForState(value)
-  const digits = sanitized.replace(/\D/g, '')
-  if (digits.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
-    return undefined
-  }
-  return sanitized
-}
-
 export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, isLoading: externalLoading = false }: SalesCustomerFormDialogProps) {
   const [ci, setCi] = useState("")
   const [name, setName] = useState("")
@@ -53,40 +29,20 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
   const [address, setAddress] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handlePhoneChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '')
-    const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
-      ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
-      : digitsOnly
-    setPhone(localDigits ? `${DEFAULT_PHONE_PREFIX}${localDigits}` : DEFAULT_PHONE_PREFIX)
-  }
-
-  const handlePhoneBlur = () => {
-    setPhone((prev) => {
-      if (!prev || prev === '+' || prev === DEFAULT_PHONE_PREFIX) return DEFAULT_PHONE_PREFIX
-      const normalized = normalizePhoneForState(prev)
-      const digitsOnly = normalized.replace(/\D/g, '')
-      if (!digitsOnly || digitsOnly.length <= DEFAULT_PHONE_PREFIX_DIGITS.length) {
-        return DEFAULT_PHONE_PREFIX
-      }
-      return normalized
-    })
-  }
-
   useEffect(() => {
     if (customer) {
       setCi(customer.ruc || "")
       setName(customer.name ? capitalizeWords(customer.name) : "")
       setLastName(customer.lastName ? capitalizeWords(customer.lastName) : "")
       setEmail(customer.email || "")
-      setPhone(normalizePhoneForState(customer.phone))
+      setPhone(customer.phone || "")
       setAddress(customer.address ? capitalizeWords(customer.address) : "")
     } else {
       setCi("")
       setName("")
       setLastName("")
       setEmail("")
-      setPhone(DEFAULT_PHONE_PREFIX)
+      setPhone("")
       setAddress("")
     }
   }, [customer, open])
@@ -94,19 +50,18 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name.trim()) {
+    if (!name.trim() || !lastName.trim()) {
       return
     }
 
     setIsLoading(true)
     try {
-      const normalizedPhone = sanitizePhoneForSubmit(phone)
       await onSave({
         ruc: ci.trim() ? ci.trim().toUpperCase() : undefined,
         name: name.trim(),
-        lastName: lastName.trim() || undefined,
+        lastName: lastName.trim(),
         email: email.trim() || undefined,
-        phone: normalizedPhone,
+        phone: phone.trim() || undefined,
         address: address.trim() || undefined,
       })
     } finally {
@@ -116,19 +71,24 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {customer ? "Editar Cliente" : "Nuevo Cliente"}
-          </DialogTitle>
-          <DialogDescription>
-            {customer 
-              ? "Modifica los datos del cliente" 
-              : "Completa los datos para crear un nuevo cliente"}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        {/* Header estático */}
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2">
+            <DialogTitle>
+              {customer ? "Editar Cliente" : "Nuevo Cliente"}
+            </DialogTitle>
+            <DialogDescription>
+              {customer 
+                ? "Modifica los datos del cliente" 
+                : "Completa los datos para crear un nuevo cliente"}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="ci">CI</Label>
@@ -158,19 +118,18 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lastName">Apellido</Label>
+                <Label htmlFor="lastName">Apellido <span className="text-red-500">*</span></Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(capitalizeWords(e.target.value))}
                   placeholder="Apellido"
+                  required
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Correo Electrónico</Label>
                 <Input
@@ -183,47 +142,42 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
                   className="rounded-full"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <div className="grid grid-cols-[80px_minmax(0,1fr)] gap-2">
-                  <Input
-                    value={DEFAULT_PHONE_PREFIX}
-                    readOnly
-                    aria-hidden="true"
-                    className="rounded-full text-center font-semibold"
-                  />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone.replace(/[^0-9]/g, '').replace(new RegExp(`^${DEFAULT_PHONE_PREFIX_DIGITS}`), '')}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
-                    onBlur={handlePhoneBlur}
-                    placeholder="70000000"
-                    inputMode="numeric"
-                    disabled={isLoading || externalLoading}
-                    className="rounded-full"
-                  />
-                </div>
-              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
-              <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(capitalizeWords(e.target.value))}
-                placeholder="Dirección completa"
-                disabled={isLoading || externalLoading}
-                className="rounded-full"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Teléfono"
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Dirección</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(capitalizeWords(e.target.value))}
+                  placeholder="Dirección completa"
+                  disabled={isLoading || externalLoading}
+                  className="rounded-full"
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter className="justify-center sm:justify-center gap-3">
+          
+          {/* Footer estático */}
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button 
               type="button" 
               variant="outline" 
-              className="rounded-full"
+              className="w-full sm:w-auto rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isLoading || externalLoading}
             >
@@ -232,10 +186,10 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
             <Button 
               type="submit" 
               variant="new"
-              className="rounded-full"
-              disabled={isLoading || externalLoading || !name.trim()}
+              className="w-full sm:w-auto rounded-full"
+              disabled={isLoading || externalLoading || !name.trim() || !lastName.trim()}
             >
-              {isLoading || externalLoading ? "Guardando..." : customer ? "Actualizar" : "Crear"}
+              {isLoading || externalLoading ? "Agregando..." : customer ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

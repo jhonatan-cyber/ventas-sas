@@ -7,15 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
+import { Calendar, Building2 } from "lucide-react"
 
-interface Customer {
+interface Organization {
   id: string
+  name: string
+  slug: string
   razonSocial: string | null
   nit: string | null
-  nombre: string | null
-  apellido: string | null
-  email: string | null
 }
 
 interface Plan {
@@ -33,40 +32,40 @@ interface SubscriptionFormDialogProps {
 }
 
 export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSave }: SubscriptionFormDialogProps) {
-  const [customerId, setCustomerId] = useState("")
+  const [organizationId, setOrganizationId] = useState("")
   const [planId, setPlanId] = useState("")
   const [billingPeriod, setBillingPeriod] = useState("monthly")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [autoRenew, setAutoRenew] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [organizations, setOrganizations] = useState<Organization[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
-  const [customersLoading, setCustomersLoading] = useState(false)
+  const [organizationsLoading, setOrganizationsLoading] = useState(false)
   const [plansLoading, setPlansLoading] = useState(false)
   
   // Validar si el formulario es válido
-  const isFormValid = customerId.trim() !== "" && planId.trim() !== ""
+  const isFormValid = organizationId.trim() !== "" && planId.trim() !== ""
 
   useEffect(() => {
     if (open) {
-      loadCustomers()
+      loadOrganizations()
       loadPlans()
     }
   }, [open])
 
-  const loadCustomers = async () => {
+  const loadOrganizations = async () => {
     try {
-      setCustomersLoading(true)
-      const response = await fetch('/api/administracion/customers?pageSize=1000')
+      setOrganizationsLoading(true)
+      const response = await fetch('/api/administracion/organizations?pageSize=1000')
       if (response.ok) {
         const data = await response.json()
-        setCustomers(data.customers || [])
+        setOrganizations(data.organizations || [])
       }
     } catch (error) {
-      console.error('Error al cargar clientes:', error)
+      console.error('Error al cargar organizaciones:', error)
     } finally {
-      setCustomersLoading(false)
+      setOrganizationsLoading(false)
     }
   }
 
@@ -87,14 +86,14 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
 
   useEffect(() => {
     if (subscription) {
-      setCustomerId(subscription.customerId || "")
+      setOrganizationId(subscription.organizationId || "")
       setPlanId(subscription.planId || "")
       setBillingPeriod(subscription.billingPeriod || "monthly")
       setStartDate(subscription.startDate ? new Date(subscription.startDate).toISOString().split('T')[0] : "")
       setEndDate(subscription.endDate ? new Date(subscription.endDate).toISOString().split('T')[0] : "")
       setAutoRenew(subscription.autoRenew ?? true)
     } else {
-      setCustomerId("")
+      setOrganizationId("")
       setPlanId("")
       setBillingPeriod("monthly")
       setStartDate("")
@@ -109,15 +108,11 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
 
     try {
       const data: any = {
+        organizationId: organizationId,
         planId,
         billingPeriod,
         autoRenew,
         status: subscription ? subscription.status : 'active', // Solo para edición, creación siempre activo
-      }
-
-      // Solo incluir customerId si tiene valor
-      if (customerId && customerId.trim() !== "") {
-        data.customerId = customerId
       }
 
       // Convertir fechas a formato ISO datetime
@@ -133,7 +128,7 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
       await onSave(data)
       onOpenChange(false)
       
-      setCustomerId("")
+      setOrganizationId("")
       setPlanId("")
       setBillingPeriod("monthly")
       setStartDate("")
@@ -164,17 +159,18 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
             <div className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  Cliente <span className="text-red-500">*</span>
+                <Label htmlFor="organization" className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Empresa <span className="text-red-500">*</span>
                 </Label>
-                <Select value={customerId} onValueChange={setCustomerId} disabled={customersLoading}>
+                <Select value={organizationId} onValueChange={setOrganizationId} disabled={organizationsLoading || !!subscription}>
                   <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
-                    <SelectValue placeholder={customersLoading ? "Cargando..." : "Selecciona un cliente"} />
+                    <SelectValue placeholder={organizationsLoading ? "Cargando..." : subscription ? "No se puede cambiar" : "Selecciona una empresa"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
-                        {customer.razonSocial || `${customer.nombre || ''} ${customer.apellido || ''}`.trim() || customer.email || 'Cliente sin nombre'}
+                    {organizations.map((organization) => (
+                      <SelectItem key={organization.id} value={organization.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
+                        {organization.razonSocial || organization.name || 'Empresa sin nombre'}
                       </SelectItem>
                     ))}
                   </SelectContent>

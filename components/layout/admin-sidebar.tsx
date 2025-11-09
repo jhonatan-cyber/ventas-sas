@@ -7,14 +7,13 @@ import { useSidebar } from "./sidebar-context"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useUserPermissions } from "@/hooks/admin/use-user-permissions"
 import {
   LayoutDashboard,
   Users,
   ShoppingCart,
-  BarChart3,
   Shield,
   CreditCard,
-  UserCog,
   Settings,
   UserCircle,
   Receipt,
@@ -30,13 +29,17 @@ import {
   MessageSquare,
   GitBranch,
   FlaskConical,
-  Building2
+  Building2,
+  Key,
+  Globe,
+  Plug
 } from "lucide-react"
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
+  requiredPermission?: string // Permiso necesario para ver este item (ej: "usuarios_listar")
 }
 
 interface NavSection {
@@ -49,42 +52,79 @@ const navSections: NavSection[] = [
     title: "PRINCIPAL",
     items: [
       { title: "Dashboard", href: "/administracion/dashboard", icon: LayoutDashboard }
+      // Dashboard siempre visible, no requiere permiso específico
     ]
   },
   {
-    title: "ADMINISTRACIÓN",
+    title: "USUARIOS Y PERMISOS",
     items: [
-      { title: "Usuarios", href: "/administracion/users", icon: Users },
-      { title: "Planes", href: "/administracion/plans", icon: CreditCard },
-      { title: "Suscripciones", href: "/administracion/subscriptions", icon: Receipt },
-      { title: "Facturación y Pagos", href: "/administracion/billing", icon: DollarSign },
-      { title: "Roles", href: "/administracion/roles", icon: Shield }
+      { title: "Usuarios", href: "/administracion/users", icon: Users, requiredPermission: "usuarios_listar" },
+      { title: "Roles", href: "/administracion/roles", icon: Shield, requiredPermission: "roles_listar" },
+      { title: "Permisos", href: "/administracion/permisos", icon: Key, requiredPermission: "permisos_listar" }
     ]
   },
   {
-    title: "VENTAS",
+    title: "COMERCIAL",
     items: [
-      { title: "Clientes", href: "/administracion/customers", icon: UserCircle },
-      { title: "Empresas", href: "/administracion/customer-organizations", icon: Building2 }
+      { title: "Planes", href: "/administracion/plans", icon: CreditCard, requiredPermission: "planes_listar" },
+      { title: "Suscripciones", href: "/administracion/subscriptions", icon: Receipt, requiredPermission: "suscripciones_listar" },
+      { title: "Facturación y Pagos", href: "/administracion/billing", icon: DollarSign, requiredPermission: "facturacion_listar" }
     ]
   },
   {
-    title: "SISTEMA",
+    title: "CLIENTES",
     items: [
-      { title: "Configuración", href: "/administracion/setup", icon: Settings },
-      { title: "Logs y Auditoría", href: "/administracion/logs", icon: FileText },
-      { title: "Notificaciones Masivas", href: "/administracion/notifications", icon: Bell },
-      { title: "Tickets de Soporte", href: "/administracion/support", icon: HelpCircle },
-      { title: "Exportación de Datos", href: "/administracion/export", icon: Download },
-      { title: "Salud del Sistema", href: "/administracion/health", icon: Activity },
-      { title: "Gestión de Caché", href: "/administracion/cache", icon: Database },
-      { title: "White Label", href: "/administracion/white-label", icon: Palette },
-      { title: "CMS", href: "/administracion/cms", icon: BookOpen },
-      { title: "Feedback", href: "/administracion/feedback", icon: MessageSquare },
-      { title: "Versiones", href: "/administracion/versions", icon: GitBranch },
-      { title: "Pruebas A/B", href: "/administracion/ab-tests", icon: FlaskConical },
-      { title: "Dominios", href: "/administracion/custom-domains", icon: Database },
-      { title: "Integraciones", href: "/administracion/integrations", icon: Download }
+      { title: "Clientes", href: "/administracion/customers", icon: UserCircle, requiredPermission: "clientes_listar" },
+      { title: "Empresas", href: "/administracion/customer-organizations", icon: Building2, requiredPermission: "organizaciones_listar" }
+    ]
+  },
+  {
+    title: "CONTENIDO",
+    items: [
+      { title: "CMS", href: "/administracion/cms", icon: BookOpen, requiredPermission: "cms_listar" },
+      { title: "White Label", href: "/administracion/white-label", icon: Palette, requiredPermission: "white_label_listar" }
+    ]
+  },
+  {
+    title: "INTEGRACIONES",
+    items: [
+      { title: "Integraciones", href: "/administracion/integrations", icon: Plug, requiredPermission: "integraciones_listar" },
+      { title: "Dominios Personalizados", href: "/administracion/custom-domains", icon: Globe, requiredPermission: "dominios_listar" }
+    ]
+  },
+  {
+    title: "COMUNICACIÓN",
+    items: [
+      { title: "Notificaciones Masivas", href: "/administracion/notifications", icon: Bell, requiredPermission: "notificaciones_listar" },
+      { title: "Feedback", href: "/administracion/feedback", icon: MessageSquare, requiredPermission: "feedback_listar" }
+    ]
+  },
+  {
+    title: "SOPORTE",
+    items: [
+      { title: "Tickets de Soporte", href: "/administracion/support", icon: HelpCircle, requiredPermission: "soporte_listar" }
+    ]
+  },
+  {
+    title: "ANÁLISIS Y REPORTES",
+    items: [
+      { title: "Logs y Auditoría", href: "/administracion/logs", icon: FileText, requiredPermission: "logs_listar" },
+      { title: "Exportación de Datos", href: "/administracion/export", icon: Download, requiredPermission: "export_listar" }
+    ]
+  },
+  {
+    title: "MONITOREO",
+    items: [
+      { title: "Salud del Sistema", href: "/administracion/health", icon: Activity, requiredPermission: "health_listar" },
+      { title: "Versiones", href: "/administracion/versions", icon: GitBranch, requiredPermission: "versions_listar" },
+      { title: "Pruebas A/B", href: "/administracion/ab-tests", icon: FlaskConical, requiredPermission: "ab_tests_listar" }
+    ]
+  },
+  {
+    title: "CONFIGURACIÓN",
+    items: [
+      { title: "Configuración General", href: "/administracion/setup", icon: Settings, requiredPermission: "configuracion_listar" },
+      { title: "Gestión de Caché", href: "/administracion/cache", icon: Database, requiredPermission: "cache_listar" }
     ]
   }
 ]
@@ -92,6 +132,36 @@ const navSections: NavSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { isOpen, close, isCollapsed, toggleCollapse } = useSidebar()
+  const { permissions, isSuperAdmin, isLoading } = useUserPermissions()
+
+  // Función para verificar si el usuario tiene permiso para ver un item
+  const hasPermission = (requiredPermission?: string): boolean => {
+    // Si no requiere permiso específico (como Dashboard), siempre visible
+    if (!requiredPermission) {
+      return true
+    }
+
+    // Mientras los permisos están cargando (permissions vacío y no es super admin),
+    // mostrar todos los items temporalmente. Se filtrarán automáticamente cuando lleguen los permisos.
+    if (permissions.length === 0 && !isSuperAdmin) {
+      return true
+    }
+
+    // Super admin tiene todos los permisos
+    if (isSuperAdmin) {
+      return true
+    }
+
+    // Verificar si tiene el permiso requerido
+    return permissions.includes(requiredPermission)
+  }
+
+  // Filtrar secciones e items según permisos
+  // Solo filtrar cuando ya terminó de cargar los permisos
+  const filteredSections = navSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => hasPermission(item.requiredPermission))
+  })).filter(section => section.items.length > 0) // Eliminar secciones vacías
 
   return (
     <>
@@ -165,7 +235,7 @@ export function AdminSidebar() {
         {/* Navegación */}
         <nav className="flex-1 overflow-y-auto p-4">
           <TooltipProvider>
-            {navSections.map((section, sectionIndex) => (
+            {filteredSections.map((section, sectionIndex) => (
               <div key={sectionIndex} className="mb-6">
                 {!isCollapsed && (
                   <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider transition-opacity duration-300">

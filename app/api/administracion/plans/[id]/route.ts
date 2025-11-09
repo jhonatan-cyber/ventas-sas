@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SubscriptionAdminService } from '@/lib/services/admin/subscription-admin-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener plan por ID
 export async function GET(
@@ -7,6 +9,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para ver detalles de planes
+    const canView = await PermissionCheckService.hasActivePermission(currentUser.id, 'planes_ver_detalles')
+    if (!canView) {
+      return NextResponse.json({ error: 'No tiene permiso para ver detalles de planes' }, { status: 403 })
+    }
+
     const { id } = await params
     const plan = await SubscriptionAdminService.getPlanById(id)
     
@@ -33,6 +46,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para editar planes
+    const canEdit = await PermissionCheckService.hasActivePermission(currentUser.id, 'planes_editar')
+    if (!canEdit) {
+      return NextResponse.json({ error: 'No tiene permiso para editar planes' }, { status: 403 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxOrders } = body
@@ -83,6 +107,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const { isActive } = body
@@ -92,6 +121,15 @@ export async function PATCH(
         { error: 'Se requiere un valor booleano para isActive' },
         { status: 400 }
       )
+    }
+
+    // Verificar permiso según la acción (activar o desactivar)
+    const requiredPermission = isActive ? 'planes_activar' : 'planes_desactivar'
+    const canToggle = await PermissionCheckService.hasActivePermission(currentUser.id, requiredPermission)
+    if (!canToggle) {
+      return NextResponse.json({ 
+        error: `No tiene permiso para ${isActive ? 'activar' : 'desactivar'} planes` 
+      }, { status: 403 })
     }
 
     const updatedPlan = await SubscriptionAdminService.togglePlanStatus(id, isActive)
@@ -121,6 +159,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = await getCurrentAdminUser(request)
+    if (!currentUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    // Verificar permiso para eliminar planes
+    const canDelete = await PermissionCheckService.hasActivePermission(currentUser.id, 'planes_eliminar')
+    if (!canDelete) {
+      return NextResponse.json({ error: 'No tiene permiso para eliminar planes' }, { status: 403 })
+    }
+
     const { id } = await params
     // Verificar si el plan existe
     const plan = await SubscriptionAdminService.getPlanById(id)

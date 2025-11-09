@@ -10,7 +10,10 @@ export function useRoleActions() {
   const [isPending, startTransition] = useTransition()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleWithStats | undefined>(undefined)
+  const [detailDialog, setDetailDialog] = useState(false)
+  const [permissionsDialog, setPermissionsDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, roleId: '', roleName: '' })
+  const [toggleStatusDialog, setToggleStatusDialog] = useState({ open: false, roleId: '', roleName: '', currentStatus: false })
 
   const handleNewClick = () => {
     setSelectedRole(undefined)
@@ -20,6 +23,48 @@ export function useRoleActions() {
   const handleEdit = (role: RoleWithStats) => {
     setSelectedRole(role)
     setOpenDialog(true)
+  }
+
+  const handleView = (role: RoleWithStats) => {
+    setSelectedRole(role)
+    setDetailDialog(true)
+  }
+
+  const handleManagePermissions = (role: RoleWithStats) => {
+    setSelectedRole(role)
+    setPermissionsDialog(true)
+  }
+
+  const handleSavePermissions = async (permissions: string[]) => {
+    if (!selectedRole) return
+
+    try {
+      const response = await fetch(`/api/administracion/roles/${selectedRole.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ permissions }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al actualizar los permisos')
+      }
+
+      setPermissionsDialog(false)
+      
+      // Refrescar la página para mostrar los cambios
+      startTransition(() => {
+        router.refresh()
+      })
+    } catch (error: any) {
+      console.error("Error al guardar permisos:", error)
+      toast.error('Error al guardar permisos', {
+        description: error.message || 'Ocurrió un error inesperado.',
+      })
+      throw error
+    }
   }
 
   const handleDeleteClick = (roleId: string, roleName: string) => {
@@ -74,7 +119,18 @@ export function useRoleActions() {
     }
   }
 
-  const handleToggleStatus = async (roleId: string, currentStatus: boolean) => {
+  const handleToggleStatusClick = async (roleId: string, roleName: string, currentStatus: boolean, userCount: number = 0) => {
+    // Si no hay usuarios asociados, ejecutar directamente sin confirmación
+    if (userCount === 0) {
+      await handleToggleStatusConfirmDirect(roleId, currentStatus)
+      return
+    }
+    
+    // Si hay usuarios, mostrar modal de confirmación
+    setToggleStatusDialog({ open: true, roleId, roleName, currentStatus })
+  }
+
+  const handleToggleStatusConfirmDirect = async (roleId: string, currentStatus: boolean) => {
     try {
       console.log('handleToggleStatus called with:', { roleId, currentStatus, isActive: !currentStatus })
       const response = await fetch(`/api/administracion/roles/${roleId}`, {
@@ -110,6 +166,49 @@ export function useRoleActions() {
       toast.error('Error al cambiar estado', {
         description: error.message || 'No se pudo activar/desactivar el rol.',
       })
+    }
+  }
+
+  const handleToggleStatusConfirm = async () => {
+    try {
+      const { roleId, currentStatus } = toggleStatusDialog
+      console.log('handleToggleStatus called with:', { roleId, currentStatus, isActive: !currentStatus })
+      const response = await fetch(`/api/administracion/roles/${roleId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al cambiar el estado del rol')
+      }
+
+      // Mostrar toast de éxito
+      if (!currentStatus) {
+        toast.success('Rol activado', {
+          description: 'El rol ha sido activado exitosamente.',
+        })
+      } else {
+        toast.success('Rol desactivado', {
+          description: 'El rol ha sido desactivado exitosamente.',
+        })
+      }
+
+      setToggleStatusDialog({ open: false, roleId: '', roleName: '', currentStatus: false })
+
+      // Refrescar la página para mostrar los cambios
+      startTransition(() => {
+        router.refresh()
+      })
+    } catch (error: any) {
+      console.error("Error al cambiar el estado del rol:", error)
+      toast.error('Error al cambiar estado', {
+        description: error.message || 'No se pudo activar/desactivar el rol.',
+      })
+      setToggleStatusDialog({ open: false, roleId: '', roleName: '', currentStatus: false })
     }
   }
 
@@ -149,14 +248,24 @@ export function useRoleActions() {
     openDialog,
     setOpenDialog,
     selectedRole,
+    detailDialog,
+    setDetailDialog,
+    permissionsDialog,
+    setPermissionsDialog,
     handleNewClick,
     handleEdit,
+    handleView,
+    handleManagePermissions,
+    handleSavePermissions,
     handleSave,
-    handleToggleStatus,
+    handleToggleStatus: handleToggleStatusClick,
+    handleToggleStatusConfirm,
     handleDeleteClick,
     handleDeleteConfirm,
     deleteDialog,
     setDeleteDialog,
+    toggleStatusDialog,
+    setToggleStatusDialog,
     isPending,
   }
 }

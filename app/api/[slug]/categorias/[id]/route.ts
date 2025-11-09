@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CategoryService } from '@/lib/services/sales/category-service'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
 
@@ -12,9 +12,9 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
     const category = await CategoryService.getCategoryById(id)
@@ -23,8 +23,8 @@ export async function GET(
       throw AppError.notFound('Categoría no encontrada')
     }
 
-    // Verificar que la categoría pertenece al cliente
-    if (category.customerId !== customer.id) {
+    // Verificar que la categoría pertenece a la organización
+    if (category.organizationId !== organizationId) {
       throw AppError.forbidden('No autorizado')
     }
 
@@ -52,14 +52,14 @@ export async function PUT(
     
     const { name, description, isActive } = body
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que la categoría existe y pertenece al cliente
+    // Verificar que la categoría existe y pertenece a la organización
     const existingCategory = await CategoryService.getCategoryById(id)
-    if (!existingCategory || existingCategory.customerId !== customer.id) {
+    if (!existingCategory || existingCategory.organizationId !== organizationId) {
       throw AppError.notFound('Categoría no encontrada')
     }
 
@@ -84,14 +84,14 @@ export async function DELETE(
   try {
     const { slug, id } = await params
 
-    const customer = await getCustomerBySlug(slug)
-    if (!customer) {
-      throw AppError.notFound('Cliente no encontrado o inactivo')
+    const organizationId = await getOrganizationIdByCustomerSlug(slug)
+    if (!organizationId) {
+      throw AppError.notFound('Organización no encontrada o inactiva')
     }
 
-    // Verificar que la categoría existe y pertenece al cliente
+    // Verificar que la categoría existe y pertenece a la organización
     const existingCategory = await CategoryService.getCategoryById(id)
-    if (!existingCategory || existingCategory.customerId !== customer.id) {
+    if (!existingCategory || existingCategory.organizationId !== organizationId) {
       throw AppError.notFound('Categoría no encontrada')
     }
 

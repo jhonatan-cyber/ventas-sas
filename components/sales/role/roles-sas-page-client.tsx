@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { RolesSasHeader } from "./roles-sas-header";
 import { RolesSasContainer } from "./roles-sas-container";
 import { RoleSasFormDialog } from "./role-sas-form-dialog";
@@ -10,12 +11,13 @@ import { useRoleSasActions } from "@/hooks/sales/role/use-role-sas-actions";
 
 interface RolesSasPageClientProps {
   initialRoles: (RoleSas & {
-    customer: {
+    organization?: {
       razonSocial: string | null;
-      nombre: string | null;
-      apellido: string | null;
+      name: string | null;
+      slug: string | null;
     } | null;
     sucursal: { name: string } | null;
+    _count?: { usuariosSas: number };
   })[];
   customerSlug: string;
 }
@@ -24,6 +26,8 @@ export function RolesSasPageClient({
   initialRoles,
   customerSlug,
 }: RolesSasPageClientProps) {
+  const [roles, setRoles] = useState(initialRoles);
+  
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -41,7 +45,12 @@ export function RolesSasPageClient({
     confirmColor,
     confirmPerform,
     setConfirmOpen,
-  } = useRoleSasActions(customerSlug);
+  } = useRoleSasActions(customerSlug, setRoles);
+
+  // Actualizar roles cuando cambien los initialRoles (después de router.refresh)
+  useEffect(() => {
+    setRoles(initialRoles);
+  }, [initialRoles]);
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -55,7 +64,7 @@ export function RolesSasPageClient({
 
       {/* Contenedor con filtros, tabla y paginación */}
       <RolesSasContainer
-        roles={initialRoles}
+        roles={roles}
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}

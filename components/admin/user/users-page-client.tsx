@@ -1,9 +1,11 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { UserHeader } from "@/components/admin/user/user-header"
 import { UsersContainer } from "./users-container"
 import { UserFormDialog } from "./user-form-dialog"
+import { UserDetailDialog } from "./user-detail-dialog"
 import { DeleteUserDialog } from "./delete-user-dialog"
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 import { useUserActions } from "@/hooks/admin/user/use-user-actions"
@@ -13,12 +15,16 @@ interface UsersPageClientProps {
 }
 
 export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
+  const [users, setUsers] = useState<UserWithDetails[]>(initialUsers)
   const {
     openDialog,
     setOpenDialog,
+    detailDialog,
+    setDetailDialog,
     selectedUser,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,
@@ -26,6 +32,34 @@ export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
     deleteDialog,
     setDeleteDialog,
   } = useUserActions()
+
+  // Recargar usuarios después de guardar
+  useEffect(() => {
+    const reloadUsers = async () => {
+      try {
+        const response = await fetch('/api/administracion/users')
+        if (response.ok) {
+          const updatedUsers = await response.json()
+          setUsers(updatedUsers)
+        }
+      } catch (error) {
+        console.error('Error recargando usuarios:', error)
+      }
+    }
+
+    // Escuchar eventos de recarga
+    const handleReload = () => reloadUsers()
+    window.addEventListener('user-updated', handleReload)
+    
+    return () => {
+      window.removeEventListener('user-updated', handleReload)
+    }
+  }, [])
+
+  // Actualizar usuarios cuando cambien los initialUsers (después de router.refresh)
+  useEffect(() => {
+    setUsers(initialUsers)
+  }, [initialUsers])
 
   return (
     <AdminLayout>
@@ -39,8 +73,9 @@ export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
 
         {/* Contenedor con filtros, tabla y paginación */}
         <UsersContainer 
-          users={initialUsers} 
+          users={users} 
           onEdit={handleEdit}
+          onView={handleView}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDeleteClick}
         />
@@ -51,6 +86,13 @@ export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
           onOpenChange={setOpenDialog}
           user={selectedUser}
           onSave={handleSave}
+        />
+
+        {/* Modal de detalles del usuario */}
+        <UserDetailDialog
+          open={detailDialog}
+          onOpenChange={setDetailDialog}
+          user={selectedUser}
         />
 
         {/* Modal de confirmación de eliminar */}

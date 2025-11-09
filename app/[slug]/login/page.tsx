@@ -1,6 +1,7 @@
 import { LoginSasForm } from "@/components/sales/auth/login-sas-form"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+import { getCustomerBySlug, getOrganizationBySlug } from "@/lib/utils/organization"
 import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
 
 export default async function LoginPage({
   params,
@@ -9,12 +10,49 @@ export default async function LoginPage({
 }) {
   const { slug } = await params
 
-  // Verificar que el cliente existe
-  const customer = await getCustomerBySlug(slug)
+  // Verificar directamente en la base de datos si la organización existe (por slug)
+  const organization = await prisma.organization.findUnique({
+    where: { slug },
+    include: {
+      customerOrganizations: {
+        where: { isActive: true },
+        include: {
+          customer: true
+        }
+      }
+    }
+  })
   
+  // Si la organización NO existe, redirigir a la raíz
+  if (!organization) {
+    redirect('/')
+  }
+
+  // Validar que tenga al menos una relación activa con un cliente activo
+  const activeCustomerOrgs = organization.customerOrganizations.filter(
+    co => co.isActive && co.customer && co.customer.isActive && !co.customer.deletedAt
+  )
+
+  if (activeCustomerOrgs.length === 0) {
+    redirect('/')
+  }
+
+  // Obtener el cliente dueño directamente desde la organización (sin validar suscripción)
+  const customer = await prisma.customer.findFirst({
+    where: {
+      id: organization.ownerId,
+      isActive: true,
+      deletedAt: null
+    }
+  })
+  
+  // Si el cliente dueño no existe o está inactivo, redirigir a la raíz
   if (!customer) {
     redirect('/')
   }
+
+  // Nota: La validación de suscripción se hará en el proceso de login
+  // Permitimos mostrar la página de login para que el usuario pueda ver el mensaje de error
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#1a1a1a] p-4">
@@ -29,7 +67,7 @@ export default async function LoginPage({
             Sistema de Ventas
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {customer.razonSocial || `${customer.nombre} ${customer.apellido}`}
+            {organization.razonSocial || organization.name || customer.razonSocial || `${customer.nombre} ${customer.apellido}`}
           </p>
         </div>
         <LoginSasForm customerSlug={slug} />

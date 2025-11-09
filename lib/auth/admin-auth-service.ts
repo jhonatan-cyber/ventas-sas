@@ -18,12 +18,7 @@ export class AdminAuthService {
     request?: NextRequest
   }) {
     const user = await prisma.profile.findUnique({
-      where: { email },
-      include: {
-        organizationMembers: {
-          include: { organization: true, role: true },
-        },
-      },
+      where: { email }
     })
 
     if (!user || !user.password) {

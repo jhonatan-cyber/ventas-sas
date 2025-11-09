@@ -41,24 +41,42 @@ export function middleware(request: NextRequest) {
     const isLogin = pathname.startsWith('/administracion/login')
     const token = request.cookies.get('admin-auth-token')?.value
     edgeLogger.debug('Admin route check', { pathname, isLogin, hasToken: Boolean(token) })
-    if (!token) {
-      return isLogin ? NextResponse.next() : NextResponse.redirect(new URL('/administracion/login', request.url))
-    }
-    // Si ya está autenticado y entra al login, redirigir al dashboard
+    
+    // Permitir siempre el acceso a login (evitar bucles de redirección)
+    // El dashboard se encargará de validar el token y redirigir si es inválido
     if (isLogin) {
-      edgeLogger.debug('Admin authenticated user accessing login, redirecting to dashboard')
-      return NextResponse.redirect(new URL('/administracion/dashboard', request.url))
+      return NextResponse.next()
     }
+    
+    // Para otras rutas de admin, verificar token
+    if (!token) {
+      return NextResponse.redirect(new URL('/administracion/login', request.url))
+    }
+    
+    return NextResponse.next()
+  }
+
+  // Rutas públicas - no requieren autenticación
+  const publicRoutes = ['privacidad', 'terminos', 'cookies', 'doc', 'offline']
+  const first = pathname.split('/').filter(Boolean)[0]
+  
+  // Permitir acceso a la ruta raíz (página principal)
+  if (pathname === '/') {
+    return NextResponse.next()
+  }
+  
+  // Permitir acceso a rutas públicas
+  if (first && publicRoutes.includes(first)) {
     return NextResponse.next()
   }
 
   // SAS zone protection (any first-level path not excluded)
-  const first = pathname.split('/').filter(Boolean)[0]
   const excluded = ['', 'administracion']
   if (first && !excluded.includes(first)) {
     const isLogin = pathname.startsWith(`/${first}/login`)
-    const token = request.cookies.get('sas-auth-token')?.value
-    if (!token) {
+    const hasAuthToken = Boolean(request.cookies.get('sas-auth-token')?.value)
+    const hasSession = Boolean(request.cookies.get('sas-session')?.value)
+    if (!hasAuthToken && !hasSession) {
       return isLogin ? NextResponse.next() : NextResponse.redirect(new URL(`/${first}/login`, request.url))
     }
     // Permitir acceder a la página de login aunque exista token

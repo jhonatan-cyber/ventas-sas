@@ -9,7 +9,7 @@ export function useSubscriptionActions() {
   const [isPending, startTransition] = useTransition()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<any>(undefined)
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, subscriptionId: '', customerName: '' })
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, subscriptionId: '', organizationName: '' })
 
   const handleNewClick = () => {
     setSelectedSubscription(undefined)
@@ -21,8 +21,8 @@ export function useSubscriptionActions() {
     setOpenDialog(true)
   }
 
-  const handleDeleteClick = (subscriptionId: string, customerName: string) => {
-    setDeleteDialog({ open: true, subscriptionId, customerName })
+  const handleDeleteClick = (subscriptionId: string, organizationName: string) => {
+    setDeleteDialog({ open: true, subscriptionId, organizationName })
   }
 
   const handleSave = async (data: any) => {
@@ -118,14 +118,14 @@ export function useSubscriptionActions() {
         description: `${deleteDialog.organizationName} ha sido eliminada exitosamente.`,
       })
 
-      setDeleteDialog({ open: false, subscriptionId: '', customerName: '' })
+      setDeleteDialog({ open: false, subscriptionId: '', organizationName: '' })
 
       startTransition(() => {
         router.refresh()
       })
     } catch (error: any) {
       console.error("Error al eliminar la suscripción:", error)
-      setDeleteDialog({ open: false, subscriptionId: '', customerName: '' })
+      setDeleteDialog({ open: false, subscriptionId: '', organizationName: '' })
       toast.error('Error al eliminar la suscripción', {
         description: error.message || 'No se pudo eliminar la suscripción.',
       })

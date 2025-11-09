@@ -1,39 +1,37 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SalesCustomersPaginationProps {
-  currentPage: number
-  totalPages: number
-  pageSize: number
-  onPageChange: (page: number) => void
-  onPageSizeChange: (size: number) => void
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
 export function SalesCustomersPagination({
   currentPage,
   totalPages,
-  pageSize,
   onPageChange,
-  onPageSizeChange
 }: SalesCustomersPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {
-      onPageChange(currentPage - 1)
+      onPageChange(currentPage - 1);
     }
-  }
+  };
 
   const handleNext = () => {
     if (currentPage < totalPages) {
-      onPageChange(currentPage + 1)
+      onPageChange(currentPage + 1);
     }
-  }
+  };
 
-  if (totalPages <= 1) return null
+  if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-center gap-4 py-4">
       <div className="text-sm text-gray-600 dark:text-gray-400">
         Página {currentPage} de {totalPages}
       </div>
@@ -43,6 +41,7 @@ export function SalesCustomersPagination({
           size="sm"
           onClick={handlePrevious}
           disabled={currentPage === 1}
+          className="rounded-full"
         >
           <ChevronLeft className="h-4 w-4" />
           Anterior
@@ -52,12 +51,12 @@ export function SalesCustomersPagination({
           size="sm"
           onClick={handleNext}
           disabled={currentPage === totalPages}
+          className="rounded-full"
         >
           Siguiente
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>
-  )
+  );
 }
-

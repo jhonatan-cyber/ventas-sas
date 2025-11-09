@@ -76,10 +76,9 @@ export async function POST(
             name: true,
           },
         },
-        customer: {
+        organization: {
           select: {
             id: true,
-            razonSocial: true,
             slug: true,
           },
         },
@@ -94,7 +93,7 @@ export async function POST(
     }
 
     // Verificar que el usuario pertenece al cliente correcto
-    if (usuario.customer.slug !== slug) {
+    if (usuario.organization?.slug !== slug) {
       return NextResponse.json(
         { error: 'Token inválido para este cliente' },
         { status: 403 }
@@ -127,7 +126,7 @@ export async function POST(
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: usuario.id,
-          customerId: usuario.customerId,
+          organizationId: usuario.organizationId,
           actionType: 'TWO_FACTOR_VERIFY_FAILED',
           details: {
             identifier: usuario.ci || usuario.correo,
@@ -140,7 +139,7 @@ export async function POST(
 
       logger.security('Código 2FA inválido durante login SAS', {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         slug,
       })
 
@@ -156,7 +155,7 @@ export async function POST(
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: usuario.id,
-          customerId: usuario.customerId,
+          organizationId: usuario.organizationId,
           actionType: 'TWO_FACTOR_BACKUP_CODE_USED',
           details: {
             identifier: usuario.ci || usuario.correo,
@@ -169,7 +168,7 @@ export async function POST(
 
       logger.security('Backup code usado durante login SAS', {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         slug,
       })
     }
@@ -181,7 +180,7 @@ export async function POST(
 
     const sessionToken = await SessionManagement.createSession({
       userId: usuario.id,
-      customerId: usuario.customerId,
+      organizationId: usuario.organizationId,
       systemType: 'sas',
       ipAddress,
       userAgent,
@@ -195,7 +194,7 @@ export async function POST(
     const finalToken = await SasJWTService.generateToken({
       userId: usuario.id,
       correo: usuario.correo || undefined,
-      customerId: usuario.customerId,
+      organizationId: usuario.organizationId,
       sessionId: sessionToken,
     })
 
@@ -211,14 +210,14 @@ export async function POST(
       foto: usuario.foto,
       rol: usuario.rol,
       sucursal: usuario.sucursal,
-      customer: usuario.customer,
+      organization: usuario.organization,
     }
 
     // Registrar login exitoso
     await SecurityAuditLogger.logLoginAttempt(
       {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         method: usuario.ci ? 'CI' : 'email',
         identifier: usuario.ci || usuario.correo || '',
         success: true,
@@ -228,7 +227,7 @@ export async function POST(
 
     logger.info('Login con 2FA exitoso SAS', {
       userId: usuario.id,
-      customerId: usuario.customerId,
+      organizationId: usuario.organizationId,
       slug,
     })
 
@@ -247,14 +246,18 @@ export async function POST(
       fullName: `${usuario.nombre} ${usuario.apellido}`,
       correo: usuario.correo,
       rol: usuario.rol?.nombre || null,
-      customerSlug: slug,
-      customerId: usuario.customerId,
+      organizationSlug: slug,
+      organizationId: usuario.organizationId,
       sucursalId: usuario.sucursal?.id || null,
+      lastUpdated: Date.now(),
     }
 
-    response.cookies.set('sas-session', JSON.stringify(sessionData), {
+    const sessionEncoded = Buffer.from(JSON.stringify(sessionData), 'utf8').toString('base64')
+    const isSecure = request.nextUrl.protocol === 'https:'
+
+    response.cookies.set('sas-session', sessionEncoded, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
@@ -262,7 +265,7 @@ export async function POST(
 
     response.cookies.set('sas-auth-token', finalToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',

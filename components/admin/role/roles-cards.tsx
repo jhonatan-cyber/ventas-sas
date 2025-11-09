@@ -4,17 +4,19 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Shield, FileText, Lock, Users, Settings, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
+import { Shield, FileText, Lock, Users, Settings, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, Key } from "lucide-react"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 
 interface RolesCardsProps {
   roles: RoleWithStats[]
   onEdit?: (role: RoleWithStats) => void
-  onToggleStatus?: (roleId: string, currentStatus: boolean) => void
+  onView?: (role: RoleWithStats) => void
+  onToggleStatus?: (roleId: string, roleName: string, currentStatus: boolean, userCount: number) => void
   onDelete?: (roleId: string, roleName: string) => void
+  onManagePermissions?: (role: RoleWithStats) => void
 }
 
-export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCardsProps) {
+export function RolesCards({ roles, onEdit, onView, onToggleStatus, onDelete, onManagePermissions }: RolesCardsProps) {
   // Si no hay roles, no renderizar nada (el contenedor padre maneja el estado vacío)
   if (roles.length === 0) {
     return null
@@ -56,7 +58,7 @@ export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCar
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => {}} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                    <DropdownMenuItem onClick={() => onView?.(role)} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
                       <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                       <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                     </DropdownMenuItem>
@@ -65,8 +67,13 @@ export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCar
                       <Edit className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
                       <span className="text-yellow-600 dark:text-yellow-400">Editar</span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onManagePermissions?.(role)} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                      <Key className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      <span className="text-blue-600 dark:text-blue-400">Gestionar permisos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => onToggleStatus?.(role.id, role.isActive ?? false)}
+                      onClick={() => onToggleStatus?.(role.id, role.name, role.isActive ?? false, role._count.adminUsers || 0)}
                       className={`cursor-pointer ${
                         role.isActive ?? false
                           ? 'text-orange-600 focus:text-orange-600 dark:text-orange-400 dark:focus:text-orange-400'
@@ -85,7 +92,7 @@ export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCar
                     <DropdownMenuItem
                       onClick={() => onDelete?.(role.id, role.name)}
                       className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                      disabled={role._count.organizationMembers > 0}
+                      disabled={(role._count.adminUsers || 0) > 0}
                     >
                       <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
                       <span className="text-red-600 dark:text-red-400">Eliminar</span>
@@ -113,7 +120,7 @@ export function RolesCards({ roles, onEdit, onToggleStatus, onDelete }: RolesCar
                       variant="secondary"
                       className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-[10px] px-1 py-0"
                     >
-                      {role._count.organizationMembers} usuarios
+                      {role._count.adminUsers || 0} usuarios
                     </Badge>
                   </div>
                 </div>

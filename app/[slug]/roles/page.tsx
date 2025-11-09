@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { RolesSasPageClient } from "@/components/sales/role/roles-sas-page-client"
 import { RoleSasService } from "@/lib/services/sales/role-sas-service"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 
 export default async function RolesPage({
   params,
@@ -10,14 +10,14 @@ export default async function RolesPage({
 }) {
   const { slug } = await params
 
-  // Verificar que el cliente existe
-  const customer = await getCustomerBySlug(slug)
-  if (!customer) {
+  // Obtener organizationId desde el slug
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
     redirect(`/${slug}/dashboard`)
   }
 
   // Obtener roles
-  const result = await RoleSasService.getAllRoles(customer.id, 0, 1000)
+  const result = await RoleSasService.getAllRoles(organizationId, 0, 1000)
   const roles = result.roles
 
   return <RolesSasPageClient initialRoles={roles} customerSlug={slug} />

@@ -57,8 +57,7 @@ export class SalesCustomerService {
         skip,
         take,
         orderBy: [
-          { lastName: 'asc' },
-          { name: 'asc' }
+          { createdAt: 'desc' } // Ordenar por fecha de creación descendente (más recientes primero)
         ]
       }),
       prisma.salesCustomer.count({ where })

@@ -53,7 +53,7 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useSalesCustomerActions(customerSlug, loadCustomers)
+  } = useSalesCustomerActions(customerSlug, loadCustomers, setCustomers)
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -61,7 +61,7 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
       <SalesCustomersHeader
         title="Gestión de Clientes"
         description="Administra los clientes de tu sistema de ventas"
-        newButtonText="Nuevo Cliente"
+        newButtonText="Agregar Cliente"
         onNewClick={openCreateDialog}
       />
 

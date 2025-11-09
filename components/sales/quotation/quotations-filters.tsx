@@ -1,25 +1,50 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Search, XCircle } from "lucide-react"
+import { Search, X } from "lucide-react"
+import { useMemo, useState } from "react"
+
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+type BranchOption = {
+  id: string
+  name: string | null
+}
 
 export interface QuotationsFiltersProps {
   onPageSizeChange: (size: number) => void
+  onStatusChange: (status: string) => void
   onSearchChange: (term: string) => void
-  onStatusChange?: (status: string) => void
+  statusValue?: string
+  branches?: BranchOption[]
+  selectedBranchId?: string | null
+  onBranchChange?: (branchId: string | null) => void
+  showBranchFilter?: boolean
 }
 
-export function QuotationsFilters({ onPageSizeChange, onSearchChange, onStatusChange }: QuotationsFiltersProps) {
+export function QuotationsFilters({
+  onPageSizeChange,
+  onStatusChange,
+  onSearchChange,
+  statusValue = "all",
+  branches = [],
+  selectedBranchId = null,
+  onBranchChange,
+  showBranchFilter = false,
+}: QuotationsFiltersProps) {
   const [searchValue, setSearchValue] = useState("")
 
-  const handleSearchChange = (term: string) => {
-    setSearchValue(term)
-    onSearchChange(term)
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    onSearchChange(value)
   }
 
   const handleClearSearch = () => {
@@ -27,18 +52,47 @@ export function QuotationsFilters({ onPageSizeChange, onSearchChange, onStatusCh
     onSearchChange("")
   }
 
+  const { branchOptions, hasUnassignedBranch } = useMemo(() => {
+    const unique = new Map<string, BranchOption>()
+    let includeUnassigned = false
+
+    branches.forEach((branch) => {
+      if (!branch) {
+        return
+      }
+
+      if (branch.id === "none" || !branch.id) {
+        includeUnassigned = true
+        return
+      }
+
+      if (!unique.has(branch.id)) {
+        unique.set(branch.id, { id: branch.id, name: branch.name ?? "Sin nombre" })
+      }
+    })
+
+    return {
+      branchOptions: Array.from(unique.values()),
+      hasUnassignedBranch:
+        includeUnassigned || branches.some((branch) => branch?.id === "none"),
+    }
+  }, [branches])
+
   return (
-    <Card className="border-dashed border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-[#101010]/80 shadow-none">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <Label htmlFor="quotation-search" className="text-xs font-medium text-gray-500 dark:text-gray-400">Buscar</Label>
+    <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 w-full sm:w-auto">
+            <Label
+              htmlFor="quotations-search"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+            >
+              Buscar
+            </Label>
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
-                id="quotation-search"
+                id="quotations-search"
                 placeholder="Buscar por número, cliente o notas..."
-                className="mt-1 pl-12 pr-12 rounded-full"
+                className="pl-10 pr-10 w-full rounded-full"
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
@@ -47,47 +101,107 @@ export function QuotationsFilters({ onPageSizeChange, onSearchChange, onStatusCh
                   type="button"
                   variant="ghost"
                   size="icon"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={handleClearSearch}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full text-gray-500 hover:text-gray-700"
+                  aria-label="Limpiar búsqueda"
                 >
-                  <XCircle className="h-4 w-4" />
+                  <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">Estado</Label>
-              <Select onValueChange={(value) => onStatusChange?.(value)} defaultValue="all">
-                <SelectTrigger className="mt-1 w-full rounded-full">
-                  <SelectValue placeholder="Todos los estados" />
+          {showBranchFilter && (branchOptions.length > 0 || hasUnassignedBranch) && (
+            <div className="w-full sm:w-[200px]">
+              <Label
+                htmlFor="branch-filter"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+              >
+                Sucursal
+              </Label>
+              <Select
+                value={selectedBranchId ?? "all"}
+                onValueChange={(value) => {
+                  if (onBranchChange) {
+                    if (value === "all") {
+                      onBranchChange(null)
+                      return
+                    }
+
+                    if (value === "none") {
+                      onBranchChange("none")
+                      return
+                    }
+
+                    onBranchChange(value)
+                  }
+                }}
+              >
+                <SelectTrigger id="branch-filter" className="w-full rounded-full">
+                  <SelectValue placeholder="Todas las sucursales" />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="active">Activas</SelectItem>
-                  <SelectItem value="expired">Vencidas</SelectItem>
+                <SelectContent>
+                  <SelectItem value="all">Todas las sucursales</SelectItem>
+                  {branchOptions.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id}>
+                      {branch.name ?? "Sin nombre"}
+                    </SelectItem>
+                  ))}
+                  {hasUnassignedBranch && (
+                    <SelectItem value="none">Sin sucursal</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">Por página</Label>
-              <Select onValueChange={(value) => onPageSizeChange(Number(value))} defaultValue="10">
-                <SelectTrigger className="mt-1 w-full rounded-full">
-                  <SelectValue placeholder="Por página" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  <SelectItem value="5">5 por página</SelectItem>
-                  <SelectItem value="10">10 por página</SelectItem>
-                  <SelectItem value="20">20 por página</SelectItem>
-                  <SelectItem value="50">50 por página</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          )}
+
+          <div className="w-full sm:w-[180px]">
+            <Label
+              htmlFor="status-filter"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+            >
+              Estado
+            </Label>
+            <Select
+              onValueChange={onStatusChange}
+              value={statusValue}
+              defaultValue="all"
+            >
+              <SelectTrigger id="status-filter" className="w-full rounded-full">
+                <SelectValue placeholder="Filtrar por estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="active">Activas</SelectItem>
+                <SelectItem value="converted">Convertidas</SelectItem>
+                <SelectItem value="expired">Vencidas</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="w-full sm:w-[150px]">
+            <Label
+              htmlFor="page-size"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+            >
+              Datos
+            </Label>
+            <Select
+              onValueChange={(value) => onPageSizeChange(Number(value))}
+              defaultValue="10"
+            >
+              <SelectTrigger id="page-size" className="w-full rounded-full">
+                <SelectValue placeholder="Por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 por página</SelectItem>
+                <SelectItem value="10">10 por página</SelectItem>
+                <SelectItem value="20">20 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+    </div>
   )
 }
-

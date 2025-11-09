@@ -90,23 +90,6 @@ export async function PATCH(
       )
     }
 
-    const { customerId, organizationId } = params
-    const body = await request.json()
-
-    if (body.action === "set-primary") {
-      // Establecer como organización principal
-      await CustomerOrganizationService.setPrimaryOrganization(
-        customerId,
-        organizationId,
-        payload.userId
-      )
-
-      return NextResponse.json({
-        success: true,
-        message: "Organización establecida como principal exitosamente",
-      })
-    }
-
     return NextResponse.json(
       { error: "Acción no válida" },
       { status: 400 }

@@ -2,28 +2,40 @@
 const CACHE_NAME = 'sistema-ventas-v1'
 const urlsToCache = [
   '/',
-  '/administracion/dashboard',
-  '/offline',
 ]
 
 // Instalación
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache)
+      // Usar Promise.allSettled para que no falle si alguna URL falla
+      return Promise.allSettled(
+        urlsToCache.map((url) => {
+          return cache.add(url).catch((error) => {
+            console.warn(`No se pudo cachear ${url}:`, error)
+            // No lanzar el error, solo registrar la advertencia
+            return null
+          })
+        })
+      )
     })
   )
+  // Forzar activación inmediata del nuevo Service Worker
+  self.skipWaiting()
 })
 
 // Activación
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
+      return Promise.all([
+        // Eliminar caches antiguos
+        ...cacheNames
           .filter((cacheName) => cacheName !== CACHE_NAME)
-          .map((cacheName) => caches.delete(cacheName))
-      )
+          .map((cacheName) => caches.delete(cacheName)),
+        // Tomar control de todas las páginas inmediatamente
+        self.clients.claim()
+      ])
     })
   )
 })
@@ -57,8 +69,22 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Si falla, devolver página offline para navegación
           if (event.request.mode === 'navigate') {
-            return caches.match('/offline')
+            return caches.match('/').catch(() => {
+              // Si incluso la página principal falla, devolver una respuesta básica
+              return new Response('Sin conexión a internet', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: new Headers({
+                  'Content-Type': 'text/plain',
+                }),
+              })
+            })
           }
+          // Para otros tipos de requests, devolver error
+          return new Response('Error de red', {
+            status: 408,
+            statusText: 'Request Timeout',
+          })
         })
     })
   )

@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { User, CreditCard, Shield, Phone, MapPin, Edit, Trash2, Power, PowerOff, Mail, MoreVertical, Eye } from "lucide-react"
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
@@ -11,11 +11,12 @@ import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 interface UsersCardsProps {
   users: UserWithDetails[]
   onEdit?: (user: UserWithDetails) => void
+  onView?: (user: UserWithDetails) => void
   onToggleStatus?: (userId: string, currentStatus: boolean) => void
   onDelete?: (userId: string, userName: string) => void
 }
 
-export function UsersCards({ users, onEdit, onToggleStatus, onDelete }: UsersCardsProps) {
+export function UsersCards({ users, onEdit, onView, onToggleStatus, onDelete }: UsersCardsProps) {
   // Función para dividir el nombre completo en nombre y apellido
   const getFullNameParts = (fullName: string | null) => {
     if (!fullName) return { firstName: '', lastName: '' }
@@ -49,6 +50,7 @@ export function UsersCards({ users, onEdit, onToggleStatus, onDelete }: UsersCar
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <Avatar className="w-10 h-10 shrink-0">
+                      <AvatarImage src={(user as any).photo || undefined} alt={user.fullName || user.email || 'Usuario'} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold text-xs">
                         {firstName[0]?.toUpperCase() || lastName[0]?.toUpperCase() || 'U'}
                       </AvatarFallback>
@@ -86,7 +88,7 @@ export function UsersCards({ users, onEdit, onToggleStatus, onDelete }: UsersCar
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => {}} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                      <DropdownMenuItem onClick={() => onView?.(user)} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
                         <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                         <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                       </DropdownMenuItem>
@@ -136,14 +138,18 @@ export function UsersCards({ users, onEdit, onToggleStatus, onDelete }: UsersCar
                     )}
 
                     {/* Rol */}
-                    {user.role && (
+                    {(user.role || user.isSuperAdmin) && (
                       <div className="flex items-center gap-1.5">
                         <Shield className="h-3 w-3 text-gray-400 shrink-0" />
                         <Badge 
                           variant="secondary" 
-                          className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-[10px] px-1 py-0"
+                          className={
+                            user.isSuperAdmin
+                              ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-[10px] px-1 py-0"
+                              : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-[10px] px-1 py-0"
+                          }
                         >
-                          {user.role}
+                          {user.isSuperAdmin ? "Super Administrador" : (user.role || "-")}
                         </Badge>
                       </div>
                     )}

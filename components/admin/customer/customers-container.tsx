@@ -11,11 +11,12 @@ import { Customer } from "@/lib/types"
 interface CustomersContainerProps {
   customers: Customer[]
   onEdit?: (customer: Customer) => void
+  onViewDetails?: (customer: Customer) => void
   onToggleStatus?: (customer: Customer) => void
   onDelete?: (customer: Customer) => void
 }
 
-export function CustomersContainer({ customers, onEdit, onToggleStatus, onDelete }: CustomersContainerProps) {
+export function CustomersContainer({ customers, onEdit, onViewDetails, onToggleStatus, onDelete }: CustomersContainerProps) {
   const [pageSize, setPageSize] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -93,28 +94,33 @@ export function CustomersContainer({ customers, onEdit, onToggleStatus, onDelete
       />
 
       {/* Cards de clientes (solo móvil) */}
-      <CustomersCards customers={currentCustomers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      <CustomersCards customers={currentCustomers} onEdit={onEdit} onViewDetails={onViewDetails} onToggleStatus={onToggleStatus} onDelete={onDelete} />
 
-      {/* Tabla de clientes (solo desktop) */}
-      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-        <CustomersTable 
-          customers={currentCustomers} 
-          onEditClick={onEdit} 
-          onToggleStatus={onToggleStatus} 
-          onDeleteClick={onDelete} 
-        />
-      </div>
+      {/* Tabla de clientes (solo desktop) - Solo mostrar si hay clientes */}
+      {customers.length > 0 && (
+        <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
+          <CustomersTable 
+            customers={currentCustomers} 
+            onViewDetails={onViewDetails}
+            onEditClick={onEdit} 
+            onToggleStatus={onToggleStatus} 
+            onDeleteClick={onDelete} 
+          />
+        </div>
+      )}
 
-      {/* Paginación */}
-      <div className="flex justify-center">
-        <CustomersPagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredCustomers.length / pageSize)}
-          pageSize={pageSize}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      </div>
+      {/* Paginación - Solo mostrar si hay clientes */}
+      {customers.length > 0 && (
+        <div className="flex justify-center">
+          <CustomersPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredCustomers.length / pageSize)}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </div>
+      )}
     </div>
   )
 }

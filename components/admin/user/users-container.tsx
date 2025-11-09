@@ -11,11 +11,12 @@ import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 interface UsersContainerProps {
   users: UserWithDetails[]
   onEdit?: (user: UserWithDetails) => void
+  onView?: (user: UserWithDetails) => void
   onToggleStatus?: (userId: string, currentStatus: boolean) => void
   onDelete?: (userId: string, userName: string) => void
 }
 
-export function UsersContainer({ users, onEdit, onToggleStatus, onDelete }: UsersContainerProps) {
+export function UsersContainer({ users, onEdit, onView, onToggleStatus, onDelete }: UsersContainerProps) {
   const [pageSize, setPageSize] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -90,11 +91,11 @@ export function UsersContainer({ users, onEdit, onToggleStatus, onDelete }: User
       />
 
       {/* Cards de usuarios (móvil) */}
-      <UsersCards users={currentUsers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+      <UsersCards users={currentUsers} onEdit={onEdit} onView={onView} onToggleStatus={onToggleStatus} onDelete={onDelete} />
 
       {/* Tabla de usuarios (desktop) */}
       <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-        <UsersTable users={currentUsers} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+        <UsersTable users={currentUsers} onEdit={onEdit} onView={onView} onToggleStatus={onToggleStatus} onDelete={onDelete} />
       </div>
 
       {/* Paginación */}

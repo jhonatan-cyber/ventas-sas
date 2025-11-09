@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma'
+import { BillingService } from '@/lib/services/admin/billing-service'
 
 export interface CreateSubscriptionData {
   organizationId?: string
-  customerId?: string
   planId: string
   billingPeriod: "monthly" | "yearly"
   startDate?: Date
@@ -27,13 +27,14 @@ export class SubscriptionManagementService {
     if (search) {
       where.OR = [
         { organization: { name: { contains: search, mode: 'insensitive' } } },
-        { customer: { razonSocial: { contains: search, mode: 'insensitive' } } },
-        { customer: { nombre: { contains: search, mode: 'insensitive' } } },
-        { customer: { apellido: { contains: search, mode: 'insensitive' } } },
-        { customer: { email: { contains: search, mode: 'insensitive' } } },
-        { customer: { nit: { contains: search, mode: 'insensitive' } } },
-        { plan: { name: { contains: search, mode: 'insensitive' } } },
+        { organization: { razonSocial: { contains: search, mode: 'insensitive' } } },
         { organization: { slug: { contains: search, mode: 'insensitive' } } },
+        { organization: { customerOrganizations: { some: { customer: { razonSocial: { contains: search, mode: 'insensitive' } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { nombre: { contains: search, mode: 'insensitive' } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { apellido: { contains: search, mode: 'insensitive' } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { email: { contains: search, mode: 'insensitive' } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { nit: { contains: search, mode: 'insensitive' } } } } } },
+        { plan: { name: { contains: search, mode: 'insensitive' } } },
       ]
     }
 
@@ -52,16 +53,27 @@ export class SubscriptionManagementService {
               id: true,
               name: true,
               slug: true,
-            }
-          },
-          customer: {
-            select: {
-              id: true,
               razonSocial: true,
               nit: true,
-              nombre: true,
-              apellido: true,
-              email: true,
+              direccion: true,
+              telefono: true,
+              ownerId: true,
+              customerOrganizations: {
+                where: { isActive: true },
+                select: {
+                  customer: {
+                    select: {
+                      id: true,
+                      razonSocial: true,
+                      nit: true,
+                      nombre: true,
+                      apellido: true,
+                      email: true,
+                    }
+                  }
+                },
+                take: 1,
+              }
             }
           },
           plan: {
@@ -86,8 +98,16 @@ export class SubscriptionManagementService {
     return prisma.subscription.findUnique({
       where: { id },
       include: {
-        organization: true,
-        customer: true,
+        organization: {
+          include: {
+            customerOrganizations: {
+              where: { isActive: true },
+              include: {
+                customer: true
+              }
+            }
+          }
+        },
         plan: true
       }
     })
@@ -108,10 +128,48 @@ export class SubscriptionManagementService {
       endDate = end
     }
 
-    return prisma.subscription.create({
+    // Obtener el plan y la organización para crear la factura
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { id: data.planId }
+    })
+
+    if (!plan) {
+      throw new Error('Plan no encontrado')
+    }
+
+    let organization = null
+    let owner = null
+
+    if (data.organizationId) {
+      organization = await prisma.organization.findUnique({
+        where: { id: data.organizationId },
+        include: {
+          customerOrganizations: {
+            where: { isActive: true },
+            include: {
+              customer: true
+            },
+            take: 1
+          }
+        }
+      })
+
+      if (organization) {
+        // Obtener el cliente dueño usando ownerId
+        owner = await prisma.customer.findUnique({
+          where: { id: organization.ownerId }
+        })
+      }
+    }
+
+    if (!organization) {
+      throw new Error('Organización no encontrada')
+    }
+
+    // Crear la suscripción
+    const subscription = await prisma.subscription.create({
       data: {
         organizationId: data.organizationId,
-        customerId: data.customerId,
         planId: data.planId,
         status: "active",
         billingPeriod: data.billingPeriod,
@@ -120,11 +178,73 @@ export class SubscriptionManagementService {
         autoRenew: data.autoRenew ?? true
       },
       include: {
-        organization: true,
-        customer: true,
+        organization: {
+          include: {
+            customerOrganizations: {
+              where: { isActive: true },
+              include: {
+                customer: true
+              }
+            }
+          }
+        },
         plan: true
       }
     })
+
+    // Generar factura automáticamente
+    try {
+      // Obtener datos de facturación: el dueño de la empresa (owner)
+      const customer = organization.customerOrganizations[0]?.customer
+      
+      // Usar nombre y apellido del dueño como billingName
+      const billingName = owner 
+        ? `${owner.nombre || ''} ${owner.apellido || ''}`.trim() || owner.razonSocial || organization.razonSocial || organization.name || 'Cliente'
+        : organization.razonSocial || organization.name || 'Cliente'
+      
+      // El email es requerido, usar el del dueño o un valor por defecto
+      const billingEmail = owner?.email || customer?.email || `contacto@${organization.slug || 'empresa'}.com`
+      const billingAddress = organization.direccion || owner?.direccion || customer?.direccion || null
+      const billingTaxId = organization.nit || owner?.nit || customer?.nit || null
+
+      // Calcular el precio según el período de facturación
+      const price = data.billingPeriod === "yearly" 
+        ? (plan.priceYearly ? Number(plan.priceYearly) : 0)
+        : (plan.priceMonthly ? Number(plan.priceMonthly) : 0)
+
+      // Usar la fecha de vencimiento de la suscripción (endDate) como fecha de vencimiento de la factura
+      const dueDate = endDate
+
+      // Crear la factura
+      await BillingService.createInvoice({
+        organizationId: organization.id,
+        subscriptionId: subscription.id,
+        subscriptionPlanId: plan.id,
+        billingName,
+        billingEmail,
+        billingAddress: billingAddress || undefined,
+        billingTaxId: billingTaxId || undefined,
+        subtotal: price,
+        tax: 0, // Se puede agregar lógica para calcular impuestos
+        discount: 0,
+        currency: 'USD',
+        dueDate,
+        description: `Factura de suscripción - Plan: ${plan.name} (${data.billingPeriod === 'yearly' ? 'Anual' : 'Mensual'})`,
+        notes: `Suscripción creada el ${new Date().toLocaleDateString('es-ES')}. Período: ${data.billingPeriod === 'yearly' ? 'Anual' : 'Mensual'}`,
+        metadata: {
+          subscriptionId: subscription.id,
+          billingPeriod: data.billingPeriod,
+          startDate: subscription.startDate,
+          endDate: subscription.endDate
+        }
+      })
+    } catch (error) {
+      // Si falla la creación de la factura, loguear el error pero no fallar la suscripción
+      console.error('Error al crear factura automática para la suscripción:', error)
+      // La suscripción se creó correctamente, solo falló la factura
+    }
+
+    return subscription
   }
 
   // Actualizar suscripción
@@ -133,8 +253,16 @@ export class SubscriptionManagementService {
       where: { id },
       data,
       include: {
-        organization: true,
-        customer: true,
+        organization: {
+          include: {
+            customerOrganizations: {
+              where: { isActive: true },
+              include: {
+                customer: true
+              }
+            }
+          }
+        },
         plan: true
       }
     })

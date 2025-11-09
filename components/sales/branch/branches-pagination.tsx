@@ -33,7 +33,7 @@ export function BranchesPagination({
   if (totalPages <= 1) return null
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-center gap-4 py-4">
       <div className="text-sm text-gray-600 dark:text-gray-400">
         Página {currentPage} de {totalPages}
       </div>
@@ -43,6 +43,7 @@ export function BranchesPagination({
           size="sm"
           onClick={handlePrevious}
           disabled={currentPage === 1}
+          className="rounded-full"
         >
           <ChevronLeft className="h-4 w-4" />
           Anterior
@@ -52,6 +53,7 @@ export function BranchesPagination({
           size="sm"
           onClick={handleNext}
           disabled={currentPage === totalPages}
+          className="rounded-full"
         >
           Siguiente
           <ChevronRight className="h-4 w-4" />

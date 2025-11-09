@@ -17,15 +17,7 @@ export class AuthService {
   // Obtener perfil por ID
   static async getProfileById(id: string) {
     return await prisma.profile.findUnique({
-      where: { id },
-      include: {
-        organizationMembers: {
-          include: {
-            organization: true,
-            role: true
-          }
-        }
-      }
+      where: { id }
     })
   }
 
@@ -47,20 +39,51 @@ export class AuthService {
     return profile?.isSuperAdmin || false
   }
 
-  // Obtener organización del usuario
-  static async getUserOrganization(userId: string) {
+  // Verificar si tiene acceso de administrador
+  // Permite acceso a cualquier usuario que:
+  // 1. Exista y esté activo
+  // 2. Tenga un rol que exista en la base de datos
+  // 3. El rol esté activo
+  // NOTA: Los usuarios del sistema de administración NO pertenecen a organizaciones
+  // Las organizaciones son solo para usuarios del sistema SAS
+  static async hasAdminAccess(userId: string): Promise<boolean> {
     const profile = await prisma.profile.findUnique({
-      where: { id: userId },
-      include: {
-        organizationMembers: {
-          include: {
-            organization: true
-          }
-        }
-      }
+      where: { id: userId }
     })
     
-    return profile?.organizationMembers?.[0]?.organization
+    if (!profile || !profile.isActive) {
+      return false
+    }
+
+    // Si es super admin, tiene acceso completo
+    if (profile.isSuperAdmin) {
+      return true
+    }
+
+    // Si no tiene rol, no tiene acceso
+    if (!profile.role) {
+      return false
+    }
+
+    // Verificar que el rol existe en la base de datos y está activo
+    const role = await prisma.role.findFirst({
+      where: {
+        name: profile.role,
+        isActive: true, // El rol debe estar activo
+      },
+    })
+
+    // Si el rol existe y está activo, tiene acceso
+    return role !== null
+  }
+
+  // Obtener organización del usuario
+  // NOTA: Los usuarios del sistema de administración NO tienen organizaciones
+  // Esta función retorna null para usuarios admin
+  static async getUserOrganization(userId: string) {
+    // Los usuarios del sistema de administración no tienen organizaciones
+    // Las organizaciones son solo para usuarios del sistema SAS (SalesUser)
+    return null
   }
 
   // Obtener todas las organizaciones (solo super admin)
@@ -221,14 +244,7 @@ export class AuthService {
           { ci: { contains: query, mode: 'insensitive' } }
         ]
       },
-      include: {
-        organizationMembers: {
-          include: {
-            organization: true,
-            role: true
-          }
-        }
-      },
+      // organizationMembers removed - users del sistema admin no tienen organizaciones
       orderBy: { createdAt: 'desc' }
     })
   }

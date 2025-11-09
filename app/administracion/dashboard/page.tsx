@@ -12,27 +12,93 @@ export default async function AdminPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
   const token = cookieStore.get('admin-auth-token')?.value
+  
   if (!token) {
     redirect('/administracion/login')
   }
-  const payload = await AdminJWTService.verifyToken(token!)
-  if (!payload) {
-    redirect('/administracion/login')
-  }
-  // Opcional: validar super admin
-  const profile = await AuthService.getProfileById(payload.userId)
-  if (!profile || !profile.isSuperAdmin) {
+  
+  try {
+    const payload = await AdminJWTService.verifyToken(token!)
+    if (!payload) {
+      // Si el token es inválido, redirigir (el logout se encargará de eliminar la cookie)
+      redirect('/administracion/login')
+    }
+    
+    // Validar acceso de administrador (super admin o rol Administrador)
+    const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+    if (!hasAccess) {
+      // Si el usuario no tiene acceso de administrador, redirigir con mensaje de error
+      redirect('/administracion/login?error=no_access')
+    }
+  } catch (error) {
+    // Si hay error al verificar token, redirigir
     redirect('/administracion/login')
   }
 
-  // Get comprehensive admin statistics
-  const [dashboardStats, recentActivity, growthStats, systemMetrics, healthMetrics] = await Promise.all([
-    AdminService.getDashboardStats(),
-    DashboardService.getRecentActivity('30d', 20),
-    AdminService.getGrowthStats(),
-    AdminService.getSystemMetrics(),
-    DashboardService.getHealthMetrics().catch(() => null), // Si falla, retornar null
-  ])
+  // Get comprehensive admin statistics with error handling
+  let dashboardStats: any = null
+  let recentActivity: any = null
+  let growthStats: any = null
+  let systemMetrics: any = null
+  let healthMetrics: any = null
+  
+  try {
+    const results = await Promise.allSettled([
+      AdminService.getDashboardStats(),
+      DashboardService.getRecentActivity('30d', 20),
+      AdminService.getGrowthStats(),
+      AdminService.getSystemMetrics(),
+      DashboardService.getHealthMetrics().catch(() => null),
+    ])
+    
+    dashboardStats = results[0].status === 'fulfilled' ? results[0].value : {
+      organizations: { total: 0, active: 0, suspended: 0, trial: 0 },
+      users: { total: 0, active: 0, inactive: 0, superAdmins: 0 },
+      roles: { total: 0, withUsers: 0, withoutUsers: 0 },
+      plans: { total: 0, active: 0, inactive: 0, totalOrganizations: 0 },
+      revenue: { total: 0, monthly: 0, yearly: 0 }
+    }
+    
+    recentActivity = results[1].status === 'fulfilled' ? results[1].value : []
+    
+    growthStats = results[2].status === 'fulfilled' ? results[2].value : {
+      organizations: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 },
+      users: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 }
+    }
+    
+    systemMetrics = results[3].status === 'fulfilled' ? results[3].value : {
+      totalOrders: 0,
+      totalProducts: 0,
+      totalCustomers: 0,
+      totalUsers: 0,
+      totalRevenue: 0
+    }
+    
+    healthMetrics = results[4].status === 'fulfilled' ? results[4].value : null
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+    // Valores por defecto en caso de error
+    dashboardStats = {
+      organizations: { total: 0, active: 0, suspended: 0, trial: 0 },
+      users: { total: 0, active: 0, inactive: 0, superAdmins: 0 },
+      roles: { total: 0, withUsers: 0, withoutUsers: 0 },
+      plans: { total: 0, active: 0, inactive: 0, totalOrganizations: 0 },
+      revenue: { total: 0, monthly: 0, yearly: 0 }
+    }
+    recentActivity = []
+    growthStats = {
+      organizations: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 },
+      users: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 }
+    }
+    systemMetrics = {
+      totalOrders: 0,
+      totalProducts: 0,
+      totalCustomers: 0,
+      totalUsers: 0,
+      totalRevenue: 0
+    }
+    healthMetrics = null
+  }
 
   return (
     <AdminLayout>

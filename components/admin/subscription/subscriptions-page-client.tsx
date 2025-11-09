@@ -9,7 +9,7 @@ import { useSubscriptionActions } from "@/hooks/admin/subscription/use-subscript
 
 interface SubscriptionWithDetails {
   id: string
-  customerId: string
+  organizationId: string
   planId: string
   status: string
   billingPeriod: string
@@ -18,14 +18,21 @@ interface SubscriptionWithDetails {
   autoRenew: boolean
   createdAt: Date
   updatedAt: Date
-  customer: {
+  organization?: {
+    id: string
+    name: string
+    slug: string
+    razonSocial: string | null
+    nit: string | null
+  }
+  customer?: {
     id: string
     razonSocial: string | null
     nit: string | null
     nombre: string | null
     apellido: string | null
     email: string | null
-  }
+  } | null
   plan: {
     id: string
     name: string
@@ -80,7 +87,7 @@ export function SubscriptionsPageClient({ initialSubscriptions }: SubscriptionsP
               open={deleteDialog.open}
               onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
               onConfirm={handleDeleteConfirm}
-              customerName={deleteDialog.customerName}
+              organizationName={deleteDialog.organizationName}
             />
       </div>
     </AdminLayout>

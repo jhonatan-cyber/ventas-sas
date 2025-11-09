@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { SasJWTService } from '@/lib/auth/sas-jwt'
 import { PasswordService } from '@/lib/auth/password'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationBySlug } from '@/lib/utils/organization'
 import type { NextRequest } from 'next/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -42,18 +42,28 @@ export class AuthSasService {
         }
       }
 
-      // Obtener el cliente por slug
-      const customer = await getCustomerBySlug(customerSlug)
-      if (!customer) {
+      // Obtener la organización por slug (valida suscripción activa)
+      let organization
+      try {
+        organization = await getOrganizationBySlug(customerSlug)
+        if (!organization) {
+          logger.debug('Organización no encontrada o sin suscripción activa', { customerSlug })
+          return {
+            success: false,
+            error: 'Organización no encontrada, inactiva o sin suscripción activa'
+          }
+        }
+      } catch (orgError) {
+        logger.error('Error al obtener organización por slug', orgError as Error, { customerSlug })
         return {
           success: false,
-          error: 'Cliente no encontrado o inactivo'
+          error: 'Error al validar organización'
         }
       }
 
-      // Buscar usuario en la tabla usuarios_sas
+      // Buscar usuario en la tabla usuarios_sas por organizationId
       const where: any = {
-        customerId: customer.id
+        organizationId: organization.id
       }
 
       if (ci) {
@@ -62,44 +72,56 @@ export class AuthSasService {
         where.correo = correo
       }
 
-      const usuario = await prisma.usuarioSas.findFirst({
-        where,
-        select: {
-          id: true,
-          ci: true,
-          nombre: true,
-          apellido: true,
-          correo: true,
-          direccion: true,
-          telefono: true,
-          foto: true,
-          contraseña: true,
-          isActive: true,
-          customerId: true,
-          twoFactorEnabled: true,
-          twoFactorSecret: true,
-          rol: {
-            select: {
-              id: true,
-              nombre: true,
-              descripcion: true
-            }
-          },
-          sucursal: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          customer: {
-            select: {
-              id: true,
-              razonSocial: true,
-              slug: true
+      let usuario
+      try {
+        usuario = await prisma.usuarioSas.findFirst({
+          where,
+          select: {
+            id: true,
+            ci: true,
+            nombre: true,
+            apellido: true,
+            correo: true,
+            direccion: true,
+            telefono: true,
+            foto: true,
+            contraseña: true,
+            isActive: true,
+            organizationId: true,
+            twoFactorEnabled: true,
+            twoFactorSecret: true,
+            rolId: true,
+            sucursalId: true,
+            rol: {
+              select: {
+                id: true,
+                nombre: true,
+                descripcion: true
+              }
+            },
+            sucursal: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            organization: {
+              select: {
+                id: true,
+                razonSocial: true,
+                slug: true
+              }
             }
           }
-        }
-      })
+        })
+      } catch (dbError) {
+        logger.error('Error al buscar usuario SAS', dbError as Error, {
+          organizationId: organization.id,
+          hasCi: !!ci,
+          hasCorreo: !!correo,
+        })
+        throw new Error('Error al buscar usuario en la base de datos')
+      }
 
       if (!usuario) {
         return {
@@ -115,7 +137,23 @@ export class AuthSasService {
         }
       }
 
+      // Validar que el usuario tenga organización asociada
+      if (!usuario.organization || !usuario.organization.id) {
+        logger.error('Usuario sin organización asociada', {
+          userId: usuario.id,
+          organizationId: usuario.organizationId,
+        })
+        return {
+          success: false,
+          error: 'Usuario sin organización asociada'
+        }
+      }
+
       if (!usuario.contraseña) {
+        logger.debug('Usuario sin contraseña configurada', {
+          userId: usuario.id,
+          organizationId: usuario.organizationId,
+        })
         return {
           success: false,
           error: 'Contraseña no configurada'
@@ -123,8 +161,27 @@ export class AuthSasService {
       }
 
       // Verificar contraseña
-      const isValidPassword = await PasswordService.verifyPassword(contraseña, usuario.contraseña)
+      let isValidPassword = false
+      try {
+        isValidPassword = await PasswordService.verifyPassword(contraseña, usuario.contraseña)
+      } catch (passwordError) {
+        logger.error('Error al verificar contraseña', passwordError as Error, {
+          userId: usuario.id,
+          organizationId: usuario.organizationId,
+        })
+        return {
+          success: false,
+          error: 'Error al verificar credenciales'
+        }
+      }
+
       if (!isValidPassword) {
+        logger.debug('Contraseña inválida', {
+          userId: usuario.id,
+          organizationId: usuario.organizationId,
+          hasCi: !!ci,
+          hasCorreo: !!correo,
+        })
         return {
           success: false,
           error: 'Credenciales inválidas'
@@ -140,7 +197,7 @@ export class AuthSasService {
         const tempToken = jwt.sign(
           {
             userId: usuario.id,
-            customerId: usuario.customer.id,
+            organizationId: usuario.organization.id,
             temp: true,
           },
           SAS_JWT_SECRET,
@@ -153,7 +210,7 @@ export class AuthSasService {
           nombre: usuario.nombre,
           apellido: usuario.apellido,
           correo: usuario.correo,
-          customer: usuario.customer,
+          organization: usuario.organization,
         }
 
         return {
@@ -166,32 +223,51 @@ export class AuthSasService {
 
       // No tiene 2FA: proceder con login normal
       // Crear sesión en BD
-      const { SessionManagement } = await import('@/lib/auth/session-management')
-      
-      // Obtener info del request
-      const ipAddress = request?.ip || request?.headers.get('x-forwarded-for')?.split(',')[0] || undefined
-      const userAgent = request?.headers.get('user-agent') || undefined
-      const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
-      
-      const sessionToken = await SessionManagement.createSession({
-        userId: usuario.id,
-        customerId: usuario.customer.id,
-        systemType: 'sas',
-        ipAddress,
-        userAgent,
-        deviceInfo,
-      }, {
-        forceSingleSession: false, // Permitir múltiples sesiones
-        trackDevice: true,
-      })
+      let sessionToken: string | null = null
+      try {
+        const { SessionManagement } = await import('@/lib/auth/session-management')
+        
+        // Obtener info del request
+        const ipAddress = request?.ip || request?.headers.get('x-forwarded-for')?.split(',')[0] || undefined
+        const userAgent = request?.headers.get('user-agent') || undefined
+        const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
+        
+        sessionToken = await SessionManagement.createSession({
+          userId: usuario.id,
+          organizationId: usuario.organization.id,
+          systemType: 'sas',
+          ipAddress,
+          userAgent,
+          deviceInfo,
+        }, {
+          forceSingleSession: false, // Permitir múltiples sesiones
+          trackDevice: true,
+        })
+      } catch (sessionError) {
+        logger.error('Error al crear sesión SAS', sessionError as Error, {
+          userId: usuario.id,
+          organizationId: usuario.organization.id,
+        })
+        // Continuar sin sesión si falla (no crítico para el login)
+        console.warn('No se pudo crear sesión, continuando sin ella:', sessionError)
+      }
 
       // Generar token JWT (SAS) con sessionId
-      const token = await SasJWTService.generateToken({ 
-        userId: usuario.id, 
-        correo: usuario.correo || undefined,
-        customerId: usuario.customer.id,
-        sessionId: sessionToken
-      })
+      let token: string
+      try {
+        token = await SasJWTService.generateToken({ 
+          userId: usuario.id, 
+          correo: usuario.correo || undefined,
+          organizationId: usuario.organization.id,
+          sessionId: sessionToken || undefined
+        })
+      } catch (tokenError) {
+        logger.error('Error al generar token JWT SAS', tokenError as Error, {
+          userId: usuario.id,
+          organizationId: usuario.organization.id,
+        })
+        throw new Error('Error al generar token de autenticación')
+      }
 
       // Preparar datos del usuario (sin contraseña)
       const userData = {
@@ -205,7 +281,7 @@ export class AuthSasService {
         foto: usuario.foto,
         rol: usuario.rol,
         sucursal: usuario.sucursal,
-        customer: usuario.customer,
+        organization: usuario.organization,
         isActive: usuario.isActive
       }
 
@@ -221,9 +297,17 @@ export class AuthSasService {
         hasCi: !!credentials.ci,
         hasCorreo: !!credentials.correo,
       })
+      console.error('Error completo en AuthSasService.login:', error)
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack available')
+      
+      // Retornar mensaje de error más específico en desarrollo
+      const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error
+        ? error.message
+        : 'Error interno del servidor'
+      
       return {
         success: false,
-        error: 'Error interno del servidor'
+        error: errorMessage
       }
     }
   }
@@ -250,7 +334,7 @@ export class AuthSasService {
         include: {
           rol: true,
           sucursal: true,
-          customer: true
+          organization: true
         }
       })
 
@@ -259,11 +343,13 @@ export class AuthSasService {
         return null
       }
 
-      if (usuario.customerId !== customer.id) {
-        logger.debug('Usuario no pertenece al cliente', { 
+      // Obtener la organización por slug para validar
+      const organization = await getOrganizationBySlug(customerSlug)
+      if (!organization || usuario.organizationId !== organization.id) {
+        logger.debug('Usuario no pertenece a la organización', { 
           userId: decoded.userId, 
-          usuarioCustomerId: usuario.customerId,
-          customerId: customer.id,
+          usuarioOrganizationId: usuario.organizationId,
+          organizationId: organization?.id,
           customerSlug 
         })
         return null

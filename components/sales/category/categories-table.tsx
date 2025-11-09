@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, Power, PowerOff, Folder } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, Folder, FileText } from "lucide-react"
 import { Category } from "@prisma/client"
 
 interface CategoriesTableProps {
@@ -23,7 +23,7 @@ export function CategoriesTable({ categories, isLoading, onEditClick, onDeleteCl
 
   return (
     <TooltipProvider>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-1 sm:mx-0">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
@@ -60,7 +60,10 @@ export function CategoriesTable({ categories, isLoading, onEditClick, onDeleteCl
                   </TableCell>
                   <TableCell>
                     {category.description ? (
-                      <span className="text-sm text-gray-900 dark:text-white">{category.description}</span>
+                      <div className="flex items-start gap-2 text-sm text-gray-900 dark:text-white">
+                        <FileText className="h-3 w-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="line-clamp-2">{category.description}</span>
+                      </div>
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
                     )}
