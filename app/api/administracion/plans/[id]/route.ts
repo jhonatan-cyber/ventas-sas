@@ -59,7 +59,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxOrders } = body
+    const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxBranches } = body
 
     const updateData: any = {}
     if (name) updateData.name = name.trim()
@@ -70,7 +70,7 @@ export async function PUT(
     if (priceYearly !== undefined) updateData.priceYearly = priceYearly
     if (maxUsers !== undefined) updateData.maxUsers = maxUsers ? parseInt(maxUsers) : null
     if (maxProducts !== undefined) updateData.maxProducts = maxProducts ? parseInt(maxProducts) : null
-    if (maxOrders !== undefined) updateData.maxOrders = maxOrders ? parseInt(maxOrders) : null
+    if (maxBranches !== undefined) updateData.maxBranches = maxBranches ? parseInt(maxBranches) : null
 
     const updatedPlan = await SubscriptionAdminService.updatePlan(id, updateData)
 

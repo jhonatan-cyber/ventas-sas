@@ -7,6 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum OrganizationSubscriptionStatus {
+  active
+  trial
+  suspended
+}
+
+enum SubscriptionStatus {
+  active
+  cancelled
+  expired
+  trial
+}
+
+enum SubscriptionBillingPeriod {
+  monthly
+  yearly
+}
+
+enum SaleStatus {
+  completed
+  pending
+  cancelled
+}
+
+enum SalePaymentMethod {
+  cash
+  card
+  transfer
+  qr
+}
+
+enum QuotationStatus {
+  active
+  pending
+  converted
+  expired
+  approved
+  rejected
+}
+
 model Profile {
   id                    String                    @id @default(uuid())
   email                 String                    @unique
@@ -42,6 +82,7 @@ model Profile {
   ticketHistory         TicketHistory[]           @relation("TicketHistoryChangedBy")
   sessions              UserSession[]
   systemVersionsCreated SystemVersion[]           @relation("SystemVersionCreatedBy")
+  ownedOrganizations    Organization[]            @relation("OrganizationOwned")
 
   @@map("system_users")
 }
@@ -52,7 +93,7 @@ model Organization {
   slug                     String                    @unique
   ownerId                  String                    @map("owner_id")
   subscriptionPlanId       String?                   @map("subscription_plan_id")
-  subscriptionStatus       String                    @default("trial") @map("subscription_status")
+  subscriptionStatus       OrganizationSubscriptionStatus @default(trial) @map("subscription_status")
   subscriptionStartDate    DateTime?                 @map("subscription_start_date")
   subscriptionEndDate      DateTime?                 @map("subscription_end_date")
   settings                 Json?
@@ -60,12 +101,11 @@ model Organization {
   updatedAt                DateTime                  @updatedAt @map("updated_at")
   nit                      String?
   razonSocial              String?                   @map("razon_social")
-  direccion                String?
-  telefono                 String?
+  address                  String?                   @map("direccion")
+  phone                    String?                   @map("telefono")
   branches                 Branch[]
   cashRegisters            CashRegister[]
   categories               Category[]
-  primaryCustomers         Customer[]                @relation("CustomerPrimaryOrganization")
   customerOrganizations    CustomerOrganization[]    @relation("CustomerOrganizations")
   salesCustomers           SalesCustomer[]
   expenses                 Expense[]
@@ -94,6 +134,7 @@ model Organization {
   userFeedback             UserFeedback[]
   versionNotifications     VersionNotification[]
   whiteLabelBranding       WhiteLabelBranding?
+  owner                    Profile                   @relation("OrganizationOwned", fields: [ownerId], references: [id])
 
   @@map("system_organizations")
 }
@@ -110,7 +151,7 @@ model SubscriptionPlan {
   modules       Json?          @map("modules")
   maxUsers      Int?           @map("max_users")
   maxProducts   Int?           @map("max_products")
-  maxOrders     Int?           @map("max_orders")
+  maxBranches   Int?           @map("max_branches")
   isActive      Boolean        @default(true) @map("is_active")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
@@ -125,8 +166,8 @@ model Subscription {
   id             String           @id @default(uuid())
   organizationId String           @map("organization_id")
   planId         String           @map("plan_id")
-  status         String           @default("active")
-  billingPeriod  String           @default("monthly") @map("billing_period")
+  status         SubscriptionStatus @default(active)
+  billingPeriod  SubscriptionBillingPeriod @default(monthly) @map("billing_period")
   startDate      DateTime         @default(now()) @map("start_date")
   endDate        DateTime?        @map("end_date")
   autoRenew      Boolean          @default(true) @map("auto_renew")
@@ -187,15 +228,11 @@ model OrganizationMember {
 model Customer {
   id             String                 @id @default(uuid())
   userId         String                 @map("user_id")
-  organizationId String?                @map("organization_id")
-  razonSocial    String?                @map("razon_social")
-  slug           String?                @unique
-  nit            String?                @unique
   ci             String?                @unique
   nombre         String?
   apellido       String?
-  direccion      String?
-  telefono       String?
+  address        String?               @map("direccion")
+  phone          String?               @map("telefono")
   email          String?
   password       String?
   city           String?
@@ -204,7 +241,6 @@ model Customer {
   deletedAt      DateTime?              @map("deleted_at")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
-  organization   Organization?          @relation("CustomerPrimaryOrganization", fields: [organizationId], references: [id])
   organizations  CustomerOrganization[]
 
   @@index([deletedAt])
@@ -409,11 +445,11 @@ model Sale {
   customerId     String?        @map("customer_id")
   customerName   String?        @map("customer_name")
   saleNumber     String         @unique @map("sale_number")
-  status         String         @default("completed")
+  status         SaleStatus     @default(completed)
   subtotal       Decimal        @db.Decimal(10, 2)
   discount       Decimal        @default(0) @db.Decimal(10, 2)
   total          Decimal        @db.Decimal(10, 2)
-  paymentMethod  String         @default("cash") @map("payment_method")
+  paymentMethod  SalePaymentMethod @default(cash) @map("payment_method")
   notes          String?
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
@@ -453,7 +489,7 @@ model Quotation {
   customerName    String?         @map("customer_name")
   customerPhone   String?         @map("customer_phone")
   quotationNumber String          @unique @map("quotation_number")
-  status          String          @default("active")
+  status          QuotationStatus @default(active)
   branchId        String?         @map("branch_id")
   subtotal        Decimal         @db.Decimal(10, 2)
   discount        Decimal         @default(0) @db.Decimal(10, 2)
@@ -585,10 +621,10 @@ model UsuarioSas {
   ci                   String?        @unique
   nombre               String
   apellido             String
-  direccion            String?        @map("direccion")
-  telefono             String?        @map("telefono")
-  correo               String?        @unique @map("correo")
-  contraseña          String?        @map("contraseña")
+  address              String?        @map("direccion")
+  phone                String?        @map("telefono")
+  email                String?        @unique @map("correo")
+  password             String?        @map("contraseña")
   passwordChangedAt    DateTime?      @map("password_changed_at")
   rolId                String?        @map("rol_id")
   foto                 String?        @map("foto")
@@ -611,7 +647,7 @@ model UsuarioSas {
   notifications        Notification[]
 
   @@index([organizationId, isActive])
-  @@index([correo, organizationId])
+  @@index([email, organizationId])
   @@index([ci, organizationId])
   @@index([deletedAt])
   @@map("sales_usuarios_sas")

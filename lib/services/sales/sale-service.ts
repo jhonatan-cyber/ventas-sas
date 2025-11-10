@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Sale } from '@prisma/client'
+import { Sale, SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { 
   CursorPaginationOptions, 
   CursorPaginationResult, 
@@ -22,8 +22,8 @@ export interface CreateSaleData {
   userId: string
   customerId?: string | null
   customerName?: string | null
-  status?: string
-  paymentMethod?: string
+  status?: SaleStatus
+  paymentMethod?: SalePaymentMethod
   subtotal: number
   discount?: number
   total: number
@@ -34,8 +34,8 @@ export interface CreateSaleData {
 export interface UpdateSaleData {
   customerId?: string | null
   customerName?: string | null
-  status?: string
-  paymentMethod?: string
+  status?: SaleStatus
+  paymentMethod?: SalePaymentMethod
   subtotal?: number
   discount?: number
   total?: number
@@ -80,8 +80,8 @@ export class SaleService {
     skip: number = 0,
     take: number = 10,
     search?: string,
-    status?: string,
-    paymentMethod?: string,
+    status?: SaleStatus | 'all',
+    paymentMethod?: SalePaymentMethod | 'all',
     customerId?: string,
     startDate?: Date,
     endDate?: Date,
@@ -151,8 +151,8 @@ export class SaleService {
     organizationId: string,
     options: CursorPaginationOptions & {
       search?: string
-      status?: string
-      paymentMethod?: string
+      status?: SaleStatus | 'all'
+      paymentMethod?: SalePaymentMethod | 'all'
       customerId?: string
       startDate?: Date
       endDate?: Date
@@ -275,8 +275,8 @@ export class SaleService {
           customerId: data.customerId ?? null,
           customerName: data.customerName,
           saleNumber,
-          status: data.status || 'completed',
-          paymentMethod: data.paymentMethod || 'cash',
+          status: data.status || SaleStatus.completed,
+          paymentMethod: data.paymentMethod || SalePaymentMethod.cash,
           subtotal: data.subtotal,
           discount: data.discount ?? 0,
           total: data.total,
@@ -313,7 +313,7 @@ export class SaleService {
         })
       }
 
-      if ((sale.status ?? 'completed') === 'completed') {
+      if ((sale.status ?? SaleStatus.completed) === SaleStatus.completed) {
         const openCashRegister = await tx.cashRegister.findFirst({
           where: {
             organizationId,
@@ -505,8 +505,8 @@ export class SaleService {
         },
       })
 
-      const previousCompleted = existingSale.status === 'completed'
-      const newCompleted = result?.status === 'completed'
+      const previousCompleted = existingSale.status === SaleStatus.completed
+      const newCompleted = result?.status === SaleStatus.completed
       const previousTotal = Number(existingSale.total)
       const newTotal = Number(result?.total ?? 0)
       const organizationId = existingSale.organizationId
@@ -570,7 +570,7 @@ export class SaleService {
         })
       }
 
-      if (existingSale.status === 'completed') {
+      if (existingSale.status === SaleStatus.completed) {
         const openCashRegister = await tx.cashRegister.findFirst({
           where: {
             organizationId: existingSale.organizationId,

@@ -7,10 +7,10 @@ export interface CreateUsuarioSasData {
   ci?: string
   nombre: string
   apellido: string
-  direccion?: string
-  telefono?: string
-  correo?: string
-  contraseña?: string
+  address?: string
+  phone?: string
+  email?: string
+  password?: string
   rolId?: string
   foto?: string
   sucursalId?: string
@@ -20,10 +20,10 @@ export interface UpdateUsuarioSasData {
   ci?: string
   nombre?: string
   apellido?: string
-  direccion?: string
-  telefono?: string
-  correo?: string
-  contraseña?: string
+  address?: string
+  phone?: string
+  email?: string
+  password?: string
   rolId?: string
   foto?: string
   sucursalId?: string
@@ -52,8 +52,8 @@ export class UsuarioSasService {
         { nombre: { contains: search, mode: 'insensitive' } },
         { apellido: { contains: search, mode: 'insensitive' } },
         { ci: { contains: search, mode: 'insensitive' } },
-        { correo: { contains: search, mode: 'insensitive' } },
-        { telefono: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -132,8 +132,8 @@ export class UsuarioSasService {
   ) {
     // Hashear contraseña si se proporciona
     let hashedPassword = null
-    if (data.contraseña) {
-      hashedPassword = await PasswordService.hashPassword(data.contraseña)
+    if (data.password) {
+      hashedPassword = await PasswordService.hashPassword(data.password)
     } else if (data.ci) {
       // Si no hay contraseña pero hay CI, usar CI como contraseña por defecto
       hashedPassword = await PasswordService.hashPassword(data.ci)
@@ -145,10 +145,10 @@ export class UsuarioSasService {
         ci: data.ci,
         nombre: data.nombre,
         apellido: data.apellido,
-        direccion: data.direccion,
-        telefono: data.telefono,
-        correo: data.correo,
-        contraseña: hashedPassword,
+        address: data.address,
+        phone: data.phone,
+        email: data.email,
+        password: hashedPassword,
         rolId: data.rolId,
         foto: data.foto,
         sucursalId: data.sucursalId,
@@ -187,8 +187,8 @@ export class UsuarioSasService {
     const updateData: any = { ...data }
 
     // Hashear nueva contraseña si se proporciona
-    if (data.contraseña) {
-      updateData.contraseña = await PasswordService.hashPassword(data.contraseña)
+    if (data.password) {
+      updateData.password = await PasswordService.hashPassword(data.password)
       
       // Invalidar sesiones al cambiar contraseña
       const { SessionManagement } = await import('@/lib/auth/session-management')
@@ -205,7 +205,7 @@ export class UsuarioSasService {
       updateData.passwordChangedAt = new Date()
     } else {
       // No actualizar contraseña si no se proporciona
-      delete updateData.contraseña
+      delete updateData.password
     }
 
     return prisma.usuarioSas.update({

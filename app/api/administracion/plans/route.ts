@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       modules: validatedData.modules || undefined,
       maxUsers: validatedData.maxUsers || undefined,
       maxProducts: validatedData.maxProducts || undefined,
-      maxOrders: validatedData.maxOrders || undefined,
+      maxBranches: validatedData.maxBranches || undefined,
       isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
     })
 

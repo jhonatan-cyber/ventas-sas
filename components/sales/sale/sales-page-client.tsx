@@ -18,7 +18,7 @@ interface SalesPageClientProps {
     id: string
     nombre?: string | null
     apellido?: string | null
-    correo?: string | null
+    email?: string | null
     sucursalId?: string | null
     sucursal?: {
       id?: string | null

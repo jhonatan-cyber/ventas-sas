@@ -8,6 +8,7 @@ import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
 import { serializeSale } from '@/lib/utils/serializers'
+import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null
@@ -15,7 +16,7 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
   let salesUser = await prisma.salesUser.findFirst({
     where: {
       organizationId,
-      email: sasUser.correo || undefined,
+      email: sasUser.email || undefined,
     },
   })
 
@@ -23,8 +24,8 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
     salesUser = await prisma.salesUser.create({
       data: {
         organizationId,
-        email: sasUser.correo || `${sasUser.nombre.toLowerCase()}.${sasUser.apellido.toLowerCase()}@ventas.local`,
-        password: sasUser.contraseña || 'temp',
+        email: sasUser.email || `${sasUser.nombre.toLowerCase()}.${sasUser.apellido.toLowerCase()}@ventas.local`,
+        password: sasUser.password || 'temp',
         fullName: `${sasUser.nombre} ${sasUser.apellido}`.trim(),
         isActive: sasUser.isActive,
       },
@@ -60,13 +61,25 @@ export async function GET(
 
     const skip = (page - 1) * pageSize
 
+    const parseSaleStatus = (value?: string): SaleStatus | 'all' | undefined => {
+      if (!value) return undefined
+      if (value === 'all') return 'all'
+      return (Object.values(SaleStatus) as string[]).includes(value) ? (value as SaleStatus) : undefined
+    }
+
+    const parsePaymentMethod = (value?: string): SalePaymentMethod | 'all' | undefined => {
+      if (!value) return undefined
+      if (value === 'all') return 'all'
+      return (Object.values(SalePaymentMethod) as string[]).includes(value) ? (value as SalePaymentMethod) : undefined
+    }
+
     const { sales, total } = await SaleService.getAllSales(
       organizationId,
       skip,
       pageSize,
       search ?? undefined,
-      status ?? undefined,
-      paymentMethod ?? undefined,
+      parseSaleStatus(status),
+      parsePaymentMethod(paymentMethod),
       customerId ?? undefined,
       startDate,
       endDate,
@@ -134,8 +147,8 @@ export async function POST(
       userId: salesUser.id,
       customerId: validatedData.customerId || null,
       customerName: validatedData.customerName || null,
-      status: validatedData.status || 'completed',
-      paymentMethod: validatedData.paymentMethod || 'cash',
+      status: validatedData.status,
+      paymentMethod: validatedData.paymentMethod,
       subtotal: validatedData.subtotal,
       discount: validatedData.discount || 0,
       total: validatedData.total,

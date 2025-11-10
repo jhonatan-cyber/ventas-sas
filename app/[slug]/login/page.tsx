@@ -1,5 +1,5 @@
 import { LoginSasForm } from "@/components/sales/auth/login-sas-form"
-import { getCustomerBySlug, getOrganizationBySlug } from "@/lib/utils/organization"
+import { getCustomerBySlug } from "@/lib/utils/organization"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
@@ -37,16 +37,9 @@ export default async function LoginPage({
     redirect('/')
   }
 
-  // Obtener el cliente dueño directamente desde la organización (sin validar suscripción)
-  const customer = await prisma.customer.findFirst({
-    where: {
-      id: organization.ownerId,
-      isActive: true,
-      deletedAt: null
-    }
-  })
-  
-  // Si el cliente dueño no existe o está inactivo, redirigir a la raíz
+  // Obtener el cliente principal asociado al slug
+  const customer = await getCustomerBySlug(slug)
+
   if (!customer) {
     redirect('/')
   }
@@ -67,7 +60,7 @@ export default async function LoginPage({
             Sistema de Ventas
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {organization.razonSocial || organization.name || customer.razonSocial || `${customer.nombre} ${customer.apellido}`}
+            {organization.razonSocial || organization.name || customer.primaryOrganization?.razonSocial || `${customer.nombre ?? ""} ${customer.apellido ?? ""}`.trim()}
           </p>
         </div>
         <LoginSasForm customerSlug={slug} />

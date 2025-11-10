@@ -6,7 +6,7 @@ const SAS_JWT_EXPIRES_IN = process.env.SAS_JWT_EXPIRES_IN || '7d'
 
 export interface SasJWTPayload {
   userId: string
-  correo?: string
+  email?: string
   customerId?: string
   sessionId?: string // ID de sesión para tracking
 }

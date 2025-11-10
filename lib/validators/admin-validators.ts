@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { SubscriptionBillingPeriod, SubscriptionStatus } from '@prisma/client'
 
 /**
  * Validadores para el sistema de administración
@@ -24,12 +25,12 @@ export const createCustomerSchema = z.object({
     .trim()
     .optional()
     .nullable(),
-  direccion: z
+  address: z
     .string()
     .max(500, 'La dirección es demasiado larga')
     .optional()
     .nullable(),
-  telefono: z
+  phone: z
     .string()
     .max(20, 'El teléfono es demasiado largo')
     .regex(/^[\d\s\-\+\(\)]+$/, 'El teléfono contiene caracteres inválidos')
@@ -171,10 +172,10 @@ const subscriptionPlanBaseSchema = z.object({
     .positive('El máximo de productos debe ser mayor a 0')
     .optional()
     .nullable(),
-  maxOrders: z
+  maxBranches: z
     .number()
-    .int('El máximo de órdenes debe ser un número entero')
-    .positive('El máximo de órdenes debe ser mayor a 0')
+    .int('El máximo de sucursales debe ser un número entero')
+    .positive('El máximo de sucursales debe ser mayor a 0')
     .optional()
     .nullable(),
   isActive: z
@@ -205,15 +206,11 @@ const subscriptionBaseSchema = z.object({
     .string()
     .uuid('El ID del plan no es válido'),
   billingPeriod: z
-    .enum(['monthly', 'yearly'], {
-      errorMap: () => ({ message: 'El período de facturación debe ser: monthly o yearly' })
-    })
-    .default('monthly'),
+    .nativeEnum(SubscriptionBillingPeriod)
+    .default(SubscriptionBillingPeriod.monthly),
   status: z
-    .enum(['active', 'cancelled', 'expired', 'trial'], {
-      errorMap: () => ({ message: 'El estado debe ser: active, cancelled, expired o trial' })
-    })
-    .default('active'),
+    .nativeEnum(SubscriptionStatus)
+    .default(SubscriptionStatus.active),
   autoRenew: z
     .boolean()
     .default(true),

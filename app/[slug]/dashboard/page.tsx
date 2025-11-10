@@ -61,7 +61,7 @@ export default async function DashboardPage({
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
-  const fullName = session.fullName || customer.razonSocial || "Usuario"
+  const fullName = session.fullName || customer.primaryOrganization?.razonSocial || customer.primaryOrganization?.name || "Usuario"
 
   // Obtener estadísticas (si no hay organización, usar valores por defecto)
   const [stats, recentQuotations] = organizationId

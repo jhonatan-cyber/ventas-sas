@@ -73,7 +73,7 @@ export async function getCurrentSasUser(request: NextRequest, slug: string) {
           })
 
           if (usuario && usuario.isActive && usuario.organization?.slug === slug) {
-            const { contraseña, ...usuarioSinPassword } = usuario as any
+            const { password, ...usuarioSinPassword } = usuario as any
             return usuarioSinPassword
           }
         }

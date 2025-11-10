@@ -7,8 +7,8 @@ import { logger } from '@/lib/utils/logger'
 
 export interface LoginSasCredentials {
   ci?: string
-  correo?: string
-  contraseña: string
+  email?: string
+  password: string
 }
 
 export interface AuthSasResult {
@@ -26,16 +26,16 @@ export class AuthSasService {
     request?: NextRequest
   ): Promise<AuthSasResult> {
     try {
-      const { ci, correo, contraseña } = credentials
+      const { ci, email, password } = credentials
 
-      if (!contraseña) {
+      if (!password) {
         return {
           success: false,
           error: 'La contraseña es requerida'
         }
       }
 
-      if (!ci && !correo) {
+      if (!ci && !email) {
         return {
           success: false,
           error: 'CI o correo electrónico es requerido'
@@ -68,8 +68,8 @@ export class AuthSasService {
 
       if (ci) {
         where.ci = ci
-      } else if (correo) {
-        where.correo = correo
+      } else if (email) {
+        where.email = email
       }
 
       let usuario
@@ -81,11 +81,11 @@ export class AuthSasService {
             ci: true,
             nombre: true,
             apellido: true,
-            correo: true,
-            direccion: true,
-            telefono: true,
+            email: true,
+            address: true,
+            phone: true,
             foto: true,
-            contraseña: true,
+            password: true,
             isActive: true,
             organizationId: true,
             twoFactorEnabled: true,
@@ -149,7 +149,7 @@ export class AuthSasService {
         }
       }
 
-      if (!usuario.contraseña) {
+      if (!usuario.password) {
         logger.debug('Usuario sin contraseña configurada', {
           userId: usuario.id,
           organizationId: usuario.organizationId,
@@ -163,7 +163,7 @@ export class AuthSasService {
       // Verificar contraseña
       let isValidPassword = false
       try {
-        isValidPassword = await PasswordService.verifyPassword(contraseña, usuario.contraseña)
+        isValidPassword = await PasswordService.verifyPassword(password, usuario.password)
       } catch (passwordError) {
         logger.error('Error al verificar contraseña', passwordError as Error, {
           userId: usuario.id,
@@ -180,7 +180,7 @@ export class AuthSasService {
           userId: usuario.id,
           organizationId: usuario.organizationId,
           hasCi: !!ci,
-          hasCorreo: !!correo,
+          hasCorreo: !!email,
         })
         return {
           success: false,
@@ -209,7 +209,7 @@ export class AuthSasService {
           id: usuario.id,
           nombre: usuario.nombre,
           apellido: usuario.apellido,
-          correo: usuario.correo,
+          email: usuario.email,
           organization: usuario.organization,
         }
 
@@ -257,7 +257,7 @@ export class AuthSasService {
       try {
         token = await SasJWTService.generateToken({ 
           userId: usuario.id, 
-          correo: usuario.correo || undefined,
+          email: usuario.email || undefined,
           organizationId: usuario.organization.id,
           sessionId: sessionToken || undefined
         })
@@ -275,9 +275,9 @@ export class AuthSasService {
         ci: usuario.ci,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
-        correo: usuario.correo,
-        direccion: usuario.direccion,
-        telefono: usuario.telefono,
+        email: usuario.email,
+        address: usuario.address,
+        phone: usuario.phone,
         foto: usuario.foto,
         rol: usuario.rol,
         sucursal: usuario.sucursal,
@@ -295,7 +295,7 @@ export class AuthSasService {
       logger.error('Error en login SAS', error as Error, {
         customerSlug,
         hasCi: !!credentials.ci,
-        hasCorreo: !!credentials.correo,
+        hasCorreo: !!credentials.email,
       })
       console.error('Error completo en AuthSasService.login:', error)
       console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack available')
@@ -361,7 +361,7 @@ export class AuthSasService {
       }
 
       // No retornar la contraseña
-      const { contraseña, ...usuarioSinPassword } = usuario
+      const { password: usuarioPassword, ...usuarioSinPassword } = usuario
       return usuarioSinPassword
 
     } catch (error) {

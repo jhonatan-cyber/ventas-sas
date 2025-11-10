@@ -39,6 +39,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
   const [maxUsers, setMaxUsers] = useState("")
   const [maxProducts, setMaxProducts] = useState("")
   const [selectedModules, setSelectedModules] = useState<string[]>([])
+  const [maxBranches, setMaxBranches] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   
   // Validar si el formulario es válido
@@ -53,8 +54,9 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
       setHasYearly(plan.hasYearly || false)
       setPriceMonthly(plan.priceMonthly ? Number(plan.priceMonthly) : 0)
       setPriceYearly(plan.priceYearly ? Number(plan.priceYearly) : 0)
-      setMaxUsers(String(plan.maxUsers) || "")
-      setMaxProducts(String(plan.maxProducts) || "")
+      setMaxUsers(plan.maxUsers !== null && plan.maxUsers !== undefined ? String(plan.maxUsers) : "")
+      setMaxProducts(plan.maxProducts !== null && plan.maxProducts !== undefined ? String(plan.maxProducts) : "")
+      setMaxBranches(plan.maxBranches !== null && plan.maxBranches !== undefined ? String(plan.maxBranches) : "")
       setSelectedModules(Array.isArray(plan.modules) ? plan.modules : [])
     } else {
       setName("")
@@ -65,6 +67,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
       setPriceYearly(0)
       setMaxUsers("")
       setMaxProducts("")
+      setMaxBranches("")
       setSelectedModules([])
     }
   }, [plan, open])
@@ -90,6 +93,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
         priceYearly: hasYearly ? (priceYearly >= 0 ? priceYearly : 0) : undefined,
         maxUsers: maxUsers ? parseInt(String(maxUsers)) : undefined,
         maxProducts: maxProducts ? parseInt(String(maxProducts)) : undefined,
+        maxBranches: maxBranches ? parseInt(String(maxBranches)) : undefined,
         modules: selectedModules.length > 0 ? selectedModules : undefined,
         isActive: plan ? plan.isActive : true,
       }
@@ -219,7 +223,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
             </div>
 
             {/* Límites */}
-            <div className="grid grid-cols-2 gap-4 border-t border-gray-200 dark:border-[#2a2a2a] pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-200 dark:border-[#2a2a2a] pt-4">
               <div className="space-y-2">
                 <Label htmlFor="maxUsers" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   Máx. Usuarios
@@ -245,6 +249,21 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
                   placeholder="Ilimitado"
                   value={maxProducts}
                   onChange={(e) => setMaxProducts(e.target.value)}
+                  min="1"
+                  className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxBranches" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Máx. Sucursales
+                </Label>
+                <Input
+                  id="maxBranches"
+                  type="number"
+                  placeholder="Ilimitado"
+                  value={maxBranches}
+                  onChange={(e) => setMaxBranches(e.target.value)}
                   min="1"
                   className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                 />

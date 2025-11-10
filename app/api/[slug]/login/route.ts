@@ -34,7 +34,7 @@ export async function POST(
       logger.security('Login SAS bloqueado por rate limit', {
         slug,
         ip: request.ip || request.headers.get('x-forwarded-for'),
-        identifier: body.ci || body.correo,
+        identifier: body.ci || body.email,
       })
       
       // Registrar rate limit excedido en auditoría
@@ -45,7 +45,7 @@ export async function POST(
           details: {
             endpoint: 'sas_login',
             slug,
-            identifier: body.ci || body.correo,
+            identifier: body.ci || body.email,
           },
         },
         request
@@ -73,10 +73,10 @@ export async function POST(
       return validation.response
     }
 
-    const { ci, correo, contraseña } = validation.data
+    const { ci, email, password } = validation.data
 
     // Intentar login
-    const result = await AuthSasService.login(slug, { ci, correo, contraseña }, request)
+    const result = await AuthSasService.login(slug, { ci, email, password }, request)
 
     // Si requiere 2FA, retornar respuesta especial
     if (result.requires2FA && result.tempToken) {
@@ -97,7 +97,7 @@ export async function POST(
         userId: result.user?.id,
         organizationId: organizationId,
         method: ci ? 'CI' : 'email',
-        identifier: ci || correo,
+        identifier: ci || email,
         success: result.success,
         errorMessage: result.success ? undefined : result.error,
       },
@@ -149,7 +149,7 @@ export async function POST(
         nombre: result.user.nombre,
         apellido: result.user.apellido,
         fullName: `${result.user.nombre} ${result.user.apellido}`,
-        correo: result.user.correo,
+        email: result.user.email,
         rol: result.user.rol?.nombre || null,
         organizationSlug: slug,
         organizationId: organizationId,

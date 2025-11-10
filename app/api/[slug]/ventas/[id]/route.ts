@@ -4,6 +4,7 @@ import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
 import { serializeSale } from '@/lib/utils/serializers'
+import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null
@@ -11,7 +12,7 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
   let salesUser = await prisma.salesUser.findFirst({
     where: {
       organizationId,
-      email: sasUser.correo || undefined,
+      email: sasUser.email || undefined,
     },
   })
 
@@ -19,8 +20,8 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
     salesUser = await prisma.salesUser.create({
       data: {
         organizationId,
-        email: sasUser.correo || `${sasUser.nombre.toLowerCase()}.${sasUser.apellido.toLowerCase()}@ventas.local`,
-        password: sasUser.contraseña || 'temp',
+        email: sasUser.email || `${sasUser.nombre.toLowerCase()}.${sasUser.apellido.toLowerCase()}@ventas.local`,
+        password: sasUser.password || 'temp',
         fullName: `${sasUser.nombre} ${sasUser.apellido}`.trim(),
         isActive: sasUser.isActive,
       },
@@ -89,10 +90,22 @@ export async function PUT(
       await ensureSalesUser(organizationId, currentUser)
     }
 
+    const normalizeSaleStatus = (value?: unknown): SaleStatus | undefined => {
+      if (typeof value !== 'string') return undefined
+      const trimmed = value.trim()
+      return (Object.values(SaleStatus) as string[]).includes(trimmed) ? (trimmed as SaleStatus) : undefined
+    }
+
+    const normalizePaymentMethod = (value?: unknown): SalePaymentMethod | undefined => {
+      if (typeof value !== 'string') return undefined
+      const trimmed = value.trim()
+      return (Object.values(SalePaymentMethod) as string[]).includes(trimmed) ? (trimmed as SalePaymentMethod) : undefined
+    }
+
     const updatePayload: UpdateSaleData = {
       customerId: body.customerId?.trim() || null,
-      status: body.status?.trim(),
-      paymentMethod: body.paymentMethod?.trim(),
+      status: normalizeSaleStatus(body.status),
+      paymentMethod: normalizePaymentMethod(body.paymentMethod),
       subtotal: body.subtotal !== undefined ? Number(body.subtotal) : undefined,
       discount: body.discount !== undefined ? Number(body.discount) : undefined,
       total: body.total !== undefined ? Number(body.total) : undefined,

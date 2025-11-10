@@ -1,4 +1,11 @@
 import { prisma } from '@/lib/prisma'
+import type { Organization } from '@prisma/client'
+import { SubscriptionStatus } from '@prisma/client'
+import type { Customer } from '@/lib/types'
+
+export type CustomerWithPrimaryOrganization = Customer & {
+  primaryOrganization: Pick<Organization, 'id' | 'name' | 'slug' | 'razonSocial' | 'nit' | 'subscriptionStatus'> | null
+}
 
 /**
  * Obtiene el ID de una organización a partir de su slug
@@ -62,7 +69,7 @@ export async function getOrganizationBySlug(
     where: {
       organizationId: organization.id,
       status: {
-        in: ['active', 'trial']
+        in: [SubscriptionStatus.active, SubscriptionStatus.trial]
       },
       OR: [
         { endDate: null },
@@ -84,7 +91,7 @@ export async function getOrganizationBySlug(
  * El slug ahora es el de la organización, no del cliente
  * Retorna null si no existe, si la organización está inactiva o no tiene suscripción activa
  */
-export async function getCustomerBySlug(slug: string) {
+export async function getCustomerBySlug(slug: string): Promise<CustomerWithPrimaryOrganization | null> {
   // Buscar organización por slug
   const organization = await getOrganizationBySlug(slug)
   
@@ -92,28 +99,35 @@ export async function getCustomerBySlug(slug: string) {
     return null
   }
 
-  // Obtener el cliente dueño (owner) de la organización
-  const ownerCustomer = await prisma.customer.findFirst({
-    where: {
-      id: organization.ownerId,
-      isActive: true,
-      deletedAt: null
-    },
-    include: {
-      organizations: {
-        where: {
-          organizationId: organization.id,
-          isActive: true
-        }
-      }
-    }
-  })
+  const activeCustomerOrg = organization.customerOrganizations.find(
+    (relation) =>
+      relation.isActive &&
+      relation.customer &&
+      relation.customer.isActive &&
+      !relation.customer.deletedAt
+  )
 
-  if (!ownerCustomer) {
+  if (!activeCustomerOrg || !activeCustomerOrg.customer) {
     return null
   }
 
-  return ownerCustomer
+  const customer = activeCustomerOrg.customer
+
+  return {
+    ...customer,
+    primaryOrganization: {
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      razonSocial: organization.razonSocial,
+      nit: organization.nit,
+      subscriptionStatus: organization.subscriptionStatus,
+    },
+    razonSocial: organization.razonSocial,
+    nit: organization.nit,
+    slug: organization.slug,
+    organizationId: organization.id,
+  }
 }
 
 /**
@@ -130,55 +144,7 @@ export async function getOrganizationIdByCustomerSlug(slug: string): Promise<str
  * Útil para crear cotizaciones, ventas, etc. cuando el cliente no tiene organización
  */
 export async function getOrCreateOrganizationForCustomer(slug: string): Promise<string | null> {
-  const customer = await getCustomerBySlug(slug)
-  
-  if (!customer) {
-    return null
-  }
-  
-  // Si el cliente ya tiene organización asociada, retornarla
-  if (customer.organizationId) {
-    return customer.organizationId
-  }
-  
-  // Crear una organización automáticamente para el cliente
-  try {
-    const organization = await prisma.organization.create({
-      data: {
-        name: customer.razonSocial || customer.slug,
-        slug: customer.slug,
-        ownerId: customer.id,
-        subscriptionStatus: 'trial',
-      }
-    })
-    
-    // Asociar la organización al cliente
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: { organizationId: organization.id }
-    })
-    
-    return organization.id
-  } catch (error: any) {
-    // Si la organización ya existe (por ejemplo, por slug duplicado), intentar obtenerla
-    if (error.code === 'P2002') {
-      const existingOrg = await prisma.organization.findUnique({
-        where: { slug: customer.slug },
-        select: { id: true }
-      })
-      
-      if (existingOrg) {
-        // Asociar la organización existente al cliente
-        await prisma.customer.update({
-          where: { id: customer.id },
-          data: { organizationId: existingOrg.id }
-        })
-        return existingOrg.id
-      }
-    }
-    
-    console.error('Error al crear organización para cliente:', error)
-    return null
-  }
+  const organization = await getOrganizationBySlug(slug)
+  return organization?.id ?? null
 }
 

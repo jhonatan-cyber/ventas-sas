@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Organization, SubscriptionPlan } from '@prisma/client'
+import { Organization, OrganizationSubscriptionStatus, SubscriptionPlan } from '@prisma/client'
 import { PasswordService } from '@/lib/auth/password'
 
 export interface OrganizationWithPlan extends Organization {
@@ -15,13 +15,13 @@ export interface OrganizationWithPlan extends Organization {
 export interface CreateOrganizationData {
   razonSocial: string // Razón social de la empresa (requerido)
   nit?: string // NIT de la empresa (opcional)
-  direccion: string // Dirección de la empresa (requerido)
-  telefono: string // Teléfono de la empresa (requerido)
+  address: string // Dirección de la empresa (requerido)
+  phone: string // Teléfono de la empresa (requerido)
   slug: string // Slug único de la empresa (requerido, generado desde razón social)
   ownerId: string // ID del cliente dueño (requerido, customerId)
   customerId: string // ID del cliente dueño (requerido, mismo que ownerId)
   subscriptionPlanId?: string
-  subscriptionStatus?: string
+  subscriptionStatus?: OrganizationSubscriptionStatus
   subscriptionStartDate?: Date
   subscriptionEndDate?: Date
   settings?: any
@@ -31,11 +31,11 @@ export interface UpdateOrganizationData {
   name?: string
   razonSocial?: string // Razón social de la empresa/organización
   nit?: string // NIT de la empresa/organización
-  direccion?: string // Dirección de la empresa/organización
-  telefono?: string // Teléfono de la empresa/organización
+  address?: string // Dirección de la empresa/organización
+  phone?: string // Teléfono de la empresa/organización
   slug?: string
   subscriptionPlanId?: string
-  subscriptionStatus?: string
+  subscriptionStatus?: OrganizationSubscriptionStatus
   subscriptionStartDate?: Date
   subscriptionEndDate?: Date
   settings?: any
@@ -95,11 +95,11 @@ export class OrganizationAdminService {
       name: organizationData.razonSocial || 'Empresa', // Usar razonSocial como name (requerido por schema)
       razonSocial: organizationData.razonSocial,
       nit: organizationData.nit,
-      direccion: organizationData.direccion,
-      telefono: organizationData.telefono,
+      address: organizationData.address,
+      phone: organizationData.phone,
       slug: organizationData.slug,
       ownerId: customerId, // El cliente es el dueño de la empresa
-      subscriptionStatus: organizationData.subscriptionStatus || 'trial',
+      subscriptionStatus: organizationData.subscriptionStatus || OrganizationSubscriptionStatus.trial,
       subscriptionStartDate: organizationData.subscriptionStartDate || new Date(),
       subscriptionEndDate: organizationData.subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
       subscriptionPlanId: organizationData.subscriptionPlanId,
@@ -115,8 +115,8 @@ export class OrganizationAdminService {
           ci: true,
           nombre: true,
           apellido: true,
-          direccion: true,
-          telefono: true,
+          address: true,
+          phone: true,
           email: true,
         }
       })
@@ -143,7 +143,7 @@ export class OrganizationAdminService {
       const branch = await tx.branch.create({
         data: {
           name: 'Principal',
-          address: organizationData.direccion || customer.direccion || '',
+          address: organizationData.address || customer.address || '',
           organizationId: organization.id,
           isActive: true
         }
@@ -171,10 +171,10 @@ export class OrganizationAdminService {
           ci: customer.ci || undefined,
           nombre: customer.nombre || '',
           apellido: customer.apellido || '',
-          direccion: customer.direccion || organizationData.direccion || undefined,
-          telefono: customer.telefono || organizationData.telefono || undefined,
-          correo: customer.email || undefined,
-          contraseña: hashedPassword,
+          address: customer.address || organizationData.address || undefined,
+          phone: customer.phone || organizationData.phone || undefined,
+          email: customer.email || undefined,
+          password: hashedPassword,
           organizationId: organization.id,
           sucursalId: branch.id,
           rolId: role.id,
@@ -193,8 +193,8 @@ export class OrganizationAdminService {
       data: {
         ...data,
         // Asegurar que los campos opcionales se manejen correctamente
-        direccion: data.direccion !== undefined ? data.direccion : undefined,
-        telefono: data.telefono !== undefined ? data.telefono : undefined,
+        address: data.address !== undefined ? data.address : undefined,
+        phone: data.phone !== undefined ? data.phone : undefined,
       }
     })
   }
@@ -343,7 +343,7 @@ export class OrganizationAdminService {
   static async suspendOrganization(id: string): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
-      data: { subscriptionStatus: 'suspended' }
+      data: { subscriptionStatus: OrganizationSubscriptionStatus.suspended }
     })
   }
 
@@ -351,7 +351,7 @@ export class OrganizationAdminService {
   static async reactivateOrganization(id: string): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
-      data: { subscriptionStatus: 'active' }
+      data: { subscriptionStatus: OrganizationSubscriptionStatus.active }
     })
   }
 
@@ -369,7 +369,7 @@ export class OrganizationAdminService {
       where: { id },
       data: {
         subscriptionPlanId: planId,
-        subscriptionStatus: 'active',
+        subscriptionStatus: OrganizationSubscriptionStatus.active,
         subscriptionStartDate: new Date(),
         subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 días
       }
@@ -380,13 +380,13 @@ export class OrganizationAdminService {
   static async getOrganizationStats() {
     const total = await prisma.organization.count()
     const active = await prisma.organization.count({
-      where: { subscriptionStatus: 'active' }
+      where: { subscriptionStatus: OrganizationSubscriptionStatus.active }
     })
     const suspended = await prisma.organization.count({
-      where: { subscriptionStatus: 'suspended' }
+      where: { subscriptionStatus: OrganizationSubscriptionStatus.suspended }
     })
     const trial = await prisma.organization.count({
-      where: { subscriptionStatus: 'trial' }
+      where: { subscriptionStatus: OrganizationSubscriptionStatus.trial }
     })
 
     return { total, active, suspended, trial }

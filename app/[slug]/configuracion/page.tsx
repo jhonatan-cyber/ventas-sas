@@ -7,54 +7,22 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import ClientPersistence from "./client-persistence"
 import { RenewalDialogClient } from "./renewal-dialog-client"
+import { getCustomerBySlug } from "@/lib/utils/organization"
 
-async function getCustomerBySlug(slug: string) {
-  return prisma.customer.findFirst({ 
-    where: { slug, isActive: true }, 
-    select: { 
-      id: true, 
-      razonSocial: true,
-      nombre: true,
-      apellido: true,
-      telefono: true,
-      email: true,
-      direccion: true
-    } 
-  })
-}
+async function getActiveSubscriptionForOrganization(organizationId?: string | null) {
+  if (!organizationId) return null
 
-async function getActiveSubscriptionForCustomer(customerId: string) {
-  // Buscar suscripción activa/trial por cliente; si no hay, intentar por organización asociada
-  const byCustomer = await prisma.subscription.findFirst({
+  const subscription = await prisma.subscription.findFirst({
     where: {
-      customerId,
+      organizationId,
       status: { in: ['active', 'trial'] },
-      OR: [ { endDate: null }, { endDate: { gt: new Date() } } ],
+      OR: [{ endDate: null }, { endDate: { gt: new Date() } }],
     },
     include: { plan: true },
     orderBy: { createdAt: 'desc' },
   })
 
-  if (byCustomer) return byCustomer
-
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-    select: { organizationId: true },
-  })
-
-  if (!customer?.organizationId) return null
-
-  const byOrg = await prisma.subscription.findFirst({
-    where: {
-      organizationId: customer.organizationId,
-      status: { in: ['active', 'trial'] },
-      OR: [ { endDate: null }, { endDate: { gt: new Date() } } ],
-    },
-    include: { plan: true },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  return byOrg
+  return subscription
 }
 
 async function getBranches(customerId: string) {
@@ -79,7 +47,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   if (!customer) redirect('/')
 
   const branches = await getBranches(customer.id)
-  const activeSubscription = await getActiveSubscriptionForCustomer(customer.id)
+  const activeSubscription = await getActiveSubscriptionForOrganization(customer.primaryOrganization?.id)
 
   // Calcular precio del plan según período
   const planPrice = activeSubscription?.plan 
@@ -163,7 +131,11 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
               <div className="space-y-2 mt-4">
                 <Label>Nombre de la empresa</Label>
-                <Input name="companyName" placeholder="Razón social o nombre comercial" defaultValue={customer.razonSocial || ""} />
+                <Input
+                  name="companyName"
+                  placeholder="Razón social o nombre comercial"
+                  defaultValue={customer.primaryOrganization?.razonSocial || customer.primaryOrganization?.name || ""}
+                />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -177,7 +149,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
                 </div>
                 <div className="space-y-2">
                   <Label>Teléfono de contacto</Label>
-                  <Input name="companyPhone" placeholder="Ej: +59170000000" defaultValue={customer.telefono || ""} />
+                  <Input name="companyPhone" placeholder="Ej: +59170000000" defaultValue={customer.phone || ""} />
                 </div>
                 <div className="space-y-2">
                   <Label>Correo de contacto</Label>
@@ -191,7 +163,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
               <div className="space-y-2">
                 <Label>Dirección</Label>
-                <Input name="companyAddress" placeholder="Calle, ciudad, país" defaultValue={customer.direccion || ""} />
+                <Input name="companyAddress" placeholder="Calle, ciudad, país" defaultValue={customer.address || ""} />
               </div>
 
               <div className="space-y-2">

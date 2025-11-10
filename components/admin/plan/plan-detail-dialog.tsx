@@ -20,7 +20,6 @@ import {
   Calendar,
   Clock,
   Infinity,
-  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SerializedSubscriptionPlanWithStats } from "./types"
@@ -238,26 +237,24 @@ export function PlanDetailDialog({
                   </p>
                 </div>
               </div>
-              {plan.maxOrders !== undefined && (
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Máximo de Pedidos
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Máximo de Sucursales
+                </p>
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-gray-400" />
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {plan.maxBranches ? (
+                      plan.maxBranches.toLocaleString()
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Infinity className="h-4 w-4" />
+                        Ilimitado
+                      </span>
+                    )}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {plan.maxOrders ? (
-                        plan.maxOrders.toLocaleString()
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <Infinity className="h-4 w-4" />
-                          Ilimitado
-                        </span>
-                      )}
-                    </p>
-                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 

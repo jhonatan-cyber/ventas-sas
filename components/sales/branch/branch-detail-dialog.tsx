@@ -313,16 +313,16 @@ export function BranchDetailDialog({
                                   <span className="font-medium">CI:</span> {usuario.ci}
                                 </span>
                               )}
-                              {usuario.correo && (
+                              {usuario.email && (
                                 <span className="flex items-center gap-1">
                                   <Mail className="h-3 w-3" />
-                                  {usuario.correo}
+                                  {usuario.email}
                                 </span>
                               )}
-                              {usuario.telefono && (
+                              {usuario.phone && (
                                 <span className="flex items-center gap-1">
                                   <Phone className="h-3 w-3" />
-                                  {usuario.telefono}
+                                  {usuario.phone}
                                 </span>
                               )}
                               {usuario.rol && (

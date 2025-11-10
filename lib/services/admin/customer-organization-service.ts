@@ -318,8 +318,8 @@ export class CustomerOrganizationService {
                     name: true,
                     razonSocial: true,
                     nit: true,
-                    direccion: true,
-                    telefono: true,
+                    address: true,
+                    phone: true,
                     slug: true,
                     subscriptionStatus: true,
                     whiteLabelBranding: {

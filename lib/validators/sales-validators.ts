@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { QuotationStatus, SalePaymentMethod, SaleStatus } from '@prisma/client'
 
 /**
  * Validadores para el sistema de ventas
@@ -45,15 +46,11 @@ const saleBaseSchema = z.object({
     .optional()
     .nullable(),
   status: z
-    .enum(['completed', 'pending', 'cancelled'], {
-      errorMap: () => ({ message: 'El estado debe ser: completed, pending o cancelled' })
-    })
-    .default('completed'),
+    .nativeEnum(SaleStatus)
+    .default(SaleStatus.completed),
   paymentMethod: z
-    .enum(['cash', 'card', 'transfer', 'qr'], {
-      errorMap: () => ({ message: 'El método de pago debe ser: cash, card, transfer o qr' })
-    })
-    .default('cash'),
+    .nativeEnum(SalePaymentMethod)
+    .default(SalePaymentMethod.cash),
   subtotal: z
     .number()
     .nonnegative('El subtotal no puede ser negativo')
@@ -300,10 +297,8 @@ const quotationBaseSchema = z.object({
     .optional()
     .nullable(),
   status: z
-    .enum(['active', 'converted', 'expired'], {
-      errorMap: () => ({ message: 'El estado debe ser: active, converted o expired' })
-    })
-    .default('active'),
+    .nativeEnum(QuotationStatus)
+    .default(QuotationStatus.active),
   subtotal: z
     .number()
     .nonnegative('El subtotal no puede ser negativo')
@@ -420,24 +415,24 @@ export const createUsuarioSasSchema = z.object({
     .min(1, 'El apellido es requerido')
     .max(100, 'El apellido es demasiado largo')
     .trim(),
-  direccion: z
+  address: z
     .string()
     .max(500, 'La dirección es demasiado larga')
     .optional()
     .nullable(),
-  telefono: z
+  phone: z
     .string()
     .max(20, 'El teléfono es demasiado largo')
     .regex(/^[\d\s\-\+\(\)]+$/, 'El teléfono contiene caracteres inválidos')
     .optional()
     .nullable(),
-  correo: z
+  email: z
     .string()
     .email('El correo electrónico no es válido')
     .toLowerCase()
     .optional()
     .nullable(),
-  contraseña: z
+  password: z
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .max(100, 'La contraseña es demasiado larga')
@@ -463,7 +458,7 @@ export const createUsuarioSasSchema = z.object({
 export type CreateUsuarioSasInput = z.infer<typeof createUsuarioSasSchema>
 
 export const updateUsuarioSasSchema = createUsuarioSasSchema.partial().extend({
-  contraseña: z
+  password: z
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .max(100, 'La contraseña es demasiado larga')

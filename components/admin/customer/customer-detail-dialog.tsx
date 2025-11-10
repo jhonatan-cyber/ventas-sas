@@ -187,7 +187,7 @@ export function CustomerDetailDialog({
                   </div>
                 </div>
               )}
-              {customer.direccion && (
+              {customer.address && (
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Dirección
@@ -195,12 +195,12 @@ export function CustomerDetailDialog({
                   <div className="flex items-start gap-2">
                     <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5" />
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {customer.direccion}
+                      {customer.address}
                     </p>
                   </div>
                 </div>
               )}
-              {customer.telefono && (
+              {customer.phone && (
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Teléfono
@@ -208,7 +208,7 @@ export function CustomerDetailDialog({
                   <div className="flex items-center gap-2">
                     <Phone className="h-3.5 w-3.5 text-gray-400" />
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {customer.telefono}
+                      {customer.phone}
                     </p>
                   </div>
                 </div>

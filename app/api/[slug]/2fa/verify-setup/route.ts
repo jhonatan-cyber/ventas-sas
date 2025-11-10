@@ -86,7 +86,7 @@ export async function POST(
           customerId: usuario.customerId,
           actionType: 'TWO_FACTOR_VERIFY_FAILED',
           details: {
-            identifier: usuario.correo || '',
+            identifier: usuario.email || '',
             reason: 'Código inválido durante setup',
             slug,
           },
@@ -122,7 +122,7 @@ export async function POST(
         customerId: usuario.customerId,
         actionType: 'TWO_FACTOR_ENABLED',
         details: {
-          identifier: usuario.correo || '',
+          identifier: usuario.email || '',
           slug,
         },
       },

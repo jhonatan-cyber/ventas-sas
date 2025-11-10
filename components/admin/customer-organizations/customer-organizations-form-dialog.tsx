@@ -75,8 +75,8 @@ export function CustomerOrganizationsFormDialog({
     if (organization) {
       setRazonSocial((organization as any).razonSocial || "")
       setNit((organization as any).nit || "")
-      setDireccion((organization as any).direccion || "")
-      setTelefono((organization as any).telefono || "")
+      setDireccion((organization as any).address || "")
+      setTelefono((organization as any).phone || "")
       setSlug(organization.slug || "")
       setCustomerId("") // No se puede cambiar el dueño al editar
     } else {
@@ -161,8 +161,8 @@ export function CustomerOrganizationsFormDialog({
         customerId: organization ? undefined : customerId, // Solo enviar customerId al crear
         razonSocial: capitalizeText(razonSocial),
         nit: nit.trim() || undefined,
-        direccion: direccion.trim(),
-        telefono: telefono.trim(),
+        address: direccion.trim(),
+        phone: telefono.trim(),
         slug: slug.trim(),
       }
 

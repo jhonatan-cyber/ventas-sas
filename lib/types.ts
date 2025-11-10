@@ -1,6 +1,5 @@
-// Re-export Prisma types for convenience
-export type {
-  Customer,
+import type {
+  Customer as PrismaCustomer,
   Product,
   Order,
   OrderItem,
@@ -10,6 +9,25 @@ export type {
   OrganizationMember,
   Profile
 } from '@prisma/client'
+
+export type Customer = PrismaCustomer & {
+  primaryOrganization?: Pick<Organization, 'id' | 'name' | 'slug' | 'razonSocial' | 'nit' | 'subscriptionStatus'> | null
+  razonSocial?: string | null
+  slug?: string | null
+  nit?: string | null
+  organizationId?: string | null
+}
+
+export type {
+  Product,
+  Order,
+  OrderItem,
+  SubscriptionPlan,
+  Organization,
+  Role,
+  OrganizationMember,
+  Profile
+}
 
 // Additional types for the application
 export interface DashboardStats {

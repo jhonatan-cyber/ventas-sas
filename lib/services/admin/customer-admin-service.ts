@@ -2,15 +2,14 @@ import { prisma } from '@/lib/prisma'
 import { randomUUID } from 'crypto'
 import { Customer } from '@prisma/client'
 import { PasswordService } from '@/lib/auth/password'
-import { createSlug } from '@/lib/utils/slug'
 
 export interface CreateCustomerData {
   // razonSocial y nit se movieron a Organization
   ci?: string
   nombre?: string
   apellido?: string
-  direccion?: string
-  telefono?: string
+  address?: string
+  phone?: string
   email?: string
   password?: string
 }
@@ -20,13 +19,41 @@ export interface UpdateCustomerData {
   ci?: string
   nombre?: string
   apellido?: string
-  direccion?: string
-  telefono?: string
+  address?: string
+  phone?: string
   email?: string
   isActive?: boolean
 }
 
 export class CustomerAdminService {
+  private static attachPrimaryOrganization<T extends Customer & { organizations?: Array<{ organization: any }> }>(
+    customer: T | null
+  ) {
+    if (!customer) {
+      return null
+    }
+
+    const primaryOrganization = customer.organizations?.[0]?.organization
+
+    return {
+      ...customer,
+      primaryOrganization: primaryOrganization
+        ? {
+            id: primaryOrganization.id,
+            name: primaryOrganization.name,
+            slug: primaryOrganization.slug,
+            razonSocial: primaryOrganization.razonSocial,
+            nit: primaryOrganization.nit,
+            subscriptionStatus: primaryOrganization.subscriptionStatus,
+          }
+        : null,
+      razonSocial: primaryOrganization?.razonSocial ?? null,
+      nit: primaryOrganization?.nit ?? null,
+      slug: primaryOrganization?.slug ?? null,
+      organizationId: primaryOrganization?.id ?? null,
+    }
+  }
+
   // Obtener todos los clientes
   static async getAllCustomers(skip: number = 0, take: number = 10, search?: string, status?: string) {
     const where: any = {
@@ -39,7 +66,7 @@ export class CustomerAdminService {
         { apellido: { contains: search, mode: 'insensitive' } },
         { ci: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { telefono: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -49,24 +76,66 @@ export class CustomerAdminService {
       where.isActive = false
     }
 
-    const [customers, total] = await Promise.all([
+    const [customersRaw, total] = await Promise.all([
       prisma.customer.findMany({
         where,
         skip,
         take,
+        include: {
+          organizations: {
+            where: { isActive: true },
+            include: {
+              organization: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  razonSocial: true,
+                  nit: true,
+                  subscriptionStatus: true,
+                }
+              }
+            },
+            orderBy: { createdAt: 'asc' }
+          }
+        },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.customer.count({ where })
     ])
+
+    const customers = customersRaw.map((customer) =>
+      CustomerAdminService.attachPrimaryOrganization(customer)
+    )
 
     return { customers, total }
   }
 
   // Obtener cliente por ID
   static async getCustomerById(id: string): Promise<Customer | null> {
-    return prisma.customer.findUnique({
-      where: { id }
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        organizations: {
+          where: { isActive: true },
+          include: {
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                razonSocial: true,
+                nit: true,
+                subscriptionStatus: true,
+              }
+            }
+          },
+          orderBy: { createdAt: 'asc' }
+        }
+      }
     })
+
+    return CustomerAdminService.attachPrimaryOrganization(customer)
   }
 
   // Obtener cliente por ID con organizaciones
@@ -91,23 +160,11 @@ export class CustomerAdminService {
             }
           },
           orderBy: { isPrimary: 'desc' }
-        },
-        organization: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            nit: true,
-            razonSocial: true,
-            subscriptionStatus: true,
-            createdAt: true,
-            updatedAt: true,
-          }
         }
       }
     })
 
-    return customer
+    return CustomerAdminService.attachPrimaryOrganization(customer)
   }
 
   // Crear nuevo cliente
@@ -116,33 +173,6 @@ export class CustomerAdminService {
     let hashedPassword = null
     if (data.ci) {
       hashedPassword = await PasswordService.hashPassword(data.ci)
-    }
-
-    // Generar slug desde nombre y apellido (o CI si no hay nombre)
-    let slug: string | undefined = undefined
-    const nameParts = [data.nombre, data.apellido].filter(Boolean).join(' ')
-    const slugSource = nameParts || data.ci || 'cliente'
-    
-    if (slugSource) {
-      const baseSlug = createSlug(slugSource)
-      // Verificar si el slug ya existe
-      const existing = await prisma.customer.findUnique({
-        where: { slug: baseSlug },
-        select: { id: true }
-      })
-      
-      if (existing) {
-        // Si existe, generar uno único agregando número
-        let counter = 1
-        let uniqueSlug = `${baseSlug}-${counter}`
-        while (await prisma.customer.findUnique({ where: { slug: uniqueSlug } })) {
-          counter++
-          uniqueSlug = `${baseSlug}-${counter}`
-        }
-        slug = uniqueSlug
-      } else {
-        slug = baseSlug
-      }
     }
 
     // Crear cliente en una transacción
@@ -156,12 +186,11 @@ export class CustomerAdminService {
         data: {
           id: sharedId,
           userId: 'admin', // TODO: obtener del contexto de autenticación
-          slug,
           ci: data.ci,
           nombre: data.nombre,
           apellido: data.apellido,
-          direccion: data.direccion,
-          telefono: data.telefono,
+          address: data.address,
+          phone: data.phone,
           email: data.email,
           password: hashedPassword,
           isActive: true
@@ -180,52 +209,6 @@ export class CustomerAdminService {
   // Actualizar cliente
   static async updateCustomer(id: string, data: UpdateCustomerData): Promise<Customer> {
     const updateData: any = { ...data }
-    
-    // Si se actualiza el nombre o apellido, actualizar el slug
-    if (data.nombre || data.apellido) {
-      // Obtener el cliente actual para combinar datos
-      const currentCustomer = await prisma.customer.findUnique({
-        where: { id },
-        select: { nombre: true, apellido: true, ci: true }
-      })
-      
-      const nameParts = [
-        data.nombre || currentCustomer?.nombre,
-        data.apellido || currentCustomer?.apellido
-      ].filter(Boolean).join(' ')
-      
-      const slugSource = nameParts || currentCustomer?.ci || 'cliente'
-      
-      if (slugSource) {
-        const baseSlug = createSlug(slugSource)
-        // Verificar si el slug ya existe (excluyendo el cliente actual)
-        const existing = await prisma.customer.findFirst({
-          where: { 
-            slug: baseSlug,
-            NOT: { id }
-          },
-          select: { id: true }
-        })
-        
-        if (existing) {
-          // Si existe, generar uno único agregando número
-          let counter = 1
-          let uniqueSlug = `${baseSlug}-${counter}`
-          while (await prisma.customer.findFirst({ 
-            where: { 
-              slug: uniqueSlug,
-              NOT: { id }
-            } 
-          })) {
-            counter++
-            uniqueSlug = `${baseSlug}-${counter}`
-          }
-          updateData.slug = uniqueSlug
-        } else {
-          updateData.slug = baseSlug
-        }
-      }
-    }
     // Actualizar el cliente
     const result = await prisma.customer.update({
       where: { id },

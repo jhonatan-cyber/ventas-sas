@@ -76,7 +76,7 @@ export default async function SalesPage({
         id: currentUser.id,
         nombre: currentUser.nombre,
         apellido: currentUser.apellido,
-        correo: currentUser.correo,
+        email: currentUser.email,
         sucursalId: currentUser.sucursalId ?? null,
         sucursal: currentUser.sucursal
           ? {

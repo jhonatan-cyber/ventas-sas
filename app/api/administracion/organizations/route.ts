@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que se proporcionen los campos requeridos
-    // Una organización es una empresa con: razonSocial, direccion, telefono, slug, ownerId (customerId)
-    if (!body.razonSocial || !body.direccion || !body.telefono || !body.slug || !body.customerId) {
+    // Una organización es una empresa con: razonSocial, address, phone, slug, ownerId (customerId)
+    if (!body.razonSocial || !body.address || !body.phone || !body.slug || !body.customerId) {
       throw AppError.validation('Razón social, dirección, teléfono, slug y cliente dueño son requeridos')
     }
 
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
     const newOrganization = await OrganizationAdminService.createOrganization({
       razonSocial: body.razonSocial,
       nit: body.nit || undefined,
-      direccion: body.direccion || undefined,
-      telefono: body.telefono || undefined,
+      address: body.address || undefined,
+      phone: body.phone || undefined,
       slug: body.slug,
       ownerId: body.customerId, // El cliente es el dueño (ownerId = customerId)
       customerId: body.customerId, // También se guarda en la relación

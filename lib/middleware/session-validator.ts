@@ -85,7 +85,7 @@ export async function validateSasSession(
   }
 
   // Obtener customerId desde slug
-  const { getOrganizationIdByCustomerSlug } = await import('@/lib/utils/organization')
+  const { getOrganizationIdByCustomerSlug, getCustomerBySlug } = await import('@/lib/utils/organization')
   const organizationId = await getOrganizationIdByCustomerSlug(customerSlug)
   
   if (!organizationId) {
@@ -93,11 +93,7 @@ export async function validateSasSession(
   }
 
   // Obtener customerId
-  const { prisma } = await import('@/lib/prisma')
-  const customer = await prisma.customer.findUnique({
-    where: { slug: customerSlug },
-    select: { id: true }
-  })
+  const customer = await getCustomerBySlug(customerSlug)
 
   if (!customer) {
     return { valid: false }

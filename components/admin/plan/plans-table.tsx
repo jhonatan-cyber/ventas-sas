@@ -162,6 +162,15 @@ export function PlansTable({
                           : "∞"}{" "}
                         productos
                       </div>
+                      <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                        <Building2 className="h-3 w-3 text-gray-400" />
+                        <span>
+                          {plan.maxBranches
+                            ? plan.maxBranches.toLocaleString()
+                            : "∞"}{" "}
+                          sucursales
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </TableCell>

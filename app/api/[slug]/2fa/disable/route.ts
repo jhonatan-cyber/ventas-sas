@@ -66,7 +66,7 @@ export async function POST(
     }
 
     // Verificar contraseña
-    if (!usuario.contraseña) {
+    if (!usuario.password) {
       return NextResponse.json(
         { error: 'No se puede verificar la contraseña' },
         { status: 400 }
@@ -75,7 +75,7 @@ export async function POST(
 
     const isValidPassword = await PasswordService.verifyPassword(
       password,
-      usuario.contraseña
+      usuario.password
     )
 
     if (!isValidPassword) {
@@ -85,7 +85,7 @@ export async function POST(
           customerId: usuario.customerId,
           actionType: 'TWO_FACTOR_DISABLE_FAILED',
           details: {
-            identifier: usuario.correo || '',
+            identifier: usuario.email || '',
             reason: 'Contraseña incorrecta',
             slug,
           },
@@ -123,7 +123,7 @@ export async function POST(
         customerId: usuario.customerId,
         actionType: 'TWO_FACTOR_DISABLED',
         details: {
-          identifier: usuario.correo || '',
+          identifier: usuario.email || '',
           slug,
         },
       },

@@ -17,7 +17,7 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
   let salesUser = await prisma.salesUser.findFirst({
     where: {
       organizationId,
-      email: sasUser.correo || undefined,
+      email: sasUser.email || undefined,
     },
   })
 
@@ -25,9 +25,9 @@ async function ensureSalesUser(organizationId: string, sasUser: any) {
     salesUser = await prisma.salesUser.create({
       data: {
         organizationId,
-        email: sasUser.correo || `${(sasUser.nombre ?? 'user').toLowerCase()}.${(sasUser.apellido ?? 'ventas').toLowerCase()}@ventas.local`,
-        password: sasUser.contraseña || 'temp',
-        fullName: `${sasUser.nombre ?? ''} ${sasUser.apellido ?? ''}`.trim() || sasUser.correo || 'Usuario Ventas',
+        email: sasUser.email || `${(sasUser.nombre ?? 'user').toLowerCase()}.${(sasUser.apellido ?? 'ventas').toLowerCase()}@ventas.local`,
+        password: sasUser.password || 'temp',
+        fullName: `${sasUser.nombre ?? ''} ${sasUser.apellido ?? ''}`.trim() || sasUser.email || 'Usuario Ventas',
         isActive: sasUser.isActive ?? true,
       },
     })

@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Determinar el email y contraseña
-    const email = usuarioSas?.correo || customer.email || ''
+    const email = usuarioSas?.email || customer.email || ''
     const password = customer.ci || ''
 
     if (!email) {

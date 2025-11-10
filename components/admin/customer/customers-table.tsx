@@ -124,20 +124,20 @@ export function CustomersTable({ customers, isLoading, onViewDetails, onEditClic
                       )}
                     </TableCell>
                     <TableCell>
-                      {customer.direccion ? (
+                      {customer.address ? (
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">{customer.direccion}</span>
+                          <span className="text-sm text-gray-900 dark:text-white">{customer.address}</span>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      {customer.telefono ? (
+                      {customer.phone ? (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">{customer.telefono}</span>
+                          <span className="text-sm text-gray-900 dark:text-white">{customer.phone}</span>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">-</span>

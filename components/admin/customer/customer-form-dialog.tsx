@@ -49,8 +49,8 @@ export function CustomerFormDialog({
       setCi(customer.ci || "");
       setNombre(customer.nombre || "");
       setApellido(customer.apellido || "");
-      setDireccion(customer.direccion || "");
-      setTelefono(customer.telefono || "");
+      setDireccion(customer.address || "");
+      setTelefono(customer.phone || "");
       setEmail(customer.email || "");
     } else {
       setCi("");
@@ -80,8 +80,8 @@ export function CustomerFormDialog({
       ci,
       nombre,
       apellido,
-      direccion,
-      telefono,
+      address: direccion,
+      phone: telefono,
       email,
     };
 

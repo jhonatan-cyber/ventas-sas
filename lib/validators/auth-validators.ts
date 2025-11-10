@@ -29,18 +29,18 @@ export const sasLoginSchema = z.object({
       (val) => !val || val.trim().length > 0,
       'El CI no puede estar vacío'
     ),
-  correo: z
+  email: z
     .string()
     .email('El correo electrónico no es válido')
     .toLowerCase()
     .trim()
     .optional(),
-  contraseña: z
+  password: z
     .string()
     .min(1, 'La contraseña es requerida')
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
 }).refine(
-  (data) => data.ci || data.correo,
+  (data) => data.ci || data.email,
   {
     message: 'CI o correo electrónico es requerido',
     path: ['ci'] // Error en el campo ci

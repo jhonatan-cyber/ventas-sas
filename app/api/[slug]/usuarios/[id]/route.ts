@@ -19,7 +19,7 @@ export async function GET(
     }
 
     // No retornar la contraseña
-    const { contraseña, ...usuarioSinPassword } = usuario
+    const { password, ...usuarioSinPassword } = usuario
     return NextResponse.json(usuarioSinPassword)
   } catch (error) {
     const { id } = await params
@@ -43,7 +43,7 @@ export async function PUT(
     }
     
     const { slug } = await params
-    const { ci, nombre, apellido, direccion, telefono, correo, contraseña, rolId, foto, sucursalId, isActive } = body
+    const { ci, nombre, apellido, address, phone, email, password, rolId, foto, sucursalId, isActive } = body
 
     // Obtener usuario actual y usuario objetivo para auditoría
     const currentUser = await getCurrentSasUser(request, slug)
@@ -53,10 +53,10 @@ export async function PUT(
       ci,
       nombre,
       apellido,
-      direccion,
-      telefono,
-      correo,
-      contraseña,
+      address,
+      phone,
+      email,
+      password,
       rolId,
       foto,
       sucursalId,
@@ -72,7 +72,7 @@ export async function PUT(
       if (isActive !== undefined && targetUser.isActive !== isActive) {
         changedFields.push('isActive')
       }
-      if (contraseña !== undefined && contraseña.trim() !== '') {
+      if (password !== undefined && password.trim() !== '') {
         changedFields.push('password')
       }
 
@@ -89,7 +89,7 @@ export async function PUT(
               oldRolId: targetUser.rolId,
               newRolId: rolId,
               targetUserCi: targetUser.ci,
-              targetUserEmail: targetUser.correo,
+              targetUserEmail: targetUser.email,
             },
           },
           request
@@ -108,7 +108,7 @@ export async function PUT(
             details: {
               changedFields,
               targetUserCi: targetUser.ci,
-              targetUserEmail: targetUser.correo,
+              targetUserEmail: targetUser.email,
             },
           },
           request
@@ -126,7 +126,7 @@ export async function PUT(
             entityId: id,
             details: {
               targetUserCi: targetUser.ci,
-              targetUserEmail: targetUser.correo,
+              targetUserEmail: targetUser.email,
             },
           },
           request
@@ -135,7 +135,7 @@ export async function PUT(
     }
 
     // No retornar la contraseña
-    const { contraseña: _, ...usuarioSinPassword } = usuario
+    const { password: _, ...usuarioSinPassword } = usuario
     return NextResponse.json(usuarioSinPassword)
   } catch (error) {
     const { id } = await params
@@ -168,7 +168,7 @@ export async function DELETE(
           entityId: id,
           details: {
             deletedUserCi: targetUser.ci,
-            deletedUserEmail: targetUser.correo,
+            deletedUserEmail: targetUser.email,
             deletedUserName: `${targetUser.nombre} ${targetUser.apellido}`,
           },
         },

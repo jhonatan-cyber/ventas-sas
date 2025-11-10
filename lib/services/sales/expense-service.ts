@@ -178,10 +178,10 @@ export class ExpenseService {
       where: { id: data.userId },
       select: {
         id: true,
-        correo: true,
+        email: true,
         nombre: true,
         apellido: true,
-        contraseña: true,
+        password: true,
         isActive: true,
         sucursalId: true,
       },
@@ -195,7 +195,7 @@ export class ExpenseService {
       let salesUser = await prisma.salesUser.findFirst({
         where: {
           organizationId,
-          email: usuarioSas.correo || `${usuarioSas.nombre.toLowerCase()}.${usuarioSas.apellido.toLowerCase()}@temp.com`
+          email: usuarioSas.email || `${usuarioSas.nombre.toLowerCase()}.${usuarioSas.apellido.toLowerCase()}@temp.com`
         }
       })
 
@@ -204,8 +204,8 @@ export class ExpenseService {
         salesUser = await prisma.salesUser.create({
           data: {
             organizationId,
-            email: usuarioSas.correo || `${usuarioSas.nombre.toLowerCase()}.${usuarioSas.apellido.toLowerCase()}@temp.com`,
-            password: usuarioSas.contraseña || 'temp',
+            email: usuarioSas.email || `${usuarioSas.nombre.toLowerCase()}.${usuarioSas.apellido.toLowerCase()}@temp.com`,
+            password: usuarioSas.password || 'temp',
             fullName: `${usuarioSas.nombre} ${usuarioSas.apellido}`,
             isActive: usuarioSas.isActive
           }

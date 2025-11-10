@@ -143,7 +143,7 @@ export function CustomersCards({ customers, onEdit, onViewDetails, onToggleStatu
                 </div>
 
                 {/* Información detallada - CI, Dirección y Teléfono */}
-                {(customer.ci || customer.direccion || customer.telefono) && (
+                {(customer.ci || customer.address || customer.phone) && (
                   <div className="pt-2 border-t border-gray-100 dark:border-[#2a2a2a] space-y-1.5">
                     {customer.ci && (
                       <div className="flex items-center gap-1.5">
@@ -151,16 +151,16 @@ export function CustomersCards({ customers, onEdit, onViewDetails, onToggleStatu
                         <span className="text-[10px] text-gray-700 dark:text-gray-300 font-mono truncate">CI: {customer.ci}</span>
                       </div>
                     )}
-                    {customer.telefono && (
+                    {customer.phone && (
                       <div className="flex items-center gap-1.5">
                         <Phone className="h-3 w-3 text-gray-400 shrink-0" />
-                        <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">{customer.telefono}</span>
+                        <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">{customer.phone}</span>
                       </div>
                     )}
-                    {customer.direccion && (
+                    {customer.address && (
                       <div className="flex items-start gap-1.5">
                         <MapPin className="h-3 w-3 text-gray-400 shrink-0 mt-0.5" />
-                        <span className="text-[10px] text-gray-700 dark:text-gray-300 line-clamp-2">{customer.direccion}</span>
+                        <span className="text-[10px] text-gray-700 dark:text-gray-300 line-clamp-2">{customer.address}</span>
                       </div>
                     )}
                   </div>

@@ -75,9 +75,9 @@ export function UsuarioSasFormDialog({
       setCi(usuario.ci || "");
       setNombre(usuario.nombre || "");
       setApellido(usuario.apellido || "");
-      setDireccion(usuario.direccion || "");
-      setTelefono(usuario.telefono || "");
-      setCorreo(usuario.correo || "");
+      setDireccion(usuario.address || "");
+      setTelefono(usuario.phone || "");
+      setCorreo(usuario.email || "");
       setRolId(usuario.rolId || "");
       setFoto(usuario.foto || "");
       setFotoPreview(usuario.foto || "");
@@ -157,7 +157,7 @@ export function UsuarioSasFormDialog({
 
       // Teléfono - solo si tiene valor
       if (telefono && telefono.trim()) {
-        data.telefono = telefono.trim();
+        data.phone = telefono.trim();
       }
 
       // Rol - solo si está seleccionado
@@ -169,11 +169,11 @@ export function UsuarioSasFormDialog({
       if (correo && correo.trim()) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (emailRegex.test(correo.trim())) {
-          data.correo = correo.trim().toLowerCase();
+          data.email = correo.trim().toLowerCase();
         }
       }
       if (direccion && direccion.trim()) {
-        data.direccion = direccion.trim();
+        data.address = direccion.trim();
       }
       
       // Foto - enviar si es una URL válida o un data URL (base64)

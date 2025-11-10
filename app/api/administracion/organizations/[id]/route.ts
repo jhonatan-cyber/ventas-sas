@@ -4,6 +4,7 @@ import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { AppError } from '@/lib/errors/app-error'
+import { OrganizationSubscriptionStatus } from '@prisma/client'
 
 // GET - Obtener organización por ID
 export async function GET(
@@ -63,14 +64,22 @@ export async function PUT(
       throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
+    const normalizeSubscriptionStatus = (value: unknown): OrganizationSubscriptionStatus | undefined => {
+      if (typeof value !== 'string') return undefined
+      const trimmed = value.trim()
+      return (Object.values(OrganizationSubscriptionStatus) as string[]).includes(trimmed)
+        ? (trimmed as OrganizationSubscriptionStatus)
+        : undefined
+    }
+
     const updateData = {
       razonSocial: body.razonSocial,
       nit: body.nit,
-      direccion: body.direccion,
-      telefono: body.telefono,
+      address: body.address,
+      phone: body.phone,
       slug: body.slug,
       subscriptionPlanId: body.subscriptionPlanId,
-      subscriptionStatus: body.subscriptionStatus,
+      subscriptionStatus: normalizeSubscriptionStatus(body.subscriptionStatus),
       subscriptionStartDate: body.subscriptionStartDate ? new Date(body.subscriptionStartDate) : undefined,
       subscriptionEndDate: body.subscriptionEndDate ? new Date(body.subscriptionEndDate) : undefined,
       settings: body.settings,
@@ -119,7 +128,9 @@ export async function PATCH(
     // Actualizar el subscriptionStatus basado en isActive
     // Si isActive es false, establecer subscriptionStatus como 'suspended' o 'inactive'
     // Si isActive es true, establecer como 'active' o 'trial'
-    const subscriptionStatus = isActive ? 'active' : 'suspended'
+    const subscriptionStatus = isActive
+      ? OrganizationSubscriptionStatus.active
+      : OrganizationSubscriptionStatus.suspended
     
     const updatedOrganization = await OrganizationAdminService.updateOrganization(id, {
       subscriptionStatus,

@@ -129,7 +129,7 @@ export async function POST(
           organizationId: usuario.organizationId,
           actionType: 'TWO_FACTOR_VERIFY_FAILED',
           details: {
-            identifier: usuario.ci || usuario.correo,
+            identifier: usuario.ci || usuario.email,
             reason: 'Código 2FA inválido durante login',
             slug,
           },
@@ -158,7 +158,7 @@ export async function POST(
           organizationId: usuario.organizationId,
           actionType: 'TWO_FACTOR_BACKUP_CODE_USED',
           details: {
-            identifier: usuario.ci || usuario.correo,
+            identifier: usuario.ci || usuario.email,
             note: 'Se usó un código de respaldo durante login',
             slug,
           },
@@ -193,7 +193,7 @@ export async function POST(
     // Generar token JWT final
     const finalToken = await SasJWTService.generateToken({
       userId: usuario.id,
-      correo: usuario.correo || undefined,
+      email: usuario.email || undefined,
       organizationId: usuario.organizationId,
       sessionId: sessionToken,
     })
@@ -204,9 +204,9 @@ export async function POST(
       ci: usuario.ci,
       nombre: usuario.nombre,
       apellido: usuario.apellido,
-      correo: usuario.correo,
-      direccion: usuario.direccion,
-      telefono: usuario.telefono,
+      email: usuario.email,
+      address: usuario.address,
+      phone: usuario.phone,
       foto: usuario.foto,
       rol: usuario.rol,
       sucursal: usuario.sucursal,
@@ -219,7 +219,7 @@ export async function POST(
         userId: usuario.id,
         organizationId: usuario.organizationId,
         method: usuario.ci ? 'CI' : 'email',
-        identifier: usuario.ci || usuario.correo || '',
+        identifier: usuario.ci || usuario.email || '',
         success: true,
       },
       request
@@ -244,7 +244,7 @@ export async function POST(
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       fullName: `${usuario.nombre} ${usuario.apellido}`,
-      correo: usuario.correo,
+      correo: usuario.email,
       rol: usuario.rol?.nombre || null,
       organizationSlug: slug,
       organizationId: usuario.organizationId,

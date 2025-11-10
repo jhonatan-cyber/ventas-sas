@@ -80,10 +80,10 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {fullName}
                           </span>
-                          {usuario.correo && (
+                          {usuario.email && (
                             <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                               <Mail className="h-3 w-3" />
-                              <span>{usuario.correo}</span>
+                              <span>{usuario.email}</span>
                             </div>
                           )}
                         </div>
@@ -101,19 +101,19 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        {usuario.telefono && (
+                        {usuario.phone && (
                           <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
                             <Phone className="h-3 w-3 text-gray-400" />
-                            <span>{usuario.telefono}</span>
+                            <span>{usuario.phone}</span>
                           </div>
                         )}
-                        {usuario.direccion && (
+                        {usuario.address && (
                           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                             <MapPin className="h-3 w-3" />
-                            <span>{usuario.direccion}</span>
+                            <span>{usuario.address}</span>
                           </div>
                         )}
-                        {!usuario.telefono && !usuario.direccion && (
+                        {!usuario.phone && !usuario.address && (
                           <span className="text-sm text-gray-400">-</span>
                         )}
                       </div>

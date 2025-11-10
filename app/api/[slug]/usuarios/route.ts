@@ -88,10 +88,10 @@ export async function POST(
       ci: validatedData.ci || undefined,
       nombre: validatedData.nombre,
       apellido: validatedData.apellido,
-      direccion: validatedData.direccion || undefined,
-      telefono: validatedData.telefono || undefined,
-      correo: validatedData.correo || undefined,
-      contraseña: validatedData.contraseña || undefined,
+      address: validatedData.address || undefined,
+      phone: validatedData.phone || undefined,
+      email: validatedData.email || undefined,
+      password: validatedData.password || undefined,
       rolId: validatedData.rolId || undefined,
       foto: validatedData.foto || undefined,
       sucursalId: validatedData.sucursalId || undefined
@@ -108,7 +108,7 @@ export async function POST(
           entityId: newUsuario.id,
           details: {
             newUserCi: newUsuario.ci,
-            newUserEmail: newUsuario.correo,
+            newUserEmail: newUsuario.email,
             rolId: validatedData.rolId,
           },
         },

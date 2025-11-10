@@ -57,7 +57,7 @@ export async function POST(
     }
 
     // Generar setup de 2FA
-    const email = usuario.correo || `${usuario.nombre}.${usuario.apellido}@${slug}.local`
+    const email = usuario.email || `${usuario.nombre}.${usuario.apellido}@${slug}.local`
     const setup = await TwoFactorService.setupTwoFactor(
       email,
       `Sistema SAS - ${slug}`
@@ -85,7 +85,7 @@ export async function POST(
         customerId: usuario.customerId,
         actionType: 'TWO_FACTOR_SETUP_INITIATED',
         details: {
-          identifier: usuario.correo || usuario.nombre,
+          identifier: usuario.email || usuario.nombre,
           slug,
         },
       },

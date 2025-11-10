@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma'
 import { BillingService } from '@/lib/services/admin/billing-service'
+import { SubscriptionBillingPeriod, SubscriptionStatus } from '@prisma/client'
 
 export interface CreateSubscriptionData {
   organizationId?: string
   planId: string
-  billingPeriod: "monthly" | "yearly"
+  billingPeriod: SubscriptionBillingPeriod
   startDate?: Date
   endDate?: Date
   autoRenew?: boolean
@@ -12,8 +13,8 @@ export interface CreateSubscriptionData {
 
 export interface UpdateSubscriptionData {
   planId?: string
-  status?: "active" | "cancelled" | "expired" | "trial"
-  billingPeriod?: "monthly" | "yearly"
+  status?: SubscriptionStatus
+  billingPeriod?: SubscriptionBillingPeriod
   startDate?: Date
   endDate?: Date
   autoRenew?: boolean
@@ -21,7 +22,7 @@ export interface UpdateSubscriptionData {
 
 export class SubscriptionManagementService {
   // Obtener todas las suscripciones
-  static async getAllSubscriptions(skip: number = 0, take: number = 10, search?: string, status?: string) {
+  static async getAllSubscriptions(skip: number = 0, take: number = 10, search?: string, status?: SubscriptionStatus) {
     const where: any = {}
 
     if (search) {
@@ -55,8 +56,8 @@ export class SubscriptionManagementService {
               slug: true,
               razonSocial: true,
               nit: true,
-              direccion: true,
-              telefono: true,
+              address: true,
+              phone: true,
               ownerId: true,
               customerOrganizations: {
                 where: { isActive: true },
@@ -120,7 +121,7 @@ export class SubscriptionManagementService {
     if (!endDate) {
       const start = data.startDate || new Date()
       const end = new Date(start)
-      if (data.billingPeriod === "yearly") {
+      if (data.billingPeriod === SubscriptionBillingPeriod.yearly) {
         end.setFullYear(end.getFullYear() + 1)
       } else {
         end.setMonth(end.getMonth() + 1)
@@ -171,7 +172,7 @@ export class SubscriptionManagementService {
       data: {
         organizationId: data.organizationId,
         planId: data.planId,
-        status: "active",
+        status: SubscriptionStatus.active,
         billingPeriod: data.billingPeriod,
         startDate: data.startDate || new Date(),
         endDate,
@@ -204,11 +205,11 @@ export class SubscriptionManagementService {
       
       // El email es requerido, usar el del dueño o un valor por defecto
       const billingEmail = owner?.email || customer?.email || `contacto@${organization.slug || 'empresa'}.com`
-      const billingAddress = organization.direccion || owner?.direccion || customer?.direccion || null
+      const billingAddress = organization.address || owner?.address || customer?.address || null
       const billingTaxId = organization.nit || owner?.nit || customer?.nit || null
 
       // Calcular el precio según el período de facturación
-      const price = data.billingPeriod === "yearly" 
+      const price = data.billingPeriod === SubscriptionBillingPeriod.yearly 
         ? (plan.priceYearly ? Number(plan.priceYearly) : 0)
         : (plan.priceMonthly ? Number(plan.priceMonthly) : 0)
 
@@ -229,8 +230,8 @@ export class SubscriptionManagementService {
         discount: 0,
         currency: 'USD',
         dueDate,
-        description: `Factura de suscripción - Plan: ${plan.name} (${data.billingPeriod === 'yearly' ? 'Anual' : 'Mensual'})`,
-        notes: `Suscripción creada el ${new Date().toLocaleDateString('es-ES')}. Período: ${data.billingPeriod === 'yearly' ? 'Anual' : 'Mensual'}`,
+        description: `Factura de suscripción - Plan: ${plan.name} (${data.billingPeriod === SubscriptionBillingPeriod.yearly ? 'Anual' : 'Mensual'})`,
+        notes: `Suscripción creada el ${new Date().toLocaleDateString('es-ES')}. Período: ${data.billingPeriod === SubscriptionBillingPeriod.yearly ? 'Anual' : 'Mensual'}`,
         metadata: {
           subscriptionId: subscription.id,
           billingPeriod: data.billingPeriod,

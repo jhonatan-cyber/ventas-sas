@@ -82,8 +82,8 @@ export async function PUT(
       ci: validatedData.ci || undefined,
       nombre: validatedData.nombre || undefined,
       apellido: validatedData.apellido || undefined,
-      direccion: validatedData.direccion || undefined,
-      telefono: validatedData.telefono || undefined,
+      address: validatedData.address || undefined,
+      phone: validatedData.phone || undefined,
       email: validatedData.email || undefined,
       isActive: body.isActive !== undefined ? body.isActive : undefined
     })

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Package, DollarSign, Building2, Settings, CheckCircle, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
+import { Package, DollarSign, Building2, Users, CheckCircle, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
 import { SerializedSubscriptionPlanWithStats } from "./types"
 import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
@@ -166,35 +166,29 @@ export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDel
                     </div>
                   )}
 
-                  {/* Límites */}
-                  <div className="flex items-center gap-1.5">
-                    <Settings className="h-3 w-3 text-gray-400 shrink-0" />
-                    <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                      {plan.maxUsers ? plan.maxUsers.toLocaleString() : '∞'} users
-                    </span>
-                  </div>
+              {/* Límites */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-3 w-3 text-gray-400 shrink-0" />
+                  <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
+                    {plan.maxUsers ? plan.maxUsers.toLocaleString() : '∞'} usuarios
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Package className="h-3 w-3 text-gray-400 shrink-0" />
+                  <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
+                    {plan.maxProducts ? plan.maxProducts.toLocaleString() : '∞'} productos
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Building2 className="h-3 w-3 text-gray-400 shrink-0" />
+                  <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
+                    {plan.maxBranches ? plan.maxBranches.toLocaleString() : '∞'} sucursales
+                  </span>
                 </div>
               </div>
-
-              {/* Productos debajo si hay precio anual */}
-              {(plan.hasYearly && plan.priceYearly) && plan.maxProducts && (
-                <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100 dark:border-[#2a2a2a]">
-                  <Settings className="h-3 w-3 text-gray-400 shrink-0" />
-                  <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                    {plan.maxProducts ? plan.maxProducts.toLocaleString() : '∞'} productos
-                  </span>
-                </div>
-              )}
-
-              {/* Productos si no hay precio anual */}
-              {(!plan.hasYearly || !plan.priceYearly) && plan.maxProducts && (
-                <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100 dark:border-[#2a2a2a]">
-                  <Settings className="h-3 w-3 text-gray-400 shrink-0" />
-                  <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                    {plan.maxProducts ? plan.maxProducts.toLocaleString() : '∞'} productos
-                  </span>
-                </div>
-              )}
+            </div>
+          </div>
             </div>
           </CardContent>
         </Card>

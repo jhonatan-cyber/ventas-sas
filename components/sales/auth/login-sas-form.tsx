@@ -19,10 +19,10 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [loginType, setLoginType] = useState<"ci" | "correo">("ci")
+  const [loginType, setLoginType] = useState<"ci" | "email">("ci")
   const [ci, setCi] = useState("")
-  const [correo, setCorreo] = useState("")
-  const [contraseña, setContraseña] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [requires2FA, setRequires2FA] = useState(false)
   const [tempToken, setTempToken] = useState<string | null>(null)
 
@@ -33,7 +33,7 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
 
     try {
       const credentials: any = {
-        contraseña
+        password
       }
 
       if (loginType === "ci") {
@@ -44,12 +44,12 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
         }
         credentials.ci = ci.trim()
       } else {
-        if (!correo.trim()) {
+        if (!email.trim()) {
           setError("El correo electrónico es requerido")
           setIsLoading(false)
           return
         }
-        credentials.correo = correo.trim()
+        credentials.email = email.trim()
       }
 
       const response = await fetch(`/api/${customerSlug}/login`, {
@@ -162,9 +162,9 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => setLoginType("correo")}
+            onClick={() => setLoginType("email")}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                loginType === "correo"
+                loginType === "email"
                   ? "bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
@@ -200,8 +200,8 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
                 <Input
                   id="correo"
                   type="email"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@ejemplo.com"
                   className="pl-10"
                   required
@@ -213,14 +213,14 @@ export function LoginSasForm({ customerSlug }: LoginSasFormProps) {
 
           {/* Campo Contraseña */}
           <div className="space-y-2">
-            <Label htmlFor="contraseña">Contraseña</Label>
+          <Label htmlFor="contraseña">Contraseña</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 id="contraseña"
                 type="password"
-                value={contraseña}
-                onChange={(e) => setContraseña(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa tu contraseña"
                 className="pl-10"
                 required

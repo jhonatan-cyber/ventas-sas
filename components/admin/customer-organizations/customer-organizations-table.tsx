@@ -29,8 +29,8 @@ interface Customer {
       name: string
       razonSocial?: string
       nit?: string
-      direccion?: string
-      telefono?: string
+      address?: string
+      phone?: string
       slug: string
       subscriptionStatus?: string
       logoUrl?: string
@@ -122,8 +122,8 @@ export function CustomerOrganizationsTable({
       name: string
       razonSocial?: string
       nit?: string
-      direccion?: string
-      telefono?: string
+      address?: string
+      phone?: string
       slug: string
       subscriptionStatus?: string
       logoUrl?: string
@@ -141,8 +141,8 @@ export function CustomerOrganizationsTable({
         name: string
         razonSocial?: string
         nit?: string
-        direccion?: string
-        telefono?: string
+        address?: string
+        phone?: string
         slug: string
         subscriptionStatus?: string
         logoUrl?: string
@@ -256,7 +256,7 @@ export function CustomerOrganizationsTable({
                     <div className="flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {row.organization.direccion || "-"}
+                        {row.organization.address || "-"}
                       </span>
                     </div>
                   </TableCell>
@@ -264,7 +264,7 @@ export function CustomerOrganizationsTable({
                     <div className="flex items-center gap-2">
                       <Phone className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {row.organization.telefono || "-"}
+                        {row.organization.phone || "-"}
                       </span>
                     </div>
                   </TableCell>

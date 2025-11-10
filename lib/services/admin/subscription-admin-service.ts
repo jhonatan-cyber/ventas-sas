@@ -18,7 +18,7 @@ export interface CreateSubscriptionPlanData {
   modules?: string[]
   maxUsers?: number
   maxProducts?: number
-  maxOrders?: number
+  maxBranches?: number
   isActive?: boolean
 }
 
@@ -33,7 +33,7 @@ export interface UpdateSubscriptionPlanData {
   modules?: string[]
   maxUsers?: number
   maxProducts?: number
-  maxOrders?: number
+  maxBranches?: number
   isActive?: boolean
 }
 
@@ -80,7 +80,7 @@ export class SubscriptionAdminService {
         modules: data.modules,
         maxUsers: data.maxUsers,
         maxProducts: data.maxProducts,
-        maxOrders: data.maxOrders,
+        maxBranches: data.maxBranches,
         isActive: data.isActive !== undefined ? data.isActive : true
       }
     })
@@ -196,7 +196,7 @@ export class SubscriptionAdminService {
         features: originalPlan.features as string[],
         maxUsers: originalPlan.maxUsers,
         maxProducts: originalPlan.maxProducts,
-        maxOrders: originalPlan.maxOrders,
+        maxBranches: originalPlan.maxBranches,
         isActive: false // Los planes duplicados empiezan inactivos
       }
     })
@@ -284,7 +284,7 @@ export class SubscriptionAdminService {
           select: {
             profiles: true,
             products: true,
-            orders: true
+            branches: true
           }
         }
       }
@@ -304,8 +304,8 @@ export class SubscriptionAdminService {
       violations.push(`Límite de productos excedido: ${organization._count.products}/${plan.maxProducts}`)
     }
 
-    if (plan.maxOrders && organization._count.orders > plan.maxOrders) {
-      violations.push(`Límite de órdenes excedido: ${organization._count.orders}/${plan.maxOrders}`)
+    if (plan.maxBranches && organization._count.branches > plan.maxBranches) {
+      violations.push(`Límite de sucursales excedido: ${organization._count.branches}/${plan.maxBranches}`)
     }
 
     return {

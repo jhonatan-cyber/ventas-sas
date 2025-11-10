@@ -43,7 +43,7 @@ export async function GET(
         apellido: true,
         ci: true,
         correo: true,
-        telefono: true,
+        phone: true,
         isActive: true,
         foto: true,
         rol: {

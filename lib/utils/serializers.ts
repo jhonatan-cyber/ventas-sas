@@ -176,12 +176,13 @@ export function serializeUsuarioSas(usuario: any) {
     customer: usuario.customer
       ? {
           id: usuario.customer.id,
-          razonSocial: usuario.customer.razonSocial,
-          slug: usuario.customer.slug,
+          razonSocial: usuario.customer.razonSocial ?? usuario.organization?.razonSocial ?? null,
+          slug: usuario.customer.slug ?? usuario.organization?.slug ?? null,
+          organizationId: usuario.customer.organizationId ?? usuario.organizationId ?? null,
         }
       : null,
     // Nunca serializar contraseña
-    contraseña: undefined,
+    password: undefined,
   }
 }
 
@@ -200,7 +201,7 @@ export function serializeOrder(order: any) {
           name: order.customer.name,
           apellido: order.customer.apellido,
           email: order.customer.email,
-          phone: order.customer.telefono,
+          phone: order.customer.phone,
         }
       : null,
     orderItems: order.orderItems?.map((item: any) => ({

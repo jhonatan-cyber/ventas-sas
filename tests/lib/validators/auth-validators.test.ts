@@ -83,22 +83,22 @@ describe('auth-validators', () => {
 
     it('debería validar login con correo', () => {
       const validData = {
-        correo: 'user@example.com',
-        contraseña: 'Password123',
+        email: 'user@example.com',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(validData)
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.correo).toBe('user@example.com')
+        expect(result.data.email).toBe('user@example.com')
       }
     })
 
     it('debería validar login con CI y correo', () => {
       const validData = {
         ci: '12345678',
-        correo: 'user@example.com',
-        contraseña: 'Password123',
+        email: 'user@example.com',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(validData)
@@ -107,7 +107,7 @@ describe('auth-validators', () => {
 
     it('debería rechazar cuando no hay CI ni correo', () => {
       const data = {
-        contraseña: 'Password123',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(data)
@@ -116,8 +116,8 @@ describe('auth-validators', () => {
 
     it('debería rechazar correo inválido', () => {
       const data = {
-        correo: 'invalid-email',
-        contraseña: 'Password123',
+        email: 'invalid-email',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(data)
@@ -127,7 +127,7 @@ describe('auth-validators', () => {
     it('debería rechazar CI vacío', () => {
       const data = {
         ci: '   ',
-        contraseña: 'Password123',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(data)
@@ -137,7 +137,7 @@ describe('auth-validators', () => {
     it('debería rechazar contraseña menor a 6 caracteres', () => {
       const data = {
         ci: '12345678',
-        contraseña: 'Pass1',
+        password: 'Pass1',
       }
 
       const result = sasLoginSchema.safeParse(data)
@@ -146,14 +146,14 @@ describe('auth-validators', () => {
 
     it('debería normalizar correo a minúsculas', () => {
       const data = {
-        correo: 'USER@EXAMPLE.COM',
-        contraseña: 'Password123',
+        email: 'USER@EXAMPLE.COM',
+        password: 'Password123',
       }
 
       const result = sasLoginSchema.safeParse(data)
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.correo).toBe('user@example.com')
+        expect(result.data.email).toBe('user@example.com')
       }
     })
   })

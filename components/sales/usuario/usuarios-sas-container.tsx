@@ -35,8 +35,8 @@ export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onTogg
         usuario.nombre?.toLowerCase().includes(searchLower) ||
         usuario.apellido?.toLowerCase().includes(searchLower) ||
         usuario.ci?.toLowerCase().includes(searchLower) ||
-        usuario.correo?.toLowerCase().includes(searchLower) ||
-        usuario.telefono?.toLowerCase().includes(searchLower)
+        usuario.email?.toLowerCase().includes(searchLower) ||
+        usuario.phone?.toLowerCase().includes(searchLower)
       
       if (!matchesSearch) return false
     }

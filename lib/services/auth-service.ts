@@ -182,7 +182,7 @@ export class AuthService {
     modules?: any
     maxUsers?: number
     maxProducts?: number
-    maxOrders?: number
+    maxBranches?: number
     isActive?: boolean
   }) {
     return await prisma.subscriptionPlan.create({
@@ -197,7 +197,7 @@ export class AuthService {
         modules: data.modules,
         maxUsers: data.maxUsers,
         maxProducts: data.maxProducts,
-        maxOrders: data.maxOrders,
+        maxBranches: data.maxBranches,
         isActive: data.isActive,
       }
     })
