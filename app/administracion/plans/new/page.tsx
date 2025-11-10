@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { redirect } from "next/navigation"
+
+import { PlanForm } from "@/components/admin/plan/plan-form"
 import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { AuthService } from "@/lib/services/auth-service"
-import { PlanForm } from "@/components/admin/plan-form"
 
 export default async function NewPlanPage() {
   // Validación de sesión Admin en el servidor
@@ -12,7 +13,7 @@ export default async function NewPlanPage() {
   if (!token) {
     redirect('/administracion/login')
   }
-  const payload = await AdminJWTService.verifyToken(token!)
+  const payload = await AdminJWTService.verifyToken(token)
   if (!payload) {
     redirect('/administracion/login')
   }

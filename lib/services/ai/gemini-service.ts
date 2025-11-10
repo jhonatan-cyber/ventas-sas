@@ -80,6 +80,8 @@ Genera solo la descripción, sin títulos ni encabezados:`;
             contents: prompt,
           });
 
+
+          
           const description = response.text?.trim() || "";
           if (description) {
             return description;
