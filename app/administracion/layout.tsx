@@ -1,6 +1,7 @@
+import { Metadata, Viewport } from "next"
+
 import { ThemeProvider } from "@/components/theme-provider"
 import { PermissionsProvider } from "@/contexts/permissions-context"
-import { Metadata, Viewport } from "next"
 
 export const metadata: Metadata = {
   applicationName: "Admin SAS",

@@ -1,12 +1,14 @@
-import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+
+import type { Metadata, Viewport } from 'next'
+
 import './globals.css'
-import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/toaster'
-import { Toaster as SonnerToaster } from '@/components/ui/sonner'
-import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
 import { Analytics } from '@/components/landing/analytics'
 import { ChatWidget } from '@/components/landing/chat-widget'
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster as SonnerToaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 

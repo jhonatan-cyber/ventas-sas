@@ -1,9 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Plus, Building2, Mail, Trash2, Edit, Power, PowerOff } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
-import { Plus, Building2, Mail, Trash2, User, Edit, Power, PowerOff } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
@@ -36,8 +36,8 @@ interface Customer {
 
 interface CustomerOrganizationsCardsProps {
   customers: Customer[]
-  onAddOrganization: (customer: Customer) => void
-  onRemoveOrganization: (customerId: string, organizationId: string) => void
+  onAddOrganization?: (customer: Customer) => void
+  onRemoveOrganization?: (customerId: string, organizationId: string) => void
   onEditOrganization?: (organizationId: string) => void
   onToggleOrganizationStatus?: (organizationId: string, isActive: boolean) => void
   onDeleteOrganization?: (organizationId: string, organizationName: string) => void
@@ -89,8 +89,8 @@ export function CustomerOrganizationsCards({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onAddOrganization(customer)}
-                        disabled={!canEdit}
+                        onClick={() => onAddOrganization?.(customer)}
+                        disabled={!canEdit || !onAddOrganization}
                         className="h-8 w-8 p-0 shrink-0"
                       >
                         <Plus className="h-4 w-4" />

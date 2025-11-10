@@ -1,14 +1,15 @@
 "use client"
 
+import { Send } from "lucide-react"
 import { useState, useEffect } from "react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Send } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { TicketStatus, TicketPriority, TicketCategory } from "@/lib/services/admin/support-service"
 
 interface Admin {

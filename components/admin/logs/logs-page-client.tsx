@@ -1,16 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { LogsFilters } from "./logs-filters"
-import { LogsTable } from "./logs-table"
-import { LogDetailDialog } from "./log-detail-dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Download, RefreshCw, AlertTriangle, XCircle, CheckCircle, Activity } from "lucide-react"
-import { SecurityLogWithUser, SecurityLogStats, SecurityLogFilters } from "@/lib/services/admin/security-logs-service"
-import { SecurityLogType } from "@/lib/utils/security-audit"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+import { Download, RefreshCw, AlertTriangle } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
 import {
   LineChart,
   Line,
@@ -23,6 +14,16 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+
+import { LogDetailDialog } from "./log-detail-dialog"
+import { LogsFilters } from "./logs-filters"
+import { LogsTable } from "./logs-table"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { SecurityLogWithUser, SecurityLogStats, SecurityLogFilters } from "@/lib/services/admin/security-logs-service"
+
 
 interface LogsPageClientProps {
   initialLogs: SecurityLogWithUser[]
@@ -56,7 +57,7 @@ export function LogsPageClient({
   const [pageSize, setPageSize] = useState(50)
 
   // Cargar logs con filtros
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -95,12 +96,11 @@ export function LogsPageClient({
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, page, pageSize])
 
   useEffect(() => {
-    fetchLogs()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, JSON.stringify(filters)])
+    void fetchLogs()
+  }, [fetchLogs])
 
   // Exportar logs
   const handleExport = async (format: "csv" | "json") => {

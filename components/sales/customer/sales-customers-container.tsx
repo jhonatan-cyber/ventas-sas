@@ -1,12 +1,14 @@
 "use client"
 
+import { SalesCustomer } from "@prisma/client"
 import { useState } from "react"
-import { SalesCustomersTable } from "./sales-customers-table"
+
 import { SalesCustomersFilters } from "./sales-customers-filters"
 import { SalesCustomersPagination } from "./sales-customers-pagination"
 import { SalesCustomersStats } from "./sales-customers-stats"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SalesCustomer } from "@prisma/client"
+import { SalesCustomersTable } from "./sales-customers-table"
+
+import { Card, CardContent } from "@/components/ui/card"
 
 interface SalesCustomersContainerProps {
   customers: SalesCustomer[]

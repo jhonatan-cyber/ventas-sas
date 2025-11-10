@@ -1,7 +1,8 @@
 "use client";
 
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service";
 import { formatDate, formatCurrency } from "./invoices-table";
+
+import { InvoiceWithRelations } from "@/lib/services/admin/billing-service";
 
 /**
  * Genera y descarga un PDF de la factura

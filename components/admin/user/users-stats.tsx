@@ -1,5 +1,7 @@
 "use client";
 
+import { Users, UserCheck, UserX, Shield } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -7,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, UserCheck, UserX, Shield } from "lucide-react";
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service";
 
 interface UsersStatsProps {

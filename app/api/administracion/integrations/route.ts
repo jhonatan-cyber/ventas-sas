@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { IntegrationService } from '@/lib/services/admin/integration-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { IntegrationService } from '@/lib/services/admin/integration-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const createIntegrationSchema = z.object({
   name: z.string().min(1),

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { AnalyticsService } from '@/lib/services/sales/analytics-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { handleApiError } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 export async function GET(
   request: NextRequest,

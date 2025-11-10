@@ -1,11 +1,5 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { useSidebar } from "./sidebar-context"
 import { X } from "lucide-react"
 import {
   LayoutDashboard,
@@ -18,11 +12,23 @@ import {
   Receipt,
   DollarSign,
   Building2,
-  Settings,
-  LogOut
+  Settings
 } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { toast } from "sonner"
 
-interface NavItem { title: string; href: string; icon: React.ComponentType<{ className?: string }>; }
+import { useSidebar } from "./sidebar-context"
+
+import type { CSSProperties, ComponentType } from "react"
+
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+
+
+
+
+interface NavItem { title: string; href: string; icon: ComponentType<{ className?: string }>; }
 interface NavSection { label: string; items: NavItem[] }
 
 interface SalesSidebarProps {
@@ -152,7 +158,7 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
                           "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       !isActive && "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-white"
                         )}
-                    style={isActive ? ({ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties) : undefined}
+                    style={isActive ? ({ background: 'var(--primary)', color: 'var(--primary-foreground)' } as CSSProperties) : undefined}
                       >
                         <Icon className={cn(
                           "h-5 w-5",

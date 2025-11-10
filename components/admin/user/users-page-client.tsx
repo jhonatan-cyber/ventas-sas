@@ -1,14 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { UserHeader } from "@/components/admin/user/user-header"
-import { UsersContainer } from "./users-container"
-import { UserFormDialog } from "./user-form-dialog"
-import { UserDetailDialog } from "./user-detail-dialog"
+
 import { DeleteUserDialog } from "./delete-user-dialog"
-import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
+import { UserDetailDialog } from "./user-detail-dialog"
+import { UserFormDialog } from "./user-form-dialog"
+import { UsersContainer } from "./users-container"
+
+import { UserHeader } from "@/components/admin/user/user-header"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { useUserActions } from "@/hooks/admin/user/use-user-actions"
+import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 
 interface UsersPageClientProps {
   initialUsers: UserWithDetails[]

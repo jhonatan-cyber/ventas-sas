@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+
+import { prisma } from '@/lib/prisma'
 
 export interface InvoiceFilters {
   organizationId?: string
@@ -74,6 +75,70 @@ export interface InvoiceWithRelations {
   }
 }
 
+export interface SerializedInvoiceWithRelations {
+  id: string
+  invoiceNumber: string
+  organizationId: string | null
+  subscriptionId: string | null
+  subscriptionPlanId: string | null
+  billingName: string
+  billingEmail: string
+  billingAddress: string | null
+  billingTaxId: string | null
+  subtotal: number
+  tax: number
+  discount: number
+  total: number
+  currency: string
+  status: string
+  issueDate: Date
+  dueDate: Date
+  paidAt: Date | null
+  paymentMethodId: string | null
+  paymentGateway: string | null
+  paymentGatewayId: string | null
+  paymentLink: string | null
+  reminderSentAt: Date | null
+  reminderCount: number
+  description: string | null
+  notes: string | null
+  metadata: any
+  createdAt: Date
+  updatedAt: Date
+  organization?: {
+    id: string
+    name: string
+    slug: string
+  } | null
+  subscription?: {
+    id: string
+    status: string
+    billingPeriod: string
+  } | null
+  subscriptionPlan?: {
+    id: string
+    name: string
+  } | null
+  paymentMethod?: {
+    id: string
+    label: string
+    type: string
+    last4: string | null
+    brand: string | null
+  } | null
+  payments?: Array<{
+    id: string
+    amount: number
+    status: string
+    paidAt: Date | null
+    paymentGateway: string
+    createdAt: Date
+  }>
+  _count?: {
+    payments: number
+  }
+}
+
 export interface CreateInvoiceData {
   organizationId?: string
   subscriptionId?: string
@@ -115,6 +180,18 @@ export interface BillingStats {
   overdueInvoices: number
   revenueByMonth: Array<{ month: string; revenue: Decimal }>
   revenueByGateway: Array<{ gateway: string; revenue: Decimal }>
+}
+
+export interface SerializedBillingStats {
+  totalRevenue: number
+  pendingAmount: number
+  overdueAmount: number
+  totalInvoices: number
+  paidInvoices: number
+  pendingInvoices: number
+  overdueInvoices: number
+  revenueByMonth: Array<{ month: string; revenue: number }>
+  revenueByGateway: Array<{ gateway: string; revenue: number }>
 }
 
 export class BillingService {
@@ -667,8 +744,8 @@ export class BillingService {
     })
 
     const pendingAmount = pendingInvoices.reduce(
-      (sum, inv) => {
-        const totalPaid = inv.payments.reduce((paid, payment) => paid + Number(payment.amount), 0)
+      (sum: Decimal, inv: any) => {
+        const totalPaid = inv.payments.reduce((paid: number, payment: any) => paid + Number(payment.amount), 0)
         const remaining = Number(inv.total) - totalPaid
         return sum.plus(remaining > 0 ? remaining : 0)
       },
@@ -676,8 +753,8 @@ export class BillingService {
     )
 
     const overdueAmount = overdueInvoices.reduce(
-      (sum, inv) => {
-        const totalPaid = inv.payments.reduce((paid, payment) => paid + Number(payment.amount), 0)
+      (sum: Decimal, inv: any) => {
+        const totalPaid = inv.payments.reduce((paid: number, payment: any) => paid + Number(payment.amount), 0)
         const remaining = Number(inv.total) - totalPaid
         return sum.plus(remaining > 0 ? remaining : 0)
       },
@@ -708,7 +785,7 @@ export class BillingService {
     })
 
     const revenueByMonthMap = new Map<string, Decimal>()
-    revenueByMonthData.forEach(payment => {
+    revenueByMonthData.forEach((payment: any) => {
       if (payment.paidAt) {
         const month = payment.paidAt.toISOString().slice(0, 7) // YYYY-MM
         const current = revenueByMonthMap.get(month) || new Decimal(0)
@@ -732,7 +809,7 @@ export class BillingService {
       }
     })
 
-    const revenueByGateway = revenueByGatewayData.map(item => ({
+    const revenueByGateway = revenueByGatewayData.map((item: any) => ({
       gateway: item.paymentGateway,
       revenue: item._sum.amount || new Decimal(0)
     }))

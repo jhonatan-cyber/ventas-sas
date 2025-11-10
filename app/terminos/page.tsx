@@ -1,6 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowLeft, BarChart3, FileText } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
 
 export const metadata = {
   title: 'Términos y Condiciones - Sistema de Ventas SAS',

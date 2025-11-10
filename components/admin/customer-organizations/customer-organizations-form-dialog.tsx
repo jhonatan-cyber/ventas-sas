@@ -1,6 +1,10 @@
 "use client"
 
+import { Organization } from "@prisma/client"
+import { MapPin, Phone, Building2, User } from "lucide-react"
 import { useState, useEffect } from "react"
+
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,9 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -19,8 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Organization } from "@prisma/client"
-import { MapPin, Phone, Building2, User } from "lucide-react"
 
 interface CustomerOrganizationsFormDialogProps {
   open: boolean

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { updateSalesCustomerSchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { updateSalesCustomerSchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener cliente por ID
 export async function GET(
@@ -69,15 +70,20 @@ export async function PUT(
 
     const validatedData = validation.data
 
+    // Helper para convertir null a undefined
+    const nullToUndefined = <T>(value: T | null | undefined): T | undefined => {
+      return value === null ? undefined : value
+    }
+
     const customer = await SalesCustomerService.updateCustomer(id, {
-      name: validatedData.name || undefined,
-      lastName: validatedData.lastName !== undefined ? validatedData.lastName : undefined,
-      email: validatedData.email || undefined,
-      phone: validatedData.phone || undefined,
-      address: validatedData.address !== undefined ? validatedData.address : undefined,
-      city: validatedData.city || undefined,
-      country: validatedData.country || undefined,
-      ruc: validatedData.ruc || undefined,
+      name: validatedData.name ?? undefined,
+      lastName: nullToUndefined(validatedData.lastName),
+      email: nullToUndefined(validatedData.email),
+      phone: nullToUndefined(validatedData.phone),
+      address: nullToUndefined(validatedData.address),
+      city: nullToUndefined(validatedData.city),
+      country: nullToUndefined(validatedData.country),
+      ruc: nullToUndefined(validatedData.ruc),
       // isActive puede venir del body directamente si no está en el schema
       isActive: body.isActive !== undefined ? body.isActive : undefined
     })

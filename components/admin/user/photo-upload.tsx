@@ -1,11 +1,12 @@
 "use client"
 
+import { Upload, X, Loader2 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
+import { toast } from "sonner"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Upload, X, Loader2 } from "lucide-react"
-import { toast } from "sonner"
 
 interface PhotoUploadProps {
   currentPhoto?: string | null

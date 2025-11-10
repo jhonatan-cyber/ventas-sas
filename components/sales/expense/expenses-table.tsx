@@ -1,12 +1,15 @@
 "use client"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Edit, Trash2, DollarSign } from "lucide-react"
-import { formatDate } from "@/lib/utils/date"
+
 import { SalesExpenseWithRelations } from "./types"
+
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TableSkeleton } from "@/components/ui/table-skeleton"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { formatDate } from "@/lib/utils/date"
+
 
 interface ExpensesTableProps {
   expenses: SalesExpenseWithRelations[]

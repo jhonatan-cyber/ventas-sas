@@ -1,19 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { CustomerOrganizationsHeader } from "./customer-organizations-header"
+
 import { CustomerOrganizationsContainer } from "./customer-organizations-container"
 import { CustomerOrganizationsFormDialog } from "./customer-organizations-form-dialog"
-import { useOrganizationActions } from "@/hooks/admin/organization/use-organization-actions"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { CustomerOrganizationsHeader } from "./customer-organizations-header"
+
+import { AdminLayout } from "@/components/layout/admin-layout"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +17,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -31,8 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { useOrganizationActions } from "@/hooks/admin/organization/use-organization-actions"
 import { useToast } from "@/hooks/use-toast"
 
 interface Customer {

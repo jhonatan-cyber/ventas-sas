@@ -1,6 +1,7 @@
-import { prisma } from '@/lib/prisma'
 import { Category } from '@prisma/client'
+
 import { getCachedData, invalidateCachePattern, CacheKeys } from '@/lib/cache/cache-service'
+import { prisma } from '@/lib/prisma'
 
 export interface CreateCategoryData {
   name: string

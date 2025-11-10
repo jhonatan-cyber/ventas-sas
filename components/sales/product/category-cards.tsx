@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Category } from "@prisma/client"
 import { ShoppingBag, ChevronRight, Package } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface CategoryCardsProps {
   categories: Category[]

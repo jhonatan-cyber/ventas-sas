@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { SalesPageClient } from "@/components/sales/sale/sales-page-client"
+import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import { SaleService } from "@/lib/services/sales/sale-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
-import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 
 const serializeSale = (sale: any) => ({
   id: sale.id,

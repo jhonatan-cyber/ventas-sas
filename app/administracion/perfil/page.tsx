@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { AuthService } from "@/lib/services/auth-service"
+import { redirect } from "next/navigation"
+
 import { ProfilePageClient } from "@/components/admin/profile/profile-page-client"
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { AuthService } from "@/lib/services/auth-service"
 
 export default async function ProfilePage() {
   // Validación de sesión Admin en el servidor

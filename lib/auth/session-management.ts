@@ -8,15 +8,17 @@
  * - Tracking de dispositivo/IP
  */
 
-import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
+
 import { NextRequest } from 'next/server'
+
+import { prisma } from '@/lib/prisma'
 
 export type SystemType = 'admin' | 'sas'
 
 interface SessionData {
   userId: string
-  customerId?: string // Para sistema SAS
+  organizationId?: string // Para sistema SAS
   systemType: SystemType
   ipAddress?: string
   userAgent?: string
@@ -48,7 +50,7 @@ export class SessionManagement {
   static async createSession(data: SessionData, config: SessionConfig = {}): Promise<string> {
     const {
       userId,
-      customerId,
+      organizationId,
       systemType,
       ipAddress,
       userAgent,
@@ -63,7 +65,7 @@ export class SessionManagement {
 
     // Invalidar otras sesiones si se requiere sesión única
     if (forceSingleSession) {
-      await this.invalidateUserSessions(userId, systemType, customerId)
+      await this.invalidateUserSessions(userId, systemType, organizationId)
     }
 
     // Generar token único para la sesión
@@ -88,14 +90,14 @@ export class SessionManagement {
         },
       })
     } else if (systemType === 'sas') {
-      if (!customerId) {
-        throw new Error('customerId es requerido para sesiones SAS')
+      if (!organizationId) {
+        throw new Error('organizationId es requerido para sesiones SAS')
       }
 
       await prisma.sasSession.create({
         data: {
           userId,
-          customerId,
+          organizationId,
           sessionToken,
           ipAddress,
           userAgent,
@@ -115,7 +117,7 @@ export class SessionManagement {
   static async validateSession(
     sessionToken: string,
     systemType: SystemType,
-    customerId?: string
+    organizationId?: string
   ): Promise<{ valid: boolean; userId?: string; needsRefresh?: boolean }> {
     try {
       if (systemType === 'admin') {
@@ -172,7 +174,7 @@ export class SessionManagement {
           needsRefresh: minutesSinceActivity > inactivityTimeout * 0.8, // Refresh si >80% del tiempo
         }
       } else if (systemType === 'sas') {
-        if (!customerId) {
+        if (!organizationId) {
           return { valid: false }
         }
 
@@ -181,10 +183,11 @@ export class SessionManagement {
           select: {
             id: true,
             userId: true,
-            customerId: true,
+            organizationId: true,
             isActive: true,
             expiresAt: true,
             lastActivityAt: true,
+            createdAt: true,
             user: {
               select: {
                 isActive: true,
@@ -194,13 +197,13 @@ export class SessionManagement {
           },
         })
 
-        if (!session || !session.isActive || session.customerId !== customerId) {
+        if (!session || !session.isActive || session.organizationId !== organizationId) {
           return { valid: false }
         }
 
         // Verificar expiración
         if (session.expiresAt < new Date()) {
-          await this.invalidateSession(sessionToken, systemType, customerId)
+          await this.invalidateSession(sessionToken, systemType, organizationId)
           return { valid: false }
         }
 
@@ -210,19 +213,19 @@ export class SessionManagement {
         const minutesSinceActivity = (Date.now() - lastActivity.getTime()) / (60 * 1000)
 
         if (minutesSinceActivity > inactivityTimeout) {
-          await this.invalidateSession(sessionToken, systemType, customerId)
+          await this.invalidateSession(sessionToken, systemType, organizationId)
           return { valid: false }
         }
 
         // Verificar que el usuario sigue activo
         if (!session.user.isActive) {
-          await this.invalidateSession(sessionToken, systemType, customerId)
+          await this.invalidateSession(sessionToken, systemType, organizationId)
           return { valid: false }
         }
 
         // Verificar si la contraseña cambió después de crear la sesión
         if (session.user.passwordChangedAt && session.createdAt < session.user.passwordChangedAt) {
-          await this.invalidateSession(sessionToken, systemType, customerId)
+          await this.invalidateSession(sessionToken, systemType, organizationId)
           return { valid: false }
         }
 
@@ -267,7 +270,7 @@ export class SessionManagement {
   static async invalidateSession(
     sessionToken: string,
     systemType: SystemType,
-    customerId?: string
+    organizationId?: string
   ): Promise<void> {
     if (systemType === 'admin') {
       await prisma.userSession.updateMany({
@@ -276,7 +279,10 @@ export class SessionManagement {
       })
     } else if (systemType === 'sas') {
       await prisma.sasSession.updateMany({
-        where: { sessionToken },
+        where: {
+          sessionToken,
+          ...(organizationId && { organizationId }),
+        },
         data: { isActive: false },
       })
     }
@@ -288,7 +294,7 @@ export class SessionManagement {
   static async invalidateUserSessions(
     userId: string,
     systemType: SystemType,
-    customerId?: string
+    organizationId?: string
   ): Promise<number> {
     if (systemType === 'admin') {
       const result = await prisma.userSession.updateMany({
@@ -301,14 +307,14 @@ export class SessionManagement {
       })
       return result.count
     } else if (systemType === 'sas') {
-      if (!customerId) {
+      if (!organizationId) {
         return 0
       }
 
       const result = await prisma.sasSession.updateMany({
         where: {
           userId,
-          customerId,
+          organizationId,
           isActive: true,
         },
         data: { isActive: false },
@@ -325,7 +331,7 @@ export class SessionManagement {
   static async invalidateSessionsOnPasswordChange(
     userId: string,
     systemType: SystemType,
-    customerId?: string
+    organizationId?: string
   ): Promise<number> {
     // Registrar cambio de contraseña
     await prisma.passwordChange.create({
@@ -336,7 +342,7 @@ export class SessionManagement {
       },
     })
 
-    const invalidated = await this.invalidateUserSessions(userId, systemType, customerId)
+    const invalidated = await this.invalidateUserSessions(userId, systemType, organizationId)
 
     // Actualizar conteo de sesiones invalidadas
     await prisma.passwordChange.updateMany({

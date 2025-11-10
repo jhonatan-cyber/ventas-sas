@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
 import { toast } from "sonner"
-import { CashRegister } from "@prisma/client"
+import type { CashRegisterWithRelations } from "@/components/sales/cash-register/types"
 
 export function useCashRegisterActions(customerSlug: string, onCashRegistersChange?: () => Promise<void> | void) {
   const router = useRouter()
@@ -12,24 +12,24 @@ export function useCashRegisterActions(customerSlug: string, onCashRegistersChan
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
-  const [selectedCashRegister, setSelectedCashRegister] = useState<CashRegister | undefined>()
+  const [selectedCashRegister, setSelectedCashRegister] = useState<CashRegisterWithRelations | undefined>()
 
   const openCreateDialog = () => {
     setSelectedCashRegister(undefined)
     setIsFormDialogOpen(true)
   }
 
-  const openDeleteDialog = (cashRegister: CashRegister) => {
+  const openDeleteDialog = (cashRegister: CashRegisterWithRelations) => {
     setSelectedCashRegister(cashRegister)
     setIsDeleteDialogOpen(true)
   }
 
-  const openOpenDialog = (cashRegister: CashRegister) => {
+  const openOpenDialog = (cashRegister: CashRegisterWithRelations) => {
     setSelectedCashRegister(cashRegister)
     setIsOpenDialogOpen(true)
   }
 
-  const openCloseDialog = (cashRegister: CashRegister) => {
+  const openCloseDialog = (cashRegister: CashRegisterWithRelations) => {
     setSelectedCashRegister(cashRegister)
     setIsCloseDialogOpen(true)
   }

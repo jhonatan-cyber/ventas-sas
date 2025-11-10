@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 import { RoleAdminService } from '@/lib/services/admin/role-admin-service'
 import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 
 // GET - Obtener rol por ID
 export async function GET(

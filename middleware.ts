@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+
 import type { NextRequest } from 'next/server'
+
 import { addSecurityHeaders } from '@/lib/utils/security-headers'
 // Nota: El middleware (edge) no puede verificar JWT con jsonwebtoken.
 // Aquí solo validamos presencia de cookies. La verificación completa ocurre en el servidor.
@@ -8,7 +10,7 @@ import { addSecurityHeaders } from '@/lib/utils/security-headers'
 const edgeLogger = {
   debug: (message: string, data?: Record<string, any>) => {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
+       
       console.log(`[MW] ${message}`, data || '')
     }
   },

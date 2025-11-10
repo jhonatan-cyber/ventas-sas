@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import {
   DndContext,
   closestCenter,
@@ -16,13 +15,14 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
   useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { GripVertical, X } from "lucide-react"
-import { Widget, WidgetType } from "./types"
+
+import { Widget } from "./types"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface WidgetContainerProps {
   widget: Widget

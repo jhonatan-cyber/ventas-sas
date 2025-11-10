@@ -5,9 +5,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import { SystemConfigService } from '@/lib/services/admin/system-config-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 export async function GET(request: NextRequest) {
   try {

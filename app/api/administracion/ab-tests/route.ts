@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AbTestService } from '@/lib/services/admin/ab-test-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { AbTestService } from '@/lib/services/admin/ab-test-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const createTestSchema = z.object({
   name: z.string().min(1),
@@ -77,9 +78,14 @@ export async function POST(request: NextRequest) {
 
     const test = await AbTestService.createTest(
       {
-        ...validatedData,
+        name: validatedData.name,
+        description: validatedData.description,
+        testType: validatedData.testType,
+        organizationId: validatedData.organizationId,
         startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
         endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined,
+        targetAudience: validatedData.targetAudience,
+        successMetrics: validatedData.successMetrics,
       },
       payload.userId
     )

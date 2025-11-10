@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CategoryService } from '@/lib/services/sales/category-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { CategoryService } from '@/lib/services/sales/category-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener categoría por ID
 export async function GET(

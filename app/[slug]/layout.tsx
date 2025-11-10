@@ -1,5 +1,6 @@
-import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { redirect } from "next/navigation"
+
+import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { ThemeProvider } from "@/components/theme-provider"
 import { prisma } from "@/lib/prisma"
 

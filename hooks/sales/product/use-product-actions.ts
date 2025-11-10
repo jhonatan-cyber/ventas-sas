@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import { SalesProduct, Category } from "@prisma/client"
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
+import { toast } from "sonner"
+
 import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
 export function useProductActions(customerSlug: string, onProductsChange?: () => void) {

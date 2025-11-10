@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { IntegrationService } from '@/lib/services/admin/integration-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { IntegrationService } from '@/lib/services/admin/integration-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const installIntegrationSchema = z.object({
   organizationId: z.string().min(1),
@@ -13,7 +14,7 @@ const installIntegrationSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -33,7 +34,7 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const validatedData = installIntegrationSchema.parse(body)
 

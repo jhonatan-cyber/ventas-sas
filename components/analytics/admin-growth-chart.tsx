@@ -1,6 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   LineChart,
   Line,
@@ -10,6 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface AdminGrowthChartProps {
   data: Array<{

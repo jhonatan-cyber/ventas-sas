@@ -1,15 +1,16 @@
 "use client";
 
-import { AdminLayout } from "@/components/layout/admin-layout";
-import { RoleHeader } from "@/components/admin/role/role-header";
-import { RolesContainer } from "./roles-container";
-import { RoleFormDialog } from "./role-form-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
-import { ToggleStatusDialog } from "./toggle-status-dialog";
 import { RoleDetailDialog } from "./role-detail-dialog";
+import { RoleFormDialog } from "./role-form-dialog";
 import { RolePermissionsDialog } from "./role-permissions-dialog";
-import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
+import { RolesContainer } from "./roles-container";
+import { ToggleStatusDialog } from "./toggle-status-dialog";
+
+import { RoleHeader } from "@/components/admin/role/role-header";
+import { AdminLayout } from "@/components/layout/admin-layout";
 import { useRoleActions } from "@/hooks/admin/role/use-role-actions";
+import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
 
 interface RolesPageClientProps {
   initialRoles: RoleWithStats[];
@@ -89,7 +90,7 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
         <RoleDetailDialog
           open={detailDialog}
           onOpenChange={setDetailDialog}
-          role={selectedRole}
+          role={selectedRole ?? null}
         />
 
         {/* Modal de gestión de permisos */}

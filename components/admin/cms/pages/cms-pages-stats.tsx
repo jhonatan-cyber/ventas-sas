@@ -1,5 +1,7 @@
 "use client"
 
+import { FileText, Eye, EyeOff, Globe } from "lucide-react"
+
 import {
   Card,
   CardContent,
@@ -7,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { FileText, Eye, EyeOff, Globe } from "lucide-react"
 
 interface CmsPage {
   id: string

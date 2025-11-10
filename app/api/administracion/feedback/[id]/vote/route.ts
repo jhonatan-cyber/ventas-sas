@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
 import { FeedbackService } from '@/lib/services/admin/feedback-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -26,7 +27,7 @@ export async function POST(
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { userType } = body
 

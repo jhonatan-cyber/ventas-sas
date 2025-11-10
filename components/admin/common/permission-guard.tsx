@@ -1,9 +1,10 @@
 "use client"
 
 import { ReactNode } from "react"
-import { useHasPermission } from "@/hooks/admin/use-user-permissions"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface PermissionGuardProps {
   permission: string

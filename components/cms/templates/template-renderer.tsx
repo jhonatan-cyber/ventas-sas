@@ -1,9 +1,9 @@
 "use client"
 
+import { TemplateBusiness } from "./template-business"
 import { TemplateHero } from "./template-hero"
 import { TemplateMinimal } from "./template-minimal"
 import { TemplateModern } from "./template-modern"
-import { TemplateBusiness } from "./template-business"
 
 interface TemplateRendererProps {
   template: string

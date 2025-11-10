@@ -1,12 +1,12 @@
 "use client"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { CashRegister } from "@prisma/client"
+import type { CashRegisterWithRelations } from "./types"
 
 interface CashRegisterCloseDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  cashRegister?: CashRegister
+  cashRegister?: CashRegisterWithRelations
   onClose: () => void
 }
 
@@ -26,7 +26,12 @@ export function CashRegisterCloseDialog({ open, onOpenChange, cashRegister, onCl
             <div className="mt-2 space-y-1">
               <p className="font-medium">Balance actual:</p>
               <p className="text-lg text-gray-900 dark:text-white">
-                ${cashRegister ? Number(cashRegister.currentBalance).toLocaleString('es-BO', { minimumFractionDigits: 2 }) : '0.00'}
+                ${cashRegister ? (() => {
+                  const balance = cashRegister.currentBalance && typeof cashRegister.currentBalance === 'object' && 'toNumber' in cashRegister.currentBalance
+                    ? cashRegister.currentBalance.toNumber()
+                    : Number(cashRegister.currentBalance || 0)
+                  return balance.toLocaleString('es-BO', { minimumFractionDigits: 2 })
+                })() : '0.00'}
               </p>
             </div>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">

@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { WhiteLabelService } from '@/lib/services/admin/white-label-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { WhiteLabelService } from '@/lib/services/admin/white-label-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const updateBrandingSchema = z.object({
   logoUrl: z.string().url().optional(),
@@ -20,7 +21,7 @@ const updateBrandingSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -40,7 +41,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { organizationId } = params
+    const { organizationId } = await params
     const branding = await WhiteLabelService.getBranding(organizationId)
 
     return NextResponse.json({ success: true, branding })
@@ -55,7 +56,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -75,7 +76,7 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { organizationId } = params
+    const { organizationId } = await params
     const body = await request.json()
     const validatedData = updateBrandingSchema.parse(body)
 

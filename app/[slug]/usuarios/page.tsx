@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation"
+
 import { UsuariosSasPageClient } from "@/components/sales/usuario/usuarios-sas-page-client"
-import { UsuarioSasService } from "@/lib/services/sales/usuario-sas-service"
-import { RoleSasService } from "@/lib/services/sales/role-sas-service"
-import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 import { prisma } from "@/lib/prisma"
+import { RoleSasService } from "@/lib/services/sales/role-sas-service"
+import { UsuarioSasService } from "@/lib/services/sales/usuario-sas-service"
+import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 
 export default async function UsuariosPage({
   params,

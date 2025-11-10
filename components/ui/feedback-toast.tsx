@@ -1,7 +1,7 @@
 "use client"
 
-import { toast } from "sonner"
 import { CheckCircle2, XCircle, AlertTriangle, Info } from "lucide-react"
+import { toast } from "sonner"
 
 interface ToastOptions {
   duration?: number

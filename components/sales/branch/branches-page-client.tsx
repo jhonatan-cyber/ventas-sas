@@ -1,13 +1,15 @@
 "use client"
 
+import { Branch } from "@prisma/client"
 import { useState, useEffect } from "react"
-import { BranchesHeader } from "./branches-header"
-import { BranchesContainer } from "./branches-container"
-import { BranchFormDialog } from "./branch-form-dialog"
+
 import { BranchDeleteDialog } from "./branch-delete-dialog"
 import { BranchDetailDialog } from "./branch-detail-dialog"
+import { BranchFormDialog } from "./branch-form-dialog"
+import { BranchesContainer } from "./branches-container"
+import { BranchesHeader } from "./branches-header"
+
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
-import { Branch } from "@prisma/client"
 import { useBranchActions } from "@/hooks/sales/branch/use-branch-actions"
 
 type BranchWithRelations = Branch & {
@@ -88,7 +90,7 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
       <BranchDetailDialog
         open={isDetailDialogOpen}
         onOpenChange={closeDialogs}
-        branch={selectedBranch}
+        branch={selectedBranch ?? null}
         customerSlug={customerSlug}
       />
 

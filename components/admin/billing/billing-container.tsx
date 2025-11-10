@@ -1,21 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { BillingStats } from "./billing-stats"
+
 import { BillingFilters } from "./billing-filters"
-import { InvoicesTable } from "./invoices-table"
-import { InvoicesCards } from "./invoices-cards"
 import { BillingPagination } from "./billing-pagination"
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service"
-import { BillingStats as BillingStatsType } from "@/lib/services/admin/billing-service"
+import { BillingStats } from "./billing-stats"
+import { InvoicesCards } from "./invoices-cards"
+import { InvoicesTable } from "./invoices-table"
+
+import { SerializedInvoiceWithRelations, SerializedBillingStats } from "@/lib/services/admin/billing-service"
 
 interface BillingContainerProps {
-  invoices: InvoiceWithRelations[]
-  stats: BillingStatsType
-  onView?: (invoice: InvoiceWithRelations) => void
-  onDownloadPDF?: (invoice: InvoiceWithRelations) => void
-  onPrintInvoice?: (invoice: InvoiceWithRelations) => void
-  onSendCredentials?: (invoice: InvoiceWithRelations) => void
+  invoices: SerializedInvoiceWithRelations[]
+  stats: SerializedBillingStats
+  onView?: (invoice: SerializedInvoiceWithRelations) => void
+  onDownloadPDF?: (invoice: SerializedInvoiceWithRelations) => void
+  onPrintInvoice?: (invoice: SerializedInvoiceWithRelations) => void
+  onSendCredentials?: (invoice: SerializedInvoiceWithRelations) => void
 }
 
 export function BillingContainer({ 

@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { Branch } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateBranchData {
@@ -209,7 +210,8 @@ export class BranchService {
       },
       select: {
         id: true,
-        name: true
+        name: true,
+        address: true
       },
       orderBy: { name: 'asc' }
     })

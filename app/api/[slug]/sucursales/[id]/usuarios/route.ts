@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { prisma } from '@/lib/prisma'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener usuarios asociados a una sucursal (optimizado)
 export async function GET(
@@ -42,7 +43,7 @@ export async function GET(
         nombre: true,
         apellido: true,
         ci: true,
-        correo: true,
+        email: true,
         phone: true,
         isActive: true,
         foto: true,

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Search, Filter } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react"
+
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface CustomerOrganizationsFiltersProps {
   onPageSizeChange?: (pageSize: number) => void

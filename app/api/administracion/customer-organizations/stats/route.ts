@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AuthService } from "@/lib/services/auth-service"
 import { cookies } from "next/headers"
+import { NextRequest, NextResponse } from "next/server"
+
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export async function GET(request: NextRequest) {
   try {

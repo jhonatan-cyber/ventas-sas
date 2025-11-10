@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { redirect } from "next/navigation"
+
+import { LogsPageClient } from "@/components/admin/logs/logs-page-client"
 import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { SecurityLogsService } from "@/lib/services/admin/security-logs-service"
 import { AuthService } from "@/lib/services/auth-service"
-import { LogsPageClient } from "@/components/admin/logs/logs-page-client"
 
 export default async function LogsPage() {
   // Validación de sesión Admin en el servidor

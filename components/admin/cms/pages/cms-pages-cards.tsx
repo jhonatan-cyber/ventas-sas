@@ -1,21 +1,26 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { FileText, Edit, Trash2, Eye, EyeOff, MoreVertical, Globe, Calendar, ExternalLink } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { FileText, Edit, Trash2, Eye, EyeOff, MoreVertical, Globe, Calendar, ExternalLink } from "lucide-react"
+
 
 interface CmsPage {
   id: string
   organizationId?: string | null
   slug: string
   title: string
+  content: string
   excerpt?: string | null
   pageType: string
   isPublished: boolean
   publishedAt?: string | null
+  order: number
   createdAt: string
+  updatedAt: string
   organization?: {
     id: string
     name: string

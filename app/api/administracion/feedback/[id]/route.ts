@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { FeedbackService } from '@/lib/services/admin/feedback-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { FeedbackService } from '@/lib/services/admin/feedback-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const updateFeedbackSchema = z.object({
   status: z.enum(['open', 'in_progress', 'completed', 'rejected']).optional(),
@@ -14,7 +15,7 @@ const updateFeedbackSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -34,7 +35,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
     const feedback = await FeedbackService.getFeedbackById(id)
 
     if (!feedback) {
@@ -53,7 +54,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -73,7 +74,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateFeedbackSchema.parse(body)
 

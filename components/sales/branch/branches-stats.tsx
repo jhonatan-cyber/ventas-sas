@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, CheckCircle2, XCircle, Users } from "lucide-react"
 import { Branch } from "@prisma/client"
+import { Building2, CheckCircle2, XCircle, Users } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface BranchesStatsProps {
   branches: (Branch & {

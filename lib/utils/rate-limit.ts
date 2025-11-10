@@ -3,6 +3,8 @@
  * Para producción, reemplazar con Redis + Upstash o similar
  */
 
+import { NextRequest, NextResponse } from 'next/server'
+
 interface RateLimitEntry {
   count: number
   resetTime: number
@@ -116,7 +118,7 @@ export async function checkRateLimit(
  * Genera un identificador único para rate limiting basado en IP y otros factores
  */
 export function getRateLimitKey(request: NextRequest, additionalIdentifier?: string): string {
-  const ip = request.ip ?? request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? request.headers.get('x-real-ip') ?? 'unknown'
   const userAgent = request.headers.get('user-agent') ?? 'unknown'
   
   if (additionalIdentifier) {
@@ -125,9 +127,6 @@ export function getRateLimitKey(request: NextRequest, additionalIdentifier?: str
   
   return `rate_limit:${ip}:${userAgent.slice(0, 50)}`
 }
-
-// Tipos para TypeScript
-import type { NextRequest } from 'next/server'
 
 /**
  * Interfaz para configuraciones de rate limit

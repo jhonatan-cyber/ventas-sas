@@ -1,11 +1,16 @@
 "use client"
 
+import { Loader2, Send, Bell } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+
+import type { NotificationType } from "@/lib/services/notification-service"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -13,10 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "sonner"
-import { Loader2, Send, Bell } from "lucide-react"
-import type { NotificationType } from "@/lib/services/notification-service"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Organization {
   id: string

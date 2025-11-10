@@ -1,11 +1,13 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Package, DollarSign, Building2, Users, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
+
+import { SerializedSubscriptionPlanWithStats } from "./types"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Package, DollarSign, Building2, Users, CheckCircle, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
-import { SerializedSubscriptionPlanWithStats } from "./types"
 import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface PlansCardsProps {

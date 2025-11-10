@@ -1,12 +1,14 @@
 "use client"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { RoleSas } from "@prisma/client"
+import { Edit, Trash2, Power, PowerOff, Shield, FileText } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Edit, Trash2, Power, PowerOff, Shield, FileText } from "lucide-react"
-import { RoleSas } from "@prisma/client"
+
 
 interface RolesSasTableProps {
   roles: (RoleSas & {

@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { existsSync } from 'fs'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { existsSync } from 'fs'
-import { getCustomerBySlug } from '@/lib/utils/organization'
+
+import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
+
+import { getCustomerBySlug } from '@/lib/utils/organization'
 
 // Función para procesar y convertir imagen a WebP
 async function processImageToWebP(imageBuffer: Buffer): Promise<Buffer> {

@@ -1,12 +1,13 @@
 "use client"
 
+import { Profile } from "@prisma/client"
+import { Shield, Smartphone } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Profile } from "@prisma/client"
-import { toast } from "sonner"
-import { Shield, Smartphone } from "lucide-react"
+
 
 interface SecuritySettingsProps {
   profile: Profile

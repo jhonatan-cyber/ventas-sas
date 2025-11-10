@@ -1,13 +1,15 @@
 "use client"
 
+import { Eye, Pencil, Trash2, Receipt, Ban } from "lucide-react"
 import { FC } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+
+import { SalesSaleWithRelations } from "./types"
+
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Eye, Pencil, Trash2, Receipt, Ban } from "lucide-react"
-import { SalesSaleWithRelations } from "./types"
 import { formatDateTime } from "@/lib/utils/date"
 
 export interface SalesTableProps {

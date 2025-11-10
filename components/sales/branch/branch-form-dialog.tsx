@@ -1,6 +1,9 @@
 "use client";
 
+import { Branch } from "@prisma/client";
 import { useState, useEffect } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,10 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Branch } from "@prisma/client";
+import { Label } from "@/components/ui/label";
 
 interface BranchFormDialogProps {
   open: boolean;

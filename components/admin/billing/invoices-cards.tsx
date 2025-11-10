@@ -1,18 +1,20 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { FileText, Eye, Download, Printer, Mail, MoreVertical, DollarSign, Calendar, Building2 } from "lucide-react"
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service"
+
 import { formatDate, formatCurrency, getStatusBadge } from "./invoices-table"
 
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service"
+
+
 interface InvoicesCardsProps {
-  invoices: InvoiceWithRelations[]
-  onView?: (invoice: InvoiceWithRelations) => void
-  onDownloadPDF?: (invoice: InvoiceWithRelations) => void
-  onPrintInvoice?: (invoice: InvoiceWithRelations) => void
+  invoices: SerializedInvoiceWithRelations[]
+  onView?: (invoice: SerializedInvoiceWithRelations) => void
+  onDownloadPDF?: (invoice: SerializedInvoiceWithRelations) => void
+  onPrintInvoice?: (invoice: SerializedInvoiceWithRelations) => void
 }
 
 export function InvoicesCards({ invoices, onView, onDownloadPDF, onPrintInvoice }: InvoicesCardsProps) {

@@ -1,11 +1,14 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
+import type { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+
 import { QuotationsPageClient } from "@/components/sales/quotation/quotations-page-client"
+import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
+import { BranchService } from "@/lib/services/sales/branch-service"
 import { QuotationService } from "@/lib/services/sales/quotation-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
-import { BranchService } from "@/lib/services/sales/branch-service"
-import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
-import type { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+
 
 export default async function QuotationsPage({
   params,
@@ -51,7 +54,7 @@ export default async function QuotationsPage({
     ? await BranchService.getActiveBranches(organizationId)
     : []
 
-  const serializedBranches = rawBranches.map((branch) => ({
+  const serializedBranches = rawBranches.map((branch: any) => ({
     id: branch.id,
     name: branch.name ?? "Sin sucursal",
     address: branch.address ?? null,
@@ -69,23 +72,23 @@ export default async function QuotationsPage({
     customerName: quotation.customerName ?? null,
     customer: quotation.customer
       ? {
-          id: quotation.customer.id,
-          name: quotation.customer.name,
-          lastName: quotation.customer.lastName ?? null,
-          email: quotation.customer.email ?? null,
-          phone: quotation.customer.phone ?? null,
-          address: quotation.customer.address ?? null,
-          ruc: quotation.customer.ruc ?? null,
-        }
+        id: quotation.customer.id,
+        name: quotation.customer.name,
+        lastName: quotation.customer.lastName ?? null,
+        email: quotation.customer.email ?? null,
+        phone: quotation.customer.phone ?? null,
+        address: quotation.customer.address ?? null,
+        ruc: quotation.customer.ruc ?? null,
+      }
       : null,
     customerPhone: quotation.customerPhone ?? null,
     branchId: quotation.branchId ?? null,
     branch: quotation.branch
       ? {
-          id: quotation.branch.id,
-          name: quotation.branch.name,
-          address: quotation.branch.address ?? null,
-        }
+        id: quotation.branch.id,
+        name: quotation.branch.name,
+        address: quotation.branch.address ?? null,
+      }
       : null,
     createdAt: quotation.createdAt.toISOString(),
     updatedAt: quotation.updatedAt.toISOString(),
@@ -98,9 +101,9 @@ export default async function QuotationsPage({
       productName: item.productName ?? null,
       product: item.product
         ? {
-            ...item.product,
-            price: Number(item.product.price ?? 0),
-          }
+          ...item.product,
+          price: Number(item.product.price ?? 0),
+        }
         : null,
     })) ?? [],
   })

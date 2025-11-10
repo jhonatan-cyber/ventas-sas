@@ -1,5 +1,6 @@
 import { prisma } from '../prisma'
-import type { Profile, Organization } from '@prisma/client'
+
+import type { Profile, Organization, OrganizationSubscriptionStatus } from '@prisma/client'
 
 export class AuthService {
   // Crear un nuevo perfil de usuario
@@ -102,13 +103,22 @@ export class AuthService {
     slug: string
     ownerId: string
     subscriptionPlanId?: string
-    subscriptionStatus?: string
+    subscriptionStatus?: OrganizationSubscriptionStatus
     subscriptionStartDate?: Date
     subscriptionEndDate?: Date
     settings?: any
   }) {
     return await prisma.organization.create({
-      data,
+      data: {
+        name: data.name,
+        slug: data.slug,
+        ownerId: data.ownerId,
+        subscriptionPlanId: data.subscriptionPlanId,
+        subscriptionStatus: data.subscriptionStatus,
+        subscriptionStartDate: data.subscriptionStartDate,
+        subscriptionEndDate: data.subscriptionEndDate,
+        settings: data.settings
+      },
       include: {
         subscriptionPlan: true
       }
@@ -116,7 +126,7 @@ export class AuthService {
   }
 
   // Actualizar organización
-  static async updateOrganization(id: string, data: Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>) {
+  static async updateOrganization(id: string, data: Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>>) {
     return await prisma.organization.update({
       where: { id },
       data: {

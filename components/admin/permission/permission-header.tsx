@@ -4,7 +4,6 @@ import { Shield, Plus, CheckCircle, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { PermissionStats } from "@/lib/services/admin/permission-admin-service"
 import { PermissionButton } from "@/components/admin/common/permission-guard"
 import {
   AlertDialog,
@@ -16,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { PermissionStats } from "@/lib/services/admin/permission-admin-service"
 
 interface PermissionHeaderProps {
   title: string

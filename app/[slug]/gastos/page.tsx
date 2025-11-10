@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { ExpensesPageClient } from "@/components/sales/expense/expenses-page-client"
+import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
+import { BranchService } from "@/lib/services/sales/branch-service"
 import { ExpenseService } from "@/lib/services/sales/expense-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
-import { BranchService } from "@/lib/services/sales/branch-service"
-import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 
 const serializeExpense = (expense: any) => ({
   id: expense.id,
@@ -63,7 +64,9 @@ export default async function ExpensesPage({
     ? (await ExpenseService.getAllExpenses(organizationId, 0, 1000)).expenses.map(serializeExpense)
     : []
 
-  const branches = await BranchService.getActiveBranches(customer.id)
+  const branches = organizationId
+    ? await BranchService.getActiveBranches(organizationId)
+    : []
 
   const serializedBranches = branches.map((branch) => ({
     id: branch.id,

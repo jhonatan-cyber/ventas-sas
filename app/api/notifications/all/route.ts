@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { NotificationService } from '@/lib/services/notification-service'
+import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { NotificationService } from '@/lib/services/notification-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 
 /**
@@ -23,7 +24,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      const payload = AdminJWTService.verifyToken(token)
+      const payload = await AdminJWTService.verifyToken(token)
       if (!payload) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }

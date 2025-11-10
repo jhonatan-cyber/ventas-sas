@@ -1,7 +1,8 @@
 import { prisma } from '../prisma'
+
 import { JWTService, type JWTPayload } from './jwt'
 import { PasswordService } from './password'
-import { AuthService as ProfileService } from '../services/auth-service'
+import { logger } from '../utils/logger'
 
 export interface LoginCredentials {
   email: string
@@ -12,8 +13,6 @@ export interface RegisterData {
   email: string
   password: string
   fullName?: string
-  companyName?: string
-  organizationId?: string
 }
 
 export interface AuthResult {
@@ -107,7 +106,7 @@ export class AuthService {
   // Registro de usuario
   static async register(data: RegisterData): Promise<AuthResult> {
     try {
-      const { email, password, fullName, companyName, organizationId } = data
+      const { email, password, fullName } = data
 
       // Verificar si el email ya existe
       const existingUser = await prisma.profile.findUnique({
@@ -139,13 +138,8 @@ export class AuthService {
           email,
           password: hashedPassword,
           fullName,
-          companyName,
-          organizationId,
           role: 'user',
           isActive: true
-        },
-        include: {
-          organization: true
         }
       })
 
@@ -153,8 +147,7 @@ export class AuthService {
       const payload: JWTPayload = {
         userId: user.id,
         email: user.email,
-        isSuperAdmin: user.isSuperAdmin,
-        organizationId: user.organizationId
+        isSuperAdmin: user.isSuperAdmin
       }
 
       const token = JWTService.generateToken(payload)
@@ -164,11 +157,8 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
-        companyName: user.companyName,
         role: user.role,
-        isSuperAdmin: user.isSuperAdmin,
-        organizationId: user.organizationId,
-        organization: user.organization
+        isSuperAdmin: user.isSuperAdmin
       }
 
       return {

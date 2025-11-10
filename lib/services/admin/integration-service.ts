@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 
 export interface IntegrationData {
   name: string

@@ -1,9 +1,10 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { AdminSidebar } from "./admin-sidebar"
 import { AdminHeader } from "./admin-header"
+import { AdminSidebar } from "./admin-sidebar"
 import { SidebarProvider, useSidebar } from "./sidebar-context"
+
+import { cn } from "@/lib/utils"
 
 interface AdminLayoutProps {
   children: React.ReactNode

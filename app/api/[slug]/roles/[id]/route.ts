@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+import { AppError } from '@/lib/errors/app-error'
 import { RoleSasService } from '@/lib/services/sales/role-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { AppError } from '@/lib/errors/app-error'
 
 // GET - Obtener rol por ID
 export async function GET(
@@ -66,7 +67,7 @@ export async function DELETE(
       throw AppError.notFound('Rol no encontrado')
     }
     if ((role.nombre || '').toLowerCase() === 'administrador') {
-      throw AppError.badRequest('No se puede eliminar el rol Administrador')
+      throw AppError.validation('No se puede eliminar el rol Administrador')
     }
     await RoleSasService.deleteRole(id)
     return NextResponse.json({ message: 'Rol eliminado correctamente' })

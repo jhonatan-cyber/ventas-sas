@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import { PermissionAdminService } from './permission-admin-service'
 
 /**
  * Servicio para verificar si un usuario tiene un permiso específico y activo

@@ -1,12 +1,13 @@
 "use client"
 
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { PlanHeader } from "@/components/admin/plan/plan-header"
-import { PlansContainer } from "./plans-container"
-import { PlanFormDialog } from "./plan-form-dialog"
-import { PlanDetailDialog } from "./plan-detail-dialog"
 import { DeletePlanDialog } from "./delete-plan-dialog"
+import { PlanDetailDialog } from "./plan-detail-dialog"
+import { PlanFormDialog } from "./plan-form-dialog"
+import { PlansContainer } from "./plans-container"
 import { SerializedSubscriptionPlanWithStats } from "./types"
+
+import { PlanHeader } from "@/components/admin/plan/plan-header"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { usePlanActions } from "@/hooks/admin/plan/use-plan-actions"
 
 interface PlansPageClientProps {
@@ -62,7 +63,7 @@ export function PlansPageClient({ initialPlans }: PlansPageClientProps) {
         <PlanDetailDialog
           open={detailDialog}
           onOpenChange={setDetailDialog}
-          plan={selectedPlan}
+          plan={selectedPlan ?? null}
         />
 
         {/* Modal de confirmación de eliminar */}

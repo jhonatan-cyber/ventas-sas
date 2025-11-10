@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+
 import { OrganizationLandingClient } from "@/components/landing/organization-landing-client"
 import { prisma } from "@/lib/prisma"
 

@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { ProductsPageClient } from "@/components/sales/product/products-page-client"
 import { CategoryService } from "@/lib/services/sales/category-service"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"

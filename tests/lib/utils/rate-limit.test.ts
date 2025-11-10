@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { checkRateLimit, getRateLimitKey, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
 import { NextRequest } from 'next/server'
+import { describe, it, expect, beforeEach } from 'vitest'
+
+import { checkRateLimit, getRateLimitKey, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
 
 describe('Rate Limiting', () => {
   beforeEach(() => {

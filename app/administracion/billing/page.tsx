@@ -1,26 +1,27 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { BillingService } from "@/lib/services/admin/billing-service"
-import { AuthService } from "@/lib/services/auth-service"
-import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
+import { redirect } from "next/navigation"
+
 import { BillingPageClient } from "@/components/admin/billing/billing-page-client"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { BillingService, SerializedBillingStats, SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service"
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export default async function BillingPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
   const token = cookieStore.get('admin-auth-token')?.value
-  
+
   if (!token) {
     redirect('/administracion/login')
   }
-  
+
   try {
     const payload = await AdminJWTService.verifyToken(token!)
     if (!payload) {
       redirect('/administracion/login')
     }
-    
+
     // Validar acceso de administrador
     const hasAccess = await AuthService.hasAdminAccess(payload.userId)
     if (!hasAccess) {
@@ -40,7 +41,7 @@ export default async function BillingPage() {
     ])
 
     // Convertir valores Decimal a números para pasar al componente cliente
-    const serializedStats = {
+    const serializedStats: SerializedBillingStats = {
       totalRevenue: Number(initialStats.totalRevenue),
       pendingAmount: Number(initialStats.pendingAmount),
       overdueAmount: Number(initialStats.overdueAmount),
@@ -59,7 +60,7 @@ export default async function BillingPage() {
     }
 
     // Serializar facturas: convertir Decimal a números
-    const serializedInvoices = initialInvoices.invoices.map(invoice => ({
+    const serializedInvoices: SerializedInvoiceWithRelations[] = initialInvoices.invoices.map(invoice => ({
       ...invoice,
       subtotal: Number(invoice.subtotal),
       tax: Number(invoice.tax),
@@ -73,6 +74,7 @@ export default async function BillingPage() {
 
     return <BillingPageClient initialInvoices={serializedInvoices} initialStats={serializedStats} />
   } catch (error) {
+    console.error('Error en BillingPage:', error)
     redirect('/administracion/login')
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+
 import { ReportsService } from "@/lib/services/sales/reports-service"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 

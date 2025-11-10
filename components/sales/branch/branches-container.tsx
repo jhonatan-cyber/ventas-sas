@@ -1,12 +1,14 @@
 "use client"
 
+import { Branch } from "@prisma/client"
 import { useState } from "react"
-import { BranchesTable } from "./branches-table"
+
 import { BranchesFilters } from "./branches-filters"
 import { BranchesPagination } from "./branches-pagination"
 import { BranchesStats } from "./branches-stats"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Branch } from "@prisma/client"
+import { BranchesTable } from "./branches-table"
+
+import { Card, CardContent } from "@/components/ui/card"
 
 interface BranchesContainerProps {
   branches: (Branch & {

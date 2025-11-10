@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
+
 import { BranchesPageClient } from "@/components/sales/branch/branches-page-client"
-import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 import { BranchService } from "@/lib/services/sales/branch-service"
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 
 export default async function BranchesPage({
   params,

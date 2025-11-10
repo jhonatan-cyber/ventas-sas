@@ -1,45 +1,14 @@
 "use client"
 
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { SubscriptionsHeader } from "@/components/admin/subscription/subscriptions-header"
-import { SubscriptionsContainer } from "./subscriptions-container"
-import { SubscriptionFormDialog } from "./subscription-form-dialog"
 import { DeleteSubscriptionDialog } from "./delete-subscription-dialog"
+import { SubscriptionFormDialog } from "./subscription-form-dialog"
+import { SubscriptionsContainer } from "./subscriptions-container"
+
+import { SubscriptionsHeader } from "@/components/admin/subscription/subscriptions-header"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { useSubscriptionActions } from "@/hooks/admin/subscription/use-subscription-actions"
 
-interface SubscriptionWithDetails {
-  id: string
-  organizationId: string
-  planId: string
-  status: string
-  billingPeriod: string
-  startDate: Date
-  endDate: Date | null
-  autoRenew: boolean
-  createdAt: Date
-  updatedAt: Date
-  organization?: {
-    id: string
-    name: string
-    slug: string
-    razonSocial: string | null
-    nit: string | null
-  }
-  customer?: {
-    id: string
-    razonSocial: string | null
-    nit: string | null
-    nombre: string | null
-    apellido: string | null
-    email: string | null
-  } | null
-  plan: {
-    id: string
-    name: string
-    priceMonthly: number | null
-    priceYearly: number | null
-  }
-}
+import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsPageClientProps {
   initialSubscriptions: SubscriptionWithDetails[]

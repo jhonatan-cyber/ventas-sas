@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ExpenseService, CreateExpenseData } from '@/lib/services/sales/expense-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-import { createExpenseSchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { ExpenseService, CreateExpenseData } from '@/lib/services/sales/expense-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeExpense } from '@/lib/utils/serializers'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createExpenseSchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener todos los gastos con paginación y filtros
 export async function GET(

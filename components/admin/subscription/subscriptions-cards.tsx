@@ -1,44 +1,14 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { User, Package, CheckCircle, Calendar, DollarSign, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
 
-interface SubscriptionWithDetails {
-  id: string
-  customerId?: string | null
-  planId: string
-  status: string
-  billingPeriod: string
-  startDate: Date
-  endDate: Date | null
-  autoRenew: boolean
-  createdAt: Date
-  updatedAt: Date
-  customer: {
-    id: string
-    razonSocial: string | null
-    nit: string | null
-    nombre: string | null
-    apellido: string | null
-    email: string | null
-  } | null
-  organization: {
-    id: string
-    name: string
-    slug: string
-    razonSocial?: string | null
-    nit?: string | null
-  } | null
-  plan: {
-    id: string
-    name: string
-    priceMonthly: number | null
-    priceYearly: number | null
-  }
-}
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+
+
+import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsCardsProps {
   subscriptions: SubscriptionWithDetails[]
@@ -87,7 +57,7 @@ export function SubscriptionsCards({ subscriptions, onEdit, onToggleStatus, onDe
     if (!customer) {
       return organization?.razonSocial || organization?.name || 'Sin cliente'
     }
-    return customer.razonSocial || `${customer.nombre || ''} ${customer.apellido || ''}`.trim() || customer.email || 'Sin nombre'
+    return `${customer.nombre || ''} ${customer.apellido || ''}`.trim() || customer.email || 'Sin nombre'
   }
 
   if (subscriptions.length === 0) {

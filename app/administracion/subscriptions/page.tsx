@@ -1,11 +1,12 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { SubscriptionsPageClient } from "@/components/admin/subscription/subscriptions-page-client"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { prisma } from "@/lib/prisma"
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
 import { SubscriptionManagementService } from "@/lib/services/admin/subscription-management-service"
 import { AuthService } from "@/lib/services/auth-service"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
-import { prisma } from "@/lib/prisma"
 
 export default async function SubscriptionsPage() {
   try {
@@ -38,7 +39,7 @@ export default async function SubscriptionsPage() {
     await prisma.$connect()
 
     const result = await SubscriptionManagementService.getAllSubscriptions(0, 1000)
-    const subscriptions = result.subscriptions.map(sub => ({
+    const subscriptions = result.subscriptions.map((sub: any) => ({
       ...sub,
       customer: sub.organization?.customerOrganizations?.[0]?.customer || null,
       organization: sub.organization,

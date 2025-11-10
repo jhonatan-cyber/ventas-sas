@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { CmsPagesHeader } from "./cms-pages-header"
-import { CmsPagesStats } from "./cms-pages-stats"
-import { CmsPagesFilters } from "./cms-pages-filters"
-import { CmsPagesTable } from "./cms-pages-table"
+
 import { CmsPagesCards } from "./cms-pages-cards"
+import { CmsPagesFilters } from "./cms-pages-filters"
+import { CmsPagesHeader } from "./cms-pages-header"
 import { CmsPagesPagination } from "./cms-pages-pagination"
+import { CmsPagesStats } from "./cms-pages-stats"
+import { CmsPagesTable } from "./cms-pages-table"
 
 interface CmsPage {
   id: string

@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma"
 import { getCachedData, CacheKeys } from '@/lib/cache/cache-service'
+import { prisma } from "@/lib/prisma"
 
 export class SalesDashboardService {
   // Obtener estadísticas del dashboard - CON CACHÉ

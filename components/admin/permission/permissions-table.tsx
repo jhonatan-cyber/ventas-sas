@@ -1,5 +1,7 @@
 "use client"
 
+import { Shield, Users, Tag, Trash2, Power, PowerOff } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,10 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Shield, Users, Tag, Trash2, Power, PowerOff } from "lucide-react"
-import { PermissionInfo } from "@/lib/services/admin/permission-admin-service"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useHasPermission } from "@/hooks/admin/use-user-permissions"
+import { PermissionInfo } from "@/lib/services/admin/permission-admin-service"
 
 interface PermissionsTableProps {
   permissions: PermissionInfo[]

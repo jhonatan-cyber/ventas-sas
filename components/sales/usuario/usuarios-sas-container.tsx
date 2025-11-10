@@ -1,18 +1,20 @@
 "use client"
 
+import { UsuarioSas } from "@prisma/client"
 import { useState } from "react"
-import { UsuariosSasTable } from "./usuarios-sas-table"
+
 import { UsuariosSasFilters } from "./usuarios-sas-filters"
 import { UsuariosSasPagination } from "./usuarios-sas-pagination"
 import { UsuariosSasStats } from "./usuarios-sas-stats"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { UsuarioSas } from "@prisma/client"
+import { UsuariosSasTable } from "./usuarios-sas-table"
+
+import { Card, CardContent } from "@/components/ui/card"
 
 interface UsuariosSasContainerProps {
   usuarios: (UsuarioSas & {
     rol: { id: string; nombre: string } | null
     sucursal: { id: string; name: string } | null
-    customer: any
+    customer?: any
   })[]
   sucursalesCount?: number
   onEdit?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void

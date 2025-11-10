@@ -5,6 +5,7 @@
  */
 
 import { NextRequest } from 'next/server'
+
 import { generateCorrelationId } from './logger'
 
 /**
@@ -26,7 +27,9 @@ export function getCorrelationId(request: NextRequest): string {
  */
 export function getRequestContext(request: NextRequest) {
   const correlationId = getCorrelationId(request)
-  const ip = request.ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+             request.headers.get('x-real-ip') || 
+             'unknown'
   const userAgent = request.headers.get('user-agent') || 'unknown'
   const method = request.method
   const url = request.url

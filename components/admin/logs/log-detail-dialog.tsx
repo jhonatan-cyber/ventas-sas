@@ -1,6 +1,8 @@
 "use client"
 
-import { SecurityLogWithUser } from "@/lib/services/admin/security-logs-service"
+import { CheckCircle, XCircle, Calendar, User, Globe, Building, UserCircle, AlertCircle } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -8,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle, XCircle, Calendar, User, Globe, Building, UserCircle, AlertCircle } from "lucide-react"
+import { SecurityLogWithUser } from "@/lib/services/admin/security-logs-service"
+
 
 interface LogDetailDialogProps {
   log: SecurityLogWithUser

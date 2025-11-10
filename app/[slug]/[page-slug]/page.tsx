@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation"
+
+import { TemplateRenderer } from "@/components/cms/templates/template-renderer"
 import { prisma } from "@/lib/prisma"
 import { CmsService } from "@/lib/services/admin/cms-service"
-import { TemplateRenderer } from "@/components/cms/templates/template-renderer"
 
 export default async function CmsPageView({
   params,

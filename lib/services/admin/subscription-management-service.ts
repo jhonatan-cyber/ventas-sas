@@ -1,6 +1,7 @@
+import { Prisma, SubscriptionBillingPeriod, SubscriptionStatus } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 import { BillingService } from '@/lib/services/admin/billing-service'
-import { SubscriptionBillingPeriod, SubscriptionStatus } from '@prisma/client'
 
 export interface CreateSubscriptionData {
   organizationId?: string
@@ -27,15 +28,13 @@ export class SubscriptionManagementService {
 
     if (search) {
       where.OR = [
-        { organization: { name: { contains: search, mode: 'insensitive' } } },
-        { organization: { razonSocial: { contains: search, mode: 'insensitive' } } },
-        { organization: { slug: { contains: search, mode: 'insensitive' } } },
-        { organization: { customerOrganizations: { some: { customer: { razonSocial: { contains: search, mode: 'insensitive' } } } } } },
-        { organization: { customerOrganizations: { some: { customer: { nombre: { contains: search, mode: 'insensitive' } } } } } },
-        { organization: { customerOrganizations: { some: { customer: { apellido: { contains: search, mode: 'insensitive' } } } } } },
-        { organization: { customerOrganizations: { some: { customer: { email: { contains: search, mode: 'insensitive' } } } } } },
-        { organization: { customerOrganizations: { some: { customer: { nit: { contains: search, mode: 'insensitive' } } } } } },
-        { plan: { name: { contains: search, mode: 'insensitive' } } },
+        { organization: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+        { organization: { razonSocial: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+        { organization: { slug: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+        { organization: { customerOrganizations: { some: { customer: { nombre: { contains: search, mode: Prisma.QueryMode.insensitive } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { apellido: { contains: search, mode: Prisma.QueryMode.insensitive } } } } } },
+        { organization: { customerOrganizations: { some: { customer: { email: { contains: search, mode: Prisma.QueryMode.insensitive } } } } } },
+        { plan: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
       ]
     }
 
@@ -65,8 +64,6 @@ export class SubscriptionManagementService {
                   customer: {
                     select: {
                       id: true,
-                      razonSocial: true,
-                      nit: true,
                       nombre: true,
                       apellido: true,
                       email: true,
@@ -163,7 +160,7 @@ export class SubscriptionManagementService {
       }
     }
 
-    if (!organization) {
+    if (!organization || !data.organizationId) {
       throw new Error('Organización no encontrada')
     }
 
@@ -199,14 +196,13 @@ export class SubscriptionManagementService {
       const customer = organization.customerOrganizations[0]?.customer
       
       // Usar nombre y apellido del dueño como billingName
-      const billingName = owner 
-        ? `${owner.nombre || ''} ${owner.apellido || ''}`.trim() || owner.razonSocial || organization.razonSocial || organization.name || 'Cliente'
-        : organization.razonSocial || organization.name || 'Cliente'
+      const ownerName = owner ? `${owner.nombre || ''} ${owner.apellido || ''}`.trim() : ''
+      const billingName = ownerName || organization.razonSocial || organization.name || 'Cliente'
       
       // El email es requerido, usar el del dueño o un valor por defecto
       const billingEmail = owner?.email || customer?.email || `contacto@${organization.slug || 'empresa'}.com`
       const billingAddress = organization.address || owner?.address || customer?.address || null
-      const billingTaxId = organization.nit || owner?.nit || customer?.nit || null
+      const billingTaxId = organization.nit || null
 
       // Calcular el precio según el período de facturación
       const price = data.billingPeriod === SubscriptionBillingPeriod.yearly 

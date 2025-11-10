@@ -1,5 +1,9 @@
 "use client"
 
+import { X } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -7,9 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 interface CmsPage {
   id: string

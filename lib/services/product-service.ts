@@ -1,5 +1,8 @@
+import { Prisma } from '@prisma/client'
+
 import { prisma } from '../prisma'
-import type { Product, Organization } from '@prisma/client'
+
+import type { Product } from '@prisma/client'
 
 export class ProductService {
   // Obtener todos los productos de una organización
@@ -26,11 +29,7 @@ export class ProductService {
         organization: true,
         orderItems: {
           include: {
-            order: {
-              include: {
-                customer: true
-              }
-            }
+            order: true
           }
         }
       }
@@ -78,18 +77,18 @@ export class ProductService {
       ? { 
           organizationId,
           OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { sku: { contains: query, mode: 'insensitive' } },
-            { category: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } }
+            { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { sku: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { category: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { description: { contains: query, mode: Prisma.QueryMode.insensitive } }
           ]
         }
       : {
           OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { sku: { contains: query, mode: 'insensitive' } },
-            { category: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } }
+            { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { sku: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { category: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { description: { contains: query, mode: Prisma.QueryMode.insensitive } }
           ]
         }
 

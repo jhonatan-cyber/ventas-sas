@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
+import { HealthDashboard } from "@/components/admin/health/health-dashboard"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { AuthService } from "@/lib/services/auth-service"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { HealthDashboard } from "@/components/admin/health/health-dashboard"
 
 export default async function HealthPage() {
   const cookieStore = await cookies()

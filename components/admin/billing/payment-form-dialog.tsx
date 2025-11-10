@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,16 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service"
+import { Label } from "@/components/ui/label"
+import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service"
 
 interface PaymentFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  invoice: InvoiceWithRelations | null
+  invoice: SerializedInvoiceWithRelations | null
   onSave: () => void
 }
 

@@ -1,5 +1,9 @@
 "use client"
 
+import { X, Eye, Calendar, Tag } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -7,10 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { X, Eye, Calendar, Tag } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface CmsBlogPost {
   id: string
@@ -24,6 +24,7 @@ interface CmsBlogPost {
   isPublished: boolean
   viewCount: number
   createdAt: string
+  updatedAt: string
   organization?: {
     id: string
     name: string

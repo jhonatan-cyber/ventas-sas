@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { PlansStats } from "./plans-stats"
-import { PlansFilters } from "./plans-filters"
-import { PlansTable } from "./plans-table"
+
 import { PlansCards } from "./plans-cards"
+import { PlansFilters } from "./plans-filters"
 import { PlansPagination } from "./plans-pagination"
+import { PlansStats } from "./plans-stats"
+import { PlansTable } from "./plans-table"
 import { SerializedSubscriptionPlanWithStats } from "./types"
 
 interface PlansContainerProps {

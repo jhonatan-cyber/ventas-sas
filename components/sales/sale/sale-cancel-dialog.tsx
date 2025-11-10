@@ -1,6 +1,15 @@
 "use client"
 
+import { BrowserMultiFormatReader } from "@zxing/library"
+import { ScanLine, X, Check, AlertCircle } from "lucide-react"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { toast } from "sonner"
+
+import { SalesSaleWithRelations } from "./types"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,14 +18,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { SalesSaleWithRelations } from "./types"
-import { ScanLine, X, Check, AlertCircle } from "lucide-react"
-import { BrowserMultiFormatReader } from "@zxing/library"
-import { toast } from "sonner"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+
+
+
 
 interface SaleCancelDialogProps {
   open: boolean
@@ -79,8 +84,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       }
     })
     setScannedCodes(initialCodes)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, sale?.id, stopScanning])
+  }, [open, sale, itemsWithCodes, stopScanning])
 
   const validateCode = useCallback((productId: string, code: string): boolean => {
     if (!sale) return false

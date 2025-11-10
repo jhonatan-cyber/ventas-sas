@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
-import { OrganizationAdminService } from '@/lib/services/admin/organization-admin-service'
+import { redirect } from 'next/navigation'
+
 import { WhiteLabelClient } from '@/components/admin/white-label/white-label-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { OrganizationAdminService } from '@/lib/services/admin/organization-admin-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function WhiteLabelPage() {
   const cookieStore = await cookies()

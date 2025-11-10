@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { AuthService } from '@/lib/services/auth-service'
-import { UserAdminService } from '@/lib/services/admin/user-admin-service'
-import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+
+import { prisma } from '@/lib/prisma'
+import { UserAdminService } from '@/lib/services/admin/user-admin-service'
+import { AuthService } from '@/lib/services/auth-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+
 
 const updateProfileSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -66,13 +68,9 @@ export async function PUT(request: NextRequest) {
       photo: data.photo || null,
     })
 
-    // Si el CI cambió, actualizar la contraseña automáticamente
+    // Si el CI cambió, actualizar la contraseña automáticamente usando el CI como nueva contraseña
     if (ciChanged && data.ci) {
-      await UserAdminService.updateUser(user.id, {
-        ci: data.ci,
-        ciChanged: true,
-        newCi: data.ci
-      })
+      await UserAdminService.changeUserPassword(user.id, data.ci)
     }
 
     return NextResponse.json(updatedProfile)

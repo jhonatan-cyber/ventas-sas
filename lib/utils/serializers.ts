@@ -269,12 +269,12 @@ export function serializePrismaObject<T extends Record<string, any>>(
     
     // Convertir fechas a ISO string
     if (value instanceof Date) {
-      serialized[key] = value.toISOString() as any
+      (serialized as Record<string, any>)[key] = value.toISOString()
     }
     
     // Convertir Decimal a Number
     if (value && typeof value === 'object' && 'toNumber' in value) {
-      serialized[key] = (value as any).toNumber() as any
+      (serialized as Record<string, any>)[key] = (value as any).toNumber()
     }
   }
   

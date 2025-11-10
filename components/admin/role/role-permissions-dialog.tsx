@@ -1,9 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Loader2, Shield, CheckCircle2 } from "lucide-react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -15,13 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { PermissionInfo, PermissionAdminService } from "@/lib/services/admin/permission-admin-service"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 

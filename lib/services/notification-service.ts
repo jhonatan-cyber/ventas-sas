@@ -50,7 +50,6 @@ export class NotificationService {
         userId: data.userId,
         usuarioSasId: data.usuarioSasId,
         organizationId: data.organizationId,
-        customerId: data.customerId,
         expiresAt: data.expiresAt,
       },
     })

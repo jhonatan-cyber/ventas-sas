@@ -1,6 +1,5 @@
 "use client"
 
-import { BarChart3 } from "lucide-react"
 
 export function ReportsHeader() {
   return (

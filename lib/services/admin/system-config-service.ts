@@ -12,9 +12,12 @@
  * - Integraciones
  */
 
-import { prisma } from '@/lib/prisma'
-import { JwtSecretRotation } from '@/lib/auth/jwt-secret-rotation'
 import { randomBytes } from 'crypto'
+
+import { Prisma } from '@prisma/client'
+
+import { JwtSecretRotation } from '@/lib/auth/jwt-secret-rotation'
+import { prisma } from '@/lib/prisma'
 
 export interface SystemConfig {
   // Configuración General
@@ -159,8 +162,8 @@ export class SystemConfigService {
       await prisma.adminSystemConfigHistory.create({
         data: {
           configKey: key,
-          oldValue: existing.value,
-          newValue: valueJson,
+          oldValue: existing.value === null ? Prisma.JsonNull : (existing.value as Prisma.InputJsonValue),
+          newValue: valueJson as Prisma.InputJsonValue,
           changedBy: userId,
           reason
         }
@@ -170,7 +173,7 @@ export class SystemConfigService {
       await prisma.adminSystemConfig.update({
         where: { key },
         data: {
-          value: valueJson,
+          value: valueJson as Prisma.InputJsonValue,
           updatedBy: userId,
           updatedAt: new Date()
         }
@@ -180,7 +183,7 @@ export class SystemConfigService {
       await prisma.adminSystemConfig.create({
         data: {
           key,
-          value: valueJson,
+          value: valueJson as Prisma.InputJsonValue,
           category,
           updatedBy: userId,
           description: `Configuración de ${category}`
@@ -359,7 +362,8 @@ export class SystemConfigService {
       totalOrganizations,
       totalUsers,
       totalCustomers,
-      activeSessions,
+      userSessionsCount,
+      sasSessionsCount,
       securityLogsLast24h,
       jwtSecrets
     ] = await Promise.all([
@@ -371,7 +375,8 @@ export class SystemConfigService {
           isActive: true,
           expiresAt: { gt: new Date() }
         }
-      }) + prisma.sasSession.count({
+      }),
+      prisma.sasSession.count({
         where: {
           isActive: true,
           expiresAt: { gt: new Date() }
@@ -388,6 +393,8 @@ export class SystemConfigService {
         where: { isActive: true }
       })
     ])
+
+    const activeSessions = userSessionsCount + sasSessionsCount
 
     return {
       organizations: {
@@ -679,7 +686,13 @@ export class SystemConfigService {
       throw new Error('Configuración de email no encontrada')
     }
 
-    // TODO: Implementar prueba real de envío
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(testEmail)) {
+      throw new Error('Email de prueba inválido')
+    }
+
+    // TODO: Implementar prueba real de envío a testEmail
     // Por ahora solo simulamos
     const success = Math.random() > 0.3 // 70% de éxito simulado
 
@@ -688,7 +701,7 @@ export class SystemConfigService {
       data: {
         lastTestedAt: new Date(),
         lastTestResult: success ? 'success' : 'failed',
-        lastTestError: success ? null : 'Error de conexión SMTP'
+        lastTestError: success ? null : `Error de conexión SMTP al enviar a ${testEmail}`
       }
     })
 
@@ -947,7 +960,8 @@ export class SystemConfigService {
     integrationConfigs?: any[]
   }, userId: string) {
     // TODO: Validar y aplicar importación
+    // userId se usará para updatedBy en las configuraciones importadas
     // Por ahora solo retornamos éxito
-    return { success: true, imported: 0 }
+    return { success: true, imported: 0, importedBy: userId }
   }
 }

@@ -1,10 +1,11 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Shield, FileText, Lock, Users, Settings, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, Key } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Shield, FileText, Lock, Users, Settings, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, Key } from "lucide-react"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 
 interface RolesCardsProps {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+
 import { SalesReportClient } from "@/components/sales/reports/sales-report-client"
+import { getCustomerBySlug } from "@/lib/utils/organization"
 
 export default async function SalesReportPage({
   params,

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PermissionAdminService } from '@/lib/services/admin/permission-admin-service'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionAdminService } from '@/lib/services/admin/permission-admin-service'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // GET - Obtener todos los permisos
 export async function GET(request: NextRequest) {

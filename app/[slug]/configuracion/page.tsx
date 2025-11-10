@@ -1,12 +1,14 @@
 import { cookies } from "next/headers"
-import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+
 import ClientPersistence from "./client-persistence"
 import { RenewalDialogClient } from "./renewal-dialog-client"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+import { prisma } from "@/lib/prisma"
 import { getCustomerBySlug } from "@/lib/utils/organization"
 
 async function getActiveSubscriptionForOrganization(organizationId?: string | null) {
@@ -25,10 +27,11 @@ async function getActiveSubscriptionForOrganization(organizationId?: string | nu
   return subscription
 }
 
-async function getBranches(customerId: string) {
+async function getBranches(organizationId?: string | null) {
+  if (!organizationId) return []
   try {
     return await prisma.branch.findMany({
-      where: { customerId },
+      where: { organizationId },
       select: { id: true, name: true },
       orderBy: { createdAt: 'desc' }
     })
@@ -46,8 +49,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const customer = await getCustomerBySlug(slug)
   if (!customer) redirect('/')
 
-  const branches = await getBranches(customer.id)
-  const activeSubscription = await getActiveSubscriptionForOrganization(customer.primaryOrganization?.id)
+  const organizationId = customer.primaryOrganization?.id
+  const branches = await getBranches(organizationId)
+  const activeSubscription = await getActiveSubscriptionForOrganization(organizationId)
 
   // Calcular precio del plan según período
   const planPrice = activeSubscription?.plan 

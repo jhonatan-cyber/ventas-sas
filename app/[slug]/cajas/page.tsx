@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+
 import { CashRegistersPageClient } from "@/components/sales/cash-register/cash-registers-page-client"
 import { CashRegisterService } from "@/lib/services/sales/cash-register-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"

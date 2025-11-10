@@ -4,17 +4,18 @@
  * Verifica el código 2FA durante el login y retorna el token JWT final
  */
 
+import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { TwoFactorService } from '@/lib/auth/two-factor-service'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { SessionManagement } from '@/lib/auth/session-management'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { TwoFactorService } from '@/lib/auth/two-factor-service'
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { logger } from '@/lib/utils/logger'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { verifyTwoFactorSchema } from '@/lib/validators/two-factor-validators'
-import { logger } from '@/lib/utils/logger'
-import jwt from 'jsonwebtoken'
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'dev-admin-secret'
 
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear sesión en BD
-    const ipAddress = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || undefined
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || undefined
     const userAgent = request.headers.get('user-agent') || undefined
     const deviceInfo = SessionManagement.getDeviceInfo(request)
 

@@ -1,18 +1,20 @@
 "use client"
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { CashRegisterWithRelations } from "./types"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CashRegister } from "@prisma/client"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { formatDateTime } from "@/lib/utils/date"
 
-const formatCurrency = (value: number | string | undefined | null) =>
-  `$${Number(value || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
-
-type CashRegisterWithRelations = CashRegister & {
-  branch?: { id: string; name: string; address?: string | null } | null
-  openedBy?: { id: string; nombre: string; apellido: string } | null
-  closedBy?: { id: string; nombre: string; apellido: string } | null
+const formatCurrency = (value: number | string | undefined | null | { toNumber?: () => number }) => {
+  let numValue = 0
+  if (value && typeof value === 'object' && 'toNumber' in value && value.toNumber) {
+    numValue = value.toNumber()
+  } else {
+    numValue = Number(value || 0)
+  }
+  return `$${numValue.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
 }
 
 interface CashRegisterDetailsDialogProps {

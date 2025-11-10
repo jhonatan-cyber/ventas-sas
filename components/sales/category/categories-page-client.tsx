@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { CategoriesHeader } from "./categories-header"
-import { CategoriesContainer } from "./categories-container"
-import { CategoryFormDialog } from "./category-form-dialog"
-import { CategoryDeleteDialog } from "./category-delete-dialog"
-import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { Category } from "@prisma/client"
+import { useState, useEffect } from "react"
+
+import { CategoriesContainer } from "./categories-container"
+import { CategoriesHeader } from "./categories-header"
+import { CategoryDeleteDialog } from "./category-delete-dialog"
+import { CategoryFormDialog } from "./category-form-dialog"
+
+import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { useCategoryActions } from "@/hooks/sales/category/use-category-actions"
 
 interface CategoriesPageClientProps {

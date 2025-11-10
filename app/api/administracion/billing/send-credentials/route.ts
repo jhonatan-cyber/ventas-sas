@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { prisma } from '@/lib/prisma'
 import { EmailService } from '@/lib/services/admin/email-service'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const payload = AdminJWTService.verifyToken(token)
+    const payload = await AdminJWTService.verifyToken(token)
     if (!payload) {
       return NextResponse.json(
         { error: 'Token inválido' },
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         ci: true,
-        correo: true,
+        email: true,
         nombre: true,
         apellido: true,
       }

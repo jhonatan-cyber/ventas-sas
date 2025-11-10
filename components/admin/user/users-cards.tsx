@@ -1,11 +1,12 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { User, CreditCard, Shield, Phone, MapPin, Edit, Trash2, Power, PowerOff, Mail, MoreVertical, Eye } from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { User, CreditCard, Shield, Phone, MapPin, Edit, Trash2, Power, PowerOff, Mail, MoreVertical, Eye } from "lucide-react"
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 
 interface UsersCardsProps {

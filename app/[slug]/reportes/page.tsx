@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+
 import { ReportsPageClient } from "@/components/sales/reports/reports-page-client"
 import { getCustomerBySlug } from "@/lib/utils/organization"
 

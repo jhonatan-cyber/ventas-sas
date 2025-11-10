@@ -5,15 +5,17 @@
 
 "use client"
 
+import { Loader2, Shield, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
+
+import { TwoFactorSetup } from "@/components/auth/two-factor-setup"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { TwoFactorSetup } from "@/components/auth/two-factor-setup"
-import { Loader2, Shield, AlertCircle, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
+
 
 export default function SecurityPage() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)

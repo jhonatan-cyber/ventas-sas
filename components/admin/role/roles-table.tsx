@@ -1,22 +1,6 @@
 "use client";
 
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Eye,
   Edit,
   Trash2,
@@ -28,8 +12,25 @@ import {
   Users,
   Key,
 } from "lucide-react";
-import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useHasPermission } from "@/hooks/admin/use-user-permissions";
+import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
 
 interface RolesTableProps {
   roles: RoleWithStats[];

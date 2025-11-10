@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { ProductsHeader } from "./products-header"
-import { ProductsContainer } from "./products-container"
-import { ProductFormDialog } from "./product-form-dialog"
-import { ProductDeleteDialog } from "./product-delete-dialog"
-import { CategoryCards } from "./category-cards"
 import { SalesProduct, Category, Branch } from "@prisma/client"
+import { useState, useEffect, useCallback } from "react"
+
+import { CategoryCards } from "./category-cards"
+import { ProductDeleteDialog } from "./product-delete-dialog"
+import { ProductFormDialog } from "./product-form-dialog"
+import { ProductsContainer } from "./products-container"
+import { ProductsHeader } from "./products-header"
+
 import { useProductActions } from "@/hooks/sales/product/use-product-actions"
-import { SalesProductService } from "@/lib/services/sales/sales-product-service"
-import { CategoryService } from "@/lib/services/sales/category-service"
 
 interface ProductsPageClientProps {
   initialCategories: Category[]

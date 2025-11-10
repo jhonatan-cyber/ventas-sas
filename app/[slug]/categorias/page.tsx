@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+
 import { CategoriesPageClient } from "@/components/sales/category/categories-page-client"
 import { CategoryService } from "@/lib/services/sales/category-service"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"

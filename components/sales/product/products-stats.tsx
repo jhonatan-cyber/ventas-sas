@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, CheckCircle2, XCircle, AlertTriangle, DollarSign } from "lucide-react"
 import { SalesProduct, Branch } from "@prisma/client"
+import { Package, CheckCircle2, XCircle, AlertTriangle, DollarSign } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ProductsStatsProps {
   products: (SalesProduct & { branch: Branch | null })[]

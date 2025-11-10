@@ -6,11 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { SystemConfigService } from '@/lib/services/admin/system-config-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { z } from 'zod'
+
+import { SystemConfigService } from '@/lib/services/admin/system-config-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 const rotateSecretSchema = z.object({
   systemType: z.enum(['admin', 'sas'])

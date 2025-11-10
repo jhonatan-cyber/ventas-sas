@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+
 import { AdminGrowthChart } from "./admin-growth-chart"
 
 export function AdminAnalyticsClient() {

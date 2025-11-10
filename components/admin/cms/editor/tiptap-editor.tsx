@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import Color from "@tiptap/extension-color"
+import Image from "@tiptap/extension-image"
+import Link from "@tiptap/extension-link"
+import Placeholder from "@tiptap/extension-placeholder"
+import { TextStyle } from "@tiptap/extension-text-style"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import Placeholder from "@tiptap/extension-placeholder"
-import Link from "@tiptap/extension-link"
-import Image from "@tiptap/extension-image"
-import TextStyle from "@tiptap/extension-text-style"
-import Color from "@tiptap/extension-color"
-import { Button } from "@/components/ui/button"
 import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Image as ImageIcon, Undo, Redo } from "lucide-react"
+import { useState, useEffect } from "react"
+
+import { Button } from "@/components/ui/button"
+
 
 interface TiptapEditorProps {
   content: string

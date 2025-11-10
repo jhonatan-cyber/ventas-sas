@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
-import { createCustomerSchema } from '@/lib/validators/admin-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createCustomerSchema } from '@/lib/validators/admin-validators'
 
 // GET - Obtener todos los clientes con paginación y filtros
 export async function GET(request: NextRequest) {
@@ -74,8 +75,6 @@ export async function POST(request: NextRequest) {
     const validatedData = validation.data
 
     const newCustomer = await CustomerAdminService.createCustomer({
-      razonSocial: validatedData.razonSocial || undefined,
-      nit: validatedData.nit || undefined,
       ci: validatedData.ci,
       nombre: validatedData.nombre || undefined,
       apellido: validatedData.apellido || undefined,
@@ -84,8 +83,11 @@ export async function POST(request: NextRequest) {
       email: validatedData.email || undefined
     })
 
+    // Obtener el cliente con las propiedades extendidas para auditoría
+    const customerWithDetails = await CustomerAdminService.getCustomerById(newCustomer.id)
+
     // Registrar creación de cliente en auditoría
-    if (currentUser) {
+    if (currentUser && customerWithDetails) {
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: currentUser.id,
@@ -94,10 +96,8 @@ export async function POST(request: NextRequest) {
           entityType: 'Customer',
           entityId: newCustomer.id,
           details: {
-            razonSocial: newCustomer.razonSocial,
-            slug: newCustomer.slug,
-            nit: newCustomer.nit,
-            ci: newCustomer.ci,
+            slug: customerWithDetails.slug,
+            ci: customerWithDetails.ci,
           },
         },
         request

@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import { logRequest } from '@/lib/utils/logger'
 import { getRequestContext } from '@/lib/utils/request-context'
 

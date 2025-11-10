@@ -1,9 +1,10 @@
 "use client"
 
-import { Activity, Clock } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { Activity, Clock } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 
 interface ActivityWidgetProps {
   data: Array<{

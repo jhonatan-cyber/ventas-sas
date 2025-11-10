@@ -1,5 +1,5 @@
+import { getCachedData } from '@/lib/cache/cache-service'
 import { prisma } from '@/lib/prisma'
-import { getCachedData, CacheKeys } from '@/lib/cache/cache-service'
 
 export interface OrganizationGrowth {
   date: string
@@ -109,7 +109,7 @@ export class AdminAnalyticsService {
 
         return plans.map((plan) => {
           const monthlyRevenue =
-            Number(plan.price) * plan.subscriptions.length
+            (plan.priceMonthly ? Number(plan.priceMonthly) : 0) * plan.subscriptions.length
           return {
             planName: plan.name,
             organizations: plan.subscriptions.length,

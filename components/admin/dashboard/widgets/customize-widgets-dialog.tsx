@@ -1,6 +1,11 @@
 "use client"
 
 import { useState } from "react"
+
+import { Widget, DEFAULT_WIDGETS } from "./types"
+
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -9,10 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Widget, DEFAULT_WIDGETS } from "./types"
+
 
 interface CustomizeWidgetsDialogProps {
   open: boolean

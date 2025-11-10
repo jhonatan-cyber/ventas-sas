@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { BranchService } from '@/lib/services/sales/branch-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { BranchService } from '@/lib/services/sales/branch-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 // GET - Obtener sucursal por ID
 export async function GET(

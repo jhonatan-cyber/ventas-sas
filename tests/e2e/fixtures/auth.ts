@@ -3,7 +3,7 @@
  */
 
 import { test as base } from '@playwright/test'
-import type { Page } from '@playwright/test'
+
 
 interface AuthFixtures {
   loginAsAdmin: () => Promise<void>

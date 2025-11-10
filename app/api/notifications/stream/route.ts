@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
-import { NotificationService } from '@/lib/services/notification-service'
+import { NextRequest } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { SasJWTService } from '@/lib/auth/sas-jwt'
+import { NotificationService } from '@/lib/services/notification-service'
 import { logger } from '@/lib/utils/logger'
 
 /**
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
         return new Response('Unauthorized', { status: 401 })
       }
 
-      const payload = AdminJWTService.verifyToken(token)
+      const payload = await AdminJWTService.verifyToken(token)
       if (!payload) {
         return new Response('Unauthorized', { status: 401 })
       }
@@ -59,9 +60,9 @@ export async function GET(request: NextRequest) {
         if (!payload) {
           return new Response('Unauthorized', { status: 401 })
         }
-        usuarioSasId = payload.usuarioId
-        organizationId = payload.organizationId
-        customerId = payload.customerId
+        usuarioSasId = payload.userId
+        organizationId = payload.organizationId || undefined
+        customerId = undefined
       }
     } else {
       return new Response('Invalid parameters', { status: 400 })

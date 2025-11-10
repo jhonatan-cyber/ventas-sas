@@ -1,30 +1,33 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { BillingHeader } from "./billing-header"
-import { BillingContainer } from "./billing-container"
-import { InvoiceFormDialog } from "./invoice-form-dialog"
-import { InvoiceDetailDialog } from "./invoice-detail-dialog"
-import { PaymentFormDialog } from "./payment-form-dialog"
-import { InvoicePrintView } from "./invoice-print-view"
-import { generateInvoicePDF } from "./invoice-pdf-utils"
-import { InvoiceWithRelations, BillingStats } from "@/lib/services/admin/billing-service"
 import { toast } from "sonner"
 
+import { BillingContainer } from "./billing-container"
+import { BillingHeader } from "./billing-header"
+import { InvoiceDetailDialog } from "./invoice-detail-dialog"
+import { InvoiceFormDialog } from "./invoice-form-dialog"
+import { generateInvoicePDF } from "./invoice-pdf-utils"
+import { InvoicePrintView } from "./invoice-print-view"
+import { PaymentFormDialog } from "./payment-form-dialog"
+
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { SerializedInvoiceWithRelations, SerializedBillingStats } from "@/lib/services/admin/billing-service"
+
+
 interface BillingPageClientProps {
-  initialInvoices: InvoiceWithRelations[]
-  initialStats: BillingStats
+  initialInvoices: SerializedInvoiceWithRelations[]
+  initialStats: SerializedBillingStats
 }
 
 export function BillingPageClient({ initialInvoices, initialStats }: BillingPageClientProps) {
-  const [invoices, setInvoices] = useState<InvoiceWithRelations[]>(initialInvoices)
-  const [stats, setStats] = useState<BillingStats>(initialStats)
+  const [invoices, setInvoices] = useState<SerializedInvoiceWithRelations[]>(initialInvoices)
+  const [stats, setStats] = useState<SerializedBillingStats>(initialStats)
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false)
   const [isInvoiceDetailOpen, setIsInvoiceDetailOpen] = useState(false)
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false)
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithRelations | null>(null)
-  const [invoiceToPrint, setInvoiceToPrint] = useState<InvoiceWithRelations | null>(null)
+  const [selectedInvoice, setSelectedInvoice] = useState<SerializedInvoiceWithRelations | null>(null)
+  const [invoiceToPrint, setInvoiceToPrint] = useState<SerializedInvoiceWithRelations | null>(null)
 
   // Recargar facturas después de guardar
   useEffect(() => {
@@ -61,9 +64,9 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   }, [initialInvoices, initialStats])
 
   // Función para descargar PDF
-  const handleDownloadPDF = async (invoice: InvoiceWithRelations) => {
+  const handleDownloadPDF = async (invoice: SerializedInvoiceWithRelations) => {
     try {
-      await generateInvoicePDF(invoice)
+      await generateInvoicePDF(invoice as any)
       toast.success("PDF descargado exitosamente")
     } catch (error) {
       console.error("Error al generar PDF:", error)
@@ -72,7 +75,7 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   }
 
   // Función para imprimir
-  const handlePrintInvoice = (invoice: InvoiceWithRelations) => {
+  const handlePrintInvoice = (invoice: SerializedInvoiceWithRelations) => {
     setInvoiceToPrint(invoice)
     // Usar setTimeout para asegurar que el componente se renderice antes de imprimir
     setTimeout(() => {
@@ -85,7 +88,7 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   }
 
   // Función para enviar credenciales por email
-  const handleSendCredentials = async (invoice: InvoiceWithRelations) => {
+  const handleSendCredentials = async (invoice: SerializedInvoiceWithRelations) => {
     try {
       const response = await fetch('/api/administracion/billing/send-credentials', {
         method: 'POST',
@@ -110,7 +113,7 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   }
 
   // Función para ver detalles
-  const handleView = (invoice: InvoiceWithRelations) => {
+  const handleView = (invoice: SerializedInvoiceWithRelations) => {
     setSelectedInvoice(invoice)
     setIsInvoiceDetailOpen(true)
   }

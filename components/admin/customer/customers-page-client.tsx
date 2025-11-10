@@ -1,13 +1,14 @@
 "use client";
 
-import { AdminLayout } from "@/components/layout/admin-layout";
-import { CustomersHeader } from "./customers-header";
-import { CustomersContainer } from "./customers-container";
-import { CustomerFormDialog } from "./customer-form-dialog";
-import { CustomerDetailDialog } from "./customer-detail-dialog";
 import { CustomerDeleteDialog } from "./customer-delete-dialog";
-import { Customer } from "@/lib/types";
+import { CustomerDetailDialog } from "./customer-detail-dialog";
+import { CustomerFormDialog } from "./customer-form-dialog";
+import { CustomersContainer } from "./customers-container";
+import { CustomersHeader } from "./customers-header";
+
+import { AdminLayout } from "@/components/layout/admin-layout";
 import { useCustomerActions } from "@/hooks/admin/customer/use-customer-actions";
+import { Customer } from "@/lib/types";
 
 interface CustomersPageClientProps {
   initialCustomers: Customer[];

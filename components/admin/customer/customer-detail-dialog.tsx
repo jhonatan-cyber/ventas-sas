@@ -1,29 +1,28 @@
 "use client"
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import {
   User,
   CreditCard,
   MapPin,
   Phone,
   Mail,
   Building2,
-  CheckCircle,
-  XCircle,
   Calendar,
   Clock,
   Tag,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import { Customer } from "@/lib/types"
 
 interface CustomerWithDetails extends Customer {

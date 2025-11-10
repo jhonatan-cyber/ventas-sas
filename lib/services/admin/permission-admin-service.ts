@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma"
 import { Role } from "@prisma/client"
+
+import { prisma } from "@/lib/prisma"
 
 export interface PermissionInfo {
   name: string

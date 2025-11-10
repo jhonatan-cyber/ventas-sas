@@ -6,7 +6,6 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { createHash } from 'crypto'
 
 export type SystemType = 'admin' | 'sas' | 'general'
 

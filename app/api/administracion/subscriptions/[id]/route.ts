@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SubscriptionManagementService } from '@/lib/services/admin/subscription-management-service'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { SubscriptionManagementService } from '@/lib/services/admin/subscription-management-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 
 // GET - Obtener una suscripción por ID
 export async function GET(
@@ -112,11 +113,12 @@ export async function PUT(
 
         // Detectar cancelación específicamente
         if (status === 'cancelled' || status === 'canceled') {
+          const customerId = targetSubscription.organization?.customerOrganizations?.[0]?.customer?.id
           await SecurityAuditLogger.logSensitiveAction(
             {
               userId: currentUser.id,
               organizationId: targetSubscription.organizationId || undefined,
-              customerId: targetSubscription.customerId || undefined,
+              customerId: customerId || undefined,
               actionType: 'SUBSCRIPTION_CANCELLED',
               entityType: 'Subscription',
               entityId: id,
@@ -144,11 +146,12 @@ export async function PUT(
       }
 
       if (changedFields.length > 0 && status !== 'cancelled' && status !== 'canceled') {
+        const customerId = targetSubscription.organization?.customerOrganizations?.[0]?.customer?.id
         await SecurityAuditLogger.logSensitiveAction(
           {
             userId: currentUser.id,
             organizationId: targetSubscription.organizationId || undefined,
-            customerId: targetSubscription.customerId || undefined,
+            customerId: customerId || undefined,
             actionType: 'SUBSCRIPTION_UPDATED',
             entityType: 'Subscription',
             entityId: id,
@@ -176,6 +179,7 @@ export async function PUT(
 
     return NextResponse.json(serialized)
   } catch (error: any) {
+    const { id } = await params
     return handleApiError(error, createErrorContext(request, { action: 'UPDATE_SUBSCRIPTION', subscriptionId: id }))
   }
 }
@@ -210,11 +214,12 @@ export async function DELETE(
 
     // Registrar eliminación de suscripción en auditoría
     if (currentUser) {
+      const customerId = targetSubscription.organization?.customerOrganizations?.[0]?.customer?.id
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: currentUser.id,
           organizationId: targetSubscription.organizationId || undefined,
-          customerId: targetSubscription.customerId || undefined,
+          customerId: customerId || undefined,
           actionType: 'SUBSCRIPTION_CANCELLED',
           entityType: 'Subscription',
           entityId: id,
@@ -231,7 +236,8 @@ export async function DELETE(
     }
 
     return NextResponse.json({ message: 'Suscripción eliminada exitosamente' })
-  } catch (error) {
+  } catch (error: any) {
+    const { id } = await params
     return handleApiError(error, createErrorContext(request, { action: 'DELETE_SUBSCRIPTION', subscriptionId: id }))
   }
 }

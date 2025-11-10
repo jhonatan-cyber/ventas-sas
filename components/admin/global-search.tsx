@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { Search, User, Building2, CreditCard, Ticket, FileText, Loader2 } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+
 import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 interface SearchResult {

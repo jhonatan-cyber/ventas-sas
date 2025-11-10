@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { OrganizationAdminService } from "@/lib/services/admin/organization-admin-service"
+import { redirect } from "next/navigation"
+
 import { BulkNotificationsClient } from "@/components/admin/notifications/bulk-notifications-client"
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { OrganizationAdminService } from "@/lib/services/admin/organization-admin-service"
 
 export default async function NotificationsPage() {
   // Validación de sesión Admin en el servidor

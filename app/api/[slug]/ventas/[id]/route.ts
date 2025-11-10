@@ -1,10 +1,11 @@
+import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+
+import { prisma } from '@/lib/prisma'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { SaleService, UpdateSaleData } from '@/lib/services/sales/sale-service'
 import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
-import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-import { prisma } from '@/lib/prisma'
 import { serializeSale } from '@/lib/utils/serializers'
-import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null

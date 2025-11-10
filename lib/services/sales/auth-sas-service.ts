@@ -1,9 +1,11 @@
-import { prisma } from '@/lib/prisma'
-import { SasJWTService } from '@/lib/auth/sas-jwt'
-import { PasswordService } from '@/lib/auth/password'
-import { getCustomerBySlug, getOrganizationBySlug } from '@/lib/utils/organization'
 import type { NextRequest } from 'next/server'
+
+import { PasswordService } from '@/lib/auth/password'
+import { SasJWTService } from '@/lib/auth/sas-jwt'
+import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
+import { getCustomerBySlug, getOrganizationBySlug } from '@/lib/utils/organization'
+
 
 export interface LoginSasCredentials {
   ci?: string
@@ -16,6 +18,8 @@ export interface AuthSasResult {
   user?: any
   token?: string
   error?: string
+  requires2FA?: boolean
+  tempToken?: string
 }
 
 export class AuthSasService {
@@ -118,7 +122,7 @@ export class AuthSasService {
         logger.error('Error al buscar usuario SAS', dbError as Error, {
           organizationId: organization.id,
           hasCi: !!ci,
-          hasCorreo: !!correo,
+          hasEmail: !!email,
         })
         throw new Error('Error al buscar usuario en la base de datos')
       }
@@ -228,7 +232,8 @@ export class AuthSasService {
         const { SessionManagement } = await import('@/lib/auth/session-management')
         
         // Obtener info del request
-        const ipAddress = request?.ip || request?.headers.get('x-forwarded-for')?.split(',')[0] || undefined
+        const forwardedFor = request?.headers.get('x-forwarded-for')
+        const ipAddress = forwardedFor?.split(',')[0]?.trim() || request?.headers.get('x-real-ip') || undefined
         const userAgent = request?.headers.get('user-agent') || undefined
         const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
         

@@ -1,12 +1,14 @@
 "use client"
 
+import { Category } from "@prisma/client"
 import { useState } from "react"
-import { CategoriesTable } from "./categories-table"
+
 import { CategoriesFilters } from "./categories-filters"
 import { CategoriesPagination } from "./categories-pagination"
 import { CategoriesStats } from "./categories-stats"
+import { CategoriesTable } from "./categories-table"
+
 import { Card, CardContent } from "@/components/ui/card"
-import { Category } from "@prisma/client"
 
 interface CategoriesContainerProps {
   categories: Category[]

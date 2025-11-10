@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NotificationService, NotificationType } from '@/lib/services/notification-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { z } from 'zod'
+
+import { NotificationService, NotificationType } from '@/lib/services/notification-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 const sendBulkNotificationSchema = z.object({
   targetType: z.enum(['all_admins', 'organization', 'organizations', 'users']),

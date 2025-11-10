@@ -45,7 +45,7 @@ export class DataExportService {
         _count: {
           select: {
             organizationMembers: true,
-            customers: true,
+            customerOrganizations: true,
             products: true,
           },
         },
@@ -62,7 +62,7 @@ export class DataExportService {
       fechaInicio: org.subscriptionStartDate?.toISOString() || '',
       fechaFin: org.subscriptionEndDate?.toISOString() || '',
       usuarios: org._count.organizationMembers,
-      clientes: org._count.customerOrganizations,
+      clientes: org._count.customerOrganizations || 0,
       productos: org._count.products,
       fechaCreacion: org.createdAt.toISOString(),
     }))
@@ -119,7 +119,7 @@ export class DataExportService {
       orderBy: { createdAt: 'desc' },
     })
 
-    const data = users.map(user => ({
+    const data = users.map((user: any) => ({
       id: user.id,
       nombre: user.fullName || 'N/A',
       email: user.email,
@@ -127,8 +127,8 @@ export class DataExportService {
       rol: user.role,
       superAdmin: user.isSuperAdmin ? 'Sí' : 'No',
       activo: user.isActive ? 'Sí' : 'No',
-      organizaciones: user.organizationMembers.map(om => om.organization.name).join(', '),
-      roles: user.organizationMembers.map(om => om.role?.name || 'N/A').join(', '),
+      organizaciones: (user.organizationMembers || []).map((om: any) => om.organization?.name || 'N/A').join(', '),
+      roles: (user.organizationMembers || []).map((om: any) => om.role?.name || 'N/A').join(', '),
       ultimoLogin: user.lastLoginAt?.toISOString() || 'Nunca',
       fechaCreacion: user.createdAt.toISOString(),
     }))

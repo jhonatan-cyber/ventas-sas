@@ -4,15 +4,17 @@
  * Deshabilita 2FA para usuario SAS (requiere contraseña)
  */
 
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+
 import { PasswordService } from '@/lib/auth/password'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { logger } from '@/lib/utils/logger'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { disableTwoFactorSchema } from '@/lib/validators/two-factor-validators'
-import { logger } from '@/lib/utils/logger'
-import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 export async function POST(
   request: NextRequest,
@@ -43,10 +45,10 @@ export async function POST(
       where: { id: user.id },
       select: {
         id: true,
-        correo: true,
-        contraseña: true,
+        email: true,
+        password: true,
         twoFactorEnabled: true,
-        customerId: true,
+        organizationId: true,
       },
     })
 
@@ -82,7 +84,7 @@ export async function POST(
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: usuario.id,
-          customerId: usuario.customerId,
+          organizationId: usuario.organizationId,
           actionType: 'TWO_FACTOR_DISABLE_FAILED',
           details: {
             identifier: usuario.email || '',
@@ -95,7 +97,7 @@ export async function POST(
 
       logger.security('Intento de deshabilitar 2FA con contraseña incorrecta SAS', {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         slug,
       })
 
@@ -111,7 +113,7 @@ export async function POST(
       data: {
         twoFactorEnabled: false,
         twoFactorSecret: null,
-        twoFactorBackupCodes: null,
+        twoFactorBackupCodes: Prisma.JsonNull,
         twoFactorEnabledAt: null,
       },
     })
@@ -120,7 +122,7 @@ export async function POST(
     await SecurityAuditLogger.logSensitiveAction(
       {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         actionType: 'TWO_FACTOR_DISABLED',
         details: {
           identifier: usuario.email || '',
@@ -132,7 +134,7 @@ export async function POST(
 
     logger.security('2FA deshabilitado SAS', {
       userId: usuario.id,
-      customerId: usuario.customerId,
+      organizationId: usuario.organizationId,
       slug,
     })
 

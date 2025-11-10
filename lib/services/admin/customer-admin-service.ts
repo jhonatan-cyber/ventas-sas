@@ -1,7 +1,10 @@
-import { prisma } from '@/lib/prisma'
 import { randomUUID } from 'crypto'
-import { Customer } from '@prisma/client'
+
+import { Customer as PrismaCustomer } from '@prisma/client'
+
 import { PasswordService } from '@/lib/auth/password'
+import { prisma } from '@/lib/prisma'
+import { Customer } from '@/lib/types'
 
 export interface CreateCustomerData {
   // razonSocial y nit se movieron a Organization
@@ -26,9 +29,9 @@ export interface UpdateCustomerData {
 }
 
 export class CustomerAdminService {
-  private static attachPrimaryOrganization<T extends Customer & { organizations?: Array<{ organization: any }> }>(
+  private static attachPrimaryOrganization<T extends PrismaCustomer & { organizations?: Array<{ organization: any }> }>(
     customer: T | null
-  ) {
+  ): Customer | null {
     if (!customer) {
       return null
     }
@@ -51,7 +54,7 @@ export class CustomerAdminService {
       nit: primaryOrganization?.nit ?? null,
       slug: primaryOrganization?.slug ?? null,
       organizationId: primaryOrganization?.id ?? null,
-    }
+    } as Customer
   }
 
   // Obtener todos los clientes
@@ -159,7 +162,7 @@ export class CustomerAdminService {
               }
             }
           },
-          orderBy: { isPrimary: 'desc' }
+          orderBy: { createdAt: 'asc' }
         }
       }
     })
@@ -168,7 +171,7 @@ export class CustomerAdminService {
   }
 
   // Crear nuevo cliente
-  static async createCustomer(data: CreateCustomerData): Promise<Customer> {
+  static async createCustomer(data: CreateCustomerData): Promise<PrismaCustomer> {
     // Si se proporciona CI, usarlo como contraseña (hasheado)
     let hashedPassword = null
     if (data.ci) {
@@ -207,7 +210,7 @@ export class CustomerAdminService {
   }
 
   // Actualizar cliente
-  static async updateCustomer(id: string, data: UpdateCustomerData): Promise<Customer> {
+  static async updateCustomer(id: string, data: UpdateCustomerData): Promise<PrismaCustomer> {
     const updateData: any = { ...data }
     // Actualizar el cliente
     const result = await prisma.customer.update({

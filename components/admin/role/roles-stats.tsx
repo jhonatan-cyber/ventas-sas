@@ -1,7 +1,8 @@
 "use client"
 
+import { UserCog, Users, Power, PowerOff } from "lucide-react"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { UserCog, Users, UserPlus, UserMinus, Power, PowerOff } from "lucide-react"
 import { RoleWithStats } from "@/lib/services/admin/role-admin-service"
 
 interface RolesStatsProps {

@@ -1,11 +1,11 @@
 "use client"
 
+import { Profile } from "@prisma/client"
 import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Profile } from "@prisma/client"
-import { toast } from "sonner"
 
 interface ProfileFormProps {
   profile: Profile

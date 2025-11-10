@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-import { prisma } from '@/lib/prisma'
-import { checkRateLimit, getRateLimitKey, addRateLimitHeaders, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
-import { sasLoginSchema } from '@/lib/validators/auth-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { logger } from '@/lib/utils/logger'
+import { checkRateLimit, getRateLimitKey, addRateLimitHeaders, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { sasLoginSchema } from '@/lib/validators/auth-validators'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  let slug: string | undefined
   try {
-    const { slug } = await params
+    const resolvedParams = await params
+    slug = resolvedParams.slug
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: 'Slug de organización no proporcionado' },
+        { status: 400 }
+      )
+    }
 
     // Parsear body una sola vez
     let body: any
@@ -33,7 +42,7 @@ export async function POST(
     if (!rateLimitResult.allowed) {
       logger.security('Login SAS bloqueado por rate limit', {
         slug,
-        ip: request.ip || request.headers.get('x-forwarded-for'),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
         identifier: body.ci || body.email,
       })
       
@@ -181,8 +190,8 @@ export async function POST(
 
   } catch (error) {
     logger.error('Error en login API SAS', error as Error, {
-      endpoint: `/api/${slug}/login`,
-      slug,
+      endpoint: slug ? `/api/${slug}/login` : '/api/[slug]/login',
+      slug: slug || 'unknown',
     })
     console.error('Error completo en login SAS:', error)
     console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack available')

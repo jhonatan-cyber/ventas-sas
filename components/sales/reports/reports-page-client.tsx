@@ -1,7 +1,7 @@
 "use client"
 
-import { ReportsHeader } from "./reports-header"
 import { ReportsContainer } from "./reports-container"
+import { ReportsHeader } from "./reports-header"
 
 interface ReportsPageClientProps {
   customerSlug: string

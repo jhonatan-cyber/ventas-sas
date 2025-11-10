@@ -6,13 +6,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+
 import { TwoFactorService } from '@/lib/auth/two-factor-service'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { logger } from '@/lib/utils/logger'
 import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { logger } from '@/lib/utils/logger'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el usuario existe y está activo
     const profile = await prisma.profile.findUnique({
-      where: { id: user.userId },
+      where: { id: user.id },
       select: {
         id: true,
         email: true,

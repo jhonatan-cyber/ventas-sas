@@ -1,13 +1,14 @@
 "use client"
 
+import { Calendar, Building2 } from "lucide-react"
 import { useState, useEffect } from "react"
+
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Calendar, Building2 } from "lucide-react"
 
 interface Organization {
   id: string

@@ -88,7 +88,6 @@ export class CustomerOrganizationService {
                   nombre: true,
                   apellido: true,
                   email: true,
-                  razonSocial: true,
                   isActive: true,
                 },
               },
@@ -157,14 +156,16 @@ export class CustomerOrganizationService {
             },
           })
 
-          await logBusinessOperation({
-            action: "CUSTOMER_ORGANIZATION_REACTIVATED",
+          await logBusinessOperation(
+            "CUSTOMER_ORGANIZATION_REACTIVATED",
+            "CustomerOrganization",
+            existing.id,
             adminId,
-            metadata: {
+            {
               customerId: data.customerId,
               organizationId: data.organizationId,
-            },
-          })
+            }
+          )
 
           return updated
         } else {
@@ -186,7 +187,6 @@ export class CustomerOrganizationService {
               nombre: true,
               apellido: true,
               email: true,
-              razonSocial: true,
             },
           },
           organization: {
@@ -199,14 +199,16 @@ export class CustomerOrganizationService {
         },
       })
 
-      await logBusinessOperation({
-        action: "CUSTOMER_ORGANIZATION_ADDED",
+      await logBusinessOperation(
+        "CUSTOMER_ORGANIZATION_ADDED",
+        "CustomerOrganization",
+        customerOrganization.id,
         adminId,
-        metadata: {
+        {
           customerId: data.customerId,
           organizationId: data.organizationId,
-        },
-      })
+        }
+      )
 
       return customerOrganization
     } catch (error) {
@@ -245,14 +247,16 @@ export class CustomerOrganizationService {
         data: { isActive: false },
       })
 
-      await logBusinessOperation({
-        action: "CUSTOMER_ORGANIZATION_REMOVED",
+      await logBusinessOperation(
+        "CUSTOMER_ORGANIZATION_REMOVED",
+        "CustomerOrganization",
+        customerOrganization.id,
         adminId,
-        metadata: {
+        {
           customerId,
           organizationId,
-        },
-      })
+        }
+      )
 
       return updated
     } catch (error) {
@@ -307,7 +311,6 @@ export class CustomerOrganizationService {
             nombre: true,
             apellido: true,
             email: true,
-            razonSocial: true,
             ci: true,
             organizations: {
               where: { isActive: true },

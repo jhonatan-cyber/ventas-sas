@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Folder, CheckCircle2, XCircle, Package } from "lucide-react"
 import { Category } from "@prisma/client"
+import { Folder, CheckCircle2, XCircle, Package } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface CategoriesStatsProps {
   categories: (Category & {

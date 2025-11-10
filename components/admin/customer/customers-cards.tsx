@@ -1,13 +1,14 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { User, CreditCard, Mail, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, MapPin, Phone, Building } from "lucide-react"
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { User, CreditCard, Mail, Edit, Trash2, Power, PowerOff, MoreVertical, Eye, MapPin, Phone, Building } from "lucide-react"
-import { Customer } from "@/lib/types"
 import { useHasPermission } from "@/hooks/admin/use-user-permissions"
+import { Customer } from "@/lib/types"
 
 interface CustomersCardsProps {
   customers: Customer[]

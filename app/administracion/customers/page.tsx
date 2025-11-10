@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { CustomersPageClient } from "@/components/admin/customer/customers-page-client"
-import { CustomerAdminService } from "@/lib/services/admin/customer-admin-service"
-import { AuthService } from "@/lib/services/auth-service"
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { CustomerAdminService } from "@/lib/services/admin/customer-admin-service"
 import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export default async function CustomersPage() {
   // Validación de sesión Admin en el servidor
@@ -35,7 +36,7 @@ export default async function CustomersPage() {
 
     // Obtener clientes
     const result = await CustomerAdminService.getAllCustomers(0, 1000) // Obtener todos los clientes
-    const customers = result.customers
+    const customers = result.customers.filter((customer): customer is NonNullable<typeof customer> => customer !== null)
 
     return <CustomersPageClient initialCustomers={customers} />
   } catch (error) {

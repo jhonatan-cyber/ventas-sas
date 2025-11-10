@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SalesProductService } from '@/lib/services/sales/sales-product-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { createProductSchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { requireCSRF } from '@/lib/utils/csrf-protection'
-import { logBusinessOperation } from '@/lib/utils/logger'
-import { getRequestContext } from '@/lib/utils/request-context'
-import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { prisma } from '@/lib/prisma'
+import { SalesProductService } from '@/lib/services/sales/sales-product-service'
+import { requireCSRF } from '@/lib/utils/csrf-protection'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { logBusinessOperation } from '@/lib/utils/logger'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getRequestContext } from '@/lib/utils/request-context'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createProductSchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(
@@ -135,20 +136,20 @@ export async function POST(
         }
       })
       if (!branch) {
-        throw AppError.badRequest('La sucursal seleccionada no pertenece a la organización')
+        throw AppError.validation('La sucursal seleccionada no pertenece a la organización')
       }
       branchId = validatedData.branchId
     } else {
       // Si no es admin o no se envió branchId, usar la sucursal del usuario
       branchId = currentUser.sucursalId || undefined
       if (!branchId) {
-        throw AppError.badRequest('El usuario debe tener una sucursal asignada para crear productos')
+        throw AppError.validation('El usuario debe tener una sucursal asignada para crear productos')
       }
     }
 
     // Validar que categoryId esté presente
     if (!validatedData.categoryId) {
-      throw AppError.badRequest('La categoría es requerida')
+      throw AppError.validation('La categoría es requerida')
     }
 
     const newProduct = await SalesProductService.createProduct(organizationId, {
@@ -158,10 +159,10 @@ export async function POST(
       description: validatedData.description || undefined,
       brand: validatedData.brand || undefined,
       model: validatedData.model || undefined,
-      price: validatedData.price,
-      cost: validatedData.cost,
-      stock: validatedData.stock,
-      minStock: validatedData.minStock,
+      price: validatedData.price ?? 0,
+      cost: validatedData.cost ?? 0,
+      stock: validatedData.stock ?? 0,
+      minStock: validatedData.minStock ?? 0,
       sku: validatedData.sku || undefined,
       barcode: validatedData.barcode || undefined,
       imageUrl: validatedData.imageUrl || undefined

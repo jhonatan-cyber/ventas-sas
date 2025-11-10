@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { UsersStats } from "./users-stats"
-import { UsersFilters } from "./users-filters"
-import { UsersTable } from "./users-table"
+
 import { UsersCards } from "./users-cards"
+import { UsersFilters } from "./users-filters"
 import { UsersPagination } from "./users-pagination"
+import { UsersStats } from "./users-stats"
+import { UsersTable } from "./users-table"
+
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service"
 
 interface UsersContainerProps {
@@ -30,7 +32,7 @@ export function UsersContainer({ users, onEdit, onView, onToggleStatus, onDelete
       const matchesSearch = 
         user.email.toLowerCase().includes(searchLower) ||
         user.fullName?.toLowerCase().includes(searchLower) ||
-        user.companyName?.toLowerCase().includes(searchLower)
+        user.ci?.toLowerCase().includes(searchLower)
       
       if (!matchesSearch) return false
     }

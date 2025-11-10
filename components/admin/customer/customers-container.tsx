@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { CustomersStats } from "./customers-stats"
-import { CustomersFilters } from "./customers-filters"
-import { CustomersTable } from "./customers-table"
+
 import { CustomersCards } from "./customers-cards"
+import { CustomersFilters } from "./customers-filters"
 import { CustomersPagination } from "./customers-pagination"
+import { CustomersStats } from "./customers-stats"
+import { CustomersTable } from "./customers-table"
+
 import { Customer } from "@/lib/types"
 
 interface CustomersContainerProps {

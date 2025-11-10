@@ -1,9 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useHasPermission } from "@/hooks/admin/use-user-permissions"
+
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useHasPermission } from "@/hooks/admin/use-user-permissions"
 
 interface BillingHeaderProps {
   title: string

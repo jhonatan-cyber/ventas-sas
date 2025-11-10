@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { QuotationService } from '@/lib/services/sales/quotation-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { serializeQuotation, serializeSale } from '@/lib/utils/serializers'
-import { SaleService } from '@/lib/services/sales/sale-service'
-import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { prisma } from '@/lib/prisma'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { QuotationService } from '@/lib/services/sales/quotation-service'
+import { SaleService } from '@/lib/services/sales/sale-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { serializeQuotation, serializeSale } from '@/lib/utils/serializers'
 
 const PAYMENT_METHODS = new Set(['cash', 'card', 'transfer', 'qr'])
 const EMPTY_PRODUCT_VALUE = '__none__'
@@ -78,9 +79,16 @@ export async function POST(
       throw AppError.validation('Método de pago no válido')
     }
 
-    const quotation = await QuotationService.getQuotationById(id)
-    if (!quotation || quotation.organizationId !== organizationId) {
+    const quotationRaw = await QuotationService.getQuotationById(id)
+    if (!quotationRaw || quotationRaw.organizationId !== organizationId) {
       throw AppError.notFound('Cotización no encontrada')
+    }
+
+    // Type assertion para acceder a las relaciones incluidas
+    const quotation = quotationRaw as typeof quotationRaw & {
+      items?: any[]
+      customer?: any
+      branch?: any
     }
 
     if (quotation.status === 'converted') {
@@ -101,7 +109,7 @@ export async function POST(
           ? item.trackingCodes
               .filter((code: unknown) => typeof code === 'string')
               .map((code: string) => code.trim())
-              .filter((code) => code.length > 0)
+              .filter((code: string) => code.length > 0)
           : []
         return {
           productId,

@@ -5,10 +5,12 @@
  * Compatible con Google Authenticator, Authy, Microsoft Authenticator, etc.
  */
 
+import crypto from 'crypto'
+
 import { authenticator } from 'otplib'
 import QRCode from 'qrcode'
+
 import { PasswordService } from './password'
-import crypto from 'crypto'
 
 // Configurar otplib
 authenticator.options = {

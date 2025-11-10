@@ -4,14 +4,15 @@
 
 "use client"
 
+import { Loader2, Shield, AlertCircle } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Shield, AlertCircle } from "lucide-react"
-import { toast } from "sonner"
 
 interface TwoFactorInputProps {
   endpoint: string // '/api/administracion/login/verify-2fa' o '/api/[slug]/login/verify-2fa'

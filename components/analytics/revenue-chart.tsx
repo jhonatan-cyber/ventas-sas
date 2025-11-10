@@ -1,6 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AreaChart,
   Area,
@@ -11,6 +10,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface RevenueChartProps {
   data: Array<{

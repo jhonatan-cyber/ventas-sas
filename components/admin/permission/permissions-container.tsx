@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { PermissionsTable } from "./permissions-table"
+
 import { PermissionsFilters } from "./permissions-filters"
 import { PermissionsPagination } from "./permissions-pagination"
+import { PermissionsTable } from "./permissions-table"
+
 import { PermissionInfo } from "@/lib/services/admin/permission-admin-service"
 
 interface PermissionsContainerProps {

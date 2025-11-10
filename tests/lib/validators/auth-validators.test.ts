@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import { adminLoginSchema, sasLoginSchema, changePasswordSchema } from '@/lib/validators/auth-validators'
 
 describe('auth-validators', () => {

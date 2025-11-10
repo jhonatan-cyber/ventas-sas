@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
-import { getCustomerBySlug } from "@/lib/utils/organization"
+
 import { CustomersReportClient } from "@/components/sales/reports/customers-report-client"
+import { getCustomerBySlug } from "@/lib/utils/organization"
 
 export default async function CustomersReportPage({
   params,

@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, CheckCircle2, XCircle, Shield } from "lucide-react"
 import { UsuarioSas } from "@prisma/client"
+import { User, CheckCircle2, XCircle, Shield } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface UsuariosSasStatsProps {
   usuarios: UsuarioSas[]

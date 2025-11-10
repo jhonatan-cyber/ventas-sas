@@ -1,5 +1,10 @@
 "use client"
 
+import { SalesProduct, Category, Branch } from "@prisma/client"
+import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -8,12 +13,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
-import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles } from "lucide-react"
-import { SalesProduct, Category, Branch } from "@prisma/client"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ProductsGridProps {
   products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
@@ -24,8 +25,13 @@ interface ProductsGridProps {
   onToggleStatus?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
 }
 
-function formatCurrency(value: number | string) {
-  const numericValue = typeof value === "string" ? Number(value) : value
+function formatCurrency(value: number | string | { toNumber?: () => number }) {
+  let numericValue = 0
+  if (value && typeof value === 'object' && 'toNumber' in value && value.toNumber) {
+    numericValue = value.toNumber()
+  } else {
+    numericValue = typeof value === "string" ? Number(value) : Number(value)
+  }
   if (Number.isNaN(numericValue)) return "-"
   return `$${numericValue.toLocaleString()}`
 }
@@ -80,7 +86,7 @@ export function ProductsGrid({
               <CardHeader className="gap-4 pb-0">
                 <div className="relative h-40 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-[#2a2a2a]">
                   {product.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                     
                     <img
                       src={product.imageUrl}
                       alt={product.name}

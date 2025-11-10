@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminAuthService } from '@/lib/auth/admin-auth-service'
-import { checkRateLimit, getRateLimitKey, addRateLimitHeaders, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
-import { adminLoginSchema } from '@/lib/validators/auth-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { logger } from '@/lib/utils/logger'
+import { checkRateLimit, getRateLimitKey, addRateLimitHeaders, rateLimitConfigs, rateLimiter } from '@/lib/utils/rate-limit'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { adminLoginSchema } from '@/lib/validators/auth-validators'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!rateLimitResult.allowed) {
       logger.security('Login admin bloqueado por rate limit', {
         email,
-        ip: request.ip || request.headers.get('x-forwarded-for'),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       })
       
       // Registrar rate limit excedido en auditoría

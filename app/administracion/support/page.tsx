@@ -1,11 +1,12 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { redirect } from "next/navigation"
+
+import { SupportPageClient } from "@/components/admin/support/support-page-client"
 import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { OrganizationAdminService } from "@/lib/services/admin/organization-admin-service"
 import { SupportService } from "@/lib/services/admin/support-service"
 import { AuthService } from "@/lib/services/auth-service"
-import { OrganizationAdminService } from "@/lib/services/admin/organization-admin-service"
-import { SupportPageClient } from "@/components/admin/support/support-page-client"
 
 export default async function SupportPage() {
   // Validación de sesión Admin en el servidor

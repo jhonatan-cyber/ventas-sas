@@ -5,7 +5,9 @@
  * la gestión y el mantenimiento del código splitting
  */
 
-import { lazy } from 'react'
+import React, { lazy } from 'react'
+
+import type { ComponentType, ReactNode } from 'react'
 
 /**
  * Lazy imports de páginas de reportes
@@ -32,17 +34,23 @@ export const DashboardPages = {
 /**
  * Helper para crear un componente lazy con fallback
  */
-export function createLazyComponent<T extends React.ComponentType<any>>(
+const defaultFallback = React.createElement(
+  'div',
+  { className: 'flex items-center justify-center p-8' },
+  React.createElement('div', {
+    className: 'animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900',
+  })
+)
+
+export function createLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
-  fallback?: React.ReactNode
+  fallback?: ReactNode
 ) {
   const LazyComponent = lazy(importFn)
   
   return {
     Component: LazyComponent,
-    fallback: fallback || <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-    </div>,
+    fallback: fallback ?? defaultFallback,
   }
 }
 

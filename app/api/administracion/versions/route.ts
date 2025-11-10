@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { VersionService } from '@/lib/services/admin/version-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { VersionService } from '@/lib/services/admin/version-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const createVersionSchema = z.object({
   version: z.string().min(1),

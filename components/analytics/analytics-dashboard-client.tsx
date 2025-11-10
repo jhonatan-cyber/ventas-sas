@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { SalesChart } from "./sales-chart"
-import { ProductsChart } from "./products-chart"
-import { RevenueChart } from "./revenue-chart"
-import { QuotationChart } from "./quotation-chart"
-import { PeriodFilter } from "./period-filter"
-import { ComparisonCard } from "./comparison-card"
 import { TrendingUp, DollarSign } from "lucide-react"
+import { useState, useEffect } from "react"
+
+import { ComparisonCard } from "./comparison-card"
+import { PeriodFilter } from "./period-filter"
+import { ProductsChart } from "./products-chart"
+import { QuotationChart } from "./quotation-chart"
+import { RevenueChart } from "./revenue-chart"
+import { SalesChart } from "./sales-chart"
 
 interface AnalyticsDashboardClientProps {
   slug: string

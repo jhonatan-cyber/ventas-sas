@@ -1,7 +1,8 @@
-import { LoginSasForm } from "@/components/sales/auth/login-sas-form"
-import { getCustomerBySlug } from "@/lib/utils/organization"
 import { redirect } from "next/navigation"
+
+import { LoginSasForm } from "@/components/sales/auth/login-sas-form"
 import { prisma } from "@/lib/prisma"
+import { getCustomerBySlug } from "@/lib/utils/organization"
 
 export default async function LoginPage({
   params,

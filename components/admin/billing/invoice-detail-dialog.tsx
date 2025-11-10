@@ -13,10 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service"
+import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service"
 
 interface InvoiceDetailDialogProps {
-  invoice: InvoiceWithRelations | null;
+  invoice: SerializedInvoiceWithRelations | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddPayment?: () => void;

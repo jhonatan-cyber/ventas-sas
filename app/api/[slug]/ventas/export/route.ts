@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-import { mkdir, writeFile } from "fs/promises"
 import { existsSync } from "fs"
+import { mkdir, writeFile } from "fs/promises"
 import { join } from "path"
+
+import { NextRequest, NextResponse } from "next/server"
+
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 
 export async function POST(

@@ -5,12 +5,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+
 import { TwoFactorService } from '@/lib/auth/two-factor-service'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { logger } from '@/lib/utils/logger'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { logger } from '@/lib/utils/logger'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 
 export async function POST(
   request: NextRequest,
@@ -33,11 +34,11 @@ export async function POST(
       where: { id: user.id },
       select: {
         id: true,
-        correo: true,
+        email: true,
         nombre: true,
         apellido: true,
         twoFactorEnabled: true,
-        customerId: true,
+        organizationId: true,
       },
     })
 
@@ -82,7 +83,7 @@ export async function POST(
     await SecurityAuditLogger.logSensitiveAction(
       {
         userId: usuario.id,
-        customerId: usuario.customerId,
+        organizationId: usuario.organizationId,
         actionType: 'TWO_FACTOR_SETUP_INITIATED',
         details: {
           identifier: usuario.email || usuario.nombre,
@@ -94,7 +95,7 @@ export async function POST(
 
     logger.security('Inicio de configuración 2FA SAS', {
       userId: usuario.id,
-      customerId: usuario.customerId,
+      organizationId: usuario.organizationId,
       slug,
     })
 

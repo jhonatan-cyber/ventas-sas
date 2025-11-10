@@ -10,12 +10,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Quotation } from "@prisma/client"
+
+import { SalesQuotationWithRelations } from "./types"
 
 interface QuotationDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  quotation?: Quotation & { customer?: any }
+  quotation?: SalesQuotationWithRelations | null
   onDelete: () => void
 }
 

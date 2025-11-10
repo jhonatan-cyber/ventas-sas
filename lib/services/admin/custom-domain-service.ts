@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+
+import { prisma } from '@/lib/prisma'
 
 export interface CustomDomainData {
   organizationId: string

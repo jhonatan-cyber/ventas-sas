@@ -1,6 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowLeft, BarChart3, Cookie } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
 
 export const metadata = {
   title: 'Política de Cookies - Sistema de Ventas SAS',

@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { CmsService } from '@/lib/services/admin/cms-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { CmsService } from '@/lib/services/admin/cms-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const updatePageSchema = z.object({
   organizationId: z.string().uuid().optional(),
@@ -20,7 +21,7 @@ const updatePageSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const cookieStore = await cookies()

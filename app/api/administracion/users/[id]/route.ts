@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UserAdminService } from '@/lib/services/admin/user-admin-service'
-import { PasswordService } from '@/lib/auth/password'
-import { updateUserSchema } from '@/lib/validators/admin-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { UserAdminService } from '@/lib/services/admin/user-admin-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { updateUserSchema } from '@/lib/validators/admin-validators'
 
 // GET - Obtener usuario por ID
 export async function GET(
@@ -153,7 +153,7 @@ export async function PUT(
           await SecurityAuditLogger.logSensitiveAction(
             {
               userId: currentUser.id,
-              actionType: 'PASSWORD_AUTO_UPDATED_BY_CI',
+              actionType: 'PASSWORD_CHANGE',
               entityType: 'User',
               entityId: id,
               details: {

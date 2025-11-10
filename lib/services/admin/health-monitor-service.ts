@@ -1,7 +1,8 @@
-import { prisma } from '@/lib/prisma'
-import os from 'os'
 import { exec } from 'child_process'
+import os from 'os'
 import { promisify } from 'util'
+
+import { prisma } from '@/lib/prisma'
 
 const execAsync = promisify(exec)
 

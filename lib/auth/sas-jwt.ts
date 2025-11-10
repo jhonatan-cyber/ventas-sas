@@ -1,4 +1,5 @@
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
+
 import { JwtSecretRotation } from './jwt-secret-rotation'
 
 const SAS_JWT_SECRET = process.env.SAS_JWT_SECRET
@@ -7,7 +8,7 @@ const SAS_JWT_EXPIRES_IN = process.env.SAS_JWT_EXPIRES_IN || '7d'
 export interface SasJWTPayload {
   userId: string
   email?: string
-  customerId?: string
+  organizationId?: string
   sessionId?: string // ID de sesión para tracking
 }
 
@@ -30,12 +31,13 @@ export class SasJWTService {
     ensureSecret()
     
     // Intentar usar secret rotado, si no usar fallback
-    const secret = await JwtSecretRotation.getActiveSecret('sas')
-      .catch(() => null) || SAS_JWT_SECRET || 'dev-sas-secret'
+    const rotatedSecret = await JwtSecretRotation.getActiveSecret('sas')
+      .catch(() => null)
+    const secret: string = rotatedSecret || SAS_JWT_SECRET || 'dev-sas-secret'
 
     return jwt.sign(payload, secret, {
       expiresIn: SAS_JWT_EXPIRES_IN,
-    })
+    } as SignOptions)
   }
 
   /**
@@ -65,7 +67,7 @@ export class SasJWTService {
       }
 
       return null
-    } catch (_e) {
+    } catch {
       return null
     }
   }
@@ -75,9 +77,10 @@ export class SasJWTService {
    */
   static generateTokenSync(payload: SasJWTPayload): string {
     ensureSecret()
-    return jwt.sign(payload, SAS_JWT_SECRET || 'dev-sas-secret', {
+    const secret: string = SAS_JWT_SECRET || 'dev-sas-secret'
+    return jwt.sign(payload, secret, {
       expiresIn: SAS_JWT_EXPIRES_IN,
-    })
+    } as SignOptions)
   }
 
   /**
@@ -87,7 +90,7 @@ export class SasJWTService {
     try {
       ensureSecret()
       return jwt.verify(token, SAS_JWT_SECRET || 'dev-sas-secret') as SasJWTPayload
-    } catch (_e) {
+    } catch {
       return null
     }
   }

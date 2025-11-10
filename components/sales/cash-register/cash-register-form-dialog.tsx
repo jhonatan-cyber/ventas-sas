@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,12 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CashRegister } from "@prisma/client";
+
+import type { CashRegisterWithRelations } from "./types"
 
 interface CashRegisterFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cashRegister?: CashRegister & { branch?: any };
+  cashRegister?: CashRegisterWithRelations;
   customerSlug: string;
   onSave: (data: any) => void;
 }

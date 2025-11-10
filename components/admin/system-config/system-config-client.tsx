@@ -1,22 +1,37 @@
 "use client"
 
+import {
+  Settings,
+  Shield,
+  Key,
+  BarChart3,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
+  Database,
+  Mail,
+  Bell,
+  Plug,
+  Download,
+  Wrench,
+  Save,
+  Plus,
+  Edit,
+  Eye,
+  HardDrive
+} from "lucide-react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
+
+import type { SystemConfig, JwtSecretInfo } from "@/lib/services/admin/system-config-service"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -25,42 +40,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Settings,
-  Shield,
-  Key,
-  FileText,
-  BarChart3,
-  Loader2,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Trash2,
-  Database,
-  Mail,
-  Bell,
-  Plug,
-  Download,
-  Upload,
-  Wrench,
-  Save,
-  Plus,
-  Edit,
-  Eye,
-  Clock,
-  HardDrive
-} from "lucide-react"
-import { toast } from "sonner"
-import type { SystemConfig, JwtSecretInfo } from "@/lib/services/admin/system-config-service"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+
+
+
+
 
 interface SystemConfigClientProps {
   initialConfig: Partial<SystemConfig>
@@ -106,6 +91,7 @@ export function SystemConfigClient({
     } else if (activeTab === 'integrations') {
       loadIntegrationConfigs()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
   // Cargar backups

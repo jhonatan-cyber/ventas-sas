@@ -1,6 +1,7 @@
-import { prisma } from '@/lib/prisma'
 import { UsuarioSas } from '@prisma/client'
+
 import { PasswordService } from '@/lib/auth/password'
+import { prisma } from '@/lib/prisma'
 import { logDatabase } from '@/lib/utils/logger'
 
 export interface CreateUsuarioSasData {

@@ -1,6 +1,22 @@
 "use client";
 
+import { Profile } from "@prisma/client";
+import {
+  User,
+  Shield,
+  Calendar,
+  Lock,
+  Edit2,
+} from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+
+import { PhotoUpload } from "../user/photo-upload";
+
+import { ChangePasswordDialog } from "./change-password-dialog";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,27 +24,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Profile } from "@prisma/client";
-import { toast } from "sonner";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  CreditCard,
-  Shield,
-  Calendar,
-  Lock,
-  Save,
-  Edit2,
-} from "lucide-react";
-import { ChangePasswordDialog } from "./change-password-dialog";
-import { PhotoUpload } from "../user/photo-upload";
+
+
+
 
 interface ProfilePageClientProps {
   initialProfile: Profile;

@@ -1,10 +1,12 @@
 "use client"
 
 import { FC, useMemo, useState, useEffect } from "react"
-import { QuotationsTable } from "./quotations-table"
+
 import { QuotationsFilters } from "./quotations-filters"
 import { QuotationsPagination } from "./quotations-pagination"
 import { QuotationsStats } from "./quotations-stats"
+import { QuotationsTable } from "./quotations-table"
+
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { Card, CardContent } from "@/components/ui/card"
 

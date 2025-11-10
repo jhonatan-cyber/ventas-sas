@@ -1,8 +1,9 @@
 "use client"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CmsPagesPageClient } from './pages/cms-pages-page-client'
 import { CmsBlogPageClient } from './blog/cms-blog-page-client'
+import { CmsPagesPageClient } from './pages/cms-pages-page-client'
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface CmsPage {
   id: string

@@ -46,7 +46,7 @@ export default function ApiDocPage() {
         docExpansion="list"
         defaultModelsExpandDepth={1}
         defaultModelExpandDepth={1}
-        persistAuthorization
+        persistAuthorization={true}
       />
     </div>
   )

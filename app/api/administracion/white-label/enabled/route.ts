@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
 import { WhiteLabelService } from '@/lib/services/admin/white-label-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export async function GET(request: NextRequest) {
   try {

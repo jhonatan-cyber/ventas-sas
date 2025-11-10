@@ -1,7 +1,10 @@
 "use client"
 
-import { useState } from 'react'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Bell } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,11 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useNotifications } from '@/hooks/use-notifications'
-import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
 interface NotificationsDropdownProps {

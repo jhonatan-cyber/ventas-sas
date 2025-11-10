@@ -1,6 +1,7 @@
-import { prisma } from '@/lib/prisma'
-import { Profile, Role } from '@prisma/client'
+import { Profile } from '@prisma/client'
+
 import { PasswordService } from '@/lib/auth/password'
+import { prisma } from '@/lib/prisma'
 
 export interface UserWithDetails extends Profile {
   // NOTA: Los usuarios del sistema de administración NO tienen organizaciones
@@ -73,10 +74,13 @@ export class UserAdminService {
   static async updateUser(id: string, data: UpdateUserData): Promise<Profile> {
     const { roleId, password, ...updateData } = data
     
+    // Preparar datos de actualización
+    const updatePayload: any = { ...updateData }
+    
     // Si se proporciona una nueva contraseña, hashearla y actualizar passwordChangedAt
     if (password) {
-      updateData.password = await PasswordService.hashPassword(password)
-      updateData.passwordChangedAt = new Date()
+      updatePayload.password = await PasswordService.hashPassword(password)
+      updatePayload.passwordChangedAt = new Date()
       
       // Invalidar sesiones al cambiar contraseña (con manejo de errores)
       try {
@@ -90,7 +94,7 @@ export class UserAdminService {
 
     return prisma.profile.update({
       where: { id },
-      data: updateData
+      data: updatePayload
     })
   }
 

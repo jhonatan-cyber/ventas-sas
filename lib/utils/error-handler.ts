@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { AppError } from '@/lib/errors/app-error'
 import { Prisma } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
+
 import { logger } from './logger'
 import { getRequestContext } from './request-context'
+
+import { AppError } from '@/lib/errors/app-error'
 
 /**
  * Tipos de error conocidos
@@ -26,6 +28,7 @@ export interface ErrorContext {
   organizationId?: string
   customerId?: string
   action?: string
+  [key: string]: any // Permitir propiedades adicionales
 }
 
 /**
@@ -95,11 +98,11 @@ function handleZodError(error: ZodError): NextResponse {
  */
 function logError(error: ErrorType, context?: ErrorContext) {
   // Obtener contexto del request si está disponible
-  const requestContext = context?.request ? getRequestContext(context.request) : {}
+  const requestContext = context?.request ? getRequestContext(context.request) : null
   
   const logData: any = {
     timestamp: new Date().toISOString(),
-    correlationId: requestContext.correlationId,
+    correlationId: requestContext?.correlationId,
     error: {
       name: error.name,
       message: error.message
@@ -113,10 +116,9 @@ function logError(error: ErrorType, context?: ErrorContext) {
     if (context.organizationId) logData.organizationId = context.organizationId
     if (context.customerId) logData.customerId = context.customerId
     if (context.action) logData.action = context.action
-    if (context.request) {
-      logData.ip = context.request.ip || context.request.headers.get('x-forwarded-for') || 'unknown'
-      logData.userAgent = context.request.headers.get('user-agent')
-    }
+    // La información de IP y userAgent ya está en requestContext
+    if (requestContext?.ip) logData.ip = requestContext.ip
+    if (requestContext?.userAgent) logData.userAgent = requestContext.userAgent
   }
 
   // Agregar información adicional según el tipo de error
@@ -232,7 +234,7 @@ export async function handleApiRoute<T>(
  */
 export function createErrorContext(
   request: NextRequest,
-  params?: { userId?: string; organizationId?: string; customerId?: string; action?: string }
+  params?: Record<string, any>
 ): ErrorContext {
   return {
     request,

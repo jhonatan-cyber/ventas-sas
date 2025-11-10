@@ -8,10 +8,6 @@ import {
   Calendar,
   Building2,
   User,
-  Package,
-  CreditCard,
-  CheckCircle,
-  Hash,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,42 +26,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 import { useHasPermission } from "@/hooks/admin/use-user-permissions";
 
-interface SubscriptionWithDetails {
-  id: string;
-  organizationId: string;
-  planId: string;
-  status: string;
-  billingPeriod: string;
-  startDate: Date;
-  endDate: Date | null;
-  autoRenew: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  organization?: {
-    id: string;
-    name: string;
-    slug: string;
-    razonSocial: string | null;
-    nit: string | null;
-  };
-  customer?: {
-    id: string;
-    razonSocial: string | null;
-    nit: string | null;
-    nombre: string | null;
-    apellido: string | null;
-    email: string | null;
-  } | null;
-  plan: {
-    id: string;
-    name: string;
-    priceMonthly: number | null;
-    priceYearly: number | null;
-  };
-}
+import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsTableProps {
   subscriptions: SubscriptionWithDetails[];
@@ -201,8 +164,7 @@ export function SubscriptionsTable({
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-gray-400" />
                           <span className="font-semibold text-gray-900 dark:text-white">
-                            {subscription.customer?.razonSocial ||
-                              `${subscription.customer?.nombre || ""} ${
+                            {`${subscription.customer?.nombre || ""} ${
                                 subscription.customer?.apellido || ""
                               }`.trim() ||
                               subscription.customer?.email ||
@@ -329,7 +291,6 @@ export function SubscriptionsTable({
                                   subscription.id,
                                   subscription.organization?.razonSocial ||
                                     subscription.organization?.name ||
-                                    subscription.customer?.razonSocial ||
                                     `${subscription.customer?.nombre || ""} ${
                                       subscription.customer?.apellido || ""
                                     }`.trim() ||

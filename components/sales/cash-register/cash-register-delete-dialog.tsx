@@ -1,12 +1,12 @@
 "use client"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { CashRegister } from "@prisma/client"
+import type { CashRegisterWithRelations } from "./types"
 
 interface CashRegisterDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  cashRegister?: CashRegister
+  cashRegister?: CashRegisterWithRelations
   onDelete: () => void
 }
 

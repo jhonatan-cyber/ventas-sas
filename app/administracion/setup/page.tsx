@@ -1,8 +1,9 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AdminLayout } from "@/components/layout/admin-layout"
+import { redirect } from "next/navigation"
+
 import { SystemConfigClient } from "@/components/admin/system-config/system-config-client"
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { SystemConfigService } from "@/lib/services/admin/system-config-service"
 import { AuthService } from "@/lib/services/auth-service"
 

@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
-import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AuthService } from "@/lib/services/auth-service"
 import { cookies } from "next/headers"
+import { NextRequest, NextResponse } from "next/server"
+
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { customerId: string; organizationId: string } }
+  { params }: { params: Promise<{ customerId: string; organizationId: string }> }
 ) {
   try {
     // Autenticación
@@ -36,7 +37,7 @@ export async function DELETE(
       )
     }
 
-    const { customerId, organizationId } = params
+    const { customerId, organizationId } = await params
 
     // Remover cliente de organización
     await CustomerOrganizationService.removeCustomerFromOrganization(
@@ -60,7 +61,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { customerId: string; organizationId: string } }
+  { params }: { params: Promise<{ customerId: string; organizationId: string }> }
 ) {
   try {
     // Autenticación

@@ -6,18 +6,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { SystemConfigService } from '@/lib/services/admin/system-config-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { z } from 'zod'
+
+import { SystemConfigService } from '@/lib/services/admin/system-config-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 const createAlertSchema = z.object({
   name: z.string().min(1),
   type: z.enum(['security', 'performance', 'business', 'system']),
   enabled: z.boolean().optional(),
   threshold: z.any().optional(),
-  conditions: z.any(),
+  conditions: z.any().default({}),
   channels: z.array(z.string()),
   recipients: z.any().optional(),
   frequency: z.enum(['immediate', 'hourly', 'daily']).optional()
@@ -59,7 +60,10 @@ export async function POST(request: NextRequest) {
       return validation.response
     }
 
-    const config = await SystemConfigService.createAlertConfig(validation.data)
+    const config = await SystemConfigService.createAlertConfig({
+      ...validation.data,
+      conditions: validation.data.conditions || {}
+    })
     
     return NextResponse.json({
       success: true,

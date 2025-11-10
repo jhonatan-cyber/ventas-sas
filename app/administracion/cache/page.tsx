@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
+import { CacheManager } from "@/components/admin/cache/cache-manager"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { AuthService } from "@/lib/services/auth-service"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { CacheManager } from "@/components/admin/cache/cache-manager"
 
 export default async function CachePage() {
   const cookieStore = await cookies()

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CategoryService } from '@/lib/services/sales/category-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { createCategorySchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { CategoryService } from '@/lib/services/sales/category-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createCategorySchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener todas las categorías con paginación y filtros
 export async function GET(

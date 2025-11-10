@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { NotificationService } from '@/lib/services/notification-service'
+import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { SasJWTService } from '@/lib/auth/sas-jwt'
+import { NotificationService } from '@/lib/services/notification-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 
 function decodeSasSession(raw?: string | null) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      const payload = AdminJWTService.verifyToken(token)
+      const payload = await AdminJWTService.verifyToken(token)
       if (!payload) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
@@ -91,16 +91,15 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PATCH /api/notifications/[id]
- * Marcar notificación como leída
+ * PATCH /api/notifications
+ * Marcar notificación como leída (o todas si markAll=true)
  */
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest
 ) {
   try {
-    const { id } = await params
     const body = await request.json()
+    const id = body.id as string | undefined
     const markAll = body.markAll === true
 
     if (markAll) {
@@ -117,7 +116,7 @@ export async function PATCH(
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const payload = AdminJWTService.verifyToken(token)
+        const payload = await AdminJWTService.verifyToken(token)
         if (!payload) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -143,9 +142,11 @@ export async function PATCH(
 
       const result = await NotificationService.markAllAsRead(filters)
       return NextResponse.json({ success: true, count: result.count })
-    } else {
+    } else if (id) {
       await NotificationService.markAsRead(id)
       return NextResponse.json({ success: true })
+    } else {
+      return NextResponse.json({ error: 'id is required when markAll is false' }, { status: 400 })
     }
   } catch (error) {
     return handleApiError(error, createErrorContext(request, { action: 'MARK_NOTIFICATION_READ' }))

@@ -1,5 +1,8 @@
+import { Quotation, QuotationStatus } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
-import { Quotation } from '@prisma/client'
+import { NotificationService } from '@/lib/services/notification-service'
+import { logDatabase } from '@/lib/utils/logger'
 import { 
   CursorPaginationOptions, 
   CursorPaginationResult, 
@@ -7,8 +10,6 @@ import {
   createCursorResponse 
 } from '@/lib/utils/pagination'
 import { CommonIncludes } from '@/lib/utils/query-optimizer'
-import { logDatabase } from '@/lib/utils/logger'
-import { NotificationService } from '@/lib/services/notification-service'
 
 const endOfDay = (date: Date) => {
   const end = new Date(date)
@@ -263,7 +264,12 @@ export class QuotationService {
   }
 
   // Obtener cotización por ID
-  static async getQuotationById(id: string): Promise<Quotation | null> {
+  static async getQuotationById(id: string): Promise<(Quotation & { 
+    customer?: any
+    branch?: any
+    items?: any[]
+    organization?: any
+  }) | null> {
     const startTime = Date.now()
     const quotation = await prisma.quotation.findUnique({
       where: { id },
@@ -460,7 +466,7 @@ export class QuotationService {
             }
           }
         }
-      }) as Promise<Quotation>
+      })
 
       if (quotation.expiresAt) {
         const expiresEnd = endOfDay(new Date(quotation.expiresAt))
@@ -535,9 +541,10 @@ export class QuotationService {
 
   // Cambiar estado de cotización
   static async updateStatus(id: string, status: string): Promise<Quotation> {
+    const statusEnum = status as QuotationStatus
     const updated = await prisma.quotation.update({
       where: { id },
-      data: { status },
+      data: { status: statusEnum },
       include: {
         customer: true,
         branch: true,

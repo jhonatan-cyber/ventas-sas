@@ -1,13 +1,16 @@
 "use client"
 
+import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
+
 import type React from "react"
+
+import { TwoFactorInput } from "@/components/auth/two-factor-input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { TwoFactorInput } from "@/components/auth/two-factor-input"
+
 
 export default function AdminLoginPage() {
   const router = useRouter()

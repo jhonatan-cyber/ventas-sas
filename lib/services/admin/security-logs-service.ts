@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { SecurityLog } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 import { SecurityLogType } from '@/lib/utils/security-audit'
 
 export interface SecurityLogFilters {
@@ -162,7 +163,6 @@ export class SecurityLogsService {
             where: { id: { in: customerIds } },
             select: {
               id: true,
-              razonSocial: true,
               nombre: true,
               apellido: true,
             },
@@ -248,7 +248,6 @@ export class SecurityLogsService {
             where: { id: log.customerId },
             select: {
               id: true,
-              razonSocial: true,
               nombre: true,
               apellido: true,
             },

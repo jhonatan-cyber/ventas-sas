@@ -1,9 +1,11 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { FileText, CheckCircle2, Clock, DollarSign, Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react"
+
 import { SalesSaleWithRelations } from "./types"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface SalesStatsProps {
   sales: SalesSaleWithRelations[]

@@ -1,7 +1,8 @@
-import { prisma } from '@/lib/prisma'
 import { CashRegister } from '@prisma/client'
-import { CommonIncludes } from '@/lib/utils/query-optimizer'
+
+import { prisma } from '@/lib/prisma'
 import { logDatabase } from '@/lib/utils/logger'
+import { CommonIncludes } from '@/lib/utils/query-optimizer'
 
 export interface CreateCashRegisterData {
   name: string

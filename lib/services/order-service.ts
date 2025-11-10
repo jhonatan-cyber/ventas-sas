@@ -1,5 +1,7 @@
 import { prisma } from '../prisma'
-import type { Order, OrderItem, Customer, Product } from '@prisma/client'
+
+import type { Order } from '@prisma/client'
+
 import { CommonIncludes } from '@/lib/utils/query-optimizer'
 
 export class OrderService {
@@ -71,7 +73,6 @@ export class OrderService {
         }
       },
       include: {
-        customer: true,
         orderItems: {
           include: {
             product: true
@@ -90,7 +91,6 @@ export class OrderService {
         updatedAt: new Date()
       },
       include: {
-        customer: true,
         orderItems: {
           include: {
             product: true
@@ -126,8 +126,7 @@ export class OrderService {
 
     return await prisma.order.findMany({
       where,
-        include: CommonIncludes.order, // Usar include optimizado
-      },
+      include: CommonIncludes.order, // Usar include optimizado
       orderBy: { createdAt: 'desc' }
     })
   }
@@ -138,8 +137,7 @@ export class OrderService {
     
     return await prisma.order.findMany({
       where,
-        include: CommonIncludes.order, // Usar include optimizado
-      },
+      include: CommonIncludes.order, // Usar include optimizado
       orderBy: { createdAt: 'desc' },
       take: limit
     })
@@ -151,23 +149,18 @@ export class OrderService {
       ? { 
           organizationId,
           OR: [
-            { orderNumber: { contains: query, mode: 'insensitive' } },
-            { customer: { name: { contains: query, mode: 'insensitive' } } },
-            { customer: { email: { contains: query, mode: 'insensitive' } } }
+            { orderNumber: { contains: query, mode: Prisma.QueryMode.insensitive } }
           ]
         }
       : {
           OR: [
-            { orderNumber: { contains: query, mode: 'insensitive' } },
-            { customer: { name: { contains: query, mode: 'insensitive' } } },
-            { customer: { email: { contains: query, mode: 'insensitive' } } }
+            { orderNumber: { contains: query, mode: Prisma.QueryMode.insensitive } }
           ]
         }
 
     return await prisma.order.findMany({
       where,
-        include: CommonIncludes.order, // Usar include optimizado
-      },
+      include: CommonIncludes.order, // Usar include optimizado
       orderBy: { createdAt: 'desc' }
     })
   }

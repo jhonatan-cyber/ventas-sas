@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
+import { redirect } from 'next/navigation'
+
 import { AbTestsClient } from '@/components/admin/ab-tests/ab-tests-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { AbTestService } from '@/lib/services/admin/ab-test-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function AbTestsPage() {
   const cookieStore = await cookies()

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Search, Filter } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react"
+
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface CmsPagesFiltersProps {
   onPageSizeChange?: (pageSize: number) => void

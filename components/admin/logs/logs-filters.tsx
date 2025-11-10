@@ -1,11 +1,12 @@
 "use client"
 
+import { Search, X } from "lucide-react"
 import { useState } from "react"
-import { Search, Calendar, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 import { SecurityLogFilters } from "@/lib/services/admin/security-logs-service"
 import { SecurityLogType } from "@/lib/utils/security-audit"
 

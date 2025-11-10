@@ -44,7 +44,14 @@ export function PlansPagination({
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious onClick={onPrevious} disabled={currentPage === 1} />
+            <PaginationPrevious 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault()
+                if (currentPage > 1) onPrevious()
+              }}
+              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+            />
           </PaginationItem>
 
           {pageNumbers[0] > 1 && (
@@ -81,7 +88,14 @@ export function PlansPagination({
           )}
 
           <PaginationItem>
-            <PaginationNext onClick={onNext} disabled={currentPage === totalPages} />
+            <PaginationNext 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault()
+                if (currentPage < totalPages) onNext()
+              }}
+              className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

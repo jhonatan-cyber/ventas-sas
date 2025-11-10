@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { PermissionsPageClient } from "@/components/admin/permission/permissions-page-client"
-import { PermissionAdminService } from "@/lib/services/admin/permission-admin-service"
-import { AuthService } from "@/lib/services/auth-service"
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { PermissionAdminService } from "@/lib/services/admin/permission-admin-service"
 import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export default async function PermissionsPage() {
   // Validación de sesión Admin en el servidor

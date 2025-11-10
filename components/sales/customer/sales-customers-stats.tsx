@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, CheckCircle2, XCircle, ShoppingBag } from "lucide-react"
 import { SalesCustomer } from "@prisma/client"
+import { Users, CheckCircle2, XCircle, ShoppingBag } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SalesCustomersStatsProps {
   customers: SalesCustomer[]

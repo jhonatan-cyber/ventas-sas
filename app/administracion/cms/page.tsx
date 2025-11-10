@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
+import { redirect } from 'next/navigation'
+
 import { CmsClient } from '@/components/admin/cms/cms-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { CmsService } from '@/lib/services/admin/cms-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function CmsPage() {
   const cookieStore = await cookies()

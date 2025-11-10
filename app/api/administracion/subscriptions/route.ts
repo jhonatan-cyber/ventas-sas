@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SubscriptionManagementService } from '@/lib/services/admin/subscription-management-service'
-import { createSubscriptionSchema } from '@/lib/validators/admin-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { SubscriptionStatus } from '@prisma/client'
+
 import { AppError } from '@/lib/errors/app-error'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { SubscriptionManagementService } from '@/lib/services/admin/subscription-management-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createSubscriptionSchema } from '@/lib/validators/admin-validators'
 
 // GET - Obtener todas las suscripciones con paginación y filtros
 export async function GET(request: NextRequest) {
@@ -26,21 +28,24 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '10')
     const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
+    const statusParam = searchParams.get('status')
+    const status = statusParam && ['active', 'cancelled', 'expired', 'trial'].includes(statusParam) 
+      ? statusParam as SubscriptionStatus 
+      : undefined
 
     const skip = (page - 1) * pageSize
 
     const { subscriptions, total } = await SubscriptionManagementService.getAllSubscriptions(skip, pageSize, search, status)
 
     // Convertir Decimal a número para serialización y mapear customer desde organization
-    const serializedSubscriptions = subscriptions.map(sub => ({
+    const serializedSubscriptions = subscriptions.map((sub: any) => ({
       ...sub,
       organization: sub.organization,
       customer: sub.organization?.customerOrganizations?.[0]?.customer || null,
       plan: {
         ...sub.plan,
-        priceMonthly: sub.plan.priceMonthly ? Number(sub.plan.priceMonthly) : null,
-        priceYearly: sub.plan.priceYearly ? Number(sub.plan.priceYearly) : null,
+        priceMonthly: sub.plan?.priceMonthly ? Number(sub.plan.priceMonthly) : null,
+        priceYearly: sub.plan?.priceYearly ? Number(sub.plan.priceYearly) : null,
       }
     }))
 
@@ -89,8 +94,7 @@ export async function POST(request: NextRequest) {
     const newSubscription = await SubscriptionManagementService.createSubscription({
       organizationId: validatedData.organizationId || undefined,
       planId: validatedData.planId,
-      billingPeriod: validatedData.billingPeriod,
-      status: validatedData.status || 'active',
+      billingPeriod: validatedData.billingPeriod || 'monthly',
       autoRenew: validatedData.autoRenew,
       startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
       endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
           entityId: newSubscription.id,
           details: {
             planId: newSubscription.planId,
-            planName: newSubscription.plan.name,
+            planName: (newSubscription as any).plan?.name || 'N/A',
             billingPeriod: newSubscription.billingPeriod,
             status: newSubscription.status,
             autoRenew: newSubscription.autoRenew,
@@ -122,11 +126,11 @@ export async function POST(request: NextRequest) {
     // Convertir Decimal a número
     const serialized = {
       ...newSubscription,
-      plan: {
-        ...newSubscription.plan,
-        priceMonthly: newSubscription.plan.priceMonthly ? Number(newSubscription.plan.priceMonthly) : null,
-        priceYearly: newSubscription.plan.priceYearly ? Number(newSubscription.plan.priceYearly) : null,
-      }
+      plan: (newSubscription as any).plan ? {
+        ...(newSubscription as any).plan,
+        priceMonthly: (newSubscription as any).plan?.priceMonthly ? Number((newSubscription as any).plan.priceMonthly) : null,
+        priceYearly: (newSubscription as any).plan?.priceYearly ? Number((newSubscription as any).plan.priceYearly) : null,
+      } : null
     }
 
     return NextResponse.json(serialized, { status: 201 })

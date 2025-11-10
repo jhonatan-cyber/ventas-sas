@@ -1,22 +1,18 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CashRegistersHeader } from "./cash-registers-header"
-import { CashRegistersContainer } from "./cash-registers-container"
-import { CashRegisterFormDialog } from "./cash-register-form-dialog"
-import { CashRegisterDeleteDialog } from "./cash-register-delete-dialog"
-import { CashRegisterOpenDialog } from "./cash-register-open-dialog"
-import { CashRegisterCloseDialog } from "./cash-register-close-dialog"
-import { CashRegisterDetailsDialog } from "./cash-register-details-dialog"
-import { CashRegister } from "@prisma/client"
-import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions"
 import { toast } from "sonner"
 
-type CashRegisterWithRelations = CashRegister & {
-  branch?: { id: string; name: string; address?: string | null } | null
-  openedBy?: { id: string; nombre: string; apellido: string } | null
-  closedBy?: { id: string; nombre: string; apellido: string } | null
-}
+import { CashRegisterCloseDialog } from "./cash-register-close-dialog"
+import { CashRegisterDeleteDialog } from "./cash-register-delete-dialog"
+import { CashRegisterDetailsDialog } from "./cash-register-details-dialog"
+import { CashRegisterFormDialog } from "./cash-register-form-dialog"
+import { CashRegisterOpenDialog } from "./cash-register-open-dialog"
+import { CashRegistersContainer } from "./cash-registers-container"
+import { CashRegistersHeader } from "./cash-registers-header"
+import type { CashRegisterWithRelations } from './types'
+
+import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions"
 
 interface CashRegistersPageClientProps {
   initialCashRegisters: CashRegisterWithRelations[]

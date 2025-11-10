@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import { getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/utils/csrf-protection'
 
 export async function GET(request: NextRequest) {

@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+import { PhotoUpload } from "./photo-upload";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,10 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { UserWithDetails } from "@/lib/services/admin/user-admin-service";
-import { RoleWithStats } from "@/lib/services/admin/role-admin-service";
-import { PhotoUpload } from "./photo-upload";
 
 interface Role {
   id: string;

@@ -1,10 +1,11 @@
 "use client"
 
 import { Profile } from "@prisma/client"
+import { User, Mail, Shield } from "lucide-react"
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { User, Mail, Shield } from "lucide-react"
 
 interface ProfileHeaderProps {
   profile: Profile

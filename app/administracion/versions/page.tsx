@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
+import { redirect } from 'next/navigation'
+
 import { VersionsClient } from '@/components/admin/versions/versions-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { VersionService } from '@/lib/services/admin/version-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function VersionsPage() {
   const cookieStore = await cookies()

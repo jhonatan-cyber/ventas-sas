@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+
 import { SalesCustomersPageClient } from "@/components/sales/customer/sales-customers-page-client"
 import { SalesCustomerService } from "@/lib/services/sales/sales-customer-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"

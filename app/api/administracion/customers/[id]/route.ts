@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
-import { updateCustomerSchema } from '@/lib/validators/admin-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { updateCustomerSchema } from '@/lib/validators/admin-validators'
 
 // GET - Obtener un cliente por ID
 export async function GET(
@@ -77,8 +78,6 @@ export async function PUT(
     const targetCustomer = await CustomerAdminService.getCustomerById(id)
 
     const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
-      razonSocial: validatedData.razonSocial || undefined,
-      nit: validatedData.nit || undefined,
       ci: validatedData.ci || undefined,
       nombre: validatedData.nombre || undefined,
       apellido: validatedData.apellido || undefined,
@@ -91,12 +90,6 @@ export async function PUT(
     // Registrar actualización de cliente en auditoría
     if (currentUser && targetCustomer) {
       const changedFields: string[] = []
-      if (validatedData.razonSocial !== undefined && targetCustomer.razonSocial !== validatedData.razonSocial) {
-        changedFields.push('razonSocial')
-      }
-      if (validatedData.nit !== undefined && targetCustomer.nit !== validatedData.nit) {
-        changedFields.push('nit')
-      }
       if (body.isActive !== undefined && targetCustomer.isActive !== body.isActive) {
         changedFields.push('isActive')
       }
@@ -111,7 +104,7 @@ export async function PUT(
             entityId: id,
             details: {
               changedFields,
-              slug: targetCustomer.slug,
+              slug: targetCustomer.slug || undefined,
             },
           },
           request
@@ -175,7 +168,7 @@ export async function PATCH(
           entityId: id,
           details: {
             action: isActive ? 'activated' : 'deactivated',
-            slug: targetCustomer.slug,
+            slug: targetCustomer.slug || undefined,
           },
         },
         request

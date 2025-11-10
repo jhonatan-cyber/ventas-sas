@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { CustomerOrganizationsStats } from "./customer-organizations-stats"
-import { CustomerOrganizationsFilters } from "./customer-organizations-filters"
-import { CustomerOrganizationsTable } from "./customer-organizations-table"
+
 import { CustomerOrganizationsCards } from "./customer-organizations-cards"
+import { CustomerOrganizationsFilters } from "./customer-organizations-filters"
 import { CustomerOrganizationsPagination } from "./customer-organizations-pagination"
+import { CustomerOrganizationsStats } from "./customer-organizations-stats"
+import { CustomerOrganizationsTable } from "./customer-organizations-table"
 
 interface Customer {
   id: string

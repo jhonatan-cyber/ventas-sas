@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { RoleAdminService } from '@/lib/services/admin/role-admin-service'
-import { createRoleSchema } from '@/lib/validators/admin-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { RoleAdminService } from '@/lib/services/admin/role-admin-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createRoleSchema } from '@/lib/validators/admin-validators'
 
 // GET - Obtener todos los roles
 export async function GET(request: NextRequest) {
@@ -68,8 +69,7 @@ export async function POST(request: NextRequest) {
     const newRole = await RoleAdminService.createRole({
       name: validatedData.name,
       description: validatedData.description || undefined,
-      permissions: validatedData.permissions || [],
-      isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
+      permissions: validatedData.permissions || []
     })
 
     return NextResponse.json(newRole, { status: 201 })

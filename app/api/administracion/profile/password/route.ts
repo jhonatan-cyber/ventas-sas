@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { AuthService } from '@/lib/services/auth-service'
 import { z } from 'zod'
+
+import { AuthService } from '@/lib/auth/auth-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'La contraseña actual es requerida'),

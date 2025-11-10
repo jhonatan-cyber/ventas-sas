@@ -1,8 +1,8 @@
 "use client"
 
-import { CheckCircle, Gauge, XCircle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { CheckCircle, Gauge, XCircle } from "lucide-react"
 
 interface HealthWidgetProps {
   data: {

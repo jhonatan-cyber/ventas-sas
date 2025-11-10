@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SupportService, CreateCommentData } from '@/lib/services/admin/support-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { z } from 'zod'
+
+import { SupportService, CreateCommentData } from '@/lib/services/admin/support-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 const createCommentSchema = z.object({
   content: z.string().min(1, 'El contenido es requerido').max(5000, 'El contenido es demasiado largo'),
@@ -15,7 +16,7 @@ const createCommentSchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentAdminUser(request)
@@ -23,6 +24,7 @@ export async function POST(
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
 
     // Validar datos
@@ -35,7 +37,7 @@ export async function POST(
     }
 
     const data: CreateCommentData = {
-      ticketId: params.id,
+      ticketId: id,
       authorId: user.id,
       authorType: 'admin',
       content: validation.data.content,

@@ -1,4 +1,5 @@
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
+
 import { AuthService } from '../services/auth-service'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here'
@@ -16,7 +17,7 @@ export class JWTService {
   static generateToken(payload: JWTPayload): string {
     return jwt.sign(payload, JWT_SECRET, {
       expiresIn: JWT_EXPIRES_IN
-    })
+    } as SignOptions)
   }
 
   // Verificar token JWT
@@ -86,11 +87,8 @@ export class JWTService {
     return {
       id: user.id,
       fullName: user.fullName,
-      companyName: user.companyName,
       role: user.role,
-      isSuperAdmin: user.isSuperAdmin,
-      organizationId: user.organizationId,
-      organization: user.organization
+      isSuperAdmin: user.isSuperAdmin
     }
   }
 }

@@ -4,15 +4,17 @@
  * Deshabilita 2FA para el usuario autenticado (requiere contraseña)
  */
 
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+
 import { PasswordService } from '@/lib/auth/password'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { logger } from '@/lib/utils/logger'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { disableTwoFactorSchema } from '@/lib/validators/two-factor-validators'
-import { logger } from '@/lib/utils/logger'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Obtener usuario con contraseña
     const profile = await prisma.profile.findUnique({
-      where: { id: user.userId },
+      where: { id: user.id },
       select: {
         id: true,
         email: true,
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
       data: {
         twoFactorEnabled: false,
         twoFactorSecret: null,
-        twoFactorBackupCodes: null,
+        twoFactorBackupCodes: Prisma.JsonNull,
         twoFactorEnabledAt: null,
       },
     })

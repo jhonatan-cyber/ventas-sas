@@ -1,8 +1,9 @@
+import { Calendar, Tag } from "lucide-react"
 import { notFound, redirect } from "next/navigation"
+
+import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
 import { CmsService } from "@/lib/services/admin/cms-service"
-import { Calendar, Tag } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 export default async function CmsBlogPostView({
   params,
@@ -133,7 +134,7 @@ export default async function CmsBlogPostView({
           {post.tags && post.tags.length > 0 && (
             <footer className="mt-8 pt-6 border-t border-gray-200 dark:border-[#2a2a2a]">
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag, idx) => (
+                {post.tags.map((tag: string, idx: number) => (
                   <Badge key={idx} variant="secondary">
                     {tag}
                   </Badge>

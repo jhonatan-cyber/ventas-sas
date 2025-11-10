@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { SubscriptionPlan, Organization } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 
 export interface SubscriptionPlanWithStats extends SubscriptionPlan {
   _count: {
@@ -191,9 +192,12 @@ export class SubscriptionAdminService {
       data: {
         name: newName,
         description: `${originalPlan.description} (Copia)`,
-        price: originalPlan.price,
-        billingPeriod: originalPlan.billingPeriod,
+        priceMonthly: originalPlan.priceMonthly,
+        priceYearly: originalPlan.priceYearly,
+        hasMonthly: originalPlan.hasMonthly,
+        hasYearly: originalPlan.hasYearly,
         features: originalPlan.features as string[],
+        modules: originalPlan.modules,
         maxUsers: originalPlan.maxUsers,
         maxProducts: originalPlan.maxProducts,
         maxBranches: originalPlan.maxBranches,
@@ -282,7 +286,7 @@ export class SubscriptionAdminService {
       include: {
         _count: {
           select: {
-            profiles: true,
+            organizationMembers: true,
             products: true,
             branches: true
           }
@@ -296,8 +300,8 @@ export class SubscriptionAdminService {
 
     const violations: string[] = []
 
-    if (plan.maxUsers && organization._count.profiles > plan.maxUsers) {
-      violations.push(`Límite de usuarios excedido: ${organization._count.profiles}/${plan.maxUsers}`)
+    if (plan.maxUsers && organization._count.organizationMembers > plan.maxUsers) {
+      violations.push(`Límite de usuarios excedido: ${organization._count.organizationMembers}/${plan.maxUsers}`)
     }
 
     if (plan.maxProducts && organization._count.products > plan.maxProducts) {

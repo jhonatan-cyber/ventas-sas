@@ -1,5 +1,8 @@
-import { prisma } from '@/lib/prisma'
 import { Sale, SalePaymentMethod, SaleStatus } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
+import { NotificationService } from '@/lib/services/notification-service'
+import { logDatabase } from '@/lib/utils/logger'
 import { 
   CursorPaginationOptions, 
   CursorPaginationResult, 
@@ -7,8 +10,6 @@ import {
   createCursorResponse 
 } from '@/lib/utils/pagination'
 import { CommonIncludes } from '@/lib/utils/query-optimizer'
-import { logDatabase } from '@/lib/utils/logger'
-import { NotificationService } from '@/lib/services/notification-service'
 
 interface SaleItemInput {
   productId: string

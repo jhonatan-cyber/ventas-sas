@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { BillingService } from '@/lib/services/admin/billing-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 /**
  * GET /api/administracion/billing/[id]
@@ -9,7 +10,7 @@ import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentAdminUser(request)
@@ -17,7 +18,8 @@ export async function GET(
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
-    const invoice = await BillingService.getInvoiceById(params.id)
+    const { id } = await params
+    const invoice = await BillingService.getInvoiceById(id)
 
     if (!invoice) {
       return NextResponse.json({ error: 'Factura no encontrada' }, { status: 404 })
@@ -38,7 +40,7 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentAdminUser(request)
@@ -46,7 +48,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
-    await BillingService.cancelInvoice(params.id)
+    const { id } = await params
+    await BillingService.cancelInvoice(id)
 
     return NextResponse.json({
       success: true,

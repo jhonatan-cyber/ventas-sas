@@ -1,13 +1,15 @@
 ﻿"use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import { TicketFilters } from "@/lib/services/admin/support-service"
-import { SupportStats } from "./support-stats"
+
 import { SupportFilters } from "./support-filters"
+import { SupportStats } from "./support-stats"
 import { SupportTicketsTable } from "./support-tickets-table"
-import { TicketFormDialog } from "./ticket-form-dialog"
 import { TicketDetailDialog } from "./ticket-detail-dialog"
+import { TicketFormDialog } from "./ticket-form-dialog"
+
+import { TicketFilters } from "@/lib/services/admin/support-service"
 
 interface Organization {
   id: string
@@ -103,7 +105,7 @@ export function SupportPageClient({
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<any>(null)
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -138,9 +140,9 @@ export function SupportPageClient({
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, page, pageSize, searchQuery])
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const orgParam = filters.organizationId ? `?organizationId=${filters.organizationId}` : ''
       const response = await fetch(`/api/administracion/support/stats${orgParam}`)
@@ -152,7 +154,7 @@ export function SupportPageClient({
     } catch (error) {
       console.error("Error fetching stats:", error)
     }
-  }
+  }, [filters.organizationId])
 
   const fetchTicketDetails = async (ticketId: string) => {
     try {
@@ -171,10 +173,9 @@ export function SupportPageClient({
   }
 
   useEffect(() => {
-    fetchTickets()
-    fetchStats()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, JSON.stringify(filters), searchQuery])
+    void fetchTickets()
+    void fetchStats()
+  }, [fetchStats, fetchTickets])
 
   const handleSaveTicket = async (formData: {
     organizationId: string

@@ -1,18 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { CashRegistersTable } from "./cash-registers-table"
+
 import { CashRegistersFilters } from "./cash-registers-filters"
 import { CashRegistersPagination } from "./cash-registers-pagination"
 import { CashRegistersStats } from "./cash-registers-stats"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CashRegister } from "@prisma/client"
+import { CashRegistersTable } from "./cash-registers-table"
+import type { CashRegisterWithRelations } from "./types"
 
-type CashRegisterWithRelations = CashRegister & {
-  branch?: { id: string; name: string; address?: string | null } | null
-  openedBy?: { id: string; nombre: string; apellido: string } | null
-  closedBy?: { id: string; nombre: string; apellido: string } | null
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface CashRegistersContainerProps {
   cashRegisters: CashRegisterWithRelations[]

@@ -1,11 +1,12 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
+import { redirect } from 'next/navigation'
+
 import { CustomDomainsClient } from '@/components/admin/custom-domains/custom-domains-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { CustomDomainService } from '@/lib/services/admin/custom-domain-service'
 import { OrganizationAdminService } from '@/lib/services/admin/organization-admin-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function CustomDomainsPage() {
   const cookieStore = await cookies()

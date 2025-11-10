@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { logDatabase, logBusinessOperation } from '@/lib/utils/logger'
 import { NotificationService } from '@/lib/services/notification-service'
+import { logDatabase, logBusinessOperation } from '@/lib/utils/logger'
 
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'

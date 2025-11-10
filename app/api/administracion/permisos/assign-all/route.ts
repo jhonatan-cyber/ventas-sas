@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PermissionAdminService } from '@/lib/services/admin/permission-admin-service'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+import { PermissionAdminService } from '@/lib/services/admin/permission-admin-service'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 // POST - Asignar todos los permisos a los roles Administrador y Super Administrador
 export async function POST(request: NextRequest) {

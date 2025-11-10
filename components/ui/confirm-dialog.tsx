@@ -1,6 +1,8 @@
 "use client"
 
+import { AlertTriangle, Trash2, Info } from 'lucide-react'
 import * as React from 'react'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { AlertTriangle, Trash2, Info } from 'lucide-react'
 
 interface ConfirmDialogProps {
   open: boolean

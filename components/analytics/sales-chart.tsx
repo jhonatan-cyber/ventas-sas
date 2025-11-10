@@ -1,6 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   LineChart,
   Line,
@@ -11,6 +10,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SalesChartProps {
   data: Array<{
@@ -28,7 +29,11 @@ export function SalesChart({ data, period }: SalesChartProps) {
     if (period === 'daily') {
       return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
     } else if (period === 'weekly') {
-      return `Sem ${date.toLocaleDateString('es-ES', { week: 'numeric' })}`
+      // Calcular semana del año
+      const startOfYear = new Date(date.getFullYear(), 0, 1)
+      const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000
+      const weekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7)
+      return `Sem ${weekNumber}`
     } else {
       return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
     }

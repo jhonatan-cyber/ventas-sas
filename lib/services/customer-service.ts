@@ -1,6 +1,7 @@
 import { prisma } from '../prisma'
-import type { Customer } from '@prisma/client'
+
 import type { Customer as AppCustomer } from '@/lib/types'
+import type { Customer, OrganizationSubscriptionStatus } from '@prisma/client'
 
 type OrganizationSummary = {
   id: string
@@ -8,7 +9,7 @@ type OrganizationSummary = {
   slug: string
   razonSocial: string | null
   nit: string | null
-  subscriptionStatus: string
+  subscriptionStatus: OrganizationSubscriptionStatus
 }
 
 function withPrimaryOrganization(customer: Customer, organization?: OrganizationSummary | null): AppCustomer {
@@ -129,16 +130,6 @@ export class CustomerService {
             },
           },
           orderBy: { createdAt: 'asc' },
-        },
-        orders: {
-          include: {
-            orderItems: {
-              include: {
-                product: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'desc' },
         },
       },
     })

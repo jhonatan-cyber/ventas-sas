@@ -28,19 +28,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  InvoiceWithRelations,
+  SerializedInvoiceWithRelations,
   InvoiceFilters,
 } from "@/lib/services/admin/billing-service";
 
 interface InvoicesTableProps {
-  invoices: InvoiceWithRelations[];
+  invoices: SerializedInvoiceWithRelations[];
   loading: boolean;
   onFiltersChange: (filters: InvoiceFilters) => void;
   onRefresh: () => void;
-  onInvoiceClick?: (invoice: InvoiceWithRelations) => void;
-  onPrintInvoice?: (invoice: InvoiceWithRelations) => void;
-  onDownloadPDF?: (invoice: InvoiceWithRelations) => void;
-  onSendCredentials?: (invoice: InvoiceWithRelations) => void;
+  onInvoiceClick?: (invoice: SerializedInvoiceWithRelations) => void;
+  onPrintInvoice?: (invoice: SerializedInvoiceWithRelations) => void;
+  onDownloadPDF?: (invoice: SerializedInvoiceWithRelations) => void;
+  onSendCredentials?: (invoice: SerializedInvoiceWithRelations) => void;
 }
 
 export const getStatusBadge = (status: string) => {

@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 
 export interface SearchResult {
@@ -110,9 +112,9 @@ export class GlobalSearchService {
     const subscriptions = await prisma.subscription.findMany({
       where: {
         OR: [
-          { status: { contains: searchTerm, mode: 'insensitive' } },
-          { organization: { name: { contains: searchTerm, mode: 'insensitive' } } },
-          { plan: { name: { contains: searchTerm, mode: 'insensitive' } } },
+          // Status es un enum, no se puede buscar con contains
+          { organization: { name: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } } },
+          { plan: { name: { contains: searchTerm, mode: Prisma.QueryMode.insensitive } } },
         ],
       },
       take: limit,
@@ -130,10 +132,10 @@ export class GlobalSearchService {
       },
     })
 
-    return subscriptions.map(sub => ({
+    return subscriptions.map((sub: any) => ({
       id: sub.id,
       type: 'subscription' as const,
-      title: `${sub.organization?.name || 'N/A'} - ${sub.plan.name}`,
+      title: `${sub.organization?.name || 'N/A'} - ${sub.plan?.name || 'N/A'}`,
       description: `Estado: ${sub.status} • ${sub.billingPeriod}`,
       url: `/administracion/subscriptions?subscription=${sub.id}`,
       metadata: {

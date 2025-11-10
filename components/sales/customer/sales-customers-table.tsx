@@ -1,5 +1,10 @@
 "use client";
 
+import { SalesCustomer } from "@prisma/client";
+import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -8,8 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Tooltip,
@@ -18,8 +21,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard } from "lucide-react";
-import { SalesCustomer } from "@prisma/client";
 
 interface SalesCustomersTableProps {
   customers: SalesCustomer[];

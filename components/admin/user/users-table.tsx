@@ -30,8 +30,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UserWithDetails } from "@/lib/services/admin/user-admin-service";
 import { useHasPermission } from "@/hooks/admin/use-user-permissions";
+import { UserWithDetails } from "@/lib/services/admin/user-admin-service";
 
 interface UsersTableProps {
   users: UserWithDetails[];

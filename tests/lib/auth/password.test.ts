@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import { PasswordService } from '@/lib/auth/password'
 
 describe('PasswordService', () => {

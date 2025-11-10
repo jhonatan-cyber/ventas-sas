@@ -1,13 +1,16 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { SalesCustomersHeader } from "./sales-customers-header"
-import { SalesCustomersContainer } from "./sales-customers-container"
-import { SalesCustomerFormDialog } from "./sales-customer-form-dialog"
-import { SalesCustomerDeleteDialog } from "./sales-customer-delete-dialog"
 import { SalesCustomer } from "@prisma/client"
-import { useSalesCustomerActions } from "@/hooks/sales/customer/use-sales-customer-actions"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+
+import { SalesCustomerDeleteDialog } from "./sales-customer-delete-dialog"
+import { SalesCustomerFormDialog } from "./sales-customer-form-dialog"
+import { SalesCustomersContainer } from "./sales-customers-container"
+import { SalesCustomersHeader } from "./sales-customers-header"
+
+import { useSalesCustomerActions } from "@/hooks/sales/customer/use-sales-customer-actions"
+
 
 interface SalesCustomersPageClientProps {
   initialCustomers: SalesCustomer[]

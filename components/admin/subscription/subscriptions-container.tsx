@@ -1,38 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { SubscriptionsStats } from "./subscriptions-stats"
-import { SubscriptionsFilters } from "./subscriptions-filters"
-import { SubscriptionsTable } from "./subscriptions-table"
-import { SubscriptionsCards } from "./subscriptions-cards"
-import { SubscriptionsPagination } from "./subscriptions-pagination"
 
-interface SubscriptionWithDetails {
-  id: string
-  customerId: string
-  planId: string
-  status: string
-  billingPeriod: string
-  startDate: Date
-  endDate: Date | null
-  autoRenew: boolean
-  createdAt: Date
-  updatedAt: Date
-  customer: {
-    id: string
-    razonSocial: string | null
-    nit: string | null
-    nombre: string | null
-    apellido: string | null
-    email: string | null
-  }
-  plan: {
-    id: string
-    name: string
-    priceMonthly: number | null
-    priceYearly: number | null
-  }
-}
+import { SubscriptionsCards } from "./subscriptions-cards"
+import { SubscriptionsFilters } from "./subscriptions-filters"
+import { SubscriptionsPagination } from "./subscriptions-pagination"
+import { SubscriptionsStats } from "./subscriptions-stats"
+import { SubscriptionsTable } from "./subscriptions-table"
+
+import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsContainerProps {
   subscriptions: SubscriptionWithDetails[]
@@ -52,13 +28,12 @@ export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, 
       const searchLower = searchTerm.toLowerCase()
       const customer = subscription.customer
       const matchesSearch = 
-        (customer?.razonSocial?.toLowerCase().includes(searchLower)) ||
         (customer?.nombre?.toLowerCase().includes(searchLower)) ||
         (customer?.apellido?.toLowerCase().includes(searchLower)) ||
         (customer?.email?.toLowerCase().includes(searchLower)) ||
-        (customer?.nit?.toLowerCase().includes(searchLower)) ||
         subscription.organization?.name?.toLowerCase().includes(searchLower) ||
         subscription.organization?.razonSocial?.toLowerCase().includes(searchLower) ||
+        subscription.organization?.nit?.toLowerCase().includes(searchLower) ||
         subscription.plan.name.toLowerCase().includes(searchLower)
       
       if (!matchesSearch) return false

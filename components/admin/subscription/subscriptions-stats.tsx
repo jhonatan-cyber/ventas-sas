@@ -1,14 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CreditCard, CheckCircle, XCircle, Clock } from "lucide-react"
 
-interface SubscriptionWithDetails {
-  id: string
-  status: string
-  organization: any
-  plan: any
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsStatsProps {
   subscriptions: SubscriptionWithDetails[]

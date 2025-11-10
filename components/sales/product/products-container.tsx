@@ -1,13 +1,16 @@
 "use client"
 
+import { SalesProduct, Category, Branch } from "@prisma/client"
 import { useState } from "react"
-import { ProductsTable } from "./products-table"
+
 import { ProductsFilters } from "./products-filters"
+import { ProductsGrid } from "./products-grid"
 import { ProductsPagination } from "./products-pagination"
 import { ProductsStats } from "./products-stats"
+import { ProductsTable } from "./products-table"
+
 import { Card, CardContent } from "@/components/ui/card"
-import { SalesProduct, Category, Branch } from "@prisma/client"
-import { ProductsGrid } from "./products-grid"
+
 
 interface ProductsContainerProps {
   products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
@@ -137,11 +140,15 @@ export function ProductsContainer({
       {viewMode === "table" ? (
         <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
           <ProductsTable 
-            products={currentProducts} 
+            products={currentProducts.map(p => ({
+              ...p,
+              price: typeof p.price === 'object' && 'toNumber' in p.price ? p.price.toNumber() : Number(p.price),
+              cost: typeof p.cost === 'object' && 'toNumber' in p.cost ? p.cost.toNumber() : Number(p.cost),
+            })) as any} 
             showBranchColumn={showBranchColumn}
-            onEditClick={onEdit} 
-            onToggleStatus={onToggleStatus} 
-            onDeleteClick={onDelete} 
+            onEditClick={onEdit as any} 
+            onToggleStatus={onToggleStatus as any} 
+            onDeleteClick={onDelete as any} 
           />
         </div>
       ) : (

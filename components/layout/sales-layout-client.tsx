@@ -1,8 +1,9 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { SalesSidebar } from "./sales-sidebar"
+
 import { SalesHeader } from "./sales-header"
+import { SalesSidebar } from "./sales-sidebar"
 import { SidebarProvider } from "./sidebar-context"
 
 interface SalesLayoutClientProps {

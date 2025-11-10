@@ -4,7 +4,8 @@
  * Usar este middleware en endpoints que modifican datos
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+
 import { requireCSRF } from '@/lib/utils/csrf-protection'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 

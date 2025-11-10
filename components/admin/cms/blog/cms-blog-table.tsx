@@ -1,6 +1,8 @@
 "use client"
 
 import { Edit, Trash2, Eye, EyeOff, FileText, Calendar, Globe, Tag, Image as ImageIcon, ExternalLink } from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,13 +19,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface CmsBlogPost {
   id: string
   organizationId?: string | null
   slug: string
   title: string
+  content: string
   excerpt?: string | null
   featuredImage?: string | null
   category?: string | null
@@ -32,6 +34,7 @@ interface CmsBlogPost {
   publishedAt?: string | null
   viewCount: number
   createdAt: string
+  updatedAt: string
   organization?: {
     id: string
     name: string

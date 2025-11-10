@@ -1,11 +1,12 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { AdminLayout } from '@/components/layout/admin-layout'
+import { redirect } from 'next/navigation'
+
 import { IntegrationsClient } from '@/components/admin/integrations/integrations-client'
+import { AdminLayout } from '@/components/layout/admin-layout'
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { IntegrationService } from '@/lib/services/admin/integration-service'
 import { OrganizationAdminService } from '@/lib/services/admin/organization-admin-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export default async function IntegrationsPage() {
   const cookieStore = await cookies()

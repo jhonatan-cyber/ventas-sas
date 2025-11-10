@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GeminiService } from '@/lib/services/ai/gemini-service'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { GeminiService } from '@/lib/services/ai/gemini-service'
 
 // POST - Generar o mejorar descripción de producto
 export async function POST(
@@ -9,14 +9,14 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = await params
+    const { slug: _slug } = await params
     const body = await request.json()
 
     const { name, brand, model, existingDescription, category } = body
 
     // Validar que al menos el nombre esté presente
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      throw AppError.badRequest('El nombre del producto es requerido')
+      throw AppError.validation('El nombre del producto es requerido')
     }
 
     // Verificar que la API key esté configurada

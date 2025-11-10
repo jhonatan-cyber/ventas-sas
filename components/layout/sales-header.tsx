@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Building2, LogOut, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { Building2, LogOut, User, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { useEffect, useState, type CSSProperties } from "react"
+
+import { useSidebar } from "./sidebar-context"
+
+import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
-import { useSidebar } from "./sidebar-context"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 
 interface SasSession {
   userId: string
@@ -188,8 +190,7 @@ export function SalesHeader() {
         } catch {}
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug])
+  }, [slug, setTheme])
 
   const applyTheme = (value: 'light' | 'dark' | 'system') => {
     setTheme(value)
@@ -255,7 +256,7 @@ export function SalesHeader() {
               <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                 <Avatar className="w-7 h-7">
                   {session?.foto && <AvatarImage src={session.foto} alt={fullName} />}
-                  <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties}>
+                  <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as CSSProperties}>
                     {(fullName || 'U').slice(0,2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -329,7 +330,7 @@ export function SalesHeader() {
               </div>
               <Avatar className="w-8 h-8">
                 {session?.foto && <AvatarImage src={session.foto} alt={fullName} />}
-                <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as React.CSSProperties}>
+                <AvatarFallback style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' } as CSSProperties}>
                   {(fullName || 'U').slice(0,2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

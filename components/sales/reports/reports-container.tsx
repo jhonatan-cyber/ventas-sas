@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { ShoppingCart, TrendingDown, Package, Users, DollarSign, Receipt } from "lucide-react"
 import { useRouter } from "next/navigation"
+
+import { Card, CardContent } from "@/components/ui/card"
 
 interface ReportCard {
   id: string

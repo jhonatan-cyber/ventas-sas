@@ -45,8 +45,8 @@ interface Customer {
 interface CustomerOrganizationsTableProps {
   customers: Customer[]
   isLoading: boolean
-  onAddOrganization: (customer: Customer) => void
-  onRemoveOrganization: (customerId: string, organizationId: string) => void
+  onAddOrganization?: (customer: Customer) => void
+  onRemoveOrganization?: (customerId: string, organizationId: string) => void
   onEditOrganization?: (organizationId: string) => void
   onToggleOrganizationStatus?: (organizationId: string, isActive: boolean) => void
   onDeleteOrganization?: (organizationId: string, organizationName: string) => void
@@ -215,8 +215,8 @@ export function CustomerOrganizationsTable({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => onAddOrganization(row.customer)}
-                                disabled={!canEdit}
+                                onClick={() => onAddOrganization?.(row.customer)}
+                                disabled={!canEdit || !onAddOrganization}
                                 className="h-8 w-8 p-0"
                               >
                                 <Plus className="h-4 w-4" />

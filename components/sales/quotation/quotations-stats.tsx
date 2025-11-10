@@ -1,8 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, Clock, FileText, TrendingUp } from "lucide-react"
+
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface QuotationsStatsProps {
   quotations: SalesQuotationWithRelations[]
@@ -25,6 +26,7 @@ const computeStats = (quotations: SalesQuotationWithRelations[]) => {
     activePercentage: total > 0 ? Math.round((active / total) * 100) : 0,
     expiredPercentage: total > 0 ? Math.round((expired / total) * 100) : 0,
     conversionRate: total > 0 ? Math.round((converted / total) * 100) : 0,
+    convertedPercentage: total > 0 ? Math.round((converted / total) * 100) : 0,
     averageValue: converted > 0 ? totalValue / converted : 0,
   }
 }

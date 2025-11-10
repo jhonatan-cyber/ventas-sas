@@ -1,6 +1,10 @@
 "use client"
 
+import { Lock, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -8,11 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import { Lock, Eye, EyeOff } from "lucide-react"
+
 
 interface ChangePasswordDialogProps {
   open: boolean

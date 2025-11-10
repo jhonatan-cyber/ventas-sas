@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+
 import { NotificationService } from '@/lib/services/notification-service'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 
 /**

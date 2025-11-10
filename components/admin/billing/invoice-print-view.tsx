@@ -1,10 +1,11 @@
 "use client";
 
-import { InvoiceWithRelations } from "@/lib/services/admin/billing-service";
 import { formatDate, formatCurrency } from "./invoices-table";
 
+import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service";
+
 interface InvoicePrintViewProps {
-  invoice: InvoiceWithRelations;
+  invoice: SerializedInvoiceWithRelations;
 }
 
 export function InvoicePrintView({ invoice }: InvoicePrintViewProps) {

@@ -1,6 +1,11 @@
 "use client";
 
+import { UsuarioSas, RoleSas } from "@prisma/client";
+import { InfoIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,10 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription } from "@/components/ui/card";
-import { UsuarioSas, RoleSas, Branch } from "@prisma/client";
-import { InfoIcon } from "lucide-react";
 
 interface UsuarioSasFormDialogProps {
   open: boolean;

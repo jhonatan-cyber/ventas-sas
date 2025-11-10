@@ -1,6 +1,7 @@
-import { prisma } from '@/lib/prisma'
 import { Organization, OrganizationSubscriptionStatus, SubscriptionPlan } from '@prisma/client'
+
 import { PasswordService } from '@/lib/auth/password'
+import { prisma } from '@/lib/prisma'
 
 export interface OrganizationWithPlan extends Organization {
   subscriptionPlan?: SubscriptionPlan | null
@@ -287,11 +288,11 @@ export class OrganizationAdminService {
         where: { organizationId: id }
       })
 
-      // 15. Eliminar clientes del sistema de administración (Customer)
-      // Nota: Solo eliminar si tienen organizationId, no eliminar todos los clientes
-      await tx.customer.updateMany({
+      // 15. Desactivar relaciones de clientes con esta organización
+      // Nota: No eliminamos los clientes, solo desactivamos su relación con la organización
+      await tx.customerOrganization.updateMany({
         where: { organizationId: id },
-        data: { organizationId: null }
+        data: { isActive: false }
       })
 
       // 16. Eliminar usuarios del sistema SAS (SalesUser)

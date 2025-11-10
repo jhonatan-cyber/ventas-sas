@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+
 import { Customer } from "@/lib/types"
 
 interface UseCustomersProps {

@@ -1,11 +1,13 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { SalesStats } from "./sales-stats"
+
 import { SalesFilters } from "./sales-filters"
-import { SalesTable } from "./sales-table"
 import { SalesPagination } from "./sales-pagination"
+import { SalesStats } from "./sales-stats"
+import { SalesTable } from "./sales-table"
 import { SalesSaleWithRelations } from "./types"
+
 import { Card } from "@/components/ui/card"
 
 interface SalesContainerProps {

@@ -1,12 +1,15 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ArrowLeft, Download, DollarSign, TrendingUp, ShoppingCart, TrendingDown, Receipt, Package, Users, Percent } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
+
 import type { GeneralReport } from "@/lib/services/sales/reports-service"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+
 
 interface GeneralReportClientProps {
   customerSlug: string

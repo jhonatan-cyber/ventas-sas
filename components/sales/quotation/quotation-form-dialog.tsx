@@ -1,6 +1,7 @@
 "use client"
 
-import { Quotation, SalesCustomer, SalesProduct } from "@prisma/client"
+import { SalesCustomer, SalesProduct } from "@prisma/client"
+import { SalesQuotationWithRelations } from "./types"
 import { Check, ChevronsUpDown, ChevronDown, Package2, Plus, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -48,13 +49,7 @@ interface BranchOption {
 interface QuotationFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  quotation?: Quotation & {
-    items?: any[]
-    customer?: any
-    customerName?: string | null
-    branchId?: string | null
-    branch?: { id?: string | null } | null
-  }
+  quotation?: SalesQuotationWithRelations | null
   organizationId: string
   customerSlug: string
   onSave: (data: any) => void
@@ -121,7 +116,7 @@ export function QuotationFormDialog({
   const customerInputRef = useRef<HTMLInputElement>(null)
   const PLACEHOLDER_BRANCH_VALUE = "__placeholder__"
   const [selectedBranchId, setSelectedBranchId] = useState<string>(PLACEHOLDER_BRANCH_VALUE)
-  
+
   const [customers, setCustomers] = useState<(SalesCustomer & { lastName?: string | null })[]>([])
   const [products, setProducts] = useState<SalesProduct[]>([])
   const [items, setItems] = useState<QuotationItemRow[]>([])
@@ -201,11 +196,10 @@ export function QuotationFormDialog({
                     type="button"
                     onClick={() => selectCustomer(customer)}
                     onMouseEnter={() => setHighlightedCustomerIndex(index)}
-                    className={`w-full text-left px-5 py-3 transition-colors ${
-                      index === highlightedCustomerIndex
+                    className={`w-full text-left px-5 py-3 transition-colors ${index === highlightedCustomerIndex
                         ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:bg-white/10 dark:text-white'
                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     <div className="font-semibold">{capitalizeWords(`${customer.name ?? ""} ${customer.lastName ?? ""}`.trim())}</div>
                     {customer.email && (
@@ -414,7 +408,7 @@ export function QuotationFormDialog({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setHighlightedCustomerIndex(prev => 
+        setHighlightedCustomerIndex(prev =>
           prev < filteredCustomers.length - 1 ? prev + 1 : prev
         )
         break
@@ -482,13 +476,13 @@ export function QuotationFormDialog({
   }
 
   const updateItem = (id: string, field: keyof QuotationItemRow, rawValue: any) => {
-     setItems((prev) => {
-       return prev.map((item) => {
-         if (item.id !== id) return item
- 
-         const updated: QuotationItemRow = { ...item }
- 
-         if (field === "productId") {
+    setItems((prev) => {
+      return prev.map((item) => {
+        if (item.id !== id) return item
+
+        const updated: QuotationItemRow = { ...item }
+
+        if (field === "productId") {
           if (rawValue === "none") {
             updated.productId = "none"
             return updated
@@ -512,11 +506,11 @@ export function QuotationFormDialog({
           updated.unitPrice = unitPrice
           updated.subtotal = unitPrice * updated.quantity
         }
- 
-         return updated
-       })
-     })
-   }
+
+        return updated
+      })
+    })
+  }
 
   const handleProductPopoverChange = (id: string, open: boolean) => {
     if (open) {
@@ -525,9 +519,9 @@ export function QuotationFormDialog({
         prev.map((item) =>
           item.id === id
             ? {
-                ...item,
-                productInput: item.productName,
-              }
+              ...item,
+              productInput: item.productName,
+            }
             : item,
         ),
       )
@@ -552,11 +546,11 @@ export function QuotationFormDialog({
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              productId: "none",
-              productInput: formatted,
-              productName: formatted,
-            }
+            ...item,
+            productId: "none",
+            productInput: formatted,
+            productName: formatted,
+          }
           : item,
       ),
     )
@@ -593,13 +587,13 @@ export function QuotationFormDialog({
       prev.map((item) =>
         item.id === itemId
           ? {
-              ...item,
-              productId: product.id,
-              productName: formattedName,
-              productInput: formattedName,
-              unitPrice: Number(product.price || 0),
-              subtotal: Number(product.price || 0) * item.quantity,
-            }
+            ...item,
+            productId: product.id,
+            productName: formattedName,
+            productInput: formattedName,
+            unitPrice: Number(product.price || 0),
+            subtotal: Number(product.price || 0) * item.quantity,
+          }
           : item,
       ),
     )
@@ -618,11 +612,11 @@ export function QuotationFormDialog({
       prev.map((item) =>
         item.id === itemId
           ? {
-              ...item,
-              productId: "none",
-              productName: formatted,
-              productInput: formatted,
-            }
+            ...item,
+            productId: "none",
+            productName: formatted,
+            productInput: formatted,
+          }
           : item,
       ),
     )
@@ -700,7 +694,7 @@ export function QuotationFormDialog({
   const isFormLocked = isLoading || isLoadingData || isBusy
 
   return (
-     <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px] max-h-[92vh] flex flex-col overflow-hidden p-0">
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
           <DialogHeader className="px-0 py-0 space-y-2">
@@ -708,8 +702,8 @@ export function QuotationFormDialog({
               {quotation ? "Editar Cotización" : "Nueva Cotización"}
             </DialogTitle>
             <DialogDescription>
-              {quotation 
-                ? "Modifica los datos de la cotización" 
+              {quotation
+                ? "Modifica los datos de la cotización"
                 : "Completa los datos para crear una nueva cotización"}
             </DialogDescription>
           </DialogHeader>
@@ -955,8 +949,8 @@ export function QuotationFormDialog({
               {/* Totales y extras */}
               <div className="space-y-6">
                 <div className="grid gap-4 lg:grid-cols-2">
-                   <div className="space-y-2">
-                     <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Subtotal</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Subtotal</Label>
                     <Input
                       type="text"
                       value={`$${totals.subtotal.toFixed(2)}`}
@@ -1035,17 +1029,17 @@ export function QuotationFormDialog({
             </div>
           </div>
           <DialogFooter className="flex w-full justify-center sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               className="rounded-full"
               onClick={() => onOpenChange(false)}
               disabled={isFormLocked}
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               variant="new"
               className="rounded-full px-6"
               disabled={isSubmitDisabled}

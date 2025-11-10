@@ -1,9 +1,10 @@
+import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
+
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
 import { AuthService } from "@/lib/services/auth-service"
-import { cookies } from "next/headers"
 
 const addCustomerSchema = z.object({
   customerId: z.string().uuid(),

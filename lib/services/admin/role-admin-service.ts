@@ -1,12 +1,12 @@
+import { Prisma, Role, OrganizationMember } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
-import { Role, OrganizationMember } from '@prisma/client'
 
 export interface RoleWithStats extends Omit<Role, 'updatedAt'> {
   _count: {
     organizationMembers: number
     adminUsers: number  // Usuarios del sistema de administración con este rol
   }
-  isActive?: boolean
 }
 
 export interface CreateRoleData {
@@ -220,7 +220,6 @@ export class RoleAdminService {
     return prisma.organizationMember.findMany({
       where: { roleId },
       include: {
-        profile: true,
         organization: true,
         role: true
       }
@@ -244,11 +243,11 @@ export class RoleAdminService {
 
   // Buscar roles
   static async searchRoles(query: string): Promise<RoleWithStats[]> {
-    return prisma.role.findMany({
+    const roles = await prisma.role.findMany({
       where: {
         OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } }
+          { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+          { description: { contains: query, mode: Prisma.QueryMode.insensitive } }
         ]
       },
       include: {
@@ -260,6 +259,27 @@ export class RoleAdminService {
       },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Calcular adminUsers para cada rol
+    const rolesWithUserCounts = await Promise.all(
+      roles.map(async (role) => {
+        const adminUserCount = await prisma.profile.count({
+          where: {
+            role: role.name
+          }
+        })
+
+        return {
+          ...role,
+          _count: {
+            ...role._count,
+            adminUsers: adminUserCount
+          }
+        }
+      })
+    )
+
+    return rolesWithUserCounts
   }
 
   // Duplicar rol

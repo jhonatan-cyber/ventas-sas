@@ -1,23 +1,6 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Branch } from "@prisma/client";
 import {
   Edit,
   Trash2,
@@ -29,7 +12,24 @@ import {
   MapPin,
   Eye,
 } from "lucide-react";
-import { Branch } from "@prisma/client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface BranchesTableProps {
   branches: (Branch & {

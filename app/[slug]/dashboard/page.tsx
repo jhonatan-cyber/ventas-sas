@@ -1,9 +1,3 @@
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SalesDashboardService } from "@/lib/services/sales/sales-dashboard-service"
-import { QuotationService } from "@/lib/services/sales/quotation-service"
-import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
 import { 
   Users, 
   ShoppingCart, 
@@ -16,8 +10,17 @@ import {
   Clock,
   CheckCircle2
 } from "lucide-react"
-import { formatDate } from "@/lib/utils/date"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
 import { AnalyticsDashboardClient } from "@/components/analytics/analytics-dashboard-client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { QuotationService } from "@/lib/services/sales/quotation-service"
+import { SalesDashboardService } from "@/lib/services/sales/sales-dashboard-service"
+import { formatDate } from "@/lib/utils/date"
+import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
+
+
 
 export default async function DashboardPage({
   params,
@@ -74,7 +77,7 @@ export default async function DashboardPage({
         { quotations: [], total: 0 }
       ] as any
 
-  const pendingQuotations = recentQuotations.quotations.filter(q => q.status === 'pending').length
+  const pendingQuotations = recentQuotations.quotations.filter((q: any) => q.status === 'pending').length
 
   return (
     <div className="py-4 md:py-6 px-0 md:px-6 space-y-4 md:space-y-6">
@@ -216,9 +219,9 @@ export default async function DashboardPage({
             ) : (
               <div className="space-y-2 md:space-y-3">
                 {recentQuotations.quotations
-                  .filter(q => q.status === 'pending')
+                  .filter((q: any) => q.status === 'pending')
                   .slice(0, 5)
-                  .map((quotation) => (
+                  .map((quotation: any) => (
                     <div
                       key={quotation.id}
                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2 md:p-3 rounded-lg bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a]"

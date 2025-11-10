@@ -1,8 +1,10 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SalesExpenseWithRelations } from "./types"
 import { FileText, CalendarDays, GaugeCircle, DollarSign } from "lucide-react"
+
+import { SalesExpenseWithRelations } from "./types"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ExpensesStatsProps {
   expenses: SalesExpenseWithRelations[]

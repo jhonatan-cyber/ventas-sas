@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
+
 import { AuthService } from '@/lib/services/auth-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 export async function GET(request: NextRequest) {
   try {

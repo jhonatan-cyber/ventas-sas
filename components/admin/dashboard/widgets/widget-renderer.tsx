@@ -1,10 +1,10 @@
 "use client"
 
-import { Widget } from "./types"
-import { StatsWidget } from "./stats-widget"
-import { HealthWidget } from "./health-widget"
 import { ActivityWidget } from "./activity-widget"
+import { HealthWidget } from "./health-widget"
 import { RecentSubscriptionsWidget } from "./recent-subscriptions-widget"
+import { StatsWidget } from "./stats-widget"
+import { Widget } from "./types"
 
 interface WidgetRendererProps {
   widget: Widget

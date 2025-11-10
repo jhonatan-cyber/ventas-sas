@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { SalesProduct, Category } from "@prisma/client";
+import { BrowserMultiFormatReader } from "@zxing/library";
+import { Camera, X, Upload, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,15 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { SalesProduct, Category } from "@prisma/client";
-import { BrowserMultiFormatReader } from "@zxing/library";
-import { Camera, X, Upload, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 // Función para capitalizar cada palabra (primera letra de cada palabra en mayúscula)
 const capitalizeWords = (text: string) => {
@@ -625,7 +626,7 @@ export function ProductFormDialog({
                   <div className="relative group">
                     <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
                       {imagePreview ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img
                           src={imagePreview}
                           alt="Vista previa"

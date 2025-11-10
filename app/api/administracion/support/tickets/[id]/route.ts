@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SupportService, UpdateTicketData } from '@/lib/services/admin/support-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { z } from 'zod'
+
+import { SupportService, UpdateTicketData } from '@/lib/services/admin/support-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 
 const updateTicketSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -19,7 +20,7 @@ const updateTicketSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentAdminUser(request)
@@ -27,7 +28,8 @@ export async function GET(
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
-    const ticket = await SupportService.getTicketById(params.id)
+    const { id } = await params
+    const ticket = await SupportService.getTicketById(id)
 
     if (!ticket) {
       return NextResponse.json({ error: 'Ticket no encontrado' }, { status: 404 })
@@ -45,7 +47,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentAdminUser(request)
@@ -53,6 +55,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
 
     // Validar datos
@@ -66,7 +69,7 @@ export async function PATCH(
 
     const data: UpdateTicketData = validation.data
 
-    const ticket = await SupportService.updateTicket(params.id, data, user.id)
+    const ticket = await SupportService.updateTicket(id, data, user.id)
 
     return NextResponse.json(ticket)
   } catch (error) {

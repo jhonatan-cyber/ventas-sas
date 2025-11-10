@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
-import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { createSalesCustomerSchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { createSalesCustomerSchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener todos los clientes con paginación y filtros
 export async function GET(

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import { Category } from "@prisma/client"
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
+import { toast } from "sonner"
 
 type CategoryWithRelations = Category & {
   _count?: { products: number }

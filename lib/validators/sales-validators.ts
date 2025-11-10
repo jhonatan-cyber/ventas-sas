@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import { QuotationStatus, SalePaymentMethod, SaleStatus } from '@prisma/client'
+import { z } from 'zod'
 
 /**
  * Validadores para el sistema de ventas

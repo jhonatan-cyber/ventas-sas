@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
-import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
+import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeCashRegister } from '@/lib/utils/serializers'
 
 // GET - Obtener caja por ID
@@ -132,7 +133,7 @@ export async function DELETE(
 
     // No permitir eliminar cajas abiertas
     if (existingCashRegister.isOpen) {
-      throw AppError.badRequest('No se puede eliminar una caja abierta. Ciérrela primero.')
+      throw AppError.validation('No se puede eliminar una caja abierta. Ciérrela primero.')
     }
 
     await CashRegisterService.deleteCashRegister(id)

@@ -1,5 +1,7 @@
 "use client";
 
+import { FileText, DollarSign, AlertCircle, CheckCircle2 } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -7,11 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, DollarSign, AlertCircle, CheckCircle2 } from "lucide-react";
-import { BillingStats } from "@/lib/services/admin/billing-service";
+import { SerializedBillingStats } from "@/lib/services/admin/billing-service";
 
 interface BillingStatsProps {
-  stats: BillingStats;
+  stats: SerializedBillingStats;
 }
 
 export function BillingStats({ stats }: BillingStatsProps) {

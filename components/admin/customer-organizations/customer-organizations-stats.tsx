@@ -1,5 +1,7 @@
 "use client"
 
+import { Building2, Building, XCircle, Users } from "lucide-react"
+
 import {
   Card,
   CardContent,
@@ -7,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Building2, Building, XCircle, Users } from "lucide-react"
 
 interface Customer {
   id: string

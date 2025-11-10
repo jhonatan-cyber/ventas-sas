@@ -1,5 +1,5 @@
+import { getCachedData } from '@/lib/cache/cache-service'
 import { prisma } from '@/lib/prisma'
-import { getCachedData, CacheKeys } from '@/lib/cache/cache-service'
 
 export interface SalesTimeSeries {
   date: string
@@ -237,7 +237,7 @@ export class AnalyticsService {
           }
 
           current.created++
-          if (q.status === 'completed' || q.status === 'approved') {
+          if (q.status === 'converted' || q.status === 'approved') {
             current.converted++
           } else if (q.status === 'expired') {
             current.expired++

@@ -5,12 +5,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { SystemConfigService } from '@/lib/services/admin/system-config-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { z } from 'zod'
+
+import { SystemConfigService } from '@/lib/services/admin/system-config-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 const cleanupLogsSchema = z.object({
   daysToKeep: z.number().int().min(7).max(365).default(90)
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Registrar acción sensible
     await SecurityAuditLogger.logSensitiveAction(
       {
-        userId: user.userId,
+        userId: user.id,
         actionType: 'SETTINGS_CHANGED',
         entityType: 'SYSTEM_LOGS',
         details: {

@@ -1,19 +1,21 @@
 "use client"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { UsuarioSas } from "@prisma/client"
+import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard, Shield, Building2 } from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard, Shield, Building2 } from "lucide-react"
-import { UsuarioSas } from "@prisma/client"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 
 interface UsuariosSasTableProps {
   usuarios: (UsuarioSas & {
     rol: { id: string; nombre: string } | null
     sucursal: { id: string; name: string } | null
-    customer: any
+    customer?: any
   })[]
   sucursalesCount?: number
   isLoading?: boolean

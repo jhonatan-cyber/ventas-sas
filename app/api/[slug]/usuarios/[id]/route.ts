@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+import { AppError } from '@/lib/errors/app-error'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { AppError } from '@/lib/errors/app-error'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 
 // GET - Obtener usuario por ID
 export async function GET(
@@ -81,7 +82,7 @@ export async function PUT(
         await SecurityAuditLogger.logSensitiveAction(
           {
             userId: currentUser.id,
-            customerId: targetUser.customerId,
+            organizationId: targetUser.organizationId,
             actionType: 'ROLE_CHANGED',
             entityType: 'UsuarioSas',
             entityId: id,
@@ -101,7 +102,7 @@ export async function PUT(
         await SecurityAuditLogger.logSensitiveAction(
           {
             userId: currentUser.id,
-            customerId: targetUser.customerId,
+            organizationId: targetUser.organizationId,
             actionType: 'USER_UPDATED',
             entityType: 'UsuarioSas',
             entityId: id,
@@ -120,7 +121,7 @@ export async function PUT(
         await SecurityAuditLogger.logSensitiveAction(
           {
             userId: currentUser.id,
-            customerId: targetUser.customerId,
+            organizationId: targetUser.organizationId,
             actionType: isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
             entityType: 'UsuarioSas',
             entityId: id,
@@ -162,7 +163,7 @@ export async function DELETE(
       await SecurityAuditLogger.logSensitiveAction(
         {
           userId: currentUser.id,
-          customerId: targetUser.customerId,
+          organizationId: targetUser.organizationId,
           actionType: 'USER_DELETED',
           entityType: 'UsuarioSas',
           entityId: id,

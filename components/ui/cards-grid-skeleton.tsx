@@ -1,5 +1,5 @@
-import { Skeleton } from "./skeleton"
 import { Card, CardContent, CardHeader } from "./card"
+import { Skeleton } from "./skeleton"
 
 interface CardsGridSkeletonProps {
   count?: number

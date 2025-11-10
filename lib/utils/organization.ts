@@ -1,7 +1,9 @@
-import { prisma } from '@/lib/prisma'
-import type { Organization } from '@prisma/client'
 import { SubscriptionStatus } from '@prisma/client'
+
 import type { Customer } from '@/lib/types'
+import type { Organization } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 
 export type CustomerWithPrimaryOrganization = Customer & {
   primaryOrganization: Pick<Organization, 'id' | 'name' | 'slug' | 'razonSocial' | 'nit' | 'subscriptionStatus'> | null

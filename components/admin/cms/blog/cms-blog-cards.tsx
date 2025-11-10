@@ -1,17 +1,21 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { FileText, Edit, Trash2, Eye, EyeOff, MoreVertical, Globe, Calendar, Image as ImageIcon, ExternalLink } from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { FileText, Edit, Trash2, Eye, EyeOff, MoreVertical, Globe, Calendar, Tag, Image as ImageIcon, ExternalLink } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+
 
 interface CmsBlogPost {
   id: string
   organizationId?: string | null
   slug: string
   title: string
+  content: string
   excerpt?: string | null
   featuredImage?: string | null
   category?: string | null
@@ -20,6 +24,7 @@ interface CmsBlogPost {
   publishedAt?: string | null
   viewCount: number
   createdAt: string
+  updatedAt: string
   organization?: {
     id: string
     name: string

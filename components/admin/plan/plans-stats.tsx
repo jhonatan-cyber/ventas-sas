@@ -1,20 +1,21 @@
 "use client";
 
 import {
+  CreditCard,
+  DollarSign,
+  Power,
+  TrendingUp,
+} from "lucide-react";
+
+import { SerializedSubscriptionPlanWithStats } from "./types";
+
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  CreditCard,
-  DollarSign,
-  Power,
-  PowerOff,
-  TrendingUp,
-} from "lucide-react";
-import { SerializedSubscriptionPlanWithStats } from "./types";
 
 interface PlansStatsProps {
   plans: SerializedSubscriptionPlanWithStats[];

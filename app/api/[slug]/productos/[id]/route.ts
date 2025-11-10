@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SalesProductService } from '@/lib/services/sales/sales-product-service'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { updateProductSchema } from '@/lib/validators/sales-validators'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+
 import { AppError } from '@/lib/errors/app-error'
+import { SalesProductService } from '@/lib/services/sales/sales-product-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
+import { updateProductSchema } from '@/lib/validators/sales-validators'
 
 // GET - Obtener producto por ID
 export async function GET(

@@ -1,28 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { BrowserMultiFormatReader } from "@zxing/library"
 import { Check, ChevronsUpDown, Plus, Trash2, ScanLine, X, ChevronDown } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
+
 import { SalesSaleWithRelations, SaleCustomerSummary, SaleProductSummary } from "./types"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -31,8 +16,24 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { toast } from "sonner"
-import { BrowserMultiFormatReader } from "@zxing/library"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
 
 const capitalizeWords = (value: string) =>

@@ -1,14 +1,16 @@
 "use client"
 
-import { Moon, Sun, Monitor, HelpCircle, Search, LogOut, User, Menu } from "lucide-react"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Moon, Sun, Monitor, HelpCircle, LogOut, User, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
+
 import { useSidebar } from "./sidebar-context"
+
 import { GlobalSearch } from "@/components/admin/global-search"
+import { NotificationsDropdown } from "@/components/common/notifications-dropdown"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 
 interface AdminUser {
   id: string

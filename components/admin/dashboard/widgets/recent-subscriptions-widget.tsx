@@ -1,8 +1,9 @@
 "use client"
 
-import { CreditCard } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { CreditCard } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 
 interface RecentSubscriptionsWidgetProps {

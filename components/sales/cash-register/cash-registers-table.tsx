@@ -1,18 +1,13 @@
 "use client"
 
+import type { CashRegisterWithRelations } from "./types"
+import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { CashRegister } from "@prisma/client"
-import { formatDateTime } from "@/lib/utils/date"
-import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
 import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
-
-type CashRegisterWithRelations = CashRegister & {
-  branch?: { id: string; name: string; address?: string | null } | null
-  openedBy?: { id: string; nombre: string; apellido: string } | null
-  closedBy?: { id: string; nombre: string; apellido: string } | null
-}
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { formatDateTime } from "@/lib/utils/date"
 
 interface CashRegistersTableProps {
   cashRegisters: CashRegisterWithRelations[]
@@ -24,8 +19,15 @@ interface CashRegistersTableProps {
   showBranchInfo?: boolean
 }
 
-const formatCurrency = (value: number | string) =>
-  `$${Number(value || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
+const formatCurrency = (value: number | string | { toNumber?: () => number }) => {
+  let numValue = 0
+  if (value && typeof value === 'object' && 'toNumber' in value && value.toNumber) {
+    numValue = value.toNumber()
+  } else {
+    numValue = Number(value || 0)
+  }
+  return `$${numValue.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
+}
 
 const getUserFullName = (user?: { nombre: string; apellido: string } | null) => {
   if (!user) return "-"

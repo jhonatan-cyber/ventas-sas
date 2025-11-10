@@ -1,6 +1,7 @@
 "use client"
 
 import { Organization } from "@prisma/client"
+
 import { TemplateRenderer } from "@/components/cms/templates/template-renderer"
 
 interface OrganizationLandingClientProps {

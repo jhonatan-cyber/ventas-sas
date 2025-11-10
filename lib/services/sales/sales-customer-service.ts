@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { SalesCustomer } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 
 export interface CreateSalesCustomerData {
   name: string
@@ -7,6 +8,8 @@ export interface CreateSalesCustomerData {
   email?: string
   phone?: string
   address?: string
+  city?: string
+  country?: string
   ruc?: string
 }
 
@@ -16,6 +19,8 @@ export interface UpdateSalesCustomerData {
   email?: string
   phone?: string
   address?: string
+  city?: string
+  country?: string
   ruc?: string
   isActive?: boolean
 }
@@ -86,6 +91,8 @@ export class SalesCustomerService {
         email: data.email,
         phone: data.phone,
         address: data.address,
+        city: data.city,
+        country: data.country,
         ruc: data.ruc,
         isActive: true
       }

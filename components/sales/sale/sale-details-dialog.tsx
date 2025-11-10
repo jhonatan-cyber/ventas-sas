@@ -1,16 +1,17 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { SalesSaleWithRelations } from "./types"
-import { formatDateTime } from "@/lib/utils/date"
 import jsPDF from "jspdf"
 import { FileDown, Printer } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+
+import { SalesSaleWithRelations } from "./types"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { formatDateTime } from "@/lib/utils/date"
 import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
 
 interface SaleDetailsDialogProps {

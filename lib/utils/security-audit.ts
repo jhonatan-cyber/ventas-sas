@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
+
+import { prisma } from '@/lib/prisma'
 
 /**
  * Tipos de eventos de seguridad
@@ -49,7 +50,7 @@ export interface LoginAttemptData {
 }
 
 export interface SensitiveActionData {
-  userId: string
+  userId?: string
   customerId?: string
   organizationId?: string
   actionType: SecurityLogType
@@ -77,7 +78,7 @@ export class SecurityAuditLogger {
     }
 
     return {
-      ip: request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || 'unknown',
       referer: request.headers.get('referer') || undefined,
     }

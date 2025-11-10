@@ -1,6 +1,7 @@
 "use client"
 
 import { Edit, Trash2, Eye, EyeOff, FileText, Calendar, Globe, ExternalLink, Link2 } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,11 +24,14 @@ interface CmsPage {
   organizationId?: string | null
   slug: string
   title: string
+  content: string
   excerpt?: string | null
   pageType: string
   isPublished: boolean
   publishedAt?: string | null
+  order: number
   createdAt: string
+  updatedAt: string
   organization?: {
     id: string
     name: string

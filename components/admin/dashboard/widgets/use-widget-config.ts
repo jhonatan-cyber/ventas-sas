@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+
 import { Widget, DEFAULT_WIDGETS } from "./types"
 
 const STORAGE_KEY = "admin-dashboard-widgets"

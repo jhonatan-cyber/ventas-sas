@@ -1,6 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowLeft, BarChart3, Shield } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
 
 export const metadata = {
   title: 'Política de Privacidad - Sistema de Ventas SAS',

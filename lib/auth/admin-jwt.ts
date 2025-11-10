@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+
 import { JwtSecretRotation } from './jwt-secret-rotation'
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET

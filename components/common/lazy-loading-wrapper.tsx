@@ -5,8 +5,8 @@
 
 "use client"
 
-import { Suspense, ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
+import { Suspense, ReactNode } from 'react'
 
 interface LazyLoadingWrapperProps {
   children: ReactNode

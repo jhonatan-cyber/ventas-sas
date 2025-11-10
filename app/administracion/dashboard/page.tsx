@@ -1,12 +1,13 @@
-import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminJWTService } from "@/lib/auth/admin-jwt"
-import { AdminLayout } from "@/components/layout/admin-layout"
-import { AdminService } from "@/lib/services/admin/admin-service"
-import { AuthService } from "@/lib/services/auth-service"
-import { DashboardService } from "@/lib/services/admin/dashboard-service"
+import { redirect } from "next/navigation"
+
 import { DashboardClient } from "@/components/admin/dashboard/dashboard-client"
 import { AdminAnalyticsClient } from "@/components/analytics/admin-analytics-client"
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
+import { AdminService } from "@/lib/services/admin/admin-service"
+import { DashboardService } from "@/lib/services/admin/dashboard-service"
+import { AuthService } from "@/lib/services/auth-service"
 
 export default async function AdminPage() {
   // Validación de sesión Admin en el servidor

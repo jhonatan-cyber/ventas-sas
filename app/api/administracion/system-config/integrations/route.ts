@@ -6,12 +6,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { SystemConfigService } from '@/lib/services/admin/system-config-service'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { z } from 'zod'
+
+import { SystemConfigService } from '@/lib/services/admin/system-config-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
+import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 const createIntegrationSchema = z.object({
   name: z.string().min(1),
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Registrar acción sensible
     await SecurityAuditLogger.logSensitiveAction(
       {
-        userId: user.userId,
+        userId: user.id,
         actionType: 'SETTINGS_CHANGED',
         entityType: 'INTEGRATION_CONFIG',
         details: {
@@ -78,8 +79,17 @@ export async function POST(request: NextRequest) {
     )
 
     const config = await SystemConfigService.createIntegrationConfig({
-      ...validation.data,
-      updatedBy: user.userId
+      name: validation.data.name,
+      type: validation.data.type,
+      provider: validation.data.provider,
+      enabled: validation.data.enabled,
+      config: validation.data.config ?? {},
+      credentials: validation.data.credentials,
+      webhookUrl: validation.data.webhookUrl,
+      webhookSecret: validation.data.webhookSecret,
+      testMode: validation.data.testMode,
+      metadata: validation.data.metadata,
+      updatedBy: user.id
     })
     
     return NextResponse.json({

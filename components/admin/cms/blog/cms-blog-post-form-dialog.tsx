@@ -1,6 +1,12 @@
 "use client"
 
+import { X, X as RemoveIcon } from "lucide-react"
 import { useState, useEffect } from "react"
+
+import { TiptapEditor } from "../editor/tiptap-editor"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,15 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { TiptapEditor } from "../editor/tiptap-editor"
-import { X, X as RemoveIcon } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+
+
 
 interface CmsBlogPost {
   id: string
@@ -32,6 +36,8 @@ interface CmsBlogPost {
   tags: string[]
   category?: string | null
   isPublished: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface CmsBlogPostFormDialogProps {

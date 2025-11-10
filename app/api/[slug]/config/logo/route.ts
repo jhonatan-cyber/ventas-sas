@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { mkdir, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
+import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
+
+import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
+
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 export const runtime = 'nodejs'

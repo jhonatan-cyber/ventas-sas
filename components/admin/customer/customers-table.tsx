@@ -1,13 +1,14 @@
 "use client"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone, Eye } from "lucide-react"
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone, Eye } from "lucide-react"
-import { Customer } from "@/lib/types"
 import { useHasPermission } from "@/hooks/admin/use-user-permissions"
+import { Customer } from "@/lib/types"
 
 interface CustomersTableProps {
   customers: Customer[]

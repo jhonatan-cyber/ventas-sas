@@ -1,14 +1,17 @@
 "use client"
 
+import { ArrowLeft, Download, Users, ShoppingCart, UserCheck, UserX } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+
+import type { CustomersReport } from "@/lib/services/sales/reports-service"
+
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Download, Users, ShoppingCart, DollarSign, Calendar, UserCheck, UserX } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { formatDate } from "@/lib/utils/date"
-import type { CustomersReport } from "@/lib/services/sales/reports-service"
+
 
 interface CustomersReportClientProps {
   customerSlug: string

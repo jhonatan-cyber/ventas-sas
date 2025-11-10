@@ -163,12 +163,12 @@ export class ReportsService {
         const existing = productMap.get(item.productId)
         if (existing) {
           existing.quantity += item.quantity
-          existing.revenue += item.subtotal
+          existing.revenue += Number(item.subtotal)
         } else {
           productMap.set(item.productId, {
             name: item.product?.name || 'Producto desconocido',
             quantity: item.quantity,
-            revenue: item.subtotal
+            revenue: Number(item.subtotal)
           })
         }
       })
@@ -394,12 +394,12 @@ export class ReportsService {
         const existing = productMap.get(item.productId)
         if (existing) {
           existing.quantity += item.quantity
-          existing.revenue += item.subtotal
+          existing.revenue += Number(item.subtotal)
         } else {
           productMap.set(item.productId, {
             name: item.product?.name || 'Producto desconocido',
             quantity: item.quantity,
-            revenue: item.subtotal
+            revenue: Number(item.subtotal)
           })
         }
       })

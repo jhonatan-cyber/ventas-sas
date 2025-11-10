@@ -4,10 +4,11 @@
  * Verifica que las sesiones sean válidas antes de permitir acceso
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { SessionManagement } from '@/lib/auth/session-management'
+import { NextRequest } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { SasJWTService } from '@/lib/auth/sas-jwt'
+import { SessionManagement } from '@/lib/auth/session-management'
 
 export interface SessionValidationResult {
   valid: boolean

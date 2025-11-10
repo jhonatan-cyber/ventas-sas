@@ -5,15 +5,16 @@
 
 "use client"
 
+import { Loader2, CheckCircle2, AlertCircle, Shield, Download } from "lucide-react"
+import Image from "next/image"
 import { useState } from "react"
+import { toast } from "sonner"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, CheckCircle2, AlertCircle, Shield, Download } from "lucide-react"
-import { toast } from "sonner"
-import Image from "next/image"
 
 interface TwoFactorSetupProps {
   endpoint: string // '/api/administracion/2fa' o '/api/[slug]/2fa'

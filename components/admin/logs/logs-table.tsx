@@ -1,17 +1,9 @@
 "use client"
 
-import { SecurityLogWithUser } from "@/lib/services/admin/security-logs-service"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Eye, CheckCircle, XCircle } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +12,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { SecurityLogWithUser } from "@/lib/services/admin/security-logs-service"
 
 interface LogsTableProps {
   logs: SecurityLogWithUser[]

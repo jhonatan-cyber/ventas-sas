@@ -1,20 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
 import {
   AlertTriangle,
   RefreshCw,
   LayoutDashboard,
 } from "lucide-react"
+import { useState, useEffect } from "react"
+
+import { CustomizeWidgetsDialog } from "./widgets/customize-widgets-dialog"
+import { Widget } from "./widgets/types"
+import { useWidgetConfig } from "./widgets/use-widget-config"
 import { DragAndDropWidgets } from "./widgets/widget-container"
 import { WidgetRenderer } from "./widgets/widget-renderer"
-import { CustomizeWidgetsDialog } from "./widgets/customize-widgets-dialog"
-import { useWidgetConfig } from "./widgets/use-widget-config"
-import { Widget } from "./widgets/types"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 interface DashboardStats {
   organizations: {

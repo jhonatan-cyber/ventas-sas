@@ -1,13 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { useSidebar } from "./sidebar-context"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useUserPermissions } from "@/hooks/admin/use-user-permissions"
 import {
   LayoutDashboard,
   Users,
@@ -34,6 +27,16 @@ import {
   Globe,
   Plug
 } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
+import { useSidebar } from "./sidebar-context"
+
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useUserPermissions } from "@/hooks/admin/use-user-permissions"
+import { cn } from "@/lib/utils"
+
 
 interface NavItem {
   title: string

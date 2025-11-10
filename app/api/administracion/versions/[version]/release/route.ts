@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
+
 import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
 import { VersionService } from '@/lib/services/admin/version-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { version: string } }
+  { params }: { params: Promise<{ version: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -26,7 +27,7 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { version } = params
+    const { version } = await params
     const versionRecord = await VersionService.releaseVersion(version, payload.userId)
 
     return NextResponse.json({ success: true, version: versionRecord })

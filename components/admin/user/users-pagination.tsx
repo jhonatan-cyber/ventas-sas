@@ -18,7 +18,7 @@ export function UsersPagination({
   onPageChange,
   onPrevious,
   onNext,
-}: RolesPaginationProps) {
+}: UsersPaginationProps) {
   const totalPages = Math.ceil(totalItems / pageSize)
   
   const getPageNumbers = () => {

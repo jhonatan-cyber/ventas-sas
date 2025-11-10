@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
 import { Expense } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 import { 
   CursorPaginationOptions, 
   CursorPaginationResult, 

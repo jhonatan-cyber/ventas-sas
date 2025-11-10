@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { AdminJWTService } from '@/lib/auth/admin-jwt'
-import { AuthService } from '@/lib/services/auth-service'
-import { CustomDomainService } from '@/lib/services/admin/custom-domain-service'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+
+import { AdminJWTService } from '@/lib/auth/admin-jwt'
+import { CustomDomainService } from '@/lib/services/admin/custom-domain-service'
+import { AuthService } from '@/lib/services/auth-service'
 
 const createDomainSchema = z.object({
   organizationId: z.string().min(1),

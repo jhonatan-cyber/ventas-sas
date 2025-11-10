@@ -1,19 +1,21 @@
 "use client"
 
+import { UsuarioSas, RoleSas } from "@prisma/client"
 import { useState, useEffect } from "react"
-import { UsuariosSasHeader } from "./usuarios-sas-header"
-import { UsuariosSasContainer } from "./usuarios-sas-container"
-import { UsuarioSasFormDialog } from "./usuario-sas-form-dialog"
+
 import { UsuarioSasDeleteDialog } from "./usuario-sas-delete-dialog"
+import { UsuarioSasFormDialog } from "./usuario-sas-form-dialog"
+import { UsuariosSasContainer } from "./usuarios-sas-container"
+import { UsuariosSasHeader } from "./usuarios-sas-header"
+
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
-import { UsuarioSas, RoleSas, Branch } from "@prisma/client"
 import { useUsuarioSasActions } from "@/hooks/sales/usuario/use-usuario-sas-actions"
 
 interface UsuariosSasPageClientProps {
   initialUsuarios: (UsuarioSas & {
     rol: { id: string; nombre: string } | null
     sucursal: { id: string; name: string } | null
-    customer: any
+    customer?: any
   })[]
   roles: (RoleSas & { customer?: any; sucursal?: any })[]
   sucursales: { id: string; name: string }[]
