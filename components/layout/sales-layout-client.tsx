@@ -9,9 +9,10 @@ import { SidebarProvider } from "./sidebar-context"
 interface SalesLayoutClientProps {
   children: React.ReactNode
   organizationSlug: string
+  maxBranches?: number | null
 }
 
-export function SalesLayoutClient({ children, organizationSlug }: SalesLayoutClientProps) {
+export function SalesLayoutClient({ children, organizationSlug, maxBranches }: SalesLayoutClientProps) {
   const pathname = usePathname()
   const isLoginPage = pathname.includes('/login')
   const isMaintenancePage = pathname.includes('/en-mantenimiento')
@@ -54,7 +55,7 @@ export function SalesLayoutClient({ children, organizationSlug }: SalesLayoutCli
   return (
     <SidebarProvider>
       <div className="flex h-screen bg-gray-50 dark:bg-[#1a1a1a]">
-        <SalesSidebar organizationSlug={organizationSlug} />
+        <SalesSidebar organizationSlug={organizationSlug} maxBranches={maxBranches} />
         <main className="flex-1 lg:ml-64 overflow-y-auto">
           <SalesHeader />
           <div className="mt-24 lg:mt-16">

@@ -87,7 +87,7 @@ export function ChangePasswordDialog({
       setNewPassword("")
       setConfirmPassword("")
       onOpenChange(false)
-    } catch (error) {
+    } catch {
       toast.error('Error al cambiar la contraseña')
     } finally {
       setIsLoading(false)

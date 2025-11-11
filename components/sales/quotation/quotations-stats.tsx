@@ -47,7 +47,7 @@ export function QuotationsStats({ quotations, isLoading = false }: QuotationsSta
     activePercentage,
     expiredPercentage,
     conversionRate,
-    convertedPercentage,
+    convertedPercentage: _convertedPercentage,
     averageValue,
   } = computeStats(quotations)
 

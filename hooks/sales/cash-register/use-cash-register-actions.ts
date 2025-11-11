@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+
 import type { CashRegisterWithRelations } from "@/components/sales/cash-register/types"
 
 export function useCashRegisterActions(customerSlug: string, onCashRegistersChange?: () => Promise<void> | void) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)

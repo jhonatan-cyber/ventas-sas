@@ -81,7 +81,7 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
       window.dispatchEvent(new Event("profile-updated"));
 
       toast.success("Perfil actualizado correctamente");
-    } catch (error) {
+    } catch {
       toast.error("Error al actualizar el perfil");
     } finally {
       setIsLoading(false);

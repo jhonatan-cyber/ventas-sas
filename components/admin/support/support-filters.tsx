@@ -138,7 +138,7 @@ export function SupportFilters({
               value={filters.assignedToId === null ? "unassigned" : filters.assignedToId || "all"}
               onValueChange={(value) => {
                 if (value === "all") {
-                  const { assignedToId, ...rest } = filters
+                  const { assignedToId: _assignedToId, ...rest } = filters
                   onFiltersChange(rest)
                 } else if (value === "unassigned") {
                   onFiltersChange({ ...filters, assignedToId: null })

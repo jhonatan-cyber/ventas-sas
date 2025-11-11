@@ -1,10 +1,11 @@
 "use client"
 
 import { SalesCustomer, SalesProduct } from "@prisma/client"
-import { SalesQuotationWithRelations } from "./types"
 import { Check, ChevronsUpDown, ChevronDown, Package2, Plus, X } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { toast } from "sonner"
+
+import { SalesQuotationWithRelations } from "./types"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -282,6 +283,52 @@ export function QuotationFormDialog({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const loadCustomers = useCallback(async () => {
+    try {
+      setIsLoadingData(true)
+      const response = await fetch(`/api/${customerSlug}/clientes?page=1&pageSize=1000`, {
+        cache: "no-store",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        const normalized = (data.customers || []).map((customer: any) => ({
+          ...customer,
+          lastName: customer.lastName ?? customer.apellido ?? null,
+        }))
+        setCustomers(normalized)
+      }
+    } catch (error) {
+      console.error('Error al cargar clientes:', error)
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [customerSlug])
+
+  const loadProducts = useCallback(async (branchIdOverride?: string | null) => {
+    try {
+      setIsLoadingData(true)
+      const effectiveBranchId = isAdmin
+        ? branchIdOverride && branchIdOverride !== PLACEHOLDER_BRANCH_VALUE
+          ? branchIdOverride
+          : null
+        : currentUserBranchId ?? null
+
+      const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : ""
+
+      const response = await fetch(`/api/${customerSlug}/productos?page=1&pageSize=1000${branchQuery}`, {
+        cache: "no-store",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data.products || [])
+      }
+    } catch (error) {
+      console.error('Error al cargar productos:', error)
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [customerSlug, isAdmin, currentUserBranchId])
+
   // Cargar clientes y productos
   useEffect(() => {
     if (open) {
@@ -291,12 +338,12 @@ export function QuotationFormDialog({
         : currentUserBranchId
       loadProducts(initialBranchId)
     }
-  }, [open, customerSlug, isAdmin, selectedBranchId, currentUserBranchId])
+  }, [open, customerSlug, isAdmin, selectedBranchId, currentUserBranchId, loadCustomers, loadProducts])
 
   useEffect(() => {
     if (!open || !isAdmin) return
     loadProducts(selectedBranchId)
-  }, [open, isAdmin, selectedBranchId])
+  }, [open, isAdmin, selectedBranchId, loadProducts])
 
   // Cargar datos de la cotización si existe
   useEffect(() => {
@@ -351,53 +398,7 @@ export function QuotationFormDialog({
       setNotes("")
       setItems([createEmptyItem()])
     }
-  }, [branchOptions, currentUserBranchId, isAdmin, open, quotation])
-
-  const loadCustomers = async () => {
-    try {
-      setIsLoadingData(true)
-      const response = await fetch(`/api/${customerSlug}/clientes?page=1&pageSize=1000`, {
-        cache: "no-store",
-      })
-      if (response.ok) {
-        const data = await response.json()
-        const normalized = (data.customers || []).map((customer: any) => ({
-          ...customer,
-          lastName: customer.lastName ?? customer.apellido ?? null,
-        }))
-        setCustomers(normalized)
-      }
-    } catch (error) {
-      console.error('Error al cargar clientes:', error)
-    } finally {
-      setIsLoadingData(false)
-    }
-  }
-
-  const loadProducts = async (branchIdOverride?: string | null) => {
-    try {
-      setIsLoadingData(true)
-      const effectiveBranchId = isAdmin
-        ? branchIdOverride && branchIdOverride !== PLACEHOLDER_BRANCH_VALUE
-          ? branchIdOverride
-          : null
-        : currentUserBranchId ?? null
-
-      const branchQuery = effectiveBranchId ? `&branchId=${effectiveBranchId}` : ""
-
-      const response = await fetch(`/api/${customerSlug}/productos?page=1&pageSize=1000${branchQuery}`, {
-        cache: "no-store",
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data.products || [])
-      }
-    } catch (error) {
-      console.error('Error al cargar productos:', error)
-    } finally {
-      setIsLoadingData(false)
-    }
-  }
+  }, [branchOptions, currentUserBranchId, isAdmin, open, quotation, todayInputValue])
 
   const handleCustomerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isCustomerDropdownOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {

@@ -165,7 +165,7 @@ export function CmsPagesPageClient({ initialPages, initialTotal }: CmsPagesPageC
 
       toast.success(page.isPublished ? 'Página despublicada' : 'Página publicada')
       await fetchPages()
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar estado')
     }
   }

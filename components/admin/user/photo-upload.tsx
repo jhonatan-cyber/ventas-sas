@@ -19,7 +19,7 @@ interface PhotoUploadProps {
 export function PhotoUpload({
   currentPhoto,
   onPhotoChange,
-  userId,
+  userId: _userId,
   disabled = false,
   fullName,
 }: PhotoUploadProps) {

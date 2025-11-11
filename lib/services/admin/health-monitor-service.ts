@@ -141,7 +141,7 @@ export class HealthMonitorService {
         slowQueries,
         connectionPool,
       }
-    } catch (error) {
+    } catch  {
       return {
         connected: false,
         latency: -1,
@@ -159,8 +159,7 @@ export class HealthMonitorService {
     try {
       // En Windows
       if (process.platform === 'win32') {
-        const { stdout } = await execAsync('wmic logicaldisk get size,freespace,caption')
-        const lines = stdout.split('\n').filter(line => line.trim())
+        await execAsync('wmic logicaldisk get size,freespace,caption')
         
         // Parsear salida (simplificado)
         let total = 0
@@ -175,12 +174,7 @@ export class HealthMonitorService {
         }
       } else {
         // Linux/Mac
-        const { stdout } = await execAsync('df -h /')
-        const lines = stdout.split('\n')
-        if (lines.length > 1) {
-          const parts = lines[1].split(/\s+/)
-          // Parsear (simplificado)
-        }
+        await execAsync('df -h /')
       }
 
       // Fallback: usar información del sistema
@@ -190,7 +184,7 @@ export class HealthMonitorService {
         free: 50,
         usage: 50,
       }
-    } catch (error) {
+    } catch {
       // Fallback
       return {
         total: 0,

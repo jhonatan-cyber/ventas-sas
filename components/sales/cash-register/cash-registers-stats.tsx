@@ -2,8 +2,9 @@
 
 import { Lock, Unlock, DollarSign, Building2 } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CashRegisterWithRelations } from "./types"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface CashRegistersStatsProps {
   cashRegisters: CashRegisterWithRelations[]

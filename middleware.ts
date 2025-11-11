@@ -35,8 +35,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Crear respuesta base y aplicar security headers a rutas dinámicas
-  let response = NextResponse.next()
-  response = addSecurityHeaders(response)
+  const response = addSecurityHeaders(NextResponse.next())
 
   // Admin zone protection
   if (pathname.startsWith('/administracion')) {
@@ -47,7 +46,7 @@ export function middleware(request: NextRequest) {
     // Permitir siempre el acceso a login (evitar bucles de redirección)
     // El dashboard se encargará de validar el token y redirigir si es inválido
     if (isLogin) {
-      return NextResponse.next()
+      return response
     }
     
     // Para otras rutas de admin, verificar token
@@ -55,7 +54,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/administracion/login', request.url))
     }
     
-    return NextResponse.next()
+    return response
   }
 
   // Rutas públicas - no requieren autenticación

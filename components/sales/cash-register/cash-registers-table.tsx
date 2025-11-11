@@ -1,7 +1,8 @@
 "use client"
 
-import type { CashRegisterWithRelations } from "./types"
 import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
+
+import type { CashRegisterWithRelations } from "./types"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

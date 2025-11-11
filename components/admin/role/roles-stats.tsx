@@ -12,7 +12,7 @@ interface RolesStatsProps {
 export function RolesStats({ roles }: RolesStatsProps) {
   const totalRoles = roles.length
   const rolesInUse = roles.filter(role => role._count.organizationMembers > 0).length
-  const rolesNotUsed = roles.filter(role => role._count.organizationMembers === 0).length
+  const _rolesNotUsed = roles.filter(role => role._count.organizationMembers === 0).length
   const rolesActive = roles.filter(role => role.isActive ?? true).length
   const rolesInactive = roles.filter(role => !(role.isActive ?? true)).length
 

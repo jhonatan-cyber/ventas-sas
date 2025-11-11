@@ -276,9 +276,9 @@ export default function HomePage() {
         {/* Scroll Progress Bar */}
         <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-violet-600 z-[100] transition-all duration-300" style={{ width: `${scrollProgress}%` }} />
       
-      {/* Header Mejorado con Mobile Menu */}
+      {/* Header Mejorado con Mobile Menu - Centrado */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
-        <div className="container relative flex h-20 items-center justify-between px-4">
+        <div className="container mx-auto max-w-7xl relative flex h-20 items-center justify-between px-4">
           <div className="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
               <BarChart3 className="h-6 w-6 text-white" />
@@ -288,8 +288,8 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Desktop Nav - Centered */}
-          <nav className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
+          {/* Desktop Nav - Centrado */}
+          <nav className="hidden md:flex items-center justify-center flex-1">
             <div className="flex items-center gap-1">
               <Link href="#features" className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Funcionalidades
@@ -307,7 +307,7 @@ export default function HomePage() {
           </nav>
 
           {/* Botón Comenzar Gratis */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
             <Link href="/administracion/login">
               <Button className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all font-medium">
                 Comenzar Gratis
@@ -378,7 +378,7 @@ export default function HomePage() {
           <div className="absolute top-20 -right-40 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-20 -left-40 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse delay-700" />
 
-          <div className="container relative px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-5xl text-center">
               {/* Badge con animación más suave */}
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/60 px-4 py-2 text-sm mb-8 backdrop-blur-sm shadow-sm animate-in fade-in slide-in-from-top-4 duration-700">
@@ -476,7 +476,7 @@ export default function HomePage() {
 
         {/* Stats Section - Dinámicas */}
         <section className="py-20 border-y bg-gradient-to-r from-blue-50/70 via-violet-50/70 to-blue-50/70 dark:from-blue-950/30 dark:via-violet-950/30 dark:to-blue-950/30">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
               {[
                 { label: "Empresas activas", value: `${stats.organizations.toLocaleString('en-US')}+`, icon: Building2 },
@@ -504,7 +504,7 @@ export default function HomePage() {
 
         {/* Video Demo / Screenshot Section */}
         <section className="py-32 relative overflow-hidden">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/60 px-5 py-2 text-sm mb-6">
@@ -564,7 +564,7 @@ export default function HomePage() {
 
         {/* Features - Más jerarquía y featured card destacada */}
         <section id="features" className="py-32">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-20">
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/60 px-5 py-2 text-sm mb-6 backdrop-blur-sm">
@@ -685,7 +685,7 @@ export default function HomePage() {
 
         {/* Benefits - Más compacto y visual */}
         <section className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-20">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -731,7 +731,7 @@ export default function HomePage() {
 
         {/* Testimonios/Clientes */}
         <section id="testimonios" className="py-32 border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/60 px-5 py-2 text-sm mb-6">
@@ -816,7 +816,7 @@ export default function HomePage() {
 
         {/* FAQ Section */}
         <section id="faq" className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-4xl">
               <div className="text-center mb-16">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -878,7 +878,7 @@ export default function HomePage() {
 
         {/* Sección de Precios */}
         <section id="precios" className="py-32">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/60 px-5 py-2 text-sm mb-6">
@@ -1072,7 +1072,7 @@ export default function HomePage() {
 
         {/* Calculadora ROI */}
         <section className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-4xl">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -1149,7 +1149,7 @@ export default function HomePage() {
 
         {/* Comparativa de Planes */}
         <section className="py-32">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -1202,7 +1202,7 @@ export default function HomePage() {
 
         {/* Integraciones */}
         <section className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -1241,7 +1241,7 @@ export default function HomePage() {
 
         {/* Blog Preview */}
         <section className="py-32">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="flex items-center justify-between mb-12">
                 <div>
@@ -1319,7 +1319,7 @@ export default function HomePage() {
         {/* CTA Final - Más persuasivo */}
         <section className="py-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-violet-600/10 to-blue-600/10" />
-          <div className="container px-4 relative">
+          <div className="container mx-auto max-w-7xl px-4 relative">
             <div className="mx-auto max-w-4xl">
               <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50/70 via-background to-violet-50/70 dark:from-blue-950/40 dark:via-background dark:to-violet-950/40 shadow-2xl backdrop-blur-sm">
                 <CardHeader className="text-center pb-8 pt-12">
@@ -1497,7 +1497,7 @@ export default function HomePage() {
 
         {/* Comparación con Competencia */}
         <section className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -1544,7 +1544,7 @@ export default function HomePage() {
 
         {/* Seguridad y Certificaciones */}
         <section className="py-32">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center gap-2 rounded-full border border-green-200 dark:border-green-800 bg-green-50/80 dark:bg-green-950/60 px-5 py-2 text-sm mb-6">
@@ -1591,7 +1591,7 @@ export default function HomePage() {
 
         {/* Roadmap */}
         <section className="py-32 bg-gradient-to-b from-muted/50 to-background border-y">
-          <div className="container px-4">
+          <div className="container mx-auto max-w-7xl px-4">
             <div className="mx-auto max-w-6xl">
               <div className="text-center mb-16">
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
@@ -1666,7 +1666,7 @@ export default function HomePage() {
 
       {/* Footer - Más limpio */}
       <footer className="border-t bg-muted/50 py-16">
-        <div className="container px-4">
+        <div className="container mx-auto max-w-7xl px-4">
           <div className="grid gap-12 md:grid-cols-4 mb-12">
             <div className="space-y-4 md:col-span-1">
               <div className="flex items-center gap-3">

@@ -75,7 +75,7 @@ export class TwoFactorService {
         margin: 2,
       })
       return qrCodeDataURL
-    } catch (error) {
+    } catch {
       throw new Error('Error generando QR Code')
     }
   }
@@ -225,7 +225,7 @@ export class TwoFactorService {
       decrypted += decipher.final('utf8')
       
       return decrypted
-    } catch (error) {
+    } catch {
       throw new Error('Error desencriptando secret')
     }
   }

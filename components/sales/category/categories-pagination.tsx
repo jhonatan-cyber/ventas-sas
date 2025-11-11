@@ -15,9 +15,9 @@ interface CategoriesPaginationProps {
 export function CategoriesPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: CategoriesPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

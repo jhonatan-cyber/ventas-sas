@@ -33,9 +33,10 @@ interface NavSection { label: string; items: NavItem[] }
 
 interface SalesSidebarProps {
   organizationSlug: string
+  maxBranches?: number | null
 }
 
-export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
+export function SalesSidebar({ organizationSlug, maxBranches }: SalesSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { isOpen, close } = useSidebar()
@@ -70,7 +71,8 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
         { title: 'Usuarios', href: `/${organizationSlug}/usuarios`, icon: Users },
         { title: 'Roles', href: `/${organizationSlug}/roles`, icon: Users },
         { title: 'Permisos', href: `/${organizationSlug}/permisos`, icon: FileText },
-        { title: 'Sucursales', href: `/${organizationSlug}/sucursales`, icon: Building2 },
+        // Ocultar Sucursales si maxBranches === 1
+        ...(maxBranches !== 1 ? [{ title: 'Sucursales', href: `/${organizationSlug}/sucursales`, icon: Building2 }] : []),
         { title: 'Configuración', href: `/${organizationSlug}/configuracion`, icon: Settings },
       ],
     },
@@ -82,7 +84,7 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
     },
   ]
 
-  const handleLogout = async () => {
+  const _handleLogout = async () => {
     try {
       const response = await fetch(`/api/${organizationSlug}/logout`, {
         method: "POST",
@@ -95,7 +97,7 @@ export function SalesSidebar({ organizationSlug }: SalesSidebarProps) {
       } else {
         toast.error("Error al cerrar sesión")
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al cerrar sesión")
     }
   }

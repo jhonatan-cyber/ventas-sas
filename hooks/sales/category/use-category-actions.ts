@@ -14,7 +14,7 @@ export function useCategoryActions(
   setCategories?: (categories: CategoryWithRelations[] | ((prev: CategoryWithRelations[]) => CategoryWithRelations[])) => void
 ) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)

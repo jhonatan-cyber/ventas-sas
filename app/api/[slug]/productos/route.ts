@@ -7,7 +7,7 @@ import { requireCSRF } from '@/lib/utils/csrf-protection'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { logBusinessOperation } from '@/lib/utils/logger'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug, getMaxProductsByOrganizationId } from '@/lib/utils/organization'
 import { getRequestContext } from '@/lib/utils/request-context'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createProductSchema } from '@/lib/validators/sales-validators'
@@ -114,6 +114,30 @@ export async function POST(
     }
 
     const validatedData = validation.data
+
+    // Verificar límite de productos del plan
+    const maxProducts = await getMaxProductsByOrganizationId(organizationId)
+    if (maxProducts !== null) {
+      // Contar productos existentes (activos e inactivos, pero no eliminados)
+      // Sin filtros de categoría o sucursal para obtener el total de la organización
+      const { total: currentProductsCount } = await SalesProductService.getAllProducts(
+        organizationId,
+        0,
+        1000, // Obtener todas para contar
+        undefined, // sin búsqueda
+        undefined, // sin filtro de estado
+        undefined, // sin filtro de categoría
+        undefined, // sin filtro de sucursal
+        false // includeDeleted: false, no contar eliminados
+      )
+
+      if (currentProductsCount >= maxProducts) {
+        throw AppError.validation(
+          `Has alcanzado el límite de productos permitidos en tu plan (${maxProducts}). ` +
+          `Por favor, actualiza tu plan para crear más productos.`
+        )
+      }
+    }
 
     // Obtener usuario logueado para asignar sucursal al producto
     const currentUser = await getCurrentSasUser(request, slug)

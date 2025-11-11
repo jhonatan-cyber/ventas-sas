@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'dev-admin-secret'
-const ADMIN_JWT_EXPIRES_IN = process.env.ADMIN_JWT_EXPIRES_IN || '7d'
+const _ADMIN_JWT_EXPIRES_IN = process.env.ADMIN_JWT_EXPIRES_IN || '7d'
 
 export class AdminAuthService {
   static async login({ 
@@ -75,7 +75,7 @@ export class AdminAuthService {
     const { SessionManagement } = await import('@/lib/auth/session-management')
     
     // Obtener info del request
-    const ipAddress = request?.ip || request?.headers.get('x-forwarded-for')?.split(',')[0] || undefined
+    const ipAddress = request?.headers.get('x-forwarded-for')?.split(',')[0] || request?.headers.get('x-real-ip') || undefined
     const userAgent = request?.headers.get('user-agent') || undefined
     const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
     

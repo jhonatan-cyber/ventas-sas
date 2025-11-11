@@ -13,20 +13,22 @@ import { useUsuarioSasActions } from "@/hooks/sales/usuario/use-usuario-sas-acti
 
 interface UsuariosSasPageClientProps {
   initialUsuarios: (UsuarioSas & {
-    rol: { id: string; nombre: string } | null
-    sucursal: { id: string; name: string } | null
+    rol?: { id: string; nombre: string } | null
+    sucursal?: { id: string; name: string } | null
     customer?: any
   })[]
   roles: (RoleSas & { customer?: any; sucursal?: any })[]
   sucursales: { id: string; name: string }[]
   customerSlug: string
+  maxUsers?: number | null
 }
 
 export function UsuariosSasPageClient({ 
   initialUsuarios, 
   roles, 
   sucursales, 
-  customerSlug 
+  customerSlug,
+  maxUsers
 }: UsuariosSasPageClientProps) {
   const [usuarios, setUsuarios] = useState(initialUsuarios)
   
@@ -74,6 +76,20 @@ export function UsuariosSasPageClient({
     }
   }, [])
 
+  // Calcular si se alcanzó el límite de usuarios
+  // El servicio getAllUsuarios ya filtra los eliminados por defecto (deletedAt: null)
+  // Por lo tanto, simplemente contamos todos los usuarios que están en el array
+  const activeUsersCount = usuarios.filter(u => !u.deletedAt).length
+  
+  // Verificar si se alcanzó el límite
+  // maxUsers puede ser null (sin límite o plan no asignado) o un número
+  // Si maxUsers es null, no hay límite, así que siempre mostramos el botón
+  const hasReachedLimit = maxUsers !== null && 
+                          maxUsers !== undefined && 
+                          typeof maxUsers === 'number' && 
+                          maxUsers > 0 && 
+                          activeUsersCount >= maxUsers
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Header con título y botón */}
@@ -82,6 +98,7 @@ export function UsuariosSasPageClient({
         description="Administra los usuarios del sistema SAS"
         newButtonText="Agregar Usuario"
         onNewClick={openCreateDialog}
+        showNewButton={!hasReachedLimit}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}

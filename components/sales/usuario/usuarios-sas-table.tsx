@@ -13,15 +13,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface UsuariosSasTableProps {
   usuarios: (UsuarioSas & {
-    rol: { id: string; nombre: string } | null
-    sucursal: { id: string; name: string } | null
+    rol?: { id: string; nombre: string } | null
+    sucursal?: { id: string; name: string } | null
     customer?: any
   })[]
   sucursalesCount?: number
   isLoading?: boolean
-  onEditClick?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
-  onDeleteClick?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
-  onToggleStatus?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
+  onEditClick?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onDeleteClick?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onToggleStatus?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
 }
 
 export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditClick, onDeleteClick, onToggleStatus }: UsuariosSasTableProps) {

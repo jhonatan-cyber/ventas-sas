@@ -2,13 +2,14 @@
 
 import { User, Package, CheckCircle, Calendar, DollarSign, Edit, Trash2, Power, PowerOff, MoreVertical, Eye } from "lucide-react"
 
+import type { SubscriptionWithDetails } from "./types"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 
 
-import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsCardsProps {
   subscriptions: SubscriptionWithDetails[]

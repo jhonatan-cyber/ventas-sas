@@ -118,7 +118,7 @@ export function useConfirm() {
 
   const handleConfirm = React.useCallback(() => {
     state.onConfirm?.()
-  }, [state.onConfirm])
+  }, [state])
 
   const Dialog = React.useMemo(
     () => (

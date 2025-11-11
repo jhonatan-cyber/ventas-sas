@@ -55,14 +55,14 @@ interface CmsPagesContainerProps {
 
 export function CmsPagesContainer({
   pages,
-  total,
-  isLoading,
+  total: _total,
+  isLoading: _isLoading,
   onNewClick,
   onEdit,
   onDelete,
   onTogglePublish,
   onPreview,
-  onRefresh,
+  onRefresh: _onRefresh,
 }: CmsPagesContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)

@@ -5,7 +5,7 @@ import { AdminJWTService } from '@/lib/auth/admin-jwt'
 import { FeedbackService } from '@/lib/services/admin/feedback-service'
 import { AuthService } from '@/lib/services/auth-service'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('admin-auth-token')?.value

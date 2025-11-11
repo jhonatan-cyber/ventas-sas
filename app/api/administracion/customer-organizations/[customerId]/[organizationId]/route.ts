@@ -6,7 +6,7 @@ import { CustomerOrganizationService } from "@/lib/services/admin/customer-organ
 import { AuthService } from "@/lib/services/auth-service"
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ customerId: string; organizationId: string }> }
 ) {
   try {
@@ -58,10 +58,10 @@ export async function DELETE(
     )
   }
 }
-
+  
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ customerId: string; organizationId: string }> }
+  _request: NextRequest,
+  { params: _params }: { params: Promise<{ customerId: string; organizationId: string }> }
 ) {
   try {
     // Autenticación
@@ -96,11 +96,11 @@ export async function PATCH(
       { status: 400 }
     )
   } catch (error: any) {
-    console.error("Error en PATCH /api/administracion/customer-organizations:", error)
+    console.error("Error en PATCH /api/administracion/customer-organizations:", error);
     return NextResponse.json(
       { error: error.message || "Error al actualizar relación" },
       { status: 500 }
-    )
+    );
   }
 }
 

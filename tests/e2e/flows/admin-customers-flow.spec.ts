@@ -1,7 +1,7 @@
 import { test, expect } from '../fixtures/auth'
 
 test.describe('Admin: Administración de Clientes', () => {
-  test.beforeEach(async ({ page, loginAsAdmin }) => {
+  test.beforeEach(async ({ page: _page, loginAsAdmin }) => {
     await loginAsAdmin()
   })
 

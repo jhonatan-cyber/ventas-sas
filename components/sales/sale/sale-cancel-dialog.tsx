@@ -33,12 +33,12 @@ interface SaleCancelDialogProps {
 export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCancelDialogProps) {
   const [isCancelling, setIsCancelling] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [scanningProductId, setScanningProductId] = useState<string | null>(null)
+  const [_scanningProductId, setScanningProductId] = useState<string | null>(null)
   const [scannedCodes, setScannedCodes] = useState<Record<string, Set<string>>>({})
   const [codeReaderRef, setCodeReaderRef] = useState<BrowserMultiFormatReader | null>(null)
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null)
-  const [scannerVideoRef, setScannerVideoRef] = useState<HTMLVideoElement | null>(null)
-  const [isLoadingData, setIsLoadingData] = useState(false)
+  const [_scannerVideoRef, _setScannerVideoRef] = useState<HTMLVideoElement | null>(null)
+  const [isLoadingData, _setIsLoadingData] = useState(false)
 
   const stopScanning = useCallback(() => {
     if (codeReaderRef) {
@@ -59,7 +59,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
   const saleIdRef = useRef<string | null>(null)
   const itemsWithCodes = useMemo(() => {
     return sale?.items.filter(item => item.trackingCodes && item.trackingCodes.length > 0) || []
-  }, [sale?.items?.map(item => `${item.id}-${item.trackingCodes?.length || 0}`).join(',')])
+  }, [sale])
 
   useEffect(() => {
     if (!open || !sale) {

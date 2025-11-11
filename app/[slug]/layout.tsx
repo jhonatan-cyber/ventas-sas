@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { ThemeProvider } from "@/components/theme-provider"
+import { getMaxBranchesBySlug } from "@/lib/utils/organization"
 import { prisma } from "@/lib/prisma"
 
 export default async function SalesLayout({
@@ -40,11 +41,14 @@ export default async function SalesLayout({
     redirect('/')
   }
   
+  // Obtener límite de sucursales para ocultar el módulo en el sidebar si es necesario
+  const maxBranches = await getMaxBranchesBySlug(slug)
+  
   // Nota: La validación de suscripción se hará en cada página individual según corresponda
   
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="sas-theme">
-      <SalesLayoutClient organizationSlug={slug}>
+      <SalesLayoutClient organizationSlug={slug} maxBranches={maxBranches}>
         {children}
       </SalesLayoutClient>
     </ThemeProvider>

@@ -31,7 +31,7 @@ interface IntegrationsClientProps {
   initialOrganizations: Organization[]
 }
 
-export function IntegrationsClient({ initialIntegrations, initialOrganizations }: IntegrationsClientProps) {
+export function IntegrationsClient({ initialIntegrations, initialOrganizations: _initialOrganizations }: IntegrationsClientProps) {
   return (
     <div className="space-y-6">
       <Card>

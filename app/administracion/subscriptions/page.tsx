@@ -8,6 +8,8 @@ import { PermissionCheckService } from "@/lib/services/admin/permission-check-se
 import { SubscriptionManagementService } from "@/lib/services/admin/subscription-management-service"
 import { AuthService } from "@/lib/services/auth-service"
 
+export const dynamic = 'force-dynamic'
+
 export default async function SubscriptionsPage() {
   try {
     // Validación de sesión Admin en el servidor

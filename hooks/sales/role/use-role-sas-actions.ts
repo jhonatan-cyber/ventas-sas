@@ -16,7 +16,7 @@ export function useRoleSasActions(
   setRoles?: (roles: RoleWithRelations[] | ((prev: RoleWithRelations[]) => RoleWithRelations[])) => void
 ) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleWithRelations | undefined>()
@@ -27,7 +27,7 @@ export function useRoleSasActions(
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
 
   // Función para recargar roles desde la API
-  const reloadRoles = async () => {
+  const _reloadRoles = async () => {
     try {
       const response = await fetch(`/api/${customerSlug}/roles`)
       if (response.ok) {

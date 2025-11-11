@@ -129,7 +129,7 @@ export function UserFormDialog({
       setIsSuperAdmin(false);
       setPassword("");
     }
-  }, [user, open]);
+  }, [user, open, roles]);
 
   // Actualizar el rolId cuando se cargue la lista de roles
   useEffect(() => {
@@ -140,7 +140,7 @@ export function UserFormDialog({
         setRoleId(roleMatch.id);
       }
     }
-  }, [roles, user, roleId]);
+  }, [roles, user, roleId, setRoleId]);
 
   // Sincronizar photo cuando cambia el usuario
   useEffect(() => {

@@ -53,11 +53,11 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
   const [companyEmail, setCompanyEmail] = useState<string>("")
   const [companyPhone, setCompanyPhone] = useState<string>("")
   const [companyAddress, setCompanyAddress] = useState<string>("")
-  const [companyWebsite, setCompanyWebsite] = useState<string>("")
+  const [_companyWebsite, setCompanyWebsite] = useState<string>("")
   const [companyLogo, setCompanyLogo] = useState<string>("")
   const [companyWhatsappNumber, setCompanyWhatsappNumber] = useState<string>("")
   const [currencyCode, setCurrencyCode] = useState<string>(DEFAULT_CURRENCY)
-  const [showBranchInfo, setShowBranchInfo] = useState<boolean>(true)
+  const [_showBranchInfo, setShowBranchInfo] = useState<boolean>(true)
 
   useEffect(() => {
     if (!open) {
@@ -155,12 +155,12 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
     return sale.customerName || "Cliente sin registrar"
   }, [sale])
 
-  const items = sale?.items ?? []
+  const items = useMemo(() => sale?.items ?? [], [sale?.items])
   const subtotal = Number(sale?.subtotal ?? 0)
   const discount = Number(sale?.discount ?? 0)
   const total = Number(sale?.total ?? 0)
 
-  const statusToken = sale ? (statusTokens[sale.status] || statusTokens.completed) : null
+  const statusToken = sale ? (statusTokens[sale.status] || statusTokens.completed) : statusTokens.completed
   const paymentLabel = sale ? (paymentTokens[sale.paymentMethod] || sale.paymentMethod) : ""
 
   const handleExportPdf = useCallback(async () => {
@@ -287,7 +287,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
 
       const saleDetails: Array<[string, string]> = [
         ['Código', sale.saleNumber],
-        ['Fecha', formatDateTime(sale.createdAt)],
+        ['Fecha', sale.createdAt ? formatDateTime(sale.createdAt) : 'Sin fecha'],
         ['Método de Pago', paymentLabel],
       ]
 
@@ -487,10 +487,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
     companyAddress,
     companyEmail,
     companyPhone,
-    companyWebsite,
     companyWhatsappNumber,
     companyContactName,
-    showBranchInfo,
     customerName,
     paymentLabel,
     currencyCode,
@@ -544,7 +542,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
               {statusToken.label}
             </Badge>
             <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-0">
-              Total: BOB {Number(sale.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+              Total: BOB {Number(sale?.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
             </Badge>
           </div>
         </DialogHeader>

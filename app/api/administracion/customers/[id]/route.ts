@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
-import { AppError } from '@/lib/errors/app-error'
-import { CustomerAdminService } from '@/lib/services/admin/customer-admin-service'
-import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
-import { SecurityAuditLogger } from '@/lib/utils/security-audit'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
-import { updateCustomerSchema } from '@/lib/validators/admin-validators'
+import { AppError } from "@/lib/errors/app-error";
+import { CustomerAdminService } from "@/lib/services/admin/customer-admin-service";
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service";
+import { handleApiError, createErrorContext } from "@/lib/utils/error-handler";
+import { getCurrentAdminUser } from "@/lib/utils/get-current-user";
+import { SecurityAuditLogger } from "@/lib/utils/security-audit";
+import { validateRequestBody } from "@/lib/utils/validation-helper";
+import { updateCustomerSchema } from "@/lib/validators/admin-validators";
 
 // GET - Obtener un cliente por ID
 export async function GET(
@@ -15,28 +15,42 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await getCurrentAdminUser(request)
+    const currentUser = await getCurrentAdminUser(request);
     if (!currentUser) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     // Verificar permiso para ver detalles de clientes
-    const canView = await PermissionCheckService.hasActivePermission(currentUser.id, 'clientes_ver_detalles')
+    const canView = await PermissionCheckService.hasActivePermission(
+      currentUser.id,
+      "clientes_ver_detalles"
+    );
     if (!canView) {
-      return NextResponse.json({ error: 'No tiene permiso para ver detalles de clientes' }, { status: 403 })
+      return NextResponse.json(
+        { error: "No tiene permiso para ver detalles de clientes" },
+        { status: 403 }
+      );
     }
 
-    const { id } = await params
-    const customer = await CustomerAdminService.getCustomerWithOrganizations(id)
-    
+    const { id } = await params;
+    const customer = await CustomerAdminService.getCustomerWithOrganizations(
+      id
+    );
+
     if (!customer) {
-      throw AppError.notFound('Cliente no encontrado')
+      throw AppError.notFound("Cliente no encontrado");
     }
 
-    return NextResponse.json(customer)
+    return NextResponse.json(customer);
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'GET_ADMIN_CUSTOMER', customerId: id }))
+    const { id } = await params;
+    return handleApiError(
+      error,
+      createErrorContext(request, {
+        action: "GET_ADMIN_CUSTOMER",
+        customerId: id,
+      })
+    );
   }
 }
 
@@ -46,36 +60,42 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await getCurrentAdminUser(request)
+    const currentUser = await getCurrentAdminUser(request);
     if (!currentUser) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     // Verificar permiso para editar clientes
-    const canEdit = await PermissionCheckService.hasActivePermission(currentUser.id, 'clientes_editar')
+    const canEdit = await PermissionCheckService.hasActivePermission(
+      currentUser.id,
+      "clientes_editar"
+    );
     if (!canEdit) {
-      return NextResponse.json({ error: 'No tiene permiso para editar clientes' }, { status: 403 })
+      return NextResponse.json(
+        { error: "No tiene permiso para editar clientes" },
+        { status: 403 }
+      );
     }
-    const { id } = await params
+    const { id } = await params;
 
     // Parsear y validar body
-    let body: any
+    let body: any;
     try {
-      body = await request.json()
+      body = await request.json();
     } catch {
-      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+      throw AppError.validation("Error al procesar el cuerpo de la solicitud");
     }
 
     // Validar datos con Zod
-    const validation = await validateRequestBody(updateCustomerSchema, body)
+    const validation = await validateRequestBody(updateCustomerSchema, body);
     if (!validation.success) {
-      return validation.response
+      return validation.response;
     }
 
-    const validatedData = validation.data
+    const validatedData = validation.data;
 
     // Obtener cliente objetivo para auditoría
-    const targetCustomer = await CustomerAdminService.getCustomerById(id)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id);
 
     const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
       ci: validatedData.ci || undefined,
@@ -84,14 +104,17 @@ export async function PUT(
       address: validatedData.address || undefined,
       phone: validatedData.phone || undefined,
       email: validatedData.email || undefined,
-      isActive: body.isActive !== undefined ? body.isActive : undefined
-    })
+      isActive: body.isActive !== undefined ? body.isActive : undefined,
+    });
 
     // Registrar actualización de cliente en auditoría
     if (currentUser && targetCustomer) {
-      const changedFields: string[] = []
-      if (body.isActive !== undefined && targetCustomer.isActive !== body.isActive) {
-        changedFields.push('isActive')
+      const changedFields: string[] = [];
+      if (
+        body.isActive !== undefined &&
+        targetCustomer.isActive !== body.isActive
+      ) {
+        changedFields.push("isActive");
       }
 
       if (changedFields.length > 0) {
@@ -99,8 +122,8 @@ export async function PUT(
           {
             userId: currentUser.id,
             customerId: id,
-            actionType: 'SENSITIVE_DATA_ACCESSED',
-            entityType: 'Customer',
+            actionType: "SENSITIVE_DATA_ACCESSED",
+            entityType: "Customer",
             entityId: id,
             details: {
               changedFields,
@@ -108,14 +131,20 @@ export async function PUT(
             },
           },
           request
-        )
+        );
       }
     }
 
-    return NextResponse.json(updatedCustomer)
+    return NextResponse.json(updatedCustomer);
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'UPDATE_ADMIN_CUSTOMER', customerId: id }))
+    const { id } = await params;
+    return handleApiError(
+      error,
+      createErrorContext(request, {
+        action: "UPDATE_ADMIN_CUSTOMER",
+        customerId: id,
+      })
+    );
   }
 }
 
@@ -125,37 +154,47 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await getCurrentAdminUser(request)
+    const currentUser = await getCurrentAdminUser(request);
     if (!currentUser) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { id } = await params
-    
-    let body: any
+    const { id } = await params;
+
+    let body: any;
     try {
-      body = await request.json()
+      body = await request.json();
     } catch {
-      throw AppError.validation('Error al procesar el cuerpo de la solicitud')
+      throw AppError.validation("Error al procesar el cuerpo de la solicitud");
     }
-    
-    const { isActive } = body
+
+    const { isActive } = body;
 
     // Verificar permiso según la acción (activar o desactivar)
-    const requiredPermission = isActive ? 'clientes_activar' : 'clientes_desactivar'
-    const canToggle = await PermissionCheckService.hasActivePermission(currentUser.id, requiredPermission)
+    const requiredPermission = isActive
+      ? "clientes_activar"
+      : "clientes_desactivar";
+    const canToggle = await PermissionCheckService.hasActivePermission(
+      currentUser.id,
+      requiredPermission
+    );
     if (!canToggle) {
-      return NextResponse.json({ 
-        error: `No tiene permiso para ${isActive ? 'activar' : 'desactivar'} clientes` 
-      }, { status: 403 })
+      return NextResponse.json(
+        {
+          error: `No tiene permiso para ${
+            isActive ? "activar" : "desactivar"
+          } clientes`,
+        },
+        { status: 403 }
+      );
     }
 
     // Obtener cliente objetivo para auditoría
-    const targetCustomer = await CustomerAdminService.getCustomerById(id)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id);
 
     const updatedCustomer = await CustomerAdminService.updateCustomer(id, {
-      isActive
-    })
+      isActive,
+    });
 
     // Registrar cambio de estado del cliente en auditoría
     if (currentUser && targetCustomer) {
@@ -163,22 +202,28 @@ export async function PATCH(
         {
           userId: currentUser.id,
           customerId: id,
-          actionType: 'SENSITIVE_DATA_ACCESSED',
-          entityType: 'Customer',
+          actionType: "SENSITIVE_DATA_ACCESSED",
+          entityType: "Customer",
           entityId: id,
           details: {
-            action: isActive ? 'activated' : 'deactivated',
+            action: isActive ? "activated" : "deactivated",
             slug: targetCustomer.slug || undefined,
           },
         },
         request
-      )
+      );
     }
 
-    return NextResponse.json(updatedCustomer)
+    return NextResponse.json(updatedCustomer);
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'PATCH_ADMIN_CUSTOMER', customerId: id }))
+    const { id } = await params;
+    return handleApiError(
+      error,
+      createErrorContext(request, {
+        action: "PATCH_ADMIN_CUSTOMER",
+        customerId: id,
+      })
+    );
   }
 }
 
@@ -188,23 +233,29 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const currentUser = await getCurrentAdminUser(request)
+    const currentUser = await getCurrentAdminUser(request);
     if (!currentUser) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
     // Verificar permiso para eliminar clientes
-    const canDelete = await PermissionCheckService.hasActivePermission(currentUser.id, 'clientes_eliminar')
+    const canDelete = await PermissionCheckService.hasActivePermission(
+      currentUser.id,
+      "clientes_eliminar"
+    );
     if (!canDelete) {
-      return NextResponse.json({ error: 'No tiene permiso para eliminar clientes' }, { status: 403 })
+      return NextResponse.json(
+        { error: "No tiene permiso para eliminar clientes" },
+        { status: 403 }
+      );
     }
 
-    const { id } = await params
+    const { id } = await params;
 
     // Obtener cliente objetivo para auditoría
-    const targetCustomer = await CustomerAdminService.getCustomerById(id)
+    const targetCustomer = await CustomerAdminService.getCustomerById(id);
 
-    await CustomerAdminService.deleteCustomer(id)
+    await CustomerAdminService.deleteCustomer(id);
 
     // Registrar eliminación de cliente en auditoría
     if (currentUser && targetCustomer) {
@@ -212,11 +263,11 @@ export async function DELETE(
         {
           userId: currentUser.id,
           customerId: id,
-          actionType: 'SENSITIVE_DATA_ACCESSED',
-          entityType: 'Customer',
+          actionType: "SENSITIVE_DATA_ACCESSED",
+          entityType: "Customer",
           entityId: id,
           details: {
-            action: 'deleted',
+            action: "deleted",
             nombre: targetCustomer.nombre || undefined,
             apellido: targetCustomer.apellido || undefined,
             email: targetCustomer.email || undefined,
@@ -224,13 +275,18 @@ export async function DELETE(
           },
         },
         request
-      )
+      );
     }
 
-    return NextResponse.json({ message: 'Cliente eliminado exitosamente' })
+    return NextResponse.json({ message: "Cliente eliminado exitosamente" });
   } catch (error) {
-    const { id } = await params
-    return handleApiError(error, createErrorContext(request, { action: 'DELETE_ADMIN_CUSTOMER', customerId: id }))
+    const { id } = await params;
+    return handleApiError(
+      error,
+      createErrorContext(request, {
+        action: "DELETE_ADMIN_CUSTOMER",
+        customerId: id,
+      })
+    );
   }
 }
-

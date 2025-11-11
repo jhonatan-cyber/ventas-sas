@@ -15,7 +15,7 @@ interface RenewalDialogProps {
   initialAmount?: string
 }
 
-export function RenewalDialog({ customerSlug, initialAmount = "" }: RenewalDialogProps) {
+export function RenewalDialog({ customerSlug: _customerSlug, initialAmount = "" }: RenewalDialogProps) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState(initialAmount)
   const [description, setDescription] = useState("")

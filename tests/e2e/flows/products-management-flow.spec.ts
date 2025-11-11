@@ -3,7 +3,7 @@ import { test, expect } from '../fixtures/auth'
 test.describe('Gestión de Productos (SAS)', () => {
   const testSlug = 'test-customer'
 
-  test.beforeEach(async ({ page, loginAsSas }) => {
+  test.beforeEach(async ({ page: _page, loginAsSas }) => {
     await loginAsSas(testSlug)
   })
 

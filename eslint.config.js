@@ -3,7 +3,7 @@ import nextPlugin from '@next/eslint-plugin-next'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 import importPlugin from 'eslint-plugin-import'
-import reactHooksPlugin from 'eslint-plugin-react-hooks'
+import reactHooksPlugin from 'eslint-plugin-react-hooks/index.js'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 /** @type {import('eslint').Linter.Config[]} */

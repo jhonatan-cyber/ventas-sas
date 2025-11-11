@@ -135,7 +135,7 @@ const navSections: NavSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { isOpen, close, isCollapsed, toggleCollapse } = useSidebar()
-  const { permissions, isSuperAdmin, isLoading } = useUserPermissions()
+  const { permissions, isSuperAdmin, isLoading: _isLoading } = useUserPermissions()
 
   // Función para verificar si el usuario tiene permiso para ver un item
   const hasPermission = (requiredPermission?: string): boolean => {

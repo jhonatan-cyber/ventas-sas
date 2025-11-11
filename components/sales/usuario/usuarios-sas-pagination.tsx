@@ -15,9 +15,9 @@ interface UsuariosSasPaginationProps {
 export function UsuariosSasPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: UsuariosSasPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

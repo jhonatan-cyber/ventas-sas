@@ -1,17 +1,41 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { CustomerOrganizationsPageClient } from "@/components/admin/customer-organizations/customer-organizations-page-client"
+import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { CustomerOrganizationService } from "@/lib/services/admin/customer-organization-service"
 import { OrganizationAdminService } from "@/lib/services/admin/organization-admin-service"
+import { PermissionCheckService } from "@/lib/services/admin/permission-check-service"
 import { AuthService } from "@/lib/services/auth-service"
 
 export default async function CustomerOrganizationsPage() {
-  // Verificar autenticación de super admin
-  const userId = "super-admin-id"
-  const profile = await AuthService.getProfileById(userId)
+  // Validación de sesión Admin en el servidor
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin-auth-token')?.value
+  
+  if (!token) {
+    redirect('/administracion/login')
+  }
+  
+  try {
+    const payload = await AdminJWTService.verifyToken(token!)
+    if (!payload) {
+      redirect('/administracion/login')
+    }
+    
+    // Validar acceso de administrador
+    const hasAccess = await AuthService.hasAdminAccess(payload.userId)
+    if (!hasAccess) {
+      redirect('/administracion/login?error=no_access')
+    }
 
-  if (!profile || !profile.isSuperAdmin) {
-    redirect("/administracion/login")
+    // Verificar permiso específico para listar organizaciones
+    const canList = await PermissionCheckService.hasActivePermission(payload.userId, 'organizaciones_listar')
+    if (!canList) {
+      redirect('/administracion/dashboard?error=no_permission')
+    }
+  } catch {
+    redirect('/administracion/login')
   }
 
   // Obtener datos iniciales
@@ -40,8 +64,8 @@ export default async function CustomerOrganizationsPage() {
         name: org.organization.name,
         razonSocial: org.organization.razonSocial === null ? undefined : org.organization.razonSocial,
         nit: org.organization.nit === null ? undefined : org.organization.nit,
-        direccion: org.organization.address === null ? undefined : org.organization.address,
-        telefono: org.organization.phone === null ? undefined : org.organization.phone,
+        address: org.organization.address === null ? undefined : org.organization.address, // Usar 'address' en lugar de 'direccion'
+        phone: org.organization.phone === null ? undefined : org.organization.phone, // Usar 'phone' en lugar de 'telefono'
         slug: org.organization.slug,
         subscriptionStatus: org.organization.subscriptionStatus === null ? undefined : org.organization.subscriptionStatus,
       },

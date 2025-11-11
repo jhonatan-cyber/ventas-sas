@@ -3,7 +3,7 @@
 import { Building2, LogOut, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useEffect, useState, type CSSProperties } from "react"
+import { useEffect, useState, useCallback, type CSSProperties } from "react"
 
 import { useSidebar } from "./sidebar-context"
 
@@ -46,7 +46,7 @@ export function SalesHeader() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  const fetchUserFromAPI = async () => {
+  const fetchUserFromAPI = useCallback(async () => {
     try {
       const slug = pathname.split('/').filter(Boolean)[0]
       if (!slug) return
@@ -84,7 +84,7 @@ export function SalesHeader() {
     } catch (error) {
       console.error('Error obteniendo usuario desde API:', error)
     }
-  }
+  }, [pathname])
 
   useEffect(() => {
     const loadSession = async () => {
@@ -165,7 +165,7 @@ export function SalesHeader() {
       window.removeEventListener('sas-user-updated', handleUserUpdated as EventListener)
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [pathname])
+  }, [pathname, fetchUserFromAPI])
 
   const fullName = session?.fullName || `${session?.nombre || ''} ${session?.apellido || ''}`.trim() || 'Usuario'
   const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]

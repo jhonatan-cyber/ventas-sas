@@ -1,6 +1,6 @@
-import { prisma } from '../prisma'
+import { Prisma, type Order } from '@prisma/client'
 
-import type { Order } from '@prisma/client'
+import { prisma } from '../prisma'
 
 import { CommonIncludes } from '@/lib/utils/query-optimizer'
 
@@ -216,7 +216,7 @@ export class OrderService {
   }
 
   // Generar número de orden único
-  static async generateOrderNumber(organizationId?: string) {
+  static async generateOrderNumber(organizationId?: string): Promise<string> {
     const prefix = organizationId ? `ORG-${organizationId.slice(-4)}-` : 'ORD-'
     const timestamp = Date.now().toString().slice(-6)
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')

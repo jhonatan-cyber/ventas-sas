@@ -13,9 +13,9 @@ interface CustomersPaginationProps {
 export function CustomersPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange,
+  onPageSizeChange: _onPageSizeChange,
 }: CustomersPaginationProps) {
   const getPageNumbers = () => {
     const pages: (number | string)[] = []

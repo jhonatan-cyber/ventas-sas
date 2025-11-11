@@ -1,7 +1,7 @@
 "use client"
 
 import { Loader2, CheckSquare2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -42,16 +42,7 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
     }
   }, [open])
 
-  // Cargar permisos existentes cuando se selecciona un módulo
-  useEffect(() => {
-    if (selectedModule) {
-      loadExistingPermissions(selectedModule)
-    } else {
-      setSelectedActions([])
-    }
-  }, [selectedModule])
-
-  const loadExistingPermissions = async (module: string) => {
+  const loadExistingPermissions = useCallback(async (module: string) => {
     setLoadingExistingPermissions(true)
     try {
       const response = await fetch("/api/administracion/permisos")
@@ -87,7 +78,16 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
     } finally {
       setLoadingExistingPermissions(false)
     }
-  }
+  }, [actions])
+
+  // Cargar permisos existentes cuando se selecciona un módulo
+  useEffect(() => {
+    if (selectedModule) {
+      loadExistingPermissions(selectedModule)
+    } else {
+      setSelectedActions([])
+    }
+  }, [selectedModule, loadExistingPermissions])
 
   const handleActionToggle = (actionId: string) => {
     setSelectedActions(prev =>

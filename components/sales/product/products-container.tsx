@@ -28,7 +28,7 @@ interface ProductsContainerProps {
 
 export function ProductsContainer({ 
   products, 
-  categoryName, 
+  categoryName: _categoryName, 
   showBranchColumn = false, 
   isAdmin = false,
   branches = [],

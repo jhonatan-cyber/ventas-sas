@@ -6,6 +6,7 @@ export class AuthService {
   // Crear un nuevo perfil de usuario
   static async createProfile(data: {
     id: string
+    email: string
     fullName?: string
     role?: string
     isSuperAdmin?: boolean
@@ -26,7 +27,7 @@ export class AuthService {
   static async updateProfile(id: string, data: Partial<Omit<Profile, 'id' | 'createdAt'>>) {
     return await prisma.profile.update({
       where: { id },
-      data
+      data: data as any
     })
   }
 
@@ -81,7 +82,7 @@ export class AuthService {
   // Obtener organización del usuario
   // NOTA: Los usuarios del sistema de administración NO tienen organizaciones
   // Esta función retorna null para usuarios admin
-  static async getUserOrganization(userId: string) {
+  static async getUserOrganization(_userId: string) {
     // Los usuarios del sistema de administración no tienen organizaciones
     // Las organizaciones son solo para usuarios del sistema SAS (SalesUser)
     return null
@@ -132,7 +133,7 @@ export class AuthService {
       data: {
         ...data,
         updatedAt: new Date()
-      },
+      } as any,
       include: {
         subscriptionPlan: true
       }

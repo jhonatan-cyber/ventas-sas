@@ -12,7 +12,7 @@ function decodeSasSession(raw?: string | null) {
     try {
       const decoded = Buffer.from(raw, 'base64').toString('utf8')
       parsed = JSON.parse(decoded)
-    } catch (base64Error) {
+    } catch  {
       parsed = JSON.parse(raw)
     }
     return parsed && typeof parsed === 'object' ? parsed : null

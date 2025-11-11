@@ -57,7 +57,7 @@ export function TwoFactorSetup({ endpoint, onComplete, onCancel }: TwoFactorSetu
       setStep('verify')
       setShowBackupCodes(true)
       toast.success('Escanea el QR code con tu app authenticator')
-    } catch (err) {
+    } catch  {
       setError('Error de conexión')
       toast.error('Error de conexión')
     } finally {
@@ -97,7 +97,7 @@ export function TwoFactorSetup({ endpoint, onComplete, onCancel }: TwoFactorSetu
 
       toast.success('2FA habilitado exitosamente')
       if (onComplete) onComplete()
-    } catch (err) {
+    } catch  {
       setError('Error de conexión')
       toast.error('Error de conexión')
     } finally {

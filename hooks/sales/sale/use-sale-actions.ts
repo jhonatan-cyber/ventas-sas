@@ -21,7 +21,7 @@ interface UseSaleActionsReturn {
 
 export function useSaleActions(customerSlug: string, onSalesChange?: () => Promise<void> | void): UseSaleActionsReturn {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedSale, setSelectedSale] = useState<SalesSaleWithRelations | undefined>()
@@ -80,7 +80,7 @@ export function useSaleActions(customerSlug: string, onSalesChange?: () => Promi
       // Retornar la venta creada
       try {
         return await response.json()
-      } catch (error) {
+      } catch  {
         // Si no hay JSON en la respuesta, retornar undefined
         return undefined
       }

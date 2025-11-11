@@ -8,7 +8,7 @@ import { Customer } from "@/lib/types"
 
 export function useCustomerActions() {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
@@ -44,8 +44,8 @@ export function useCustomerActions() {
       } else {
         toast.error("Error al cargar los detalles del cliente")
       }
-    } catch (error) {
-      console.error("Error al cargar detalles:", error)
+    } catch  {
+     
       toast.error("Error al cargar los detalles del cliente")
     } finally {
       setIsLoadingDetails(false)
@@ -85,7 +85,7 @@ export function useCustomerActions() {
       startTransition(() => {
         router.refresh()
       })
-    } catch (error) {
+    } catch  {
       toast.error("Error al guardar el cliente")
     }
   }
@@ -134,7 +134,7 @@ export function useCustomerActions() {
       startTransition(() => {
         router.refresh()
       })
-    } catch (error) {
+    } catch {
       toast.error("Error al cambiar el estado del cliente")
     }
   }

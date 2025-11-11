@@ -114,7 +114,7 @@ export const QuotationsContainer: FC<QuotationsContainerProps> = ({
 
       return matchesStatus && matchesBranch
     })
-  }, [branchFilter, quotations, searchTerm, showBranchColumn, statusFilter])
+  }, [branchFilter, quotations, searchTerm, statusFilter, allowBranchFilter])
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term)

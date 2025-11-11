@@ -7,9 +7,10 @@ import { RenewalDialogClient } from "./renewal-dialog-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
 import { prisma } from "@/lib/prisma"
 import { getCustomerBySlug } from "@/lib/utils/organization"
+
+export const dynamic = 'force-dynamic'
 
 async function getActiveSubscriptionForOrganization(organizationId?: string | null) {
   if (!organizationId) return null

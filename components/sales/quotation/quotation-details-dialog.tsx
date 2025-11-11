@@ -69,7 +69,7 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
   const [companyEmail, setCompanyEmail] = useState<string>("")
   const [companyPhone, setCompanyPhone] = useState<string>("")
   const [companyAddress, setCompanyAddress] = useState<string>("")
-  const [companyWebsite, setCompanyWebsite] = useState<string>("")
+  const [_companyWebsite, setCompanyWebsite] = useState<string>("")
   const [companyLogo, setCompanyLogo] = useState<string>("")
   const [currencyCode, setCurrencyCode] = useState<string>(DEFAULT_CURRENCY)
   const [showBranchInfo, setShowBranchInfo] = useState<boolean>(true)
@@ -102,7 +102,7 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
     return prefixed
   }, [quotation])
 
-  const items = quotation?.items ?? []
+  const items = useMemo(() => quotation?.items ?? [], [quotation?.items])
   const subtotal = Number(quotation?.subtotal ?? 0)
   const discount = Number(quotation?.discount ?? 0)
   const total = Number(quotation?.total ?? 0)
@@ -301,12 +301,12 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
       doc.line(margin, headerBottom, pageWidth - margin, headerBottom)
       cursorY = headerBottom + 6
 
-      const infoLeftX = margin
-      const infoRightX = pageWidth / 2 + 6
-      const infoLabelColor = primaryColor
+      const _infoLeftX = margin
+      const _infoRightX = pageWidth / 2 + 6
+      const _infoLabelColor = primaryColor
       cursorY = headerBottom + 6
       const rightInfoYStart = cursorY
-      let rightCursorY = rightInfoYStart
+      let _rightCursorY = rightInfoYStart
  
       const columnGap = 8
       const leftColumnX = margin
@@ -500,6 +500,10 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
     handleOpenShareUrl,
     companyLogo,
     customerSlug,
+    currencyCode,
+    customerName,
+    customerPhone,
+    items,
     subtotal,
     discount,
     total,
@@ -509,7 +513,6 @@ export function QuotationDetailsDialog({ open, onOpenChange, quotation, customer
     companyAddress,
     companyEmail,
     companyPhone,
-    companyWebsite,
     companyWhatsappNumber,
     companyContactName,
     showBranchInfo,

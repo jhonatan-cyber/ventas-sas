@@ -70,13 +70,13 @@ export function CustomersContainer({ customers, onEdit, onViewDetails, onToggleS
     setCurrentPage(page)
   }
 
-  const handlePrevious = () => {
+  const _handlePrevious = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1)
     }
   }
 
-  const handleNext = () => {
+  const _handleNext = () => {
     const totalPages = Math.ceil(filteredCustomers.length / pageSize)
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1)

@@ -13,12 +13,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface RolesSasTableProps {
   roles: (RoleSas & {
     organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
-    sucursal: { name: string } | null
+    sucursal?: { name: string } | null
   })[]
   isLoading?: boolean
-  onEditClick?: (role: RoleSas & { organization?: any; sucursal: any }) => void
-  onDeleteClick?: (role: RoleSas & { organization?: any; sucursal: any }) => void
-  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onEditClick?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onDeleteClick?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
 }
 
 export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, onToggleStatus }: RolesSasTableProps) {

@@ -128,7 +128,7 @@ export function SalesStats({ sales, isLoading = false }: SalesStatsProps) {
           showCurrency = true
         } else if (key === 'completed' || key === 'cancelled') {
           // Mostrar cantidad + monto
-          const amount = (stat as any).amount || 0
+          const _amount = (stat as any).amount || 0
           displayValue = stat.value
         }
 

@@ -20,9 +20,10 @@ type BranchWithRelations = Branch & {
 interface BranchesPageClientProps {
   initialBranches: BranchWithRelations[]
   customerSlug: string
+  maxBranches?: number | null
 }
 
-export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPageClientProps) {
+export function BranchesPageClient({ initialBranches, customerSlug, maxBranches }: BranchesPageClientProps) {
   const [branches, setBranches] = useState(initialBranches)
   
   const {
@@ -44,12 +45,26 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useBranchActions(customerSlug, setBranches)
+  } = useBranchActions(customerSlug, setBranches, maxBranches)
 
   // Actualizar branches cuando cambien los initialBranches (después de router.refresh)
   useEffect(() => {
     setBranches(initialBranches)
   }, [initialBranches])
+
+  // Calcular si se alcanzó el límite de sucursales
+  // El servicio getAllBranches ya filtra las eliminadas por defecto (deletedAt: null)
+  // Por lo tanto, simplemente contamos todas las sucursales que están en el array
+  const activeBranchesCount = branches.length
+  
+  // Verificar si se alcanzó el límite
+  // maxBranches puede ser null (sin límite o plan no asignado) o un número
+  // Si maxBranches es null, no hay límite, así que siempre mostramos el botón
+  const hasReachedLimit = maxBranches !== null && 
+                          maxBranches !== undefined && 
+                          typeof maxBranches === 'number' && 
+                          maxBranches > 0 && 
+                          activeBranchesCount >= maxBranches
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -59,6 +74,7 @@ export function BranchesPageClient({ initialBranches, customerSlug }: BranchesPa
         description="Administra las sucursales de tu organización"
         newButtonText="Agregar Sucursal"
         onNewClick={openCreateDialog}
+        showNewButton={!hasReachedLimit}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}

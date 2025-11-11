@@ -23,7 +23,7 @@ interface VersionsClientProps {
   initialStats: any
 }
 
-export function VersionsClient({ initialVersions, initialCurrentVersion, initialStats }: VersionsClientProps) {
+export function VersionsClient({ initialVersions, initialCurrentVersion, initialStats: _initialStats }: VersionsClientProps) {
   return (
     <div className="space-y-6">
       <Card>

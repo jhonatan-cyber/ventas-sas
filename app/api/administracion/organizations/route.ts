@@ -50,21 +50,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que se proporcionen los campos requeridos
-    // Una organización es una empresa con: razonSocial, address, phone, slug, ownerId (customerId)
+    // Una organización es una empresa con: razonSocial, address, phone, slug, customerId
+    // El ownerId se toma del usuario administrador actual (currentUser.id)
     if (!body.razonSocial || !body.address || !body.phone || !body.slug || !body.customerId) {
       throw AppError.validation('Razón social, dirección, teléfono, slug y cliente dueño son requeridos')
     }
 
     // Crear la organización (empresa)
-    // El ownerId es el customerId porque el cliente es el dueño de la empresa
+    // El ownerId se crea automáticamente como un Profile basado en el cliente
+    // El cliente se usa para crear el Profile del dueño y el UsuarioSas administrador
+    // El customerId se usa para crear la relación CustomerOrganization
     const newOrganization = await OrganizationAdminService.createOrganization({
       razonSocial: body.razonSocial,
-      nit: body.nit || undefined,
-      address: body.address || undefined,
-      phone: body.phone || undefined,
-      slug: body.slug,
-      ownerId: body.customerId, // El cliente es el dueño (ownerId = customerId)
-      customerId: body.customerId, // También se guarda en la relación
+      nit: body.nit ? body.nit.trim() : undefined,
+      address: body.address ? body.address.trim() : undefined, // Asegurar que se guarde la dirección
+      phone: body.phone ? body.phone.trim() : undefined, // Asegurar que se guarde el teléfono
+      slug: body.slug.trim(),
+      customerId: body.customerId, // Se usa para crear el Profile del dueño y el UsuarioSas administrador
       subscriptionPlanId: body.subscriptionPlanId || undefined,
       subscriptionStatus: body.subscriptionStatus || undefined,
       subscriptionStartDate: body.subscriptionStartDate ? new Date(body.subscriptionStartDate) : undefined,

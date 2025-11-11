@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
 interface PermissionsContextType {
   permissions: string[]
@@ -77,7 +77,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const fetchPermissions = async () => {
+  const fetchPermissions = useCallback(async () => {
     try {
       const response = await fetch('/api/administracion/auth/permissions', {
         credentials: 'include',
@@ -114,7 +114,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   const refreshPermissions = async () => {
     clearPermissionsCache()
@@ -133,7 +133,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     
     // Luego hacer fetch para actualizar
     fetchPermissions()
-  }, [])
+  }, [fetchPermissions])
 
   return (
     <PermissionsContext.Provider

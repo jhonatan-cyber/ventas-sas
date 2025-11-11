@@ -15,9 +15,9 @@ interface ProductsPaginationProps {
 export function ProductsPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: ProductsPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

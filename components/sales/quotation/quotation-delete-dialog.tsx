@@ -1,5 +1,7 @@
 "use client"
 
+import { SalesQuotationWithRelations } from "./types"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +13,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-import { SalesQuotationWithRelations } from "./types"
 
 interface QuotationDeleteDialogProps {
   open: boolean

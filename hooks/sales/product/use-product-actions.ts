@@ -9,7 +9,7 @@ import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-er
 
 export function useProductActions(customerSlug: string, onProductsChange?: () => void) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)

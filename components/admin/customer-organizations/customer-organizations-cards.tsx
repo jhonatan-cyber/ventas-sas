@@ -46,7 +46,7 @@ interface CustomerOrganizationsCardsProps {
 export function CustomerOrganizationsCards({
   customers,
   onAddOrganization,
-  onRemoveOrganization,
+  onRemoveOrganization: _onRemoveOrganization,
   onEditOrganization,
   onToggleOrganizationStatus,
   onDeleteOrganization,

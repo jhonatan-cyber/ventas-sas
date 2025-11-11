@@ -366,7 +366,7 @@ export class AuthSasService {
       }
 
       // No retornar la contraseña
-      const { password: usuarioPassword, ...usuarioSinPassword } = usuario
+      const { password: _usuarioPassword, ...usuarioSinPassword } = usuario
       return usuarioSinPassword
 
     } catch (error) {

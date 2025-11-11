@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  _request: NextRequest,
+  { params: _params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const response = NextResponse.json(

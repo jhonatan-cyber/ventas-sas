@@ -74,16 +74,16 @@ export async function PUT(
     }
 
     const updateData = {
-      razonSocial: body.razonSocial,
-      nit: body.nit,
-      address: body.address,
-      phone: body.phone,
-      slug: body.slug,
-      subscriptionPlanId: body.subscriptionPlanId,
+      razonSocial: body.razonSocial ? body.razonSocial.trim() : undefined,
+      nit: body.nit ? body.nit.trim() : undefined,
+      address: body.address ? body.address.trim() : undefined, // Asegurar que se guarde la dirección
+      phone: body.phone ? body.phone.trim() : undefined, // Asegurar que se guarde el teléfono
+      slug: body.slug ? body.slug.trim() : undefined,
+      subscriptionPlanId: body.subscriptionPlanId || undefined,
       subscriptionStatus: normalizeSubscriptionStatus(body.subscriptionStatus),
       subscriptionStartDate: body.subscriptionStartDate ? new Date(body.subscriptionStartDate) : undefined,
       subscriptionEndDate: body.subscriptionEndDate ? new Date(body.subscriptionEndDate) : undefined,
-      settings: body.settings,
+      settings: body.settings || undefined,
     }
 
     const updatedOrganization = await OrganizationAdminService.updateOrganization(id, updateData)

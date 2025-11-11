@@ -11,7 +11,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     <NextThemesProvider 
       {...props}
       disableTransitionOnChange={false}
-      suppressColorSchemeWarning
     >
       {children}
     </NextThemesProvider>

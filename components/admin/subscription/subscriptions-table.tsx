@@ -10,6 +10,8 @@ import {
   User,
 } from "lucide-react";
 
+import type { SubscriptionWithDetails } from "./types"
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +30,6 @@ import {
 } from "@/components/ui/tooltip";
 import { useHasPermission } from "@/hooks/admin/use-user-permissions";
 
-import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsTableProps {
   subscriptions: SubscriptionWithDetails[];

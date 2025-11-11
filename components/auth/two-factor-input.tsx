@@ -60,7 +60,7 @@ export function TwoFactorInput({ endpoint, tempToken, onSuccess, onError }: TwoF
 
       toast.success('Autenticación exitosa')
       if (onSuccess) onSuccess(data)
-    } catch (err) {
+    } catch  {
       const errorMsg = 'Error de conexión'
       setError(errorMsg)
       toast.error(errorMsg)

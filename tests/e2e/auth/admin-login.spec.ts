@@ -36,7 +36,7 @@ test.describe('Admin Login Flow', () => {
 
     // Verificar que hay validación de campos
     const emailInput = page.getByLabel(/email/i)
-    const passwordInput = page.getByLabel(/contraseña/i)
+    const _passwordInput = page.getByLabel(/contraseña/i)
     
     // Verificar que los campos tienen atributo required o mensaje de error
     await expect(emailInput).toBeFocused().or(expect(emailInput).toHaveAttribute('required'))

@@ -2,7 +2,7 @@
 
 import { Search, User, Building2, CreditCard, Ticket, FileText, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -43,6 +43,13 @@ export function GlobalSearch() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleSelectResult = useCallback((result: SearchResult) => {
+    router.push(result.url)
+    setOpen(false)
+    setQuery("")
+    setResults([])
+  }, [router])
 
   // Atajo de teclado Cmd/Ctrl + K
   useEffect(() => {
@@ -115,7 +122,7 @@ export function GlobalSearch() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, results, selectedIndex])
+  }, [open, results, selectedIndex, handleSelectResult])
 
   // Cerrar al hacer click fuera
   useEffect(() => {
@@ -130,13 +137,6 @@ export function GlobalSearch() {
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [open])
-
-  const handleSelectResult = (result: SearchResult) => {
-    router.push(result.url)
-    setOpen(false)
-    setQuery("")
-    setResults([])
-  }
 
   if (!open) {
     return (

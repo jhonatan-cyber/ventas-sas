@@ -6,7 +6,7 @@ import {
   RefreshCw,
   LayoutDashboard,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 import { CustomizeWidgetsDialog } from "./widgets/customize-widgets-dialog"
 import { Widget } from "./widgets/types"
@@ -73,7 +73,7 @@ type PeriodFilter = "7d" | "30d" | "90d" | "1y" | "all"
 
 export function DashboardClient({
   initialStats,
-  initialMetrics,
+  initialMetrics: _initialMetrics,
   initialActivity,
   initialHealth,
 }: DashboardClientProps) {
@@ -92,10 +92,6 @@ export function DashboardClient({
     fetchHealthMetrics()
     fetchRecentSubscriptions()
   }, [])
-
-  useEffect(() => {
-    fetchActivity()
-  }, [period])
 
   const fetchAlerts = async () => {
     try {
@@ -121,7 +117,7 @@ export function DashboardClient({
     }
   }
 
-  const fetchActivity = async () => {
+  const fetchActivity = useCallback(async () => {
     try {
       const response = await fetch(`/api/administracion/dashboard/activity?period=${period}`)
       const data = await response.json()
@@ -131,7 +127,11 @@ export function DashboardClient({
     } catch (error) {
       console.error("Error fetching activity:", error)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    fetchActivity()
+  }, [fetchActivity])
 
   const fetchRecentSubscriptions = async () => {
     try {

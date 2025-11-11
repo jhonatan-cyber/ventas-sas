@@ -20,7 +20,7 @@ export async function GET(
     }
 
     // No retornar la contraseña
-    const { password, ...usuarioSinPassword } = usuario
+    const { password: _password, ...usuarioSinPassword } = usuario
     return NextResponse.json(usuarioSinPassword)
   } catch (error) {
     const { id } = await params

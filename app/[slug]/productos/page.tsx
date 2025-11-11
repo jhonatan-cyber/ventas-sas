@@ -1,9 +1,9 @@
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { ProductsPageClient } from "@/components/sales/product/products-page-client"
 import { CategoryService } from "@/lib/services/sales/category-service"
-import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
+import { SalesProductService } from "@/lib/services/sales/sales-product-service"
+import { getOrganizationIdByCustomerSlug, getMaxProductsBySlug } from "@/lib/utils/organization"
 
 export default async function ProductsPage({
   params,
@@ -18,24 +18,21 @@ export default async function ProductsPage({
     redirect(`/${slug}/dashboard`)
   }
 
-  // Obtener sucursal del usuario logueado desde la sesión
-  let branchId: string | undefined = undefined
-  try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get("sas-session")
-    
-    if (sessionCookie) {
-      try {
-        const decoded = Buffer.from(sessionCookie.value, 'base64').toString('utf8')
-        const session = JSON.parse(decoded)
-        branchId = session.sucursalId || undefined
-      } catch (e) {
-        // Si hay error al decodificar, continuar sin branchId
-      }
-    }
-  } catch (e) {
-    // Si hay error al obtener cookies, continuar sin branchId
-  }
+  // Obtener límite de productos del plan
+  const maxProducts = await getMaxProductsBySlug(slug)
+
+  // Obtener el total de productos de la organización (sin filtros de categoría o sucursal)
+  // Esto es para verificar el límite del plan
+  const { total: totalProducts } = await SalesProductService.getAllProducts(
+    organizationId,
+    0,
+    1, // Solo necesitamos el total, no los productos
+    undefined, // sin búsqueda
+    undefined, // sin filtro de estado
+    undefined, // sin filtro de categoría
+    undefined, // sin filtro de sucursal
+    false // no incluir eliminados
+  )
 
   // Obtener todas las categorías activas de la organización
   // Las categorías se muestran todas, independientemente de si tienen productos en la sucursal
@@ -45,7 +42,9 @@ export default async function ProductsPage({
   return (
     <ProductsPageClient 
       initialCategories={categories}
-      customerSlug={slug} 
+      customerSlug={slug}
+      maxProducts={maxProducts}
+      totalProducts={totalProducts}
     />
   )
 }

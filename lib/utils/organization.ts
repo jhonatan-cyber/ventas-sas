@@ -150,3 +150,234 @@ export async function getOrCreateOrganizationForCustomer(slug: string): Promise<
   return organization?.id ?? null
 }
 
+/**
+ * Obtiene el límite máximo de sucursales permitidas según el plan de suscripción
+ * Busca primero en Organization.subscriptionPlanId, y si no existe, busca en la tabla Subscription
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxBranchesByOrganizationId(organizationId: string): Promise<number | null> {
+  // Primero intentar obtener el plan directamente de la organización
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      subscriptionPlan: {
+        select: {
+          id: true,
+          name: true,
+          maxBranches: true
+        }
+      }
+    }
+  })
+
+  // Si la organización tiene un plan asignado directamente, usarlo
+  if (organization?.subscriptionPlan) {
+    const maxBranches = organization.subscriptionPlan.maxBranches
+    
+    if (maxBranches !== null && maxBranches !== undefined) {
+      return maxBranches
+    }
+  }
+
+  // Si no hay plan asignado directamente, buscar en la tabla Subscription
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      organizationId,
+      status: 'active', // Solo suscripciones activas
+      OR: [
+        { endDate: null },
+        { endDate: { gt: new Date() } } // Que no esté vencida
+      ]
+    },
+    include: {
+      plan: {
+        select: {
+          id: true,
+          name: true,
+          maxBranches: true
+        }
+      }
+    },
+    orderBy: {
+      startDate: 'desc' // La más reciente primero
+    }
+  })
+
+  if (activeSubscription?.plan) {
+    const maxBranches = activeSubscription.plan.maxBranches
+    
+    if (maxBranches !== null && maxBranches !== undefined) {
+      return maxBranches
+    }
+  }
+
+  return null
+}
+
+/**
+ * Obtiene el límite máximo de sucursales permitidas según el plan de suscripción por slug
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxBranchesBySlug(slug: string): Promise<number | null> {
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
+    return null
+  }
+
+  return getMaxBranchesByOrganizationId(organizationId)
+}
+
+/**
+ * Obtiene el límite máximo de usuarios permitidos según el plan de suscripción
+ * Busca primero en Organization.subscriptionPlanId, y si no existe, busca en la tabla Subscription
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxUsersByOrganizationId(organizationId: string): Promise<number | null> {
+  // Primero intentar obtener el plan directamente de la organización
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      subscriptionPlan: {
+        select: {
+          id: true,
+          name: true,
+          maxUsers: true
+        }
+      }
+    }
+  })
+
+  // Si la organización tiene un plan asignado directamente, usarlo
+  if (organization?.subscriptionPlan) {
+    const maxUsers = organization.subscriptionPlan.maxUsers
+    
+    if (maxUsers !== null && maxUsers !== undefined) {
+      return maxUsers
+    }
+  }
+
+  // Si no hay plan asignado directamente, buscar en la tabla Subscription
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      organizationId,
+      status: 'active', // Solo suscripciones activas
+      OR: [
+        { endDate: null },
+        { endDate: { gt: new Date() } } // Que no esté vencida
+      ]
+    },
+    include: {
+      plan: {
+        select: {
+          id: true,
+          name: true,
+          maxUsers: true
+        }
+      }
+    },
+    orderBy: {
+      startDate: 'desc' // La más reciente primero
+    }
+  })
+
+  if (activeSubscription?.plan) {
+    const maxUsers = activeSubscription.plan.maxUsers
+    
+    if (maxUsers !== null && maxUsers !== undefined) {
+      return maxUsers
+    }
+  }
+
+  return null
+}
+
+/**
+ * Obtiene el límite máximo de usuarios permitidos según el plan de suscripción por slug
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxUsersBySlug(slug: string): Promise<number | null> {
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
+    return null
+  }
+
+  return getMaxUsersByOrganizationId(organizationId)
+}
+
+/**
+ * Obtiene el límite máximo de productos permitidos según el plan de suscripción
+ * Busca primero en Organization.subscriptionPlanId, y si no existe, busca en la tabla Subscription
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxProductsByOrganizationId(organizationId: string): Promise<number | null> {
+  // Primero intentar obtener el plan directamente de la organización
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      subscriptionPlan: {
+        select: {
+          id: true,
+          name: true,
+          maxProducts: true
+        }
+      }
+    }
+  })
+
+  // Si la organización tiene un plan asignado directamente, usarlo
+  if (organization?.subscriptionPlan) {
+    const maxProducts = organization.subscriptionPlan.maxProducts
+    
+    if (maxProducts !== null && maxProducts !== undefined) {
+      return maxProducts
+    }
+  }
+
+  // Si no hay plan asignado directamente, buscar en la tabla Subscription
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      organizationId,
+      status: 'active', // Solo suscripciones activas
+      OR: [
+        { endDate: null },
+        { endDate: { gt: new Date() } } // Que no esté vencida
+      ]
+    },
+    include: {
+      plan: {
+        select: {
+          id: true,
+          name: true,
+          maxProducts: true
+        }
+      }
+    },
+    orderBy: {
+      startDate: 'desc' // La más reciente primero
+    }
+  })
+
+  if (activeSubscription?.plan) {
+    const maxProducts = activeSubscription.plan.maxProducts
+    
+    if (maxProducts !== null && maxProducts !== undefined) {
+      return maxProducts
+    }
+  }
+
+  return null
+}
+
+/**
+ * Obtiene el límite máximo de productos permitidos según el plan de suscripción por slug
+ * Retorna null si no hay plan o no tiene límite definido
+ */
+export async function getMaxProductsBySlug(slug: string): Promise<number | null> {
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
+    return null
+  }
+
+  return getMaxProductsByOrganizationId(organizationId)
+}
+

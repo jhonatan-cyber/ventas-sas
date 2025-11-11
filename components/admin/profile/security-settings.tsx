@@ -46,7 +46,7 @@ export function SecuritySettings({ profile, onUpdate, isLoading }: SecuritySetti
         setTwoFactorEnabled(false)
         await onUpdate({ twoFactorEnabled: false })
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al cambiar configuración de 2FA')
       setTwoFactorEnabled(profile.twoFactorEnabled || false) // Revertir cambio
     }

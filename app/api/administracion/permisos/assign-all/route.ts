@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Actualizar cada rol con todos los permisos registrados
-    const updatePromises = rolesToUpdate.map(({ role, name }) => {
+    const updatePromises = rolesToUpdate.map(({ role }) => {
       const currentPermissions = (role.permissions as string[]) || []
       const updatedPermissions = [...new Set([...currentPermissions, ...permissionNames])]
 

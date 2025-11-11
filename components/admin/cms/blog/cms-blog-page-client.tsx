@@ -132,7 +132,7 @@ export function CmsBlogPageClient({ initialPosts, initialTotal }: CmsBlogPageCli
 
       toast.success('Post eliminado')
       await fetchPosts()
-    } catch (error) {
+    } catch  {
       toast.error('Error al eliminar post')
     }
   }
@@ -152,7 +152,7 @@ export function CmsBlogPageClient({ initialPosts, initialTotal }: CmsBlogPageCli
 
       toast.success(post.isPublished ? 'Post despublicado' : 'Post publicado')
       await fetchPosts()
-    } catch (error) {
+    } catch  {
       toast.error('Error al actualizar estado')
     }
   }

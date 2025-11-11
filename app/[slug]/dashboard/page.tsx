@@ -50,10 +50,10 @@ export default async function DashboardPage({
     try {
       decoded = Buffer.from(value, 'base64').toString('utf8')
       session = JSON.parse(decoded)
-    } catch (base64Error) {
+    } catch  {
       session = JSON.parse(value)
     }
-  } catch (e) {
+  } catch  {
     redirect(`/${slug}/login`)
   }
 

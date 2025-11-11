@@ -90,48 +90,75 @@ export class DataExportService {
       if (options.filters.dateFrom) where.createdAt.gte = options.filters.dateFrom
       if (options.filters.dateTo) where.createdAt.lte = options.filters.dateTo
     }
+
+    // Si hay filtro por organización, obtener primero los userId de esa organización
+    let userIds: string[] | undefined
     if (options.filters?.organizationId) {
-      where.organizationMembers = {
-        some: {
+      const orgMembers = await prisma.organizationMember.findMany({
+        where: {
           organizationId: options.filters.organizationId,
         },
+        select: {
+          userId: true,
+        },
+      })
+      userIds = orgMembers.map(om => om.userId)
+      if (userIds.length === 0) {
+        // Si no hay usuarios en esa organización, retornar array vacío
+        return this.formatData([], options.format)
       }
+      where.id = { in: userIds }
     }
 
     const users = await prisma.profile.findMany({
       where,
-      include: {
-        organizationMembers: {
-          include: {
-            organization: {
-              select: {
-                name: true,
-              },
-            },
-            role: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      },
       orderBy: { createdAt: 'desc' },
     })
 
-    const data = users.map((user: any) => ({
-      id: user.id,
-      nombre: user.fullName || 'N/A',
-      email: user.email,
-      ci: user.ci || 'N/A',
-      rol: user.role,
-      superAdmin: user.isSuperAdmin ? 'Sí' : 'No',
-      activo: user.isActive ? 'Sí' : 'No',
-      organizaciones: (user.organizationMembers || []).map((om: any) => om.organization?.name || 'N/A').join(', '),
-      roles: (user.organizationMembers || []).map((om: any) => om.role?.name || 'N/A').join(', '),
-      ultimoLogin: user.lastLoginAt?.toISOString() || 'Nunca',
-      fechaCreacion: user.createdAt.toISOString(),
-    }))
+    // Obtener miembros de organizaciones para los usuarios encontrados
+    const userIdsList = users.map(u => u.id)
+    const organizationMembers = await prisma.organizationMember.findMany({
+      where: {
+        userId: { in: userIdsList },
+      },
+      include: {
+        organization: {
+          select: {
+            name: true,
+          },
+        },
+        role: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
+
+    // Crear un mapa de userId -> organizationMembers
+    const userOrgMembersMap = new Map<string, typeof organizationMembers>()
+    for (const om of organizationMembers) {
+      const existing = userOrgMembersMap.get(om.userId) || []
+      existing.push(om)
+      userOrgMembersMap.set(om.userId, existing)
+    }
+
+    const data = users.map((user) => {
+      const orgMembers = userOrgMembersMap.get(user.id) || []
+      return {
+        id: user.id,
+        nombre: user.fullName || 'N/A',
+        email: user.email,
+        ci: user.ci || 'N/A',
+        rol: user.role,
+        superAdmin: user.isSuperAdmin ? 'Sí' : 'No',
+        activo: user.isActive ? 'Sí' : 'No',
+        organizaciones: orgMembers.map((om) => om.organization?.name || 'N/A').join(', ') || 'N/A',
+        roles: orgMembers.map((om) => om.role?.name || 'N/A').join(', ') || 'N/A',
+        ultimoLogin: user.lastLoginAt?.toISOString() || 'Nunca',
+        fechaCreacion: user.createdAt.toISOString(),
+      }
+    })
 
     const duration = Date.now() - startTime
     logBusinessOperation('EXPORT', 'DataExport', undefined, undefined, {

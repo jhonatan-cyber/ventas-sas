@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface InvoiceFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: () => void;
 }
 
 export function InvoiceFormDialog({
@@ -27,10 +27,10 @@ export function InvoiceFormDialog({
   onOpenChange,
   onSave,
 }: InvoiceFormDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [organizations, setOrganizations] = useState<any[]>([])
-  const [subscriptions, setSubscriptions] = useState<any[]>([])
-  const [plans, setPlans] = useState<any[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [_plans, setPlans] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     organizationId: "",
@@ -47,71 +47,71 @@ export function InvoiceFormDialog({
     dueDate: "",
     description: "",
     notes: "",
-  })
+  });
 
   useEffect(() => {
     if (open) {
-      fetchOrganizations()
-      fetchPlans()
+      fetchOrganizations();
+      fetchPlans();
     }
-  }, [open])
+  }, [open]);
 
   useEffect(() => {
     if (formData.organizationId) {
-      fetchSubscriptions(formData.organizationId)
+      fetchSubscriptions(formData.organizationId);
     } else {
-      setSubscriptions([])
+      setSubscriptions([]);
     }
-  }, [formData.organizationId])
+  }, [formData.organizationId]);
 
   const fetchOrganizations = async () => {
     try {
-      const response = await fetch("/api/administracion/organizations")
-      const data = await response.json()
+      const response = await fetch("/api/administracion/organizations");
+      const data = await response.json();
       if (data.organizations) {
-        setOrganizations(data.organizations)
+        setOrganizations(data.organizations);
       }
     } catch (error) {
-      console.error("Error fetching organizations:", error)
+      console.error("Error fetching organizations:", error);
     }
-  }
+  };
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch("/api/administracion/plans")
-      const data = await response.json()
+      const response = await fetch("/api/administracion/plans");
+      const data = await response.json();
       if (Array.isArray(data)) {
-        setPlans(data)
+        setPlans(data);
       }
     } catch (error) {
-      console.error("Error fetching plans:", error)
+      console.error("Error fetching plans:", error);
     }
-  }
+  };
 
   const fetchSubscriptions = async (organizationId: string) => {
     try {
       const response = await fetch(
         `/api/administracion/subscriptions?organizationId=${organizationId}`
-      )
-      const data = await response.json()
+      );
+      const data = await response.json();
       if (data.subscriptions) {
-        setSubscriptions(data.subscriptions)
+        setSubscriptions(data.subscriptions);
       }
     } catch (error) {
-      console.error("Error fetching subscriptions:", error)
+      console.error("Error fetching subscriptions:", error);
     }
-  }
+  };
 
   const calculateTotal = () => {
-    const subtotal = parseFloat(formData.subtotal) || 0
-    const tax = parseFloat(formData.tax) || 0
-    const discount = parseFloat(formData.discount) || 0
-    return subtotal + tax - discount
-  }
+    const subtotal = parseFloat(formData.subtotal) || 0;
+    const tax = parseFloat(formData.tax) || 0;
+    const discount = parseFloat(formData.discount) || 0;
+    return subtotal + tax - discount;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/administracion/billing", {
@@ -133,25 +133,25 @@ export function InvoiceFormDialog({
           description: formData.description || undefined,
           notes: formData.notes || undefined,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success || data.invoice) {
-        toast.success("Factura creada exitosamente")
-        onOpenChange(false)
-        resetForm()
-        onSave()
+        toast.success("Factura creada exitosamente");
+        onOpenChange(false);
+        resetForm();
+        onSave();
       } else {
-        toast.error(data.error || "Error al crear factura")
+        toast.error(data.error || "Error al crear factura");
       }
     } catch (error) {
-      console.error("Error creating invoice:", error)
-      toast.error("Error al crear factura")
+      console.error("Error creating invoice:", error);
+      toast.error("Error al crear factura");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -169,10 +169,10 @@ export function InvoiceFormDialog({
       dueDate: "",
       description: "",
       notes: "",
-    })
-  }
+    });
+  };
 
-  const total = calculateTotal()
+  const total = calculateTotal();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -230,11 +230,14 @@ export function InvoiceFormDialog({
 
             {/* Información de Facturación */}
             <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold mb-3">Información de Facturación</h3>
+              <h3 className="text-sm font-semibold mb-3">
+                Información de Facturación
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="billingName">
-                    Nombre / Razón Social <span className="text-red-500">*</span>
+                    Nombre / Razón Social{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="billingName"
@@ -273,7 +276,10 @@ export function InvoiceFormDialog({
                     id="billingAddress"
                     value={formData.billingAddress}
                     onChange={(e) =>
-                      setFormData({ ...formData, billingAddress: e.target.value })
+                      setFormData({
+                        ...formData,
+                        billingAddress: e.target.value,
+                      })
                     }
                     placeholder="Dirección de facturación"
                     disabled={isSubmitting}
@@ -441,7 +447,13 @@ export function InvoiceFormDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !formData.billingName || !formData.billingEmail || !formData.subtotal || !formData.dueDate}
+              disabled={
+                isSubmitting ||
+                !formData.billingName ||
+                !formData.billingEmail ||
+                !formData.subtotal ||
+                !formData.dueDate
+              }
             >
               {isSubmitting ? "Creando..." : "Crear Factura"}
             </Button>
@@ -449,5 +461,5 @@ export function InvoiceFormDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

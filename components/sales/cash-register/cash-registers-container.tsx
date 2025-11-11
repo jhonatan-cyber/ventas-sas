@@ -6,6 +6,7 @@ import { CashRegistersFilters } from "./cash-registers-filters"
 import { CashRegistersPagination } from "./cash-registers-pagination"
 import { CashRegistersStats } from "./cash-registers-stats"
 import { CashRegistersTable } from "./cash-registers-table"
+
 import type { CashRegisterWithRelations } from "./types"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

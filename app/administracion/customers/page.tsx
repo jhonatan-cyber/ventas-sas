@@ -39,7 +39,7 @@ export default async function CustomersPage() {
     const customers = result.customers.filter((customer): customer is NonNullable<typeof customer> => customer !== null)
 
     return <CustomersPageClient initialCustomers={customers} />
-  } catch (error) {
+  } catch  {
     redirect('/administracion/login')
   }
 }

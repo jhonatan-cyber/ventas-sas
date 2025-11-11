@@ -83,7 +83,7 @@ const generateTempId = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2)
 
-const statusOptions = [
+const _statusOptions = [
   { value: 'completed', label: 'Completada' },
   { value: 'pending', label: 'Pendiente' },
   { value: 'cancelled', label: 'Cancelada' },
@@ -114,7 +114,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
 
   const [customerId, setCustomerId] = useState<string>('')
   const [customerInputValue, setCustomerInputValue] = useState<string>('')
-  const [customerPhoneInput, setCustomerPhoneInput] = useState<string>(DEFAULT_PHONE_PREFIX)
+  const [_customerPhoneInput, setCustomerPhoneInput] = useState<string>(DEFAULT_PHONE_PREFIX)
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
   const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0)
   const customerContainerRef = useRef<HTMLDivElement>(null)

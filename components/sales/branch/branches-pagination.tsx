@@ -15,9 +15,9 @@ interface BranchesPaginationProps {
 export function BranchesPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: BranchesPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

@@ -2,8 +2,9 @@
 
 import { CreditCard, CheckCircle, XCircle, Clock } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { SubscriptionWithDetails } from "./types"
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SubscriptionsStatsProps {
   subscriptions: SubscriptionWithDetails[]

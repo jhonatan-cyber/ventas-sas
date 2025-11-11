@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+import type { CashRegisterWithRelations } from "./types"
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import type { CashRegisterWithRelations } from "./types"
 
 interface CashRegisterFormDialogProps {
   open: boolean;
@@ -76,12 +77,27 @@ export function CashRegisterFormDialog({
     getCurrentDateTimeDisplay()
   );
 
+  const loadBranches = useCallback(async () => {
+    try {
+      setIsLoadingData(true);
+      const response = await fetch(`/api/${customerSlug}/sucursales`);
+      if (response.ok) {
+        const data = await response.json();
+        setBranches(data.branches || []);
+      }
+    } catch (error) {
+      console.error("Error al cargar sucursales:", error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [customerSlug]);
+
   // Cargar sucursales
   useEffect(() => {
     if (open) {
       loadBranches();
     }
-  }, [open, customerSlug]);
+  }, [open, loadBranches]);
 
   // Cargar datos de la caja si existe
   useEffect(() => {
@@ -95,21 +111,6 @@ export function CashRegisterFormDialog({
       setOpeningBalance("0");
     }
   }, [cashRegister, open]);
-
-  const loadBranches = async () => {
-    try {
-      setIsLoadingData(true);
-      const response = await fetch(`/api/${customerSlug}/sucursales`);
-      if (response.ok) {
-        const data = await response.json();
-        setBranches(data.branches || []);
-      }
-    } catch (error) {
-      console.error("Error al cargar sucursales:", error);
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

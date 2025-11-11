@@ -24,7 +24,7 @@ export function CustomersPageClient({
     setIsDetailDialogOpen,
     selectedCustomer,
     customerDetails,
-    isLoadingDetails,
+    isLoadingDetails: _isLoadingDetails,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,

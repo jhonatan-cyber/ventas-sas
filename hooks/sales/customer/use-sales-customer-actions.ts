@@ -13,7 +13,7 @@ export function useSalesCustomerActions(
   setCustomers?: (customers: SalesCustomer[] | ((prev: SalesCustomer[]) => SalesCustomer[])) => void
 ) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)

@@ -4,7 +4,7 @@ import { AppError } from '@/lib/errors/app-error'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug, getMaxUsersByOrganizationId } from '@/lib/utils/organization'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createUsuarioSasSchema } from '@/lib/validators/sales-validators'
@@ -81,6 +81,29 @@ export async function POST(
     }
 
     const validatedData = validation.data
+
+    // Verificar límite de usuarios del plan
+    const maxUsers = await getMaxUsersByOrganizationId(organizationId)
+    if (maxUsers !== null) {
+      // Contar usuarios existentes (activos e inactivos, pero no eliminados)
+      const { total: currentUsersCount } = await UsuarioSasService.getAllUsuarios(
+        organizationId,
+        0,
+        1000, // Obtener todas para contar
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        false // includeDeleted: false, no contar eliminados
+      )
+
+      if (currentUsersCount >= maxUsers) {
+        throw AppError.validation(
+          `Has alcanzado el límite de usuarios permitidos en tu plan (${maxUsers}). ` +
+          `Por favor, actualiza tu plan para crear más usuarios.`
+        )
+      }
+    }
 
     // Obtener usuario actual para auditoría
     const currentUser = await getCurrentSasUser(request, slug)

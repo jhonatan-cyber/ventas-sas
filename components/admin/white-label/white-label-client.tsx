@@ -53,7 +53,7 @@ export function WhiteLabelClient({ initialOrganizations }: WhiteLabelClientProps
         setBranding(data.branding || { organizationId: orgId, enabled: false })
         setIsDialogOpen(true)
       }
-    } catch (error) {
+    } catch  {
       toast({ title: 'Error', description: 'Error al cargar branding', variant: 'destructive' })
     } finally {
       setIsLoading(false)

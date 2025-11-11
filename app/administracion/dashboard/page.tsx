@@ -31,7 +31,7 @@ export default async function AdminPage() {
       // Si el usuario no tiene acceso de administrador, redirigir con mensaje de error
       redirect('/administracion/login?error=no_access')
     }
-  } catch (error) {
+  } catch {
     // Si hay error al verificar token, redirigir
     redirect('/administracion/login')
   }
@@ -39,7 +39,7 @@ export default async function AdminPage() {
   // Get comprehensive admin statistics with error handling
   let dashboardStats: any = null
   let recentActivity: any = null
-  let growthStats: any = null
+  let _growthStats: any = null
   let systemMetrics: any = null
   let healthMetrics: any = null
   
@@ -62,7 +62,7 @@ export default async function AdminPage() {
     
     recentActivity = results[1].status === 'fulfilled' ? results[1].value : []
     
-    growthStats = results[2].status === 'fulfilled' ? results[2].value : {
+    _growthStats = results[2].status === 'fulfilled' ? results[2].value : {
       organizations: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 },
       users: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 }
     }
@@ -87,7 +87,7 @@ export default async function AdminPage() {
       revenue: { total: 0, monthly: 0, yearly: 0 }
     }
     recentActivity = []
-    growthStats = {
+    _growthStats = {
       organizations: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 },
       users: { current: 0, monthlyGrowth: 0, yearlyGrowth: 0 }
     }

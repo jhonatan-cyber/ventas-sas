@@ -4,11 +4,12 @@ import { DeleteSubscriptionDialog } from "./delete-subscription-dialog"
 import { SubscriptionFormDialog } from "./subscription-form-dialog"
 import { SubscriptionsContainer } from "./subscriptions-container"
 
+import type { SubscriptionWithDetails } from "./types"
+
 import { SubscriptionsHeader } from "@/components/admin/subscription/subscriptions-header"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { useSubscriptionActions } from "@/hooks/admin/subscription/use-subscription-actions"
 
-import type { SubscriptionWithDetails } from "./types"
 
 interface SubscriptionsPageClientProps {
   initialSubscriptions: SubscriptionWithDetails[]

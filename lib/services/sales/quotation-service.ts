@@ -468,6 +468,10 @@ export class QuotationService {
         }
       })
 
+      if (!quotation) {
+        throw new Error(`Cotización con id ${id} no encontrada`)
+      }
+
       if (quotation.expiresAt) {
         const expiresEnd = endOfDay(new Date(quotation.expiresAt))
         const now = new Date()

@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 
+import type { CashRegisterWithRelations } from "./types"
+
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { CashRegisterWithRelations } from "./types"
 
 interface CashRegisterOpenDialogProps {
   open: boolean

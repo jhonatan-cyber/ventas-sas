@@ -1,19 +1,21 @@
-"use client"
+"use client";
 
-import { RoleSas } from "@prisma/client"
-import { Shield, CheckCircle2, XCircle, Users } from "lucide-react"
+import { RoleSas } from "@prisma/client";
+import { Shield, CheckCircle2, XCircle, Users } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface RolesSasStatsProps {
-  roles: RoleSas[]
+  roles: (RoleSas & {
+    _count?: { usuariosSas: number };
+  })[];
 }
 
 export function RolesSasStats({ roles }: RolesSasStatsProps) {
-  const total = roles.length
-  const active = roles.filter(r => r.isActive).length
-  const inactive = roles.filter(r => !r.isActive).length
-  const activePercentage = total > 0 ? Math.round((active / total) * 100) : 0
+  const total = roles.length;
+  const active = roles.filter((r) => r.isActive).length;
+  const inactive = roles.filter((r) => !r.isActive).length;
+  const activePercentage = total > 0 ? Math.round((active / total) * 100) : 0;
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -27,7 +29,9 @@ export function RolesSasStats({ roles }: RolesSasStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{total}</div>
+          <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+            {total}
+          </div>
           <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
             Roles registrados en el sistema
           </p>
@@ -44,7 +48,9 @@ export function RolesSasStats({ roles }: RolesSasStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-green-900 dark:text-green-100">{active}</div>
+          <div className="text-3xl font-bold text-green-900 dark:text-green-100">
+            {active}
+          </div>
           <p className="text-xs text-green-700 dark:text-green-300 mt-1">
             {activePercentage}% del total • En uso actualmente
           </p>
@@ -61,9 +67,12 @@ export function RolesSasStats({ roles }: RolesSasStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{inactive}</div>
+          <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            {inactive}
+          </div>
           <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
-            {total > 0 ? Math.round((inactive / total) * 100) : 0}% del total • Deshabilitados
+            {total > 0 ? Math.round((inactive / total) * 100) : 0}% del total •
+            Deshabilitados
           </p>
         </CardContent>
       </Card>
@@ -79,7 +88,10 @@ export function RolesSasStats({ roles }: RolesSasStatsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
-            {roles.reduce((acc, role) => acc + (role._count?.usuariosSas || 0), 0)}
+            {roles.reduce(
+              (acc, role) => acc + (role._count?.usuariosSas || 0),
+              0
+            )}
           </div>
           <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
             Usuarios con roles asignados
@@ -87,6 +99,5 @@ export function RolesSasStats({ roles }: RolesSasStatsProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

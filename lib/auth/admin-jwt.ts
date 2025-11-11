@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
 
 import { JwtSecretRotation } from './jwt-secret-rotation'
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET
-const ADMIN_JWT_EXPIRES_IN = process.env.ADMIN_JWT_EXPIRES_IN || '7d'
+const ADMIN_JWT_EXPIRES_IN: string = process.env.ADMIN_JWT_EXPIRES_IN || '7d'
 
 export interface AdminJWTPayload {
   userId: string
@@ -31,12 +31,13 @@ export class AdminJWTService {
     ensureSecret()
     
     // Intentar usar secret rotado, si no usar fallback
-    const secret = await JwtSecretRotation.getActiveSecret('admin')
-      .catch(() => null) || ADMIN_JWT_SECRET || 'dev-admin-secret'
+    const rotatedSecret = await JwtSecretRotation.getActiveSecret('admin')
+      .catch(() => null)
+    const secret: string = (rotatedSecret || ADMIN_JWT_SECRET || 'dev-admin-secret') as string
 
     return jwt.sign(payload, secret, {
       expiresIn: ADMIN_JWT_EXPIRES_IN,
-    })
+    } as SignOptions)
   }
 
   /**
@@ -66,7 +67,7 @@ export class AdminJWTService {
       }
 
       return null
-    } catch (_e) {
+    } catch {
       return null
     }
   }
@@ -77,9 +78,10 @@ export class AdminJWTService {
    */
   static generateTokenSync(payload: AdminJWTPayload): string {
     ensureSecret()
-    return jwt.sign(payload, ADMIN_JWT_SECRET || 'dev-admin-secret', {
+    const secret: string = (ADMIN_JWT_SECRET || 'dev-admin-secret') as string
+    return jwt.sign(payload, secret, {
       expiresIn: ADMIN_JWT_EXPIRES_IN,
-    })
+    } as SignOptions)
   }
 
   /**
@@ -88,8 +90,9 @@ export class AdminJWTService {
   static verifyTokenSync(token: string): AdminJWTPayload | null {
     try {
       ensureSecret()
-      return jwt.verify(token, ADMIN_JWT_SECRET || 'dev-admin-secret') as AdminJWTPayload
-    } catch (_e) {
+      const secret: string = (ADMIN_JWT_SECRET || 'dev-admin-secret') as string
+      return jwt.verify(token, secret) as AdminJWTPayload
+    } catch {
       return null
     }
   }

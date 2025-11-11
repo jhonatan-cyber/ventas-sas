@@ -18,7 +18,7 @@ interface RolesSasPageClientProps {
       name: string | null;
       slug: string | null;
     } | null;
-    sucursal: { name: string } | null;
+    sucursal?: { name: string } | null;
     _count?: { usuariosSas: number };
   })[];
   customerSlug: string;

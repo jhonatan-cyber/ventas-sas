@@ -21,7 +21,7 @@ interface OrganizationLandingClientProps {
  * Muestra el contenido del CMS si está disponible
  */
 export function OrganizationLandingClient({
-  organizationSlug,
+  organizationSlug: _organizationSlug,
   organization,
   landingPage,
 }: OrganizationLandingClientProps) {

@@ -10,6 +10,7 @@ import { CashRegisterFormDialog } from "./cash-register-form-dialog"
 import { CashRegisterOpenDialog } from "./cash-register-open-dialog"
 import { CashRegistersContainer } from "./cash-registers-container"
 import { CashRegistersHeader } from "./cash-registers-header"
+
 import type { CashRegisterWithRelations } from './types'
 
 import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions"

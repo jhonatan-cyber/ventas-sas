@@ -1,7 +1,7 @@
 "use client"
 
 import { Database, Trash2, RefreshCw, TrendingUp, Key, HardDrive } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export function CacheManager() {
   const [purgeAllOpen, setPurgeAllOpen] = useState(false)
   const { toast } = useToast()
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch('/api/administracion/cache/stats')
       const data = await response.json()
@@ -43,13 +43,13 @@ export function CacheManager() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     fetchStats()
     const interval = setInterval(fetchStats, 10000) // Actualizar cada 10 segundos
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchStats])
 
   const handlePurgePattern = async () => {
     if (!purgePattern.trim()) {

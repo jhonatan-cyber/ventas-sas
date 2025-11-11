@@ -79,7 +79,7 @@ export function ChangePasswordForm({ isLoading }: ChangePasswordFormProps) {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (error) {
+    } catch  {
       toast.error("Error al cambiar la contraseña");
     }
   };

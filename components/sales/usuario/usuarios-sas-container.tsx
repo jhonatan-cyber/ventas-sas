@@ -12,14 +12,14 @@ import { Card, CardContent } from "@/components/ui/card"
 
 interface UsuariosSasContainerProps {
   usuarios: (UsuarioSas & {
-    rol: { id: string; nombre: string } | null
-    sucursal: { id: string; name: string } | null
+    rol?: { id: string; nombre: string } | null
+    sucursal?: { id: string; name: string } | null
     customer?: any
   })[]
   sucursalesCount?: number
-  onEdit?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
-  onToggleStatus?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
-  onDelete?: (usuario: UsuarioSas & { rol: any; sucursal: any }) => void
+  onEdit?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onToggleStatus?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onDelete?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
 }
 
 export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onToggleStatus, onDelete }: UsuariosSasContainerProps) {

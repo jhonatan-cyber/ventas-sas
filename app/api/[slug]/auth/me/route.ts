@@ -20,7 +20,7 @@ export async function GET(
     }
 
     // No retornar la contraseña ni información sensible
-    const { password, ...userData } = user
+    const { password: _password, ...userData } = user
     
     return NextResponse.json(userData)
   } catch (error) {

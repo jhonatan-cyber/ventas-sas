@@ -225,7 +225,7 @@ export function QuotationConvertDialog({
     if (!open || !isAdmin) return;
     const branchToLoad = selectedBranchId ?? null;
     loadProducts(branchToLoad);
-  }, [open, isAdmin, selectedBranchId]);
+  }, [open, isAdmin, selectedBranchId, loadProducts]);
 
   const subtotal = useMemo(
     () =>
@@ -302,6 +302,7 @@ export function QuotationConvertDialog({
     validItems.length,
     hasMissingProducts,
     hasInvalidValues,
+    hasInvalidCodes,
     rawTotal,
   ]);
 
@@ -319,7 +320,7 @@ export function QuotationConvertDialog({
       },
     ]);
     setCodeInputs((prev) => ({ ...prev, [id]: "" }));
-  }, [products]);
+  }, []);
 
   const handleRemoveItem = useCallback((itemId: string) => {
     setItems((prev) => prev.filter((item) => item.id !== itemId));

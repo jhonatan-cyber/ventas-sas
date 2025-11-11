@@ -38,7 +38,7 @@ export default async function RolesPage() {
     const roles = await RoleAdminService.getAllRoles()
 
     return <RolesPageClient initialRoles={roles} />
-  } catch (error) {
+  } catch  {
     redirect('/administracion/login')
   }
 }

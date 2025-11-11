@@ -12,10 +12,11 @@ type BranchWithRelations = Branch & {
 
 export function useBranchActions(
   customerSlug: string,
-  setBranches?: (branches: BranchWithRelations[] | ((prev: BranchWithRelations[]) => BranchWithRelations[])) => void
+  setBranches?: (branches: BranchWithRelations[] | ((prev: BranchWithRelations[]) => BranchWithRelations[])) => void,
+  maxBranches?: number | null
 ) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
@@ -27,6 +28,7 @@ export function useBranchActions(
   const [selectedBranch, setSelectedBranch] = useState<BranchWithRelations | undefined>()
 
   const openCreateDialog = () => {
+    // La validación del límite de sucursales se hace en el servidor (API)
     setSelectedBranch(undefined)
     setIsFormDialogOpen(true)
   }
@@ -46,7 +48,7 @@ export function useBranchActions(
     setIsDeleteDialogOpen(true)
   }
 
-  const openDetailDialog = (branch: BranchWithRelations) => {
+  const _openDetailDialog = (branch: BranchWithRelations) => {
     setSelectedBranch(branch)
     setIsDetailDialogOpen(true)
   }

@@ -16,7 +16,7 @@ export function useUsuarioSasActions(
   setUsuarios?: (usuarios: UsuarioWithRelations[] | ((prev: UsuarioWithRelations[]) => UsuarioWithRelations[])) => void
 ) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<UsuarioWithRelations | undefined>()

@@ -26,7 +26,7 @@ interface TableResponsiveProps {
 export function TableResponsive({ 
   children, 
   className,
-  hiddenColumns
+  hiddenColumns: _hiddenColumns
 }: TableResponsiveProps) {
   return (
     <div className={cn(

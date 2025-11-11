@@ -13,11 +13,6 @@ export default defineConfig({
     exclude: ['node_modules', '.next', 'dist'],
     // Configurar diferentes entornos para diferentes tipos de tests
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

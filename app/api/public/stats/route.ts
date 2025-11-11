@@ -38,7 +38,7 @@ export async function GET() {
       monthlySales: monthlySales || 50000,
       products: productsCount || 10000
     })
-  } catch (error) {
+  } catch {
     // En caso de error, retornar valores por defecto
     return NextResponse.json({
       organizations: 1000,

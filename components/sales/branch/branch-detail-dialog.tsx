@@ -12,7 +12,7 @@ import {
   XCircle,
   User,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -66,15 +66,7 @@ export function BranchDetailDialog({
   const [usuarios, setUsuarios] = useState<UsuarioAsociado[]>([]);
   const [isLoadingUsuarios, setIsLoadingUsuarios] = useState(false);
 
-  useEffect(() => {
-    if (open && branch?.id) {
-      loadUsuarios();
-    } else {
-      setUsuarios([]);
-    }
-  }, [open, branch?.id, customerSlug]);
-
-  const loadUsuarios = async () => {
+  const loadUsuarios = useCallback(async () => {
     if (!branch?.id) return;
     
     setIsLoadingUsuarios(true);
@@ -100,7 +92,15 @@ export function BranchDetailDialog({
     } finally {
       setIsLoadingUsuarios(false);
     }
-  };
+  }, [branch?.id, customerSlug]);
+
+  useEffect(() => {
+    if (open && branch?.id) {
+      loadUsuarios();
+    } else {
+      setUsuarios([]);
+    }
+  }, [open, branch?.id, loadUsuarios]);
 
   if (!branch) return null;
 

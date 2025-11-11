@@ -61,7 +61,7 @@ export function useOrganizationActions() {
       }
 
       const result = await response.json()
-      const updatedOrganization = result.organization || result
+      const _updatedOrganization = result.organization || result
       
       if (selectedOrganization) {
         setIsEditDialogOpen(false)

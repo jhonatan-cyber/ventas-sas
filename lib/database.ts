@@ -47,7 +47,7 @@ export class DatabaseService {
     try {
       await prisma.$queryRaw`SELECT 1`
       return { status: 'healthy', message: 'Base de datos conectada' }
-    } catch (error) {
+    } catch {
       return { status: 'unhealthy', message: 'Error de conexión a la base de datos' }
     }
   }

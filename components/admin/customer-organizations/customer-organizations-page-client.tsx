@@ -54,8 +54,8 @@ interface Customer {
       name: string
       razonSocial?: string
       nit?: string
-      direccion?: string
-      telefono?: string
+      address?: string // Usar 'address' en lugar de 'direccion'
+      phone?: string // Usar 'phone' en lugar de 'telefono'
       slug: string
       subscriptionStatus?: string
     }

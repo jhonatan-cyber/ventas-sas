@@ -128,7 +128,7 @@ export async function extractErrorFromResponse(response: Response): Promise<stri
  */
 export async function handleFetchError(
   response: Response,
-  options?: HandleErrorOptions
+  _options?: HandleErrorOptions
 ): Promise<never> {
   const errorMessage = await extractErrorFromResponse(response)
   throw new Error(errorMessage)

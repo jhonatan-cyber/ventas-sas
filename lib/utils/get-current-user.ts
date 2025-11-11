@@ -36,7 +36,7 @@ export async function getCurrentAdminUser(request: NextRequest) {
     if (!hasAccess) return null
 
     return user
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -59,7 +59,7 @@ export async function getCurrentSasUser(request: NextRequest, slug: string) {
         try {
           const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8')
           session = JSON.parse(decoded)
-        } catch (base64Error) {
+        } catch {
           session = JSON.parse(sessionCookie)
         }
 
@@ -74,17 +74,17 @@ export async function getCurrentSasUser(request: NextRequest, slug: string) {
           })
 
           if (usuario && usuario.isActive && usuario.organization?.slug === slug) {
-            const { password, ...usuarioSinPassword } = usuario as any
+            const { password: _password, ...usuarioSinPassword } = usuario as any
             return usuarioSinPassword
           }
         }
-      } catch (_error) {
+      } catch {
         // ignorar errores de parseo y continuar
       }
     }
 
     return null
-  } catch (error) {
+  } catch {
     return null
   }
 }

@@ -45,7 +45,7 @@ export default async function PlansPage() {
     }))
 
     return <PlansPageClient initialPlans={serializedPlans} />
-  } catch (error) {
+  } catch  {
     redirect('/administracion/login')
   }
 }

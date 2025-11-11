@@ -178,7 +178,7 @@ export class CategoryService {
   // Obtener categorías activas (para selects) - CON CACHÉ
   // Siempre retorna todas las categorías activas de la organización
   // El filtrado por sucursal se aplica solo a los productos, no a las categorías
-  static async getActiveCategories(organizationId: string, branchId?: string) {
+  static async getActiveCategories(organizationId: string, _branchId?: string) {
     const cacheKey = CacheKeys.category(organizationId, 'active')
     
     return getCachedData(

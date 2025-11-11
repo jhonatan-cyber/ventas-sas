@@ -197,7 +197,7 @@ export class SubscriptionAdminService {
         hasMonthly: originalPlan.hasMonthly,
         hasYearly: originalPlan.hasYearly,
         features: originalPlan.features as string[],
-        modules: originalPlan.modules,
+        modules: originalPlan.modules as any,
         maxUsers: originalPlan.maxUsers,
         maxProducts: originalPlan.maxProducts,
         maxBranches: originalPlan.maxBranches,

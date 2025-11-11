@@ -26,11 +26,11 @@ export function PlansStats({ plans }: PlansStatsProps) {
   const plansInUse = plans.filter(
     (plan) => plan._count.organizations > 0
   ).length;
-  const plansNotUsed = plans.filter(
+  const _plansNotUsed = plans.filter(
     (plan) => plan._count.organizations === 0
   ).length;
   const plansActive = plans.filter((plan) => plan.isActive ?? true).length;
-  const plansInactive = plans.filter((plan) => !(plan.isActive ?? true)).length;
+  const _plansInactive = plans.filter((plan) => !(plan.isActive ?? true)).length;
   const totalRevenue = plans.reduce((sum, plan) => {
     // Calcular ingresos mensuales: usar priceMonthly si existe, sino usar priceYearly / 12
     const monthlyPrice =

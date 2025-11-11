@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AppError } from '@/lib/errors/app-error'
 import { BranchService } from '@/lib/services/sales/branch-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getOrganizationIdByCustomerSlug, getMaxBranchesByOrganizationId } from '@/lib/utils/organization'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createBranchSchema } from '@/lib/validators/sales-validators'
 
@@ -75,6 +75,27 @@ export async function POST(
     }
 
     const validatedData = validation.data
+
+    // Verificar límite de sucursales del plan
+    const maxBranches = await getMaxBranchesByOrganizationId(organizationId)
+    if (maxBranches !== null) {
+      // Contar sucursales existentes (activas e inactivas, pero no eliminadas)
+      const { total: currentBranchesCount } = await BranchService.getAllBranches(
+        organizationId,
+        0,
+        1000, // Obtener todas para contar
+        undefined,
+        undefined,
+        false // includeDeleted: false, no contar eliminadas
+      )
+
+      if (currentBranchesCount >= maxBranches) {
+        throw AppError.validation(
+          `Has alcanzado el límite de sucursales permitidas en tu plan (${maxBranches}). ` +
+          `Por favor, actualiza tu plan para crear más sucursales.`
+        )
+      }
+    }
 
     const branch = await BranchService.createBranch(organizationId, {
       name: validatedData.name,

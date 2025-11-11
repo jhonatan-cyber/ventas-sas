@@ -41,7 +41,7 @@ export default async function PermissionsPage() {
     ])
 
     return <PermissionsPageClient initialPermissions={permissions} initialStats={stats} />
-  } catch (error) {
+  } catch {
     redirect('/administracion/login')
   }
 }

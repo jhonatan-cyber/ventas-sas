@@ -3,6 +3,8 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Términos y Condiciones - Sistema de Ventas SAS',
   description: 'Términos y condiciones de uso de Sistema de Ventas SAS',

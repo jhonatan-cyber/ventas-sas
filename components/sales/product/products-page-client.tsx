@@ -14,18 +14,26 @@ import { useProductActions } from "@/hooks/sales/product/use-product-actions"
 interface ProductsPageClientProps {
   initialCategories: Category[]
   customerSlug: string
+  maxProducts?: number | null
+  totalProducts?: number
 }
 
-export function ProductsPageClient({ initialCategories, customerSlug }: ProductsPageClientProps) {
+export function ProductsPageClient({ initialCategories, customerSlug, maxProducts, totalProducts = 0 }: ProductsPageClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [products, setProducts] = useState<(SalesProduct & { category: Category | null; branch: Branch | null })[]>([])
-  const [categories, setCategories] = useState<Category[]>(initialCategories)
-  const [isLoading, setIsLoading] = useState(false)
+  const [categories] = useState<Category[]>(initialCategories)
   const [showBranchColumn, setShowBranchColumn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [branches, setBranches] = useState<Branch[]>([])
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [userBranchId, setUserBranchId] = useState<string | null>(null)
+  // Estado para mantener el conteo total de productos (se actualiza cuando se crea/elimina)
+  const [currentTotalProducts, setCurrentTotalProducts] = useState(totalProducts)
+
+  // Actualizar el conteo cuando cambie totalProducts desde el servidor
+  useEffect(() => {
+    setCurrentTotalProducts(totalProducts)
+  }, [totalProducts])
 
   const selectedCategoryName = selectedCategory
     ? categories.find((category) => category.id === selectedCategory)?.name
@@ -38,7 +46,6 @@ export function ProductsPageClient({ initialCategories, customerSlug }: Products
       return
     }
 
-    setIsLoading(true)
     try {
       const response = await fetch(`/api/${customerSlug}/productos?categoryId=${selectedCategory}&page=1&pageSize=1000`)
       const data = await response.json()
@@ -46,8 +53,6 @@ export function ProductsPageClient({ initialCategories, customerSlug }: Products
     } catch (error) {
       console.error('Error al cargar productos:', error)
       setProducts([])
-    } finally {
-      setIsLoading(false)
     }
   }, [selectedCategory, customerSlug])
 
@@ -89,6 +94,20 @@ export function ProductsPageClient({ initialCategories, customerSlug }: Products
     loadProducts()
   }, [loadProducts])
 
+  // Función para actualizar el conteo total cuando se crea/elimina un producto
+  const updateTotalProducts = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/${customerSlug}/productos?page=1&pageSize=1`)
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentTotalProducts(data.total || 0)
+      }
+    } catch (error) {
+      console.error('Error al actualizar conteo de productos:', error)
+    }
+  }, [customerSlug])
+
+
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
@@ -100,7 +119,19 @@ export function ProductsPageClient({ initialCategories, customerSlug }: Products
     handleSave,
     handleDelete,
     handleToggleStatus
-  } = useProductActions(customerSlug, loadProducts)
+  } = useProductActions(customerSlug, async () => {
+    await loadProducts()
+    await updateTotalProducts()
+  })
+
+  // Calcular si se alcanzó el límite de productos
+  // maxProducts puede ser null (sin límite o plan no asignado) o un número
+  // Si maxProducts es null, no hay límite, así que siempre mostramos el botón
+  const hasReachedLimit = maxProducts !== null && 
+                          maxProducts !== undefined && 
+                          typeof maxProducts === 'number' && 
+                          maxProducts > 0 && 
+                          currentTotalProducts >= maxProducts
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
@@ -110,7 +141,7 @@ export function ProductsPageClient({ initialCategories, customerSlug }: Products
         description="Administra los productos de tu inventario"
         newButtonText="Agregar Producto"
         onNewClick={openCreateDialog}
-        showButton={selectedCategory !== null}
+        showButton={selectedCategory !== null && !hasReachedLimit}
         showBackButton={selectedCategory !== null}
         onBackClick={() => setSelectedCategory(null)}
       />

@@ -15,9 +15,9 @@ interface ExpensesPaginationProps {
 export function ExpensesPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: ExpensesPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

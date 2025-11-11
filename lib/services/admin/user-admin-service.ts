@@ -72,7 +72,7 @@ export class UserAdminService {
 
   // Actualizar usuario
   static async updateUser(id: string, data: UpdateUserData): Promise<Profile> {
-    const { roleId, password, ...updateData } = data
+    const { roleId: _roleId, password, ...updateData } = data
     
     // Preparar datos de actualización
     const updatePayload: any = { ...updateData }
@@ -156,14 +156,14 @@ export class UserAdminService {
   // Las organizaciones son solo para usuarios del sistema SAS (SalesUser)
   
   // Asignar rol a usuario en organización (DEPRECADO - solo para compatibilidad)
-  static async assignRoleToUser(userId: string, organizationId: string, roleId: string): Promise<void> {
+  static async assignRoleToUser(_userId: string, _organizationId: string, _roleId: string): Promise<void> {
     // NOTA: Este método no debería usarse para usuarios del sistema de administración
     // Los usuarios admin no deben estar en organizaciones
     throw new Error('Los usuarios del sistema de administración no pueden estar en organizaciones. Use el campo role del perfil.')
   }
 
   // Remover rol de usuario (DEPRECADO - solo para compatibilidad)
-  static async removeRoleFromUser(userId: string, organizationId: string): Promise<void> {
+  static async removeRoleFromUser(_userId: string, _organizationId: string): Promise<void> {
     // NOTA: Este método no debería usarse para usuarios del sistema de administración
     // Los usuarios admin no deben estar en organizaciones
     throw new Error('Los usuarios del sistema de administración no pueden estar en organizaciones.')

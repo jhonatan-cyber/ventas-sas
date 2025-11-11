@@ -15,9 +15,9 @@ interface CashRegistersPaginationProps {
 export function CashRegistersPagination({
   currentPage,
   totalPages,
-  pageSize,
+  pageSize: _pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange: _onPageSizeChange
 }: CashRegistersPaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {

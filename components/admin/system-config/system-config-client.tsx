@@ -73,12 +73,12 @@ export function SystemConfigClient({
   const [integrationConfigsLoading, setIntegrationConfigsLoading] = useState(false)
   
   // Estados para diálogos
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
-  const [alertDialogOpen, setAlertDialogOpen] = useState(false)
-  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false)
-  const [selectedEmailConfig, setSelectedEmailConfig] = useState<any>(null)
-  const [selectedAlertConfig, setSelectedAlertConfig] = useState<any>(null)
-  const [selectedIntegrationConfig, setSelectedIntegrationConfig] = useState<any>(null)
+  const [_emailDialogOpen, setEmailDialogOpen] = useState(false)
+  const [_alertDialogOpen, setAlertDialogOpen] = useState(false)
+  const [_integrationDialogOpen, setIntegrationDialogOpen] = useState(false)
+  const [_selectedEmailConfig, setSelectedEmailConfig] = useState<any>(null)
+  const [_selectedAlertConfig, setSelectedAlertConfig] = useState<any>(null)
+  const [_selectedIntegrationConfig, setSelectedIntegrationConfig] = useState<any>(null)
 
   // Cargar datos según el tab activo
   useEffect(() => {
@@ -91,7 +91,7 @@ export function SystemConfigClient({
     } else if (activeTab === 'integrations') {
       loadIntegrationConfigs()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [activeTab])
 
   // Cargar backups
@@ -103,7 +103,7 @@ export function SystemConfigClient({
       if (data.success) {
         setBackups(data.backups || [])
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al cargar backups')
     } finally {
       setBackupsLoading(false)
@@ -119,7 +119,7 @@ export function SystemConfigClient({
       if (data.success) {
         setEmailConfigs(data.configs || [])
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al cargar configuraciones de email')
     } finally {
       setEmailConfigsLoading(false)
@@ -135,7 +135,7 @@ export function SystemConfigClient({
       if (data.success) {
         setAlertConfigs(data.configs || [])
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al cargar configuraciones de alertas')
     } finally {
       setAlertConfigsLoading(false)
@@ -151,7 +151,7 @@ export function SystemConfigClient({
       if (data.success) {
         setIntegrationConfigs(data.configs || [])
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar configuraciones de integraciones')
     } finally {
       setIntegrationConfigsLoading(false)
@@ -178,7 +178,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al guardar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al guardar configuración')
     } finally {
       setIsLoading(false)
@@ -214,7 +214,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al guardar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al guardar configuración')
     } finally {
       setIsLoading(false)
@@ -241,7 +241,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al guardar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al guardar configuración')
     } finally {
       setIsLoading(false)
@@ -267,7 +267,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al guardar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al guardar configuración')
     } finally {
       setIsLoading(false)
@@ -293,7 +293,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al guardar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al guardar configuración')
     } finally {
       setIsLoading(false)
@@ -325,7 +325,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al rotar secret')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al rotar secret')
     } finally {
       setIsLoading(false)
@@ -352,7 +352,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al crear backup')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al crear backup')
     } finally {
       setIsLoading(false)
@@ -381,7 +381,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al exportar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al exportar configuración')
     } finally {
       setIsLoading(false)
@@ -411,7 +411,7 @@ export function SystemConfigClient({
       } else {
         toast.error(data.error || 'Error al importar')
       }
-    } catch (error) {
+    } catch  {
       toast.error('Error al importar configuración')
     } finally {
       setIsLoading(false)
@@ -428,7 +428,7 @@ export function SystemConfigClient({
         setMetrics(data.metrics)
         toast.success('Métricas actualizadas')
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar métricas')
     } finally {
       setIsLoading(false)

@@ -26,7 +26,7 @@ interface CustomDomainsClientProps {
   initialOrganizations: Organization[]
 }
 
-export function CustomDomainsClient({ initialDomains, initialOrganizations }: CustomDomainsClientProps) {
+export function CustomDomainsClient({ initialDomains, initialOrganizations: _initialOrganizations }: CustomDomainsClientProps) {
   return (
     <div className="space-y-6">
       <Card>

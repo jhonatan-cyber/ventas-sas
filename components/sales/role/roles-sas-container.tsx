@@ -13,12 +13,12 @@ import { Card, CardContent } from "@/components/ui/card"
 interface RolesSasContainerProps {
   roles: (RoleSas & {
     organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
-    sucursal: { name: string } | null
+    sucursal?: { name: string } | null
     _count?: { usuariosSas: number }
   })[]
-  onEdit?: (role: RoleSas & { organization?: any; sucursal: any }) => void
-  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal: any }) => void
-  onDelete?: (role: RoleSas & { organization?: any; sucursal: any }) => void
+  onEdit?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onToggleStatus?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onDelete?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
 }
 
 export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete }: RolesSasContainerProps) {

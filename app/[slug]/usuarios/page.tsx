@@ -4,7 +4,7 @@ import { UsuariosSasPageClient } from "@/components/sales/usuario/usuarios-sas-p
 import { prisma } from "@/lib/prisma"
 import { RoleSasService } from "@/lib/services/sales/role-sas-service"
 import { UsuarioSasService } from "@/lib/services/sales/usuario-sas-service"
-import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug, getMaxUsersBySlug } from "@/lib/utils/organization"
 
 export default async function UsuariosPage({
   params,
@@ -18,6 +18,9 @@ export default async function UsuariosPage({
   if (!organizationId) {
     redirect(`/${slug}/dashboard`)
   }
+
+  // Obtener límite de usuarios del plan
+  const maxUsers = await getMaxUsersBySlug(slug)
 
   // Obtener usuarios y roles
   const [usuariosResult, rolesResult] = await Promise.all([
@@ -40,7 +43,8 @@ export default async function UsuariosPage({
       initialUsuarios={usuariosResult.usuarios} 
       roles={rolesResult}
       sucursales={sucursales}
-      customerSlug={slug} 
+      customerSlug={slug}
+      maxUsers={maxUsers}
     />
   )
 }

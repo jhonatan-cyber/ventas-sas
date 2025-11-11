@@ -59,7 +59,7 @@ export default function SecurityPage() {
       setShowDisable(false)
       setPassword("")
       toast.success('2FA deshabilitado exitosamente')
-    } catch (err) {
+    } catch {
       setError('Error de conexión')
       toast.error('Error de conexión')
     } finally {
