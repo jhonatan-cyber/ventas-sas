@@ -19,6 +19,8 @@ export function useRoleSasActions(
   const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleWithRelations | undefined>()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmTitle, setConfirmTitle] = useState('')
@@ -57,10 +59,66 @@ export function useRoleSasActions(
     setIsDeleteDialogOpen(true)
   }
 
+  const openViewDialog = (role: RoleWithRelations) => {
+    setSelectedRole(role)
+    setIsDetailDialogOpen(true)
+  }
+
+  const openManagePermissionsDialog = (role: RoleWithRelations) => {
+    setSelectedRole(role)
+    setIsPermissionsDialogOpen(true)
+  }
+
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setIsDetailDialogOpen(false)
+    setIsPermissionsDialogOpen(false)
     setSelectedRole(undefined)
+  }
+
+  const handleSavePermissions = async (permissions: string[]) => {
+    if (!selectedRole) return
+
+    try {
+      const response = await fetch(`/api/${customerSlug}/roles/${selectedRole.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ permissions }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al actualizar los permisos')
+      }
+
+      setIsPermissionsDialogOpen(false)
+      
+      // Actualizar estado local en tiempo real
+      if (setRoles) {
+        setRoles((prevRoles) =>
+          prevRoles.map((r) =>
+            r.id === selectedRole.id ? { ...r, permissions } : r
+          )
+        )
+      } else {
+        startTransition(() => {
+          router.refresh()
+        })
+      }
+      
+      toast.success('Permisos actualizados', {
+        description: `Los permisos de ${selectedRole.nombre} han sido actualizados exitosamente.`,
+      })
+    } catch (error: any) {
+      console.error("Error al guardar permisos:", error)
+      toast.error('Error al guardar permisos', {
+        description: error.message || 'Ocurrió un error inesperado.',
+      })
+      throw error
+    }
   }
 
   const handleSave = async (data: any) => {
@@ -201,6 +259,8 @@ export function useRoleSasActions(
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
+    isPermissionsDialogOpen,
     selectedRole,
     confirmOpen,
     confirmTitle,
@@ -211,8 +271,11 @@ export function useRoleSasActions(
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
+    openManagePermissionsDialog,
     closeDialogs,
     handleSave,
+    handleSavePermissions,
     handleDelete,
     handleToggleStatus
   }

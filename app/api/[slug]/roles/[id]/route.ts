@@ -39,13 +39,14 @@ export async function PUT(
       throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
     
-    const { nombre, descripcion, sucursalId, isActive } = body
+    const { nombre, descripcion, sucursalId, isActive, permissions } = body
 
     const role = await RoleSasService.updateRole(id, {
       nombre,
       descripcion,
       sucursalId,
-      isActive
+      isActive,
+      permissions
     })
 
     return NextResponse.json(role)

@@ -4,7 +4,9 @@ import { RoleSas } from "@prisma/client";
 import { useState, useEffect } from "react";
 
 import { RoleSasDeleteDialog } from "./role-sas-delete-dialog";
+import { RoleSasDetailDialog } from "./role-sas-detail-dialog";
 import { RoleSasFormDialog } from "./role-sas-form-dialog";
+import { RoleSasPermissionsDialog } from "./role-sas-permissions-dialog";
 import { RolesSasContainer } from "./roles-sas-container";
 import { RolesSasHeader } from "./roles-sas-header";
 
@@ -33,12 +35,17 @@ export function RolesSasPageClient({
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
+    isPermissionsDialogOpen,
     selectedRole,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
+    openManagePermissionsDialog,
     closeDialogs,
     handleSave,
+    handleSavePermissions,
     handleDelete,
     handleToggleStatus,
     confirmOpen,
@@ -70,6 +77,8 @@ export function RolesSasPageClient({
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}
+        onView={openViewDialog}
+        onManagePermissions={openManagePermissionsDialog}
       />
 
       {/* Modal de crear/editar rol */}
@@ -86,6 +95,30 @@ export function RolesSasPageClient({
         onOpenChange={closeDialogs}
         role={selectedRole}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de detalles del rol */}
+      <RoleSasDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialogs()
+          }
+        }}
+        role={selectedRole}
+      />
+
+      {/* Modal de gestión de permisos */}
+      <RoleSasPermissionsDialog
+        open={isPermissionsDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialogs()
+          }
+        }}
+        role={selectedRole}
+        customerSlug={customerSlug}
+        onSave={handleSavePermissions}
       />
 
       <ConfirmActionDialog

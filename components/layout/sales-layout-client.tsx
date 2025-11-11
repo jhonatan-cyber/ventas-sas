@@ -28,6 +28,7 @@ export function SalesLayoutClient({ children, organizationSlug, maxBranches }: S
     '/ventas',
     '/usuarios',
     '/roles',
+    '/permisos',
     '/sucursales',
     '/gastos',
     '/cajas',

@@ -19,9 +19,11 @@ interface RolesSasContainerProps {
   onEdit?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
   onToggleStatus?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
   onDelete?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onView?: (role: RoleSas & { organization?: any; sucursal?: any; _count?: { usuariosSas: number } }) => void
+  onManagePermissions?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
 }
 
-export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete }: RolesSasContainerProps) {
+export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete, onView, onManagePermissions }: RolesSasContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -92,7 +94,9 @@ export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete }: R
           roles={currentRoles} 
           onEditClick={onEdit} 
           onToggleStatus={onToggleStatus} 
-          onDeleteClick={onDelete} 
+          onDeleteClick={onDelete}
+          onViewClick={onView}
+          onManagePermissions={onManagePermissions}
         />
       </div>
 

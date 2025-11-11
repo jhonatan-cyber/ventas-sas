@@ -211,6 +211,22 @@ model Permission {
   @@map("system_permissions")
 }
 
+model PermissionSas {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  module      String
+  action      String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([module])
+  @@index([isActive])
+  @@index([module, action])
+  @@map("sales_permissions")
+}
+
 model OrganizationMember {
   id             String       @id @default(uuid())
   organizationId String       @map("organization_id")
@@ -602,6 +618,7 @@ model RoleSas {
   nombre         String       @map("nombre")
   descripcion    String?      @map("descripcion")
   sucursalId     String?      @map("sucursal_id")
+  permissions    Json?
   isActive       Boolean      @default(true) @map("is_active")
   deletedAt      DateTime?    @map("deleted_at")
   createdAt      DateTime     @default(now()) @map("created_at")

@@ -1,7 +1,7 @@
 "use client"
 
 import { RoleSas } from "@prisma/client"
-import { Edit, Trash2, Power, PowerOff, Shield, FileText } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, Shield, FileText, Eye, Key } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,14 +14,17 @@ interface RolesSasTableProps {
   roles: (RoleSas & {
     organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
     sucursal?: { name: string } | null
+    _count?: { usuariosSas: number }
   })[]
   isLoading?: boolean
   onEditClick?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
   onDeleteClick?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
   onToggleStatus?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
+  onViewClick?: (role: RoleSas & { organization?: any; sucursal?: any; _count?: { usuariosSas: number } }) => void
+  onManagePermissions?: (role: RoleSas & { organization?: any; sucursal?: any }) => void
 }
 
-export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, onToggleStatus }: RolesSasTableProps) {
+export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, onToggleStatus, onViewClick, onManagePermissions }: RolesSasTableProps) {
   if (isLoading) {
     return <TableSkeleton columns={3} rows={5} showActions={true} />
   }
@@ -95,6 +98,21 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1 sm:gap-2">
+                      {onViewClick && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewClick(role)}
+                              className="hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver detalles</TooltipContent>
+                        </Tooltip>
+                      )}
                       {onEditClick && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -108,6 +126,21 @@ export function RolesSasTable({ roles, isLoading, onEditClick, onDeleteClick, on
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Editar rol</TooltipContent>
+                        </Tooltip>
+                      )}
+                      {onManagePermissions && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onManagePermissions(role)}
+                              className="hover:bg-purple-100 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                            >
+                              <Key className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Gestionar permisos</TooltipContent>
                         </Tooltip>
                       )}
                       {onToggleStatus && (

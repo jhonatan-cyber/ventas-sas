@@ -14,6 +14,7 @@ export interface UpdateRoleSasData {
   descripcion?: string
   sucursalId?: string
   isActive?: boolean
+  permissions?: string[]
 }
 
 export class RoleSasService {
@@ -137,9 +138,17 @@ export class RoleSasService {
     id: string,
     data: UpdateRoleSasData
   ) {
+    const updateData: any = {}
+    
+    if (data.nombre !== undefined) updateData.nombre = data.nombre
+    if (data.descripcion !== undefined) updateData.descripcion = data.descripcion
+    if (data.sucursalId !== undefined) updateData.sucursalId = data.sucursalId
+    if (data.isActive !== undefined) updateData.isActive = data.isActive
+    if (data.permissions !== undefined) updateData.permissions = data.permissions
+
     return prisma.roleSas.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
         organization: {
           select: {
