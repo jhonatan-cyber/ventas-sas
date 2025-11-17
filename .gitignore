@@ -50,8 +50,5 @@ temp_file.txt
 .DS_Store
 Thumbs.db
 
-.env
-.env
-public/code.txt
-.env
-public/code.txt
+#uploads
+public/uploads
