@@ -1,8 +1,11 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { ArrowLeft, Download, Package, ShoppingCart, TrendingDown, AlertTriangle, DollarSign, Tag } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
+import { toast } from "sonner"
 
 import type { ProductsReport } from "@/lib/services/sales/reports-service"
 
@@ -10,6 +13,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { exportProductsReportToPDF } from "@/lib/utils/pdf-reports-export"
+import { TopProductsChart } from "./charts/top-products-chart"
+import { ProductsByCategoryChart } from "./charts/products-by-category-chart"
+import { InventoryStatusChart } from "./charts/inventory-status-chart"
+import { ReportAiSummary } from "./report-ai-summary"
 
 
 interface ProductsReportClientProps {
@@ -44,9 +53,25 @@ export function ProductsReportClient({ customerSlug }: ProductsReportClientProps
     fetchReport()
   }, [fetchReport])
 
-  const handleExport = () => {
-    console.log("Exporting products report...")
-  }
+  const t = useTranslations()
+  
+  const handleExport = useCallback(async () => {
+    if (!report) {
+      toast.error(t('reports.export.noData'))
+      return
+    }
+
+    try {
+      toast.loading(t('reports.export.generating'))
+      await exportProductsReportToPDF(report, customerSlug, startDate, endDate)
+      toast.dismiss()
+      toast.success(t('reports.export.success'))
+    } catch (error) {
+      toast.dismiss()
+      console.error("Error al exportar PDF:", error)
+      toast.error(t('reports.export.error'))
+    }
+  }, [report, customerSlug, startDate, endDate, t])
 
   if (isLoading) {
     return (
@@ -71,31 +96,32 @@ export function ProductsReportClient({ customerSlug }: ProductsReportClientProps
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
             Reporte de Productos
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
             Análisis de inventario y productos
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-full w-full sm:w-auto text-xs sm:text-sm"
             onClick={() => router.push(`/${customerSlug}/reportes`)}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             Volver
           </Button>
           <Button
             variant="outline"
-            className="rounded-full"
+            size="sm"
+            className="rounded-full w-full sm:w-auto text-xs sm:text-sm"
             onClick={handleExport}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             Exportar PDF
           </Button>
         </div>
@@ -139,146 +165,171 @@ export function ProductsReportClient({ customerSlug }: ProductsReportClientProps
         </CardContent>
       </Card>
 
+      <ReportAiSummary
+        customerSlug={customerSlug}
+        type="products"
+        startDate={startDate || undefined}
+        endDate={endDate || undefined}
+      />
+
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Productos
                 </p>
-                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+                <p className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 sm:mt-2 break-words">
                   {report?.totalProducts || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <Package className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <Package className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-emerald-50/50 to-emerald-100/30 dark:from-emerald-950/20 dark:to-emerald-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Activos
                 </p>
-                <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+                <p className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 sm:mt-2 break-words">
                   {report?.activeProducts || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <ShoppingCart className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <ShoppingCart className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-gray-50/50 to-gray-100/30 dark:from-gray-950/20 dark:to-gray-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Inactivos
                 </p>
-                <p className="text-3xl font-bold text-gray-600 dark:text-gray-400 mt-2">
+                <p className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-gray-600 dark:text-gray-400 mt-1 sm:mt-2 break-words">
                   {report?.inactiveProducts || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <Tag className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <Tag className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-amber-50/50 to-amber-100/30 dark:from-amber-950/20 dark:to-amber-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Stock Bajo
                 </p>
-                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2">
+                <p className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 sm:mt-2 break-words">
                   {report?.lowStockProducts || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-red-50/50 to-red-100/30 dark:from-red-950/20 dark:to-red-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Sin Stock
                 </p>
-                <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">
+                <p className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 sm:mt-2 break-words">
                   {report?.outOfStockProducts || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <TrendingDown className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-3 sm:p-4 md:p-5 xl:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Valor Inventario
                 </p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                  BOB {Number(report?.totalStockValue || 0).toLocaleString('es-BO', { minimumFractionDigits: 0 })}
+                <p className="text-sm sm:text-base md:text-lg xl:text-xl font-bold text-purple-600 dark:text-purple-400 mt-1 sm:mt-2 break-words">
+                  {formatCurrencyWithPreferences(Number(report?.totalStockValue || 0), customerSlug)}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-white" />
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5 xl:h-6 xl:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Charts */}
+      {report && (
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          <InventoryStatusChart
+            activeProducts={report.activeProducts}
+            inactiveProducts={report.inactiveProducts}
+            lowStockProducts={report.lowStockProducts}
+            outOfStockProducts={report.outOfStockProducts}
+          />
+          {report.byCategory && report.byCategory.length > 0 && (
+            <ProductsByCategoryChart data={report.byCategory} />
+          )}
+        </div>
+      )}
+
       {/* Top Selling */}
       {report && report.topSelling.length > 0 && (
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Productos Más Vendidos
-            </h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>Cantidad Vendida</TableHead>
-                  <TableHead className="text-right">Ingresos</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.topSelling.map((product) => (
-                  <TableRow key={product.productId}>
-                    <TableCell className="font-medium">{product.productName}</TableCell>
-                    <TableCell>{product.quantitySold}</TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                      BOB {product.revenue.toLocaleString('es-BO', { minimumFractionDigits: 2 })}
-                    </TableCell>
+        <>
+          <TopProductsChart data={report.topSelling} customerSlug={customerSlug} />
+          <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Productos Más Vendidos
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Cantidad Vendida</TableHead>
+                    <TableHead className="text-right">Ingresos</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {report.topSelling.map((product) => (
+                    <TableRow key={product.productId}>
+                      <TableCell className="font-medium">{product.productName}</TableCell>
+                      <TableCell>{product.quantitySold}</TableCell>
+                      <TableCell className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrencyWithPreferences(product.revenue)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* By Category */}

@@ -88,25 +88,26 @@ model Profile {
 }
 
 model Organization {
-  id                       String                    @id @default(uuid())
+  id                       String                         @id @default(uuid())
   name                     String
-  slug                     String                    @unique
-  ownerId                  String                    @map("owner_id")
-  subscriptionPlanId       String?                   @map("subscription_plan_id")
+  slug                     String                         @unique
+  ownerId                  String                         @map("owner_id")
+  subscriptionPlanId       String?                        @map("subscription_plan_id")
   subscriptionStatus       OrganizationSubscriptionStatus @default(trial) @map("subscription_status")
-  subscriptionStartDate    DateTime?                 @map("subscription_start_date")
-  subscriptionEndDate      DateTime?                 @map("subscription_end_date")
+  subscriptionStartDate    DateTime?                      @map("subscription_start_date")
+  subscriptionEndDate      DateTime?                      @map("subscription_end_date")
   settings                 Json?
-  createdAt                DateTime                  @default(now()) @map("created_at")
-  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  createdAt                DateTime                       @default(now()) @map("created_at")
+  updatedAt                DateTime                       @updatedAt @map("updated_at")
   nit                      String?
-  razonSocial              String?                   @map("razon_social")
-  address                  String?                   @map("direccion")
-  phone                    String?                   @map("telefono")
+  razonSocial              String?                        @map("razon_social")
+  address                  String?                        @map("direccion")
+  phone                    String?                        @map("telefono")
+  website                  String?                        @map("sitio_web")
   branches                 Branch[]
   cashRegisters            CashRegister[]
   categories               Category[]
-  customerOrganizations    CustomerOrganization[]    @relation("CustomerOrganizations")
+  customerOrganizations    CustomerOrganization[]         @relation("CustomerOrganizations")
   salesCustomers           SalesCustomer[]
   expenses                 Expense[]
   orders                   Order[]
@@ -127,14 +128,18 @@ model Organization {
   invoices                 Invoice[]
   notifications            Notification[]
   organizationIntegrations OrganizationIntegration[]
-  subscriptionPlan         SubscriptionPlan?         @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlan         SubscriptionPlan?              @relation(fields: [subscriptionPlanId], references: [id])
   paymentMethods           PaymentMethod[]
   subscriptions            Subscription[]
   supportTickets           SupportTicket[]
   userFeedback             UserFeedback[]
   versionNotifications     VersionNotification[]
   whiteLabelBranding       WhiteLabelBranding?
-  owner                    Profile                   @relation("OrganizationOwned", fields: [ownerId], references: [id])
+  configurationSas         ConfigurationSas?
+  owner                    Profile                        @relation("OrganizationOwned", fields: [ownerId], references: [id])
+  InventoryMovement        InventoryMovement[]
+  InventoryTransfer        InventoryTransfer[]
+  InventoryAdjustment      InventoryAdjustment[]
 
   @@map("system_organizations")
 }
@@ -163,19 +168,19 @@ model SubscriptionPlan {
 }
 
 model Subscription {
-  id             String           @id @default(uuid())
-  organizationId String           @map("organization_id")
-  planId         String           @map("plan_id")
-  status         SubscriptionStatus @default(active)
+  id             String                    @id @default(uuid())
+  organizationId String                    @map("organization_id")
+  planId         String                    @map("plan_id")
+  status         SubscriptionStatus        @default(active)
   billingPeriod  SubscriptionBillingPeriod @default(monthly) @map("billing_period")
-  startDate      DateTime         @default(now()) @map("start_date")
-  endDate        DateTime?        @map("end_date")
-  autoRenew      Boolean          @default(true) @map("auto_renew")
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
+  startDate      DateTime                  @default(now()) @map("start_date")
+  endDate        DateTime?                 @map("end_date")
+  autoRenew      Boolean                   @default(true) @map("auto_renew")
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
   invoices       Invoice[]
-  organization   Organization     @relation(fields: [organizationId], references: [id])
-  plan           SubscriptionPlan @relation(fields: [planId], references: [id])
+  organization   Organization              @relation(fields: [organizationId], references: [id])
+  plan           SubscriptionPlan          @relation(fields: [planId], references: [id])
 
   @@index([organizationId, status])
   @@index([endDate])
@@ -242,22 +247,22 @@ model OrganizationMember {
 }
 
 model Customer {
-  id             String                 @id @default(uuid())
-  userId         String                 @map("user_id")
-  ci             String?                @unique
-  nombre         String?
-  apellido       String?
-  address        String?               @map("direccion")
-  phone          String?               @map("telefono")
-  email          String?
-  password       String?
-  city           String?
-  country        String?
-  isActive       Boolean                @default(true) @map("is_active")
-  deletedAt      DateTime?              @map("deleted_at")
-  createdAt      DateTime               @default(now()) @map("created_at")
-  updatedAt      DateTime               @updatedAt @map("updated_at")
-  organizations  CustomerOrganization[]
+  id            String                 @id @default(uuid())
+  userId        String                 @map("user_id")
+  ci            String?                @unique
+  nombre        String?
+  apellido      String?
+  address       String?                @map("direccion")
+  phone         String?                @map("telefono")
+  email         String?
+  password      String?
+  city          String?
+  country       String?
+  isActive      Boolean                @default(true) @map("is_active")
+  deletedAt     DateTime?              @map("deleted_at")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+  organizations CustomerOrganization[]
 
   @@index([deletedAt])
   @@map("sales_customer_accounts")
@@ -372,19 +377,24 @@ model SalesRole {
 }
 
 model SalesUser {
-  id             String       @id @default(uuid())
-  organizationId String       @map("organization_id")
-  email          String
-  password       String
-  fullName       String       @map("full_name")
-  roleId         String?      @map("role_id")
-  isActive       Boolean      @default(true) @map("is_active")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  expenses       Expense[]
-  sales          Sale[]
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  role           SalesRole?   @relation(fields: [roleId], references: [id])
+  id                   String                @id @default(uuid())
+  organizationId       String                @map("organization_id")
+  email                String
+  password             String
+  fullName             String                @map("full_name")
+  roleId               String?               @map("role_id")
+  isActive             Boolean               @default(true) @map("is_active")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  expenses             Expense[]
+  sales                Sale[]
+  organization         Organization          @relation(fields: [organizationId], references: [id])
+  role                 SalesRole?            @relation(fields: [roleId], references: [id])
+  inventoryMovements   InventoryMovement[]
+  transferRequests     InventoryTransfer[]   @relation("TransferRequestedBy")
+  transferApprovals    InventoryTransfer[]   @relation("TransferApprovedBy")
+  transferCompletions  InventoryTransfer[]   @relation("TransferCompletedBy")
+  inventoryAdjustments InventoryAdjustment[]
 
   @@index([organizationId, isActive])
   @@index([email, organizationId])
@@ -392,30 +402,35 @@ model SalesUser {
 }
 
 model SalesProduct {
-  id             String          @id @default(uuid())
-  organizationId String?         @map("organization_id")
-  categoryId     String?         @map("category_id")
-  name           String
-  description    String?
-  brand          String?         @map("brand")
-  model          String?         @map("model")
-  price          Decimal         @db.Decimal(10, 2)
-  cost           Decimal         @db.Decimal(10, 2)
-  stock          Int             @default(0)
-  minStock       Int             @default(0) @map("min_stock")
-  sku            String?
-  barcode        String?
-  imageUrl       String?         @map("image_url")
-  isActive       Boolean         @default(true) @map("is_active")
-  deletedAt      DateTime?       @map("deleted_at")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-  branchId       String?         @map("branch_id")
-  branch         Branch?         @relation(fields: [branchId], references: [id])
-  category       Category?       @relation(fields: [categoryId], references: [id])
-  organization   Organization?   @relation(fields: [organizationId], references: [id])
-  quotationItems QuotationItem[]
-  saleItems      SaleItem[]
+  id                      String                @id @default(uuid())
+  organizationId          String?               @map("organization_id")
+  categoryId              String?               @map("category_id")
+  name                    String
+  description             String?
+  descriptionTranslations Json?                 @map("description_translations")
+  brand                   String?               @map("brand")
+  model                   String?               @map("model")
+  price                   Decimal               @db.Decimal(10, 2)
+  cost                    Decimal               @db.Decimal(10, 2)
+  stock                   Int                   @default(0)
+  minStock                Int                   @default(0) @map("min_stock")
+  reorderPoint            Int?                  @map("reorder_point")
+  sku                     String?
+  barcode                 String?
+  imageUrl                String?               @map("image_url")
+  isActive                Boolean               @default(true) @map("is_active")
+  deletedAt               DateTime?             @map("deleted_at")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
+  branchId                String?               @map("branch_id")
+  branch                  Branch?               @relation(fields: [branchId], references: [id])
+  category                Category?             @relation(fields: [categoryId], references: [id])
+  organization            Organization?         @relation(fields: [organizationId], references: [id])
+  quotationItems          QuotationItem[]
+  saleItems               SaleItem[]
+  inventoryMovements      InventoryMovement[]
+  inventoryTransfers      InventoryTransfer[]   @relation("TransferFrom")
+  inventoryAdjustments    InventoryAdjustment[]
 
   @@index([organizationId, isActive])
   @@index([organizationId, stock])
@@ -455,24 +470,25 @@ model SalesCustomer {
 }
 
 model Sale {
-  id             String         @id @default(uuid())
-  organizationId String         @map("organization_id")
-  userId         String         @map("user_id")
-  customerId     String?        @map("customer_id")
-  customerName   String?        @map("customer_name")
-  saleNumber     String         @unique @map("sale_number")
-  status         SaleStatus     @default(completed)
-  subtotal       Decimal        @db.Decimal(10, 2)
-  discount       Decimal        @default(0) @db.Decimal(10, 2)
-  total          Decimal        @db.Decimal(10, 2)
-  paymentMethod  SalePaymentMethod @default(cash) @map("payment_method")
-  notes          String?
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  items          SaleItem[]
-  customer       SalesCustomer? @relation(fields: [customerId], references: [id])
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  user           SalesUser      @relation(fields: [userId], references: [id])
+  id                String            @id @default(uuid())
+  organizationId    String            @map("organization_id")
+  userId            String            @map("user_id")
+  customerId        String?           @map("customer_id")
+  customerName      String?           @map("customer_name")
+  saleNumber        String            @unique @map("sale_number")
+  status            SaleStatus        @default(completed)
+  subtotal          Decimal           @db.Decimal(10, 2)
+  discount          Decimal           @default(0) @db.Decimal(10, 2)
+  total             Decimal           @db.Decimal(10, 2)
+  paymentMethod     SalePaymentMethod @default(cash) @map("payment_method")
+  notes             String?
+  notesTranslations Json?             @map("notes_translations")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  items             SaleItem[]
+  customer          SalesCustomer?    @relation(fields: [customerId], references: [id])
+  organization      Organization      @relation(fields: [organizationId], references: [id])
+  user              SalesUser         @relation(fields: [userId], references: [id])
 
   @@index([organizationId, createdAt])
   @@index([customerId, createdAt])
@@ -499,25 +515,26 @@ model SaleItem {
 }
 
 model Quotation {
-  id              String          @id @default(uuid())
-  organizationId  String          @map("organization_id")
-  customerId      String?         @map("customer_id")
-  customerName    String?         @map("customer_name")
-  customerPhone   String?         @map("customer_phone")
-  quotationNumber String          @unique @map("quotation_number")
-  status          QuotationStatus @default(active)
-  branchId        String?         @map("branch_id")
-  subtotal        Decimal         @db.Decimal(10, 2)
-  discount        Decimal         @default(0) @db.Decimal(10, 2)
-  total           Decimal         @db.Decimal(10, 2)
-  expiresAt       DateTime?       @map("expires_at")
-  notes           String?
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
-  items           QuotationItem[]
-  branch          Branch?         @relation(fields: [branchId], references: [id])
-  customer        SalesCustomer?  @relation(fields: [customerId], references: [id])
-  organization    Organization    @relation(fields: [organizationId], references: [id])
+  id                String          @id @default(uuid())
+  organizationId    String          @map("organization_id")
+  customerId        String?         @map("customer_id")
+  customerName      String?         @map("customer_name")
+  customerPhone     String?         @map("customer_phone")
+  quotationNumber   String          @unique @map("quotation_number")
+  status            QuotationStatus @default(active)
+  branchId          String?         @map("branch_id")
+  subtotal          Decimal         @db.Decimal(10, 2)
+  discount          Decimal         @default(0) @db.Decimal(10, 2)
+  total             Decimal         @db.Decimal(10, 2)
+  expiresAt         DateTime?       @map("expires_at")
+  notes             String?
+  notesTranslations Json?           @map("notes_translations")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  items             QuotationItem[]
+  branch            Branch?         @relation(fields: [branchId], references: [id])
+  customer          SalesCustomer?  @relation(fields: [customerId], references: [id])
+  organization      Organization    @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, createdAt])
   @@index([customerId, createdAt])
@@ -544,20 +561,21 @@ model QuotationItem {
 }
 
 model Expense {
-  id             String       @id @default(uuid())
-  organizationId String       @map("organization_id")
-  userId         String       @map("user_id")
-  branchId       String?      @map("branch_id")
-  name           String
-  category       String?
-  description    String
-  amount         Decimal      @db.Decimal(10, 2)
-  date           DateTime     @db.Date
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  branch         Branch?      @relation(fields: [branchId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  user           SalesUser    @relation(fields: [userId], references: [id])
+  id                      String       @id @default(uuid())
+  organizationId          String       @map("organization_id")
+  userId                  String       @map("user_id")
+  branchId                String?      @map("branch_id")
+  name                    String
+  category                String?
+  description             String
+  descriptionTranslations Json?        @map("description_translations")
+  amount                  Decimal      @db.Decimal(10, 2)
+  date                    DateTime     @db.Date
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
+  branch                  Branch?      @relation(fields: [branchId], references: [id])
+  organization            Organization @relation(fields: [organizationId], references: [id])
+  user                    SalesUser    @relation(fields: [userId], references: [id])
 
   @@index([organizationId, date])
   @@index([userId, date])
@@ -591,23 +609,28 @@ model CashRegister {
 }
 
 model Branch {
-  id             String         @id @default(uuid())
-  organizationId String?        @map("organization_id")
-  name           String
-  address        String?
-  phone          String?
-  email          String?
-  isActive       Boolean        @default(true) @map("is_active")
-  deletedAt      DateTime?      @map("deleted_at")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  organization   Organization?  @relation(fields: [organizationId], references: [id])
-  cashRegisters  CashRegister[]
-  expenses       Expense[]
-  products       SalesProduct[]
-  quotations     Quotation[]
-  rolesSas       RoleSas[]
-  usuariosSas    UsuarioSas[]
+  id                    String                @id @default(uuid())
+  organizationId        String?               @map("organization_id")
+  name                  String
+  address               String?
+  phone                 String?
+  email                 String?
+  isActive              Boolean               @default(true) @map("is_active")
+  deletedAt             DateTime?             @map("deleted_at")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  organization          Organization?         @relation(fields: [organizationId], references: [id])
+  cashRegisters         CashRegister[]
+  expenses              Expense[]
+  products              SalesProduct[]
+  quotations            Quotation[]
+  rolesSas              RoleSas[]
+  usuariosSas           UsuarioSas[]
+  defaultConfigurations ConfigurationSas[]
+  inventoryMovements    InventoryMovement[]
+  transfersFrom         InventoryTransfer[]   @relation("TransferFromBranch")
+  transfersTo           InventoryTransfer[]   @relation("TransferToBranch")
+  inventoryAdjustments  InventoryAdjustment[]
 
   @@index([deletedAt])
   @@map("sales_branches")
@@ -1452,4 +1475,144 @@ model IntegrationEvent {
   @@index([integrationId, eventType, createdAt])
   @@index([eventType, createdAt])
   @@map("system_integration_events")
+}
+
+model ConfigurationSas {
+  id                   String       @id @default(uuid())
+  organizationId       String       @unique @map("organization_id")
+  currency             String?      @default("BOB") @map("moneda")
+  dateFormat           String?      @default("dd/MM/yyyy") @map("format_fecha")
+  themeColor           String?      @default("green") @map("color")
+  timezone             String?      @default("America/La_Paz") @map("zona_horaria")
+  language             String?      @default("es") @map("idioma")
+  decimalPlaces        Int?         @default(2) @map("decimales")
+  numberFormat         String?      @default("standard") @map("formato_numero")
+  notificationsEnabled Boolean      @default(true) @map("notificaciones_habilitadas")
+  autoSave             Boolean      @default(true) @map("guardado_automatico")
+  defaultBranchId      String?      @map("sucursal_por_defecto_id")
+  invoicePrefix        String?      @map("prefijo_factura")
+  invoiceNumberFormat  String?      @default("sequential") @map("formato_numero_factura")
+  taxRate              Decimal?     @default(0) @map("tasa_impuesto") @db.Decimal(5, 2)
+  receiptFooter        String?      @map("pie_recibo")
+  whatsappNumber       String?      @map("numero_whatsapp")
+  whatsappCountryCode  String?      @default("+591") @map("codigo_pais_whatsapp")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  defaultBranch        Branch?      @relation(fields: [defaultBranchId], references: [id])
+
+  @@index([organizationId])
+  @@map("sales_configuration_sas")
+}
+
+// Historial de movimientos de inventario
+model InventoryMovement {
+  id             String                @id @default(uuid())
+  organizationId String                @map("organization_id")
+  productId      String                @map("product_id")
+  branchId       String?               @map("branch_id")
+  movementType   InventoryMovementType @map("movement_type")
+  quantity       Int
+  previousStock  Int                   @map("previous_stock")
+  newStock       Int                   @map("new_stock")
+  referenceType  String?               @map("reference_type") // 'sale', 'quotation', 'transfer', 'adjustment', 'manual'
+  referenceId    String?               @map("reference_id")
+  notes          String?
+  userId         String                @map("user_id")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  product        SalesProduct          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branch         Branch?               @relation(fields: [branchId], references: [id])
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           SalesUser             @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([productId, createdAt])
+  @@index([branchId, createdAt])
+  @@index([movementType, createdAt])
+  @@index([referenceType, referenceId])
+  @@map("sales_inventory_movements")
+}
+
+enum InventoryMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+// Transferencias entre sucursales
+model InventoryTransfer {
+  id             String         @id @default(uuid())
+  organizationId String         @map("organization_id")
+  productId      String         @map("product_id")
+  fromBranchId   String         @map("from_branch_id")
+  toBranchId     String         @map("to_branch_id")
+  quantity       Int
+  status         TransferStatus @default(pending)
+  notes          String?
+  requestedById  String         @map("requested_by_id")
+  approvedById   String?        @map("approved_by_id")
+  completedById  String?        @map("completed_by_id")
+  requestedAt    DateTime       @default(now()) @map("requested_at")
+  approvedAt     DateTime?      @map("approved_at")
+  completedAt    DateTime?      @map("completed_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  product        SalesProduct   @relation("TransferFrom", fields: [productId], references: [id], onDelete: Cascade)
+  fromBranch     Branch         @relation("TransferFromBranch", fields: [fromBranchId], references: [id])
+  toBranch       Branch         @relation("TransferToBranch", fields: [toBranchId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedBy    SalesUser      @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+  approvedBy     SalesUser?     @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+  completedBy    SalesUser?     @relation("TransferCompletedBy", fields: [completedById], references: [id])
+
+  @@index([organizationId, status, createdAt])
+  @@index([productId, status])
+  @@index([fromBranchId, status])
+  @@index([toBranchId, status])
+  @@index([requestedById])
+  @@map("sales_inventory_transfers")
+}
+
+enum TransferStatus {
+  pending
+  approved
+  rejected
+  in_transit
+  completed
+  cancelled
+}
+
+// Ajustes de inventario con justificación
+model InventoryAdjustment {
+  id             String         @id @default(uuid())
+  organizationId String         @map("organization_id")
+  productId      String         @map("product_id")
+  branchId       String?        @map("branch_id")
+  adjustmentType AdjustmentType
+  quantity       Int
+  previousStock  Int            @map("previous_stock")
+  newStock       Int            @map("new_stock")
+  reason         String
+  justification  String
+  notes          String?
+  userId         String         @map("user_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  product        SalesProduct   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branch         Branch?        @relation(fields: [branchId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           SalesUser      @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([productId, createdAt])
+  @@index([branchId, createdAt])
+  @@index([adjustmentType, createdAt])
+  @@map("sales_inventory_adjustments")
+}
+
+enum AdjustmentType {
+  INCREASE
+  DECREASE
+  CORRECTION
 }

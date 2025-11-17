@@ -4,7 +4,7 @@ import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug, getMaxBranchesByOrganizationId } from '@/lib/utils/organization'
 import { serializeCashRegister } from '@/lib/utils/serializers'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createCashRegisterSchema } from '@/lib/validators/sales-validators'
@@ -91,9 +91,46 @@ export async function POST(
 
     const validatedData = validation.data
 
+    // Verificar si el usuario es administrador
+    const isAdmin = (currentUser as any).rol?.nombre?.toLowerCase() === 'administrador' || 
+                   (currentUser as any).rol?.name?.toLowerCase() === 'administrador'
+    
+    // Obtener sucursal del usuario (puede estar en sucursalId o en la relación sucursal)
+    const userBranchId = (currentUser as any).sucursalId || (currentUser as any).sucursal?.id || null
+    
+    // Determinar branchId final
+    let finalBranchId: string | undefined = undefined
+    
+    if (!isAdmin && userBranchId) {
+      // Usuario NO administrador: usar su sucursal automáticamente
+      finalBranchId = userBranchId
+    } else if (isAdmin) {
+      // Usuario administrador: permitir selección manual de sucursal
+      finalBranchId = validatedData.branchId || undefined
+    } else {
+      // Por defecto: sin sucursal (solo si no hay sucursal asignada al usuario)
+      finalBranchId = undefined
+    }
+    
+    // Validar que no haya una caja abierta para esta sucursal
+    if (finalBranchId) {
+      const existingOpenCashRegister = await CashRegisterService.getAllCashRegisters(
+        organizationId,
+        0,
+        1,
+        undefined,
+        finalBranchId,
+        true // isOpen = true
+      )
+      
+      if (existingOpenCashRegister.cashRegisters.length > 0) {
+        throw AppError.validation(`Ya existe una caja abierta para esta sucursal. Debe cerrarla antes de crear una nueva.`)
+      }
+    }
+
     const cashRegister = await CashRegisterService.createCashRegister(organizationId, {
       name: validatedData.name,
-      branchId: validatedData.branchId || undefined,
+      branchId: finalBranchId,
       openingBalance: validatedData.openingBalance || 0,
       openedById: currentUser.id,
     })

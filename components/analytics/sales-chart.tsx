@@ -12,6 +12,7 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 interface SalesChartProps {
   data: Array<{
@@ -20,14 +21,15 @@ interface SalesChartProps {
     revenue: number
   }>
   period: 'daily' | 'weekly' | 'monthly'
+  slug?: string
 }
 
-export function SalesChart({ data, period }: SalesChartProps) {
+export function SalesChart({ data, period, slug }: SalesChartProps) {
   // Formatear fecha según período
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     if (period === 'daily') {
-      return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
+      return formatDateWithPreferences(dateStr, slug)
     } else if (period === 'weekly') {
       // Calcular semana del año
       const startOfYear = new Date(date.getFullYear(), 0, 1)
@@ -35,17 +37,13 @@ export function SalesChart({ data, period }: SalesChartProps) {
       const weekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7)
       return `Sem ${weekNumber}`
     } else {
-      return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
+      return formatDateWithPreferences(dateStr, slug)
     }
   }
 
   // Formatear valor monetario
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-BO', {
-      style: 'currency',
-      currency: 'BOB',
-      minimumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyWithPreferences(value, slug)
   }
 
   return (

@@ -1,7 +1,9 @@
 "use client"
 
+import { Shield } from "lucide-react"
 import { useState, useMemo } from "react"
 
+import { PermissionsSasCards } from "./permissions-sas-cards"
 import { PermissionsSasFilters } from "./permissions-sas-filters"
 import { PermissionsSasPagination } from "./permissions-sas-pagination"
 import { PermissionsSasStats } from "./permissions-sas-stats"
@@ -98,7 +100,7 @@ export function PermissionsSasContainer({ permissions: initialPermissions, onDel
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6 overflow-x-hidden max-w-full">
       {/* Estadísticas */}
       <PermissionsSasStats permissions={initialPermissions} />
 
@@ -119,10 +121,31 @@ export function PermissionsSasContainer({ permissions: initialPermissions, onDel
         </CardContent>
       </Card>
 
-      {/* Tabla de permisos sin Card */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
-        <PermissionsSasTable permissions={currentPermissions} onDelete={onDelete} onToggleStatus={onToggleStatus} />
-      </div>
+      {/* Mostrar cards y tabla solo si hay permisos */}
+      {currentPermissions.length > 0 ? (
+        <>
+          {/* Cards de permisos (solo móvil) */}
+          <PermissionsSasCards
+            permissions={currentPermissions}
+            onDelete={onDelete}
+            onToggleStatus={onToggleStatus}
+          />
+
+          {/* Tabla de permisos (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden overflow-x-auto">
+            <PermissionsSasTable permissions={currentPermissions} onDelete={onDelete} onToggleStatus={onToggleStatus} />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <Shield className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No se encontraron permisos con los filtros aplicados</p>
+          </div>
+        </div>
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

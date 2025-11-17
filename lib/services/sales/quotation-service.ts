@@ -45,6 +45,7 @@ export interface CreateQuotationData {
   total: number
   expiresAt?: Date
   notes?: string
+  notesTranslations?: any // JSON con traducciones { es, en, pt }
   items: Array<{
     productId?: string | null
     productName?: string | null
@@ -65,6 +66,7 @@ export interface UpdateQuotationData {
   total?: number
   expiresAt?: Date
   notes?: string
+  notesTranslations?: any // JSON con traducciones { es, en, pt }
   items?: Array<{
     productId?: string | null
     productName?: string | null
@@ -316,7 +318,8 @@ export class QuotationService {
         discount: data.discount || 0,
         total: data.total,
         expiresAt: data.expiresAt,
-        notes: data.notes
+        notes: data.notes,
+        notesTranslations: data.notesTranslations
       }
 
       if (sanitizedPhone) {
@@ -414,6 +417,7 @@ export class QuotationService {
       if (data.total !== undefined) updateData.total = data.total
       if (data.expiresAt !== undefined) updateData.expiresAt = data.expiresAt
       if (data.notes !== undefined) updateData.notes = data.notes
+      if (data.notesTranslations !== undefined) updateData.notesTranslations = data.notesTranslations
 
       await tx.quotation.update({
         where: { id },

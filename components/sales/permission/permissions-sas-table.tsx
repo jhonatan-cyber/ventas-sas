@@ -32,8 +32,8 @@ export function PermissionsSasTable({ permissions, onDelete, onToggleStatus }: P
   }
 
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg overflow-hidden">
-      <Table>
+    <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg overflow-hidden overflow-x-auto">
+      <Table className="min-w-full">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[200px]">Permiso</TableHead>

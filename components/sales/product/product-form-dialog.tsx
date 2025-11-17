@@ -4,6 +4,7 @@ import { SalesProduct, Category } from "@prisma/client";
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Camera, X, Upload, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ interface ProductFormDialogProps {
   product?: SalesProduct & { category: Category | null };
   categories: Category[];
   defaultCategoryId?: string;
+  maxBranches?: number | null;
   onSave: (data: any) => void;
 }
 
@@ -50,8 +52,10 @@ export function ProductFormDialog({
   product,
   categories,
   defaultCategoryId,
+  maxBranches,
   onSave,
 }: ProductFormDialogProps) {
+  const t = useTranslations()
   const pathname = usePathname();
   const customerSlug = pathname.split('/')[1] || '';
   
@@ -62,6 +66,7 @@ export function ProductFormDialog({
   const [cost, setCost] = useState("");
   const [stock, setStock] = useState("");
   const [minStock, setMinStock] = useState("");
+  const [reorderPoint, setReorderPoint] = useState("");
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
   const [brand, setBrand] = useState("");
@@ -118,6 +123,7 @@ export function ProductFormDialog({
       setCost(Number(product.cost).toString());
       setStock(product.stock?.toString() || "0");
       setMinStock(product.minStock?.toString() || "0");
+      setReorderPoint((product as any).reorderPoint?.toString() || "");
       setSku(product.sku || "");
       setBarcode(""); // Resetear el campo al abrir incluso en modo edición
       setImagePreview(product.imageUrl || null);
@@ -181,10 +187,15 @@ export function ProductFormDialog({
             const branchesResponse = await fetch(`/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`);
             if (branchesResponse.ok) {
               const branchesData = await branchesResponse.json();
-              setBranches(branchesData.branches?.map((b: any) => ({ id: b.id, name: b.name })) || []);
-              // Solo establecer sucursal por defecto si no hay producto (modo creación)
-              // Si hay producto, el branchId ya fue establecido en el useEffect anterior
-              if (!product && userData.sucursalId) {
+              const branchesList = branchesData.branches?.map((b: any) => ({ id: b.id, name: b.name })) || [];
+              setBranches(branchesList);
+              
+              // Si el plan solo permite una sucursal y solo hay una disponible, seleccionarla automáticamente
+              if (maxBranches === 1 && branchesList.length === 1 && !product) {
+                setSelectedBranchId(branchesList[0].id);
+              } else if (!product && userData.sucursalId) {
+                // Solo establecer sucursal por defecto si no hay producto (modo creación)
+                // Si hay producto, el branchId ya fue establecido en el useEffect anterior
                 setSelectedBranchId(userData.sucursalId);
               }
             }
@@ -202,25 +213,25 @@ export function ProductFormDialog({
     };
 
     fetchUserAndBranches();
-  }, [open, customerSlug, product]);
+  }, [open, customerSlug, product, maxBranches]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim() || !price || !cost) {
-      toast.error("Por favor, complete todos los campos obligatorios");
+      toast.error(t('form.required'));
       return;
     }
 
     // Validar que haya categoría seleccionada
     if (!categoryId) {
-      toast.error("Debe seleccionar una categoría");
+      toast.error(t('products.form.categoryRequired'));
       return;
     }
 
     // Validar que haya sucursal (para administradores)
     if (isAdmin && !selectedBranchId) {
-      toast.error("Debe seleccionar una sucursal");
+      toast.error(t('products.form.branchRequired'));
       return;
     }
 
@@ -244,12 +255,12 @@ export function ProductFormDialog({
             finalImageUrl = uploadData.imageUrl;
           } else {
             const error = await uploadResponse.json();
-            toast.error(error.error || 'Error al subir la imagen');
+            toast.error(error.error || t('products.form.errorUploadingImage'));
             return;
           }
         } catch (error) {
           console.error('Error al subir imagen:', error);
-          toast.error('Error al subir la imagen');
+          toast.error(t('products.form.errorUploadingImage'));
           return;
         }
       }
@@ -287,6 +298,7 @@ export function ProductFormDialog({
         cost: Number(cost),
         stock: stock ? Number(stock) : 0,
         minStock: minStock ? Number(minStock) : 0,
+        reorderPoint: reorderPoint ? Number(reorderPoint) : undefined,
       };
 
       // Agregar campos opcionales solo si tienen valor
@@ -336,6 +348,7 @@ export function ProductFormDialog({
       setCost("");
       setStock("0");
       setMinStock("0");
+      setReorderPoint("");
       setSku("");
       setBarcode("");
       setBrand("");
@@ -405,7 +418,7 @@ export function ProductFormDialog({
       });
     } catch (error) {
       console.error("Error al acceder a la cámara:", error);
-      toast.error("No se pudo acceder a la cámara");
+      toast.error(t('products.form.cameraAccessError'));
     }
   };
 
@@ -422,7 +435,7 @@ export function ProductFormDialog({
       setIsLoading(true);
       
       // Mostrar toast de carga
-      loadingToastId = toast.loading("Buscando información del producto...");
+      loadingToastId = toast.loading(t('products.form.searchingProductInfo'));
       
       // Usar la ruta API de Next.js como proxy para evitar CORS
       const response = await fetch('/api/barcode-lookup', {
@@ -456,9 +469,9 @@ export function ProductFormDialog({
           setImagePreview(data.imageUrl);
         }
         
-        toast.success("Información del producto cargada");
+        toast.success(t('products.form.productInfoLoaded'));
       } else {
-        toast.info("No se encontró información del producto. Por favor, complete los campos manualmente.");
+        toast.info(t('products.form.productInfoNotFound'));
       }
     } catch (error) {
       console.error("Error al buscar información del producto:", error);
@@ -466,7 +479,7 @@ export function ProductFormDialog({
       if (loadingToastId) {
         toast.dismiss(loadingToastId);
       }
-      toast.error("Error al buscar información del producto");
+      toast.error(t('products.form.errorSearchingProductInfo'));
     } finally {
       setIsLoading(false);
       setIsFetchingProduct(false);
@@ -475,12 +488,12 @@ export function ProductFormDialog({
 
   const handleGenerateDescription = async () => {
     if (!name.trim()) {
-      toast.error("Por favor, ingresa al menos el nombre del producto");
+      toast.error(t('products.form.nameRequired'));
       return;
     }
 
     setIsGeneratingDescription(true);
-    const loadingToastId = toast.loading("Generando descripción con IA...");
+    const loadingToastId = toast.loading(t('products.form.generatingDescriptionAI'));
 
     try {
       const categoryName = categories.find(cat => cat.id === categoryId)?.name || null;
@@ -529,19 +542,19 @@ export function ProductFormDialog({
         if (result.imageUrl && !imagePreview) foundItems.push("imagen");
         
         if (foundItems.length > 1) {
-          toast.success(`Información generada: ${foundItems.join(", ")}`);
+          toast.success(t('products.form.infoGenerated') + ': ' + foundItems.join(", "));
         } else if (foundItems.length === 1) {
-          toast.success(`${foundItems[0].charAt(0).toUpperCase() + foundItems[0].slice(1)} generada exitosamente`);
+          toast.success(foundItems[0].charAt(0).toUpperCase() + foundItems[0].slice(1) + ' ' + t('products.form.generatedSuccessfully'));
         } else {
-          toast.success("Descripción generada exitosamente");
+          toast.success(t('products.form.descriptionGeneratedSuccessfully'));
         }
       } else {
-        toast.error(result.error || "No se pudo generar la descripción");
+        toast.error(result.error || t('products.form.couldNotGenerateDescription'));
       }
     } catch (error) {
       console.error("Error al generar descripción:", error);
       toast.dismiss(loadingToastId);
-      toast.error("Error al generar la descripción. Verifica que la API key esté configurada.");
+      toast.error(t('products.form.errorGeneratingDescription'));
     } finally {
       setIsGeneratingDescription(false);
     }
@@ -551,33 +564,33 @@ export function ProductFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
         {/* Header estático */}
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {product ? "Editar Producto" : "Nuevo Producto"}
+              {product ? t('products.edit') : t('products.new')}
             </DialogTitle>
             <DialogDescription>
               {product
-                ? "Modifica los datos del producto"
-                : "Completa los datos para crear un nuevo producto"}
+                ? t('products.editDescription')
+                : t('products.newDescription')}
             </DialogDescription>
           </DialogHeader>
         </div>
         
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           {/* Contenido con scroll */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             {/* Primera fila: Código de barras y Foto */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="barcode">Código de Barras</Label>
+                  <Label htmlFor="barcode">{t('products.form.barcode')}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="barcode"
                       value={barcode}
                       onChange={(e) => setBarcode(e.target.value)}
-                      placeholder="Código de barras"
+                      placeholder={t('products.form.barcode')}
                       disabled={isLoading}
                       className="rounded-full flex-1"
                     />
@@ -588,7 +601,7 @@ export function ProductFormDialog({
                         onClick={startScanning}
                         disabled={isLoading}
                         className="rounded-full px-3"
-                        title="Escanear código de barras"
+                        title={t('products.form.scanBarcode')}
                       >
                         <Camera className="h-4 w-4" />
                       </Button>
@@ -598,7 +611,7 @@ export function ProductFormDialog({
                         variant="destructive"
                         onClick={stopScanning}
                         className="rounded-full px-3"
-                        title="Detener escaneo"
+                        title={t('products.form.stopScan')}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -607,75 +620,38 @@ export function ProductFormDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    Nombre <span className="text-red-500">*</span>
+                    {t('form.name')} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(capitalizeWords(e.target.value))}
-                    placeholder="Nombre del producto"
+                    placeholder={t('products.form.name')}
                     required
                     disabled={isLoading}
                     className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Foto</Label>
-                <div className="flex items-center justify-center">
-                  <div className="relative group">
-                    <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
-                      {imagePreview ? (
-                         
-                        <img
-                          src={imagePreview}
-                          alt="Vista previa"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                          <span className="text-xs text-gray-400 dark:text-gray-500">Sin imagen</span>
-                        </div>
-                      )}
-                      {/* Overlay para el botón cuando hay imagen */}
-                      {imagePreview && (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                          <input
-                            id="product-image-input"
-                            type="file"
-                            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setImageFile(file);
-                              const reader = new FileReader();
-                              reader.onload = () =>
-                                setImagePreview(reader.result as string);
-                              reader.readAsDataURL(file);
-                            }}
-                            disabled={isLoading}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-full h-9 w-9 p-0 bg-white/90 hover:bg-white border-white/20"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              document.getElementById("product-image-input")?.click();
-                            }}
-                            disabled={isLoading}
-                            title="Cambiar foto"
-                          >
-                            <Upload className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {/* Botón cuando no hay imagen */}
-                    {!imagePreview && (
-                      <div className="absolute -bottom-2 -right-2">
+              <div className="space-y-2 flex flex-col items-center md:items-start">
+                <Label className="block w-full">{t('products.form.image')}</Label>
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Vista previa"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{t('products.form.noImage')}</span>
+                      </div>
+                    )}
+                    {/* Overlay para el botón cuando hay imagen */}
+                    {imagePreview && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <input
                           id="product-image-input"
                           type="file"
@@ -695,42 +671,76 @@ export function ProductFormDialog({
                         <Button
                           type="button"
                           variant="outline"
-                          className="rounded-full h-9 w-9 p-0 shadow-md hover:shadow-lg transition-shadow"
-                          onClick={() =>
-                            document.getElementById("product-image-input")?.click()
-                          }
+                          className="rounded-full h-9 w-9 p-0 bg-white/90 hover:bg-white border-white/20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById("product-image-input")?.click();
+                          }}
                           disabled={isLoading}
-                          title="Seleccionar foto"
+                          title={t('products.form.changePhoto')}
                         >
                           <Upload className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
                   </div>
+                  {/* Botón cuando no hay imagen */}
+                  {!imagePreview && (
+                    <div className="absolute -bottom-2 -right-2">
+                      <input
+                        id="product-image-input"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setImageFile(file);
+                          const reader = new FileReader();
+                          reader.onload = () =>
+                            setImagePreview(reader.result as string);
+                          reader.readAsDataURL(file);
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full h-9 w-9 p-0 shadow-md hover:shadow-lg transition-shadow"
+                        onClick={() =>
+                          document.getElementById("product-image-input")?.click()
+                        }
+                        disabled={isLoading}
+                        title={t('products.form.selectPhoto')}
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Marca y Modelo */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="brand">Marca</Label>
+                <Label htmlFor="brand">{t('products.form.brand')}</Label>
                 <Input
                   id="brand"
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  placeholder="Marca"
+                  placeholder={t('products.form.brand')}
                   disabled={isLoading}
                   className="rounded-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="model">Modelo</Label>
+                <Label htmlFor="model">{t('products.form.model')}</Label>
                 <Input
                   id="model"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  placeholder="Modelo"
+                  placeholder={t('products.form.model')}
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -739,7 +749,7 @@ export function ProductFormDialog({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="description">{t('products.form.description')}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -747,28 +757,28 @@ export function ProductFormDialog({
                   onClick={handleGenerateDescription}
                   disabled={isLoading || isGeneratingDescription || !name.trim()}
                   className="rounded-full text-xs h-7 px-3 gap-1.5"
-                  title="Mejorar descripción con IA"
+                  title={t('products.form.improveDescriptionAI')}
                 >
                   <Sparkles className={`h-3 w-3 ${isGeneratingDescription ? 'animate-spin' : ''}`} />
-                  {isGeneratingDescription ? 'Generando...' : 'Mejorar con IA'}
+                  {isGeneratingDescription ? t('products.form.generating') : t('products.form.improveWithAI')}
                 </Button>
               </div>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripción del producto..."
+                placeholder={t('products.form.description') + '...'}
                 rows={3}
                 disabled={isLoading || isGeneratingDescription}
                 className="rounded-lg"
               />
             </div>
 
-            {/* Select de Sucursal (solo para administradores) */}
-            {isAdmin && branches.length > 0 && (
+            {/* Select de Sucursal (solo para administradores y si el plan permite más de una sucursal) */}
+            {isAdmin && branches.length > 0 && !(maxBranches === 1 && branches.length === 1) && (
               <div className="space-y-2 w-full">
                 <Label htmlFor="branch">
-                  Sucursal <span className="text-red-500">*</span>
+                  {t('form.branch')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={selectedBranchId}
@@ -777,7 +787,7 @@ export function ProductFormDialog({
                   disabled={isLoading}
                 >
                   <SelectTrigger id="branch" className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-                    <SelectValue placeholder="Seleccionar sucursal" />
+                    <SelectValue placeholder={t('products.form.selectBranch')} />
                   </SelectTrigger>
                   <SelectContent>
                     {branches.map((branch) => (
@@ -790,10 +800,10 @@ export function ProductFormDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cost">
-                  Precio de Compra <span className="text-red-500">*</span>
+                  {t('products.form.cost')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="cost"
@@ -802,7 +812,7 @@ export function ProductFormDialog({
                   min="0"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  placeholder="0.00"
+                  placeholder={t('common.placeholders.amount')}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -810,7 +820,7 @@ export function ProductFormDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">
-                  Precio de Venta <span className="text-red-500">*</span>
+                  {t('products.form.priceSale')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="price"
@@ -819,7 +829,7 @@ export function ProductFormDialog({
                   min="0"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
+                  placeholder={t('common.placeholders.amount')}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -827,9 +837,9 @@ export function ProductFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stock">Stock Inicial</Label>
+                <Label htmlFor="stock">{t('products.form.initialStock')}</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -842,7 +852,7 @@ export function ProductFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minStock">Stock Mínimo</Label>
+                <Label htmlFor="minStock">{t('products.form.minStock')}</Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -856,10 +866,26 @@ export function ProductFormDialog({
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="reorderPoint">{t('products.form.reorderPoint') || 'Punto de Reorden'}</Label>
+                <Input
+                  id="reorderPoint"
+                  type="number"
+                  min="0"
+                  value={reorderPoint}
+                  onChange={(e) => setReorderPoint(e.target.value)}
+                  placeholder={t('products.form.reorderPointPlaceholder') || 'Opcional: stock para reordenar'}
+                  disabled={isLoading}
+                  className="rounded-full"
+                />
+              </div>
+            </div>
+
           </div>
           
           {/* Footer estático */}
-          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-4 sm:px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
             <Button
               type="button"
               variant="outline"
@@ -867,7 +893,7 @@ export function ProductFormDialog({
               disabled={isLoading}
               className="w-full sm:w-auto rounded-full"
             >
-              Cancelar
+              {t('action.cancel')}
             </Button>
             <Button
               type="submit"
@@ -875,7 +901,7 @@ export function ProductFormDialog({
               disabled={isLoading || !name.trim() || !price || !cost}
               className="w-full sm:w-auto rounded-full"
             >
-              {isLoading ? "Guardando..." : product ? "Actualizar" : "Agregar"}
+              {isLoading ? t('message.saving') : product ? t('action.update') : t('action.add')}
             </Button>
           </DialogFooter>
         </form>

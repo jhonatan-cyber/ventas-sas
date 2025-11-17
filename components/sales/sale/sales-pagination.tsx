@@ -13,20 +13,23 @@ export function SalesPagination({ currentPage, totalPages, onPageChange }: Sales
   const hasNext = currentPage < totalPages
 
   return (
-    <div className="flex items-center justify-center gap-2 w-full">
+    <div className="flex items-center justify-center gap-2 w-full py-4">
       <Button
         variant="outline"
         size="sm"
-        className="rounded-full"
+        className="rounded-full text-xs sm:text-sm"
         disabled={!hasPrevious}
         onClick={() => hasPrevious && onPageChange(currentPage - 1)}
       >
         Anterior
       </Button>
+      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-2">
+        Página {currentPage} de {totalPages}
+      </span>
       <Button
         variant="outline"
         size="sm"
-        className="rounded-full"
+        className="rounded-full text-xs sm:text-sm"
         disabled={!hasNext}
         onClick={() => hasNext && onPageChange(currentPage + 1)}
       >

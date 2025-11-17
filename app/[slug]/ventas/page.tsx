@@ -3,8 +3,10 @@ import { redirect } from "next/navigation"
 
 import { SalesPageClient } from "@/components/sales/sale/sales-page-client"
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
+import { BranchService } from "@/lib/services/sales/branch-service"
+import { CashRegisterService } from "@/lib/services/sales/cash-register-service"
 import { SaleService } from "@/lib/services/sales/sale-service"
-import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug, getCustomerBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
 
 const serializeSale = (sale: any) => ({
   id: sale.id,
@@ -68,6 +70,7 @@ export default async function SalesPage({
   }
 
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  const maxBranches = await getMaxBranchesBySlug(slug)
 
   const cookieStore = await cookies()
   const token = cookieStore.get('sas-auth-token')?.value
@@ -93,11 +96,28 @@ export default async function SalesPage({
     ? (await SaleService.getAllSales(organizationId, 0, 1000)).sales.map(serializeSale)
     : []
 
+  const branches = organizationId
+    ? await BranchService.getActiveBranches(organizationId)
+    : []
+
+  const serializedBranches = branches.map((branch) => ({
+    id: branch.id,
+    name: branch.name,
+  }))
+
+  // Verificar si hay cajas abiertas
+  const hasOpenCashRegister = organizationId
+    ? (await CashRegisterService.getAllCashRegisters(organizationId, 0, 1, undefined, undefined, true)).total > 0
+    : false
+
   return (
     <SalesPageClient
       initialSales={sales}
       customerSlug={slug}
       currentUser={serializedUser}
+      branches={serializedBranches}
+      maxBranches={maxBranches !== null ? maxBranches : undefined}
+      hasOpenCashRegister={hasOpenCashRegister}
     />
   )
 }

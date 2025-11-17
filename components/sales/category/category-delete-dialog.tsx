@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Category } from "@prisma/client"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -12,6 +14,8 @@ interface CategoryDeleteDialogProps {
 }
 
 export function CategoryDeleteDialog({ open, onOpenChange, category, onDelete }: CategoryDeleteDialogProps) {
+  const t = useTranslations()
+  
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -21,20 +25,20 @@ export function CategoryDeleteDialog({ open, onOpenChange, category, onDelete }:
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente la categoría
+            {t('categories.deleteWarning')}
             <strong className="block mt-2">"{category?.name}"</strong>
-            y todos sus datos asociados.
+            {t('categories.deleteWarningEnd')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

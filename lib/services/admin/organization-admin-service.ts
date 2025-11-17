@@ -103,141 +103,158 @@ export class OrganizationAdminService {
     }
 
     return prisma.$transaction(async (tx) => {
-      // Obtener los datos del cliente para crear el usuario SAS
-      const customer = await tx.customer.findUnique({
-        where: { id: customerId },
-        select: {
-          id: true,
-          ci: true,
-          nombre: true,
-          apellido: true,
-          address: true,
-          phone: true,
-          email: true,
-        },
-      });
-
-      if (!customer) {
-        throw new Error("Cliente no encontrado");
-      }
-
-      // Crear o buscar un Profile para el usuario administrador de la organización
-      // El Profile será el dueño (ownerId) de la organización según el schema
-      // Se crea basado en los datos del cliente (que ya fue creado en el módulo de clientes)
-      // NOTA: El dueño real es el UsuarioSas que se crea después, pero el schema requiere un Profile.id como ownerId
-      const customerEmail =
-        customer.email || `${customer.ci || customer.id}@organizacion.local`;
-      const customerFullName =
-        `${customer.nombre || ""} ${customer.apellido || ""}`.trim() ||
-        customerEmail;
-
-      // Buscar si ya existe un Profile con ese email
-      let ownerProfile = await tx.profile.findUnique({
-        where: { email: customerEmail },
-      });
-
-      // Si no existe, crear uno nuevo basado en los datos del cliente
-      if (!ownerProfile) {
-        ownerProfile = await tx.profile.create({
-          data: {
-            email: customerEmail,
-            fullName: customerFullName,
-            role: "user",
-            isSuperAdmin: false,
-            isActive: true,
-            address: customer.address || undefined,
-            phone: customer.phone || undefined,
+      try {
+        // Obtener los datos del cliente para crear el usuario SAS
+        const customer = await tx.customer.findUnique({
+          where: { id: customerId },
+          select: {
+            id: true,
+            ci: true,
+            nombre: true,
+            apellido: true,
+            address: true,
+            phone: true,
+            email: true,
           },
         });
-      }
 
-      const organization = await tx.organization.create({
-        data: {
-          name: organizationData.razonSocial || "Empresa",
-          razonSocial: organizationData.razonSocial,
-          nit: organizationData.nit !== undefined ? organizationData.nit : null,
-          address:
-            organizationData.address !== undefined
-              ? organizationData.address
-              : null,
-          phone:
-            organizationData.phone !== undefined
-              ? organizationData.phone
-              : null,
-          slug: organizationData.slug,
-          ownerId: ownerProfile.id,
-          subscriptionStatus:
-            organizationData.subscriptionStatus ||
-            OrganizationSubscriptionStatus.trial,
-          subscriptionStartDate:
-            organizationData.subscriptionStartDate || new Date(),
-          subscriptionEndDate:
-            organizationData.subscriptionEndDate ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          subscriptionPlanId:
-            organizationData.subscriptionPlanId !== undefined
-              ? organizationData.subscriptionPlanId
-              : null,
-          settings:
-            organizationData.settings !== undefined
-              ? organizationData.settings
-              : null,
-        },
-      });
+        if (!customer) {
+          throw new Error("Cliente no encontrado");
+        }
 
-      await tx.customerOrganization.create({
-        data: {
+        // Crear o buscar un Profile para el usuario administrador de la organización
+        // El Profile será el dueño (ownerId) de la organización según el schema
+        // Se crea basado en los datos del cliente (que ya fue creado en el módulo de clientes)
+        // NOTA: El dueño real es el UsuarioSas que se crea después, pero el schema requiere un Profile.id como ownerId
+        const customerEmail =
+          customer.email || `${customer.ci || customer.id}@organizacion.local`;
+        const customerFullName =
+          `${customer.nombre || ""} ${customer.apellido || ""}`.trim() ||
+          customerEmail;
+
+        // Buscar si ya existe un Profile con ese email
+        let ownerProfile = await tx.profile.findUnique({
+          where: { email: customerEmail },
+        });
+
+        // Si no existe, crear uno nuevo basado en los datos del cliente
+        if (!ownerProfile) {
+          ownerProfile = await tx.profile.create({
+            data: {
+              email: customerEmail,
+              fullName: customerFullName,
+              role: "user",
+              isSuperAdmin: false,
+              isActive: true,
+              address: customer.address || undefined,
+              phone: customer.phone || undefined,
+            },
+          });
+        }
+
+        const organization = await tx.organization.create({
+          data: {
+            name: organizationData.razonSocial || "Empresa",
+            razonSocial: organizationData.razonSocial,
+            nit: organizationData.nit !== undefined ? organizationData.nit : null,
+            address:
+              organizationData.address !== undefined
+                ? organizationData.address
+                : null,
+            phone:
+              organizationData.phone !== undefined
+                ? organizationData.phone
+                : null,
+            slug: organizationData.slug,
+            ownerId: ownerProfile.id,
+            subscriptionStatus:
+              organizationData.subscriptionStatus ||
+              OrganizationSubscriptionStatus.trial,
+            subscriptionStartDate:
+              organizationData.subscriptionStartDate || new Date(),
+            subscriptionEndDate:
+              organizationData.subscriptionEndDate ||
+              new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            subscriptionPlanId:
+              organizationData.subscriptionPlanId !== undefined
+                ? organizationData.subscriptionPlanId
+                : null,
+            settings:
+              organizationData.settings !== undefined
+                ? organizationData.settings
+                : null,
+          },
+        });
+
+        await tx.customerOrganization.create({
+          data: {
+            customerId,
+            organizationId: organization.id,
+            isActive: true,
+          },
+        });
+
+        const branch = await tx.branch.create({
+          data: {
+            name: "Principal",
+            address: organizationData.address || customer.address || undefined,
+            organizationId: organization.id,
+            isActive: true,
+          },
+        });
+
+        const role = await tx.roleSas.create({
+          data: {
+            nombre: "Administrador",
+            descripcion: "Rol de administrador de la organización",
+            organizationId: organization.id,
+            sucursalId: branch.id,
+            isActive: true,
+          },
+        });
+
+        // Hashear la contraseña (CI del cliente)
+        // La contraseña del UsuarioSas será el CI del cliente
+        const hashedPassword = customer.ci
+          ? await PasswordService.hashPassword(customer.ci)
+          : null;
+
+        // Crear el UsuarioSas (usuario administrador/dueño de la organización)
+        // Se crea con los MISMOS datos del cliente que ya fue creado en el módulo de clientes
+        // Este UsuarioSas es el dueño real de la organización
+        await tx.usuarioSas.create({
+          data: {
+            ci: customer.ci || undefined,
+            nombre: customer.nombre || "",
+            apellido: customer.apellido || "",
+            address: customer.address || organizationData.address || undefined,
+            phone: customer.phone || organizationData.phone || undefined,
+            email: customer.email || undefined,
+            password: hashedPassword,
+            organizationId: organization.id,
+            sucursalId: branch.id,
+            rolId: role.id,
+            isActive: true,
+          },
+        });
+
+        return organization;
+      } catch (error: any) {
+        // Log detallado del error para debugging
+        console.error('Error al crear organización:', {
+          error: error.message,
+          code: error.code,
+          meta: error.meta,
           customerId,
-          organizationId: organization.id,
-          isActive: true,
-        },
-      });
-
-      const branch = await tx.branch.create({
-        data: {
-          name: "Principal",
-          address: organizationData.address || customer.address || "",
-          organizationId: organization.id,
-          isActive: true,
-        },
-      });
-
-      const role = await tx.roleSas.create({
-        data: {
-          nombre: "Administrador",
-          descripcion: "Rol de administrador de la organización",
-          organizationId: organization.id,
-          sucursalId: branch.id,
-          isActive: true,
-        },
-      });
-
-      // Hashear la contraseña (CI del cliente)
-      // La contraseña del UsuarioSas será el CI del cliente
-      const hashedPassword = customer.ci
-        ? await PasswordService.hashPassword(customer.ci)
-        : null;
-
-      // Crear el UsuarioSas (usuario administrador/dueño de la organización)
-      // Se crea con los MISMOS datos del cliente que ya fue creado en el módulo de clientes
-      // Este UsuarioSas es el dueño real de la organización
-      await tx.usuarioSas.create({
-        data: {
-          ci: customer.ci || undefined,
-          nombre: customer.nombre || "",
-          apellido: customer.apellido || "",
-          address: customer.address || organizationData.address || undefined,
-          phone: customer.phone || organizationData.phone || undefined,
-          email: customer.email || undefined,
-          password: hashedPassword,
-          organizationId: organization.id,
-          sucursalId: branch.id,
-          rolId: role.id,
-          isActive: true,
-        },
-      });
-
-      return organization;
+          organizationData: {
+            razonSocial: organizationData.razonSocial,
+            slug: organizationData.slug,
+            hasAddress: !!organizationData.address,
+            hasPhone: !!organizationData.phone,
+          }
+        });
+        throw error;
+      }
     });
   }
 

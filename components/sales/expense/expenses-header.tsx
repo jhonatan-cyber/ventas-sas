@@ -18,17 +18,18 @@ export function ExpensesHeader({
   onNewClick
 }: ExpensesHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{title}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{description}</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{title}</h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{description}</p>
       </div>
       <Button 
         variant="new" 
         rounded="full" 
         onClick={onNewClick}
+        className="w-full sm:w-auto"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4 mr-2" />
         {newButtonText}
       </Button>
     </div>

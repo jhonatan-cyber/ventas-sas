@@ -1,8 +1,11 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { ArrowLeft, Download, TrendingDown, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
+import { toast } from "sonner"
 
 import type { ExpensesReport } from "@/lib/services/sales/reports-service"
 
@@ -10,6 +13,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { exportExpensesReportToPDF } from "@/lib/utils/pdf-reports-export"
+import { ExpensesByCategoryChart } from "./charts/expenses-by-category-chart"
+import { ReportAiSummary } from "./report-ai-summary"
 
 
 interface ExpensesReportClientProps {
@@ -44,9 +51,25 @@ export function ExpensesReportClient({ customerSlug }: ExpensesReportClientProps
     fetchReport()
   }, [fetchReport])
 
-  const handleExport = () => {
-    console.log("Exporting expenses report...")
-  }
+  const t = useTranslations()
+  
+  const handleExport = useCallback(async () => {
+    if (!report) {
+      toast.error(t('reports.export.noData'))
+      return
+    }
+
+    try {
+      toast.loading(t('reports.export.generating'))
+      await exportExpensesReportToPDF(report, customerSlug, startDate, endDate)
+      toast.dismiss()
+      toast.success(t('reports.export.success'))
+    } catch (error) {
+      toast.dismiss()
+      console.error("Error al exportar PDF:", error)
+      toast.error(t('reports.export.error'))
+    }
+  }, [report, customerSlug, startDate, endDate, t])
 
   if (isLoading) {
     return (
@@ -71,31 +94,32 @@ export function ExpensesReportClient({ customerSlug }: ExpensesReportClientProps
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
             Reporte de Gastos
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
             Análisis detallado de gastos
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-full w-full sm:w-auto text-xs sm:text-sm"
             onClick={() => router.push(`/${customerSlug}/reportes`)}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             Volver
           </Button>
           <Button
             variant="outline"
-            className="rounded-full"
+            size="sm"
+            className="rounded-full w-full sm:w-auto text-xs sm:text-sm"
             onClick={handleExport}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             Exportar PDF
           </Button>
         </div>
@@ -139,39 +163,46 @@ export function ExpensesReportClient({ customerSlug }: ExpensesReportClientProps
         </CardContent>
       </Card>
 
+      <ReportAiSummary
+        customerSlug={customerSlug}
+        type="expenses"
+        startDate={startDate || undefined}
+        endDate={endDate || undefined}
+      />
+
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-red-50/50 to-red-100/30 dark:from-red-950/20 dark:to-red-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-4 sm:p-5 md:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Gastos
                 </p>
-                <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 sm:mt-2 break-words">
                   {report?.totalExpenses || 0}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 w-12 h-12 rounded-xl shadow-lg flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-white" />
+              <div className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-gray-200/60 dark:border-gray-800/60 bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10 backdrop-blur-sm">
-          <CardContent className="p-6 space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          <CardContent className="p-4 sm:p-5 md:p-6 space-y-2 sm:space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   Monto Total
                 </p>
-                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-2">
-                  BOB {Number(report?.totalAmount || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                <p className="text-base sm:text-lg md:text-xl font-bold text-orange-600 dark:text-orange-400 mt-1 sm:mt-2 break-words">
+                  {formatCurrencyWithPreferences(Number(report?.totalAmount || 0))}
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 w-12 h-12 rounded-xl shadow-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-white" />
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
           </CardContent>
@@ -180,33 +211,36 @@ export function ExpensesReportClient({ customerSlug }: ExpensesReportClientProps
 
       {/* By Category */}
       {report && report.byCategory.length > 0 && (
-        <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Gastos por Categoría
-            </h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Cantidad</TableHead>
-                  <TableHead className="text-right">Monto Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.byCategory.map((category, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{category.category}</TableCell>
-                    <TableCell>{category.count}</TableCell>
-                    <TableCell className="text-right font-semibold text-red-600 dark:text-red-400">
-                      BOB {category.amount.toLocaleString('es-BO', { minimumFractionDigits: 2 })}
-                    </TableCell>
+        <>
+          <ExpensesByCategoryChart data={report.byCategory} customerSlug={customerSlug} />
+          <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Gastos por Categoría
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Cantidad</TableHead>
+                    <TableHead className="text-right">Monto Total</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {report.byCategory.map((category, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{category.category}</TableCell>
+                      <TableCell>{category.count}</TableCell>
+                      <TableCell className="text-right font-semibold text-red-600 dark:text-red-400">
+                        {formatCurrencyWithPreferences(category.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   )

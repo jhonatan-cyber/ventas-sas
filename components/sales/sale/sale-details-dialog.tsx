@@ -1,7 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import jsPDF from "jspdf"
-import { FileDown, Printer } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -13,12 +14,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatDateTime } from "@/lib/utils/date"
 import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { getTranslatableText } from "@/lib/utils/translatable-text"
 
 interface SaleDetailsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   sale: SalesSaleWithRelations | null
   customerSlug: string
+  maxBranches?: number
 }
 
 const statusTokens: Record<string, { label: string; className: string }> = {
@@ -45,7 +49,8 @@ const paymentTokens: Record<string, string> = {
 
 const DEFAULT_CURRENCY = "BOB"
 
-export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: SaleDetailsDialogProps) {
+export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxBranches: _maxBranches }: SaleDetailsDialogProps) {
+  const t = useTranslations()
   const [isExporting, setIsExporting] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState<string>("")
@@ -57,7 +62,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
   const [companyLogo, setCompanyLogo] = useState<string>("")
   const [companyWhatsappNumber, setCompanyWhatsappNumber] = useState<string>("")
   const [currencyCode, setCurrencyCode] = useState<string>(DEFAULT_CURRENCY)
-  const [_showBranchInfo, setShowBranchInfo] = useState<boolean>(true)
+
+  // const showBranchInfo = maxBranches === undefined || maxBranches > 1 // No disponible: SalesUser no tiene relación con Branch
 
   useEffect(() => {
     if (!open) {
@@ -78,12 +84,48 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
 
   useEffect(() => {
     if (typeof document === "undefined") return
+    
+    // Cargar moneda desde la API
+    const loadCurrency = async () => {
+      try {
+        const response = await fetch(`/api/${customerSlug}/config/preferencias`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data?.success && data.configuration?.currency) {
+            setCurrencyCode(data.configuration.currency)
+          } else {
+            setCurrencyCode(DEFAULT_CURRENCY)
+          }
+        } else {
+          setCurrencyCode(DEFAULT_CURRENCY)
+        }
+      } catch {
+        setCurrencyCode(DEFAULT_CURRENCY)
+      }
+    }
+
+    // Cargar información de empresa desde cookies (temporal, hasta migrar a BD)
+    // TODO: Migrar esta información a la base de datos
     try {
       const raw = document.cookie
         .split("; ")
         .find((chunk) => chunk.startsWith(`sas-prefs-${customerSlug}=`))
         ?.split("=")[1]
-      if (!raw) {
+      if (raw) {
+        const parsed = JSON.parse(decodeURIComponent(raw))
+        const value = typeof parsed.whatsappNumber === "string" ? parsed.whatsappNumber : ""
+        setCompanyWhatsappNumber(value)
+        setCompanyName(typeof parsed.companyName === "string" ? parsed.companyName : "")
+        setCompanyContactName(typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
+        setCompanyEmail(typeof parsed.companyEmail === "string" ? parsed.companyEmail : "")
+        setCompanyPhone(typeof parsed.companyPhone === "string" ? parsed.companyPhone : "")
+        setCompanyAddress(typeof parsed.companyAddress === "string" ? parsed.companyAddress : "")
+        setCompanyWebsite(typeof parsed.companyWebsite === "string" ? parsed.companyWebsite : "")
+        setCompanyLogo(typeof parsed.companyLogo === "string" ? parsed.companyLogo : "")
+      } else {
+        // Valores por defecto si no hay cookies
         setCompanyWhatsappNumber("")
         setCompanyName("")
         setCompanyContactName("")
@@ -92,23 +134,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
         setCompanyAddress("")
         setCompanyWebsite("")
         setCompanyLogo("")
-        setCurrencyCode(DEFAULT_CURRENCY)
-        setShowBranchInfo(true)
-        return
       }
-      const parsed = JSON.parse(decodeURIComponent(raw))
-      const value = typeof parsed.whatsappNumber === "string" ? parsed.whatsappNumber : ""
-      setCompanyWhatsappNumber(value)
-      setCompanyName(typeof parsed.companyName === "string" ? parsed.companyName : "")
-      setCompanyContactName(typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
-      setCompanyEmail(typeof parsed.companyEmail === "string" ? parsed.companyEmail : "")
-      setCompanyPhone(typeof parsed.companyPhone === "string" ? parsed.companyPhone : "")
-      setCompanyAddress(typeof parsed.companyAddress === "string" ? parsed.companyAddress : "")
-      setCompanyWebsite(typeof parsed.companyWebsite === "string" ? parsed.companyWebsite : "")
-      setCompanyLogo(typeof parsed.companyLogo === "string" ? parsed.companyLogo : "")
-      setCurrencyCode(typeof parsed.currency === "string" && parsed.currency.trim() ? parsed.currency : DEFAULT_CURRENCY)
-      const branchCount = typeof parsed.branchCount === 'number' ? parsed.branchCount : undefined
-      setShowBranchInfo(branchCount === undefined || branchCount > 1)
     } catch {
       setCompanyWhatsappNumber("")
       setCompanyName("")
@@ -118,9 +144,9 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
       setCompanyAddress("")
       setCompanyWebsite("")
       setCompanyLogo("")
-      setCurrencyCode(DEFAULT_CURRENCY)
-      setShowBranchInfo(true)
     }
+
+    loadCurrency()
   }, [customerSlug, open])
 
   const fetchImageAsDataUrl = useCallback(async (url: string): Promise<string | null> => {
@@ -142,8 +168,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
   }, [])
 
   const formatCurrency = useCallback(
-    (value: number) => `${currencyCode} ${Number(value || 0).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`,
-    [currencyCode]
+    (value: number) => formatCurrencyWithPreferences(value, customerSlug, currencyCode),
+    [currencyCode, customerSlug]
   )
 
   const customerName = useMemo(() => {
@@ -168,7 +194,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
 
     if (shareUrl) {
       handleOpenShareUrl()
-      toast.success("Abriendo PDF existente")
+      toast.success(t('sales.pdf.openingExisting'))
       return
     }
 
@@ -198,7 +224,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
               b: Number(rgbMatch[3])
             }
           }
-        } catch {}
+        } catch { }
 
         return fallback
       }
@@ -410,8 +436,17 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
         cursorY += 6
       })
 
-      // Agregar notas si existen
-      if (sale.notes && sale.notes.trim()) {
+      // Agregar notas si existen (usar traducción si está disponible)
+      const currentLanguage = (() => {
+        try {
+          const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+          return prefs?.language || 'es';
+        } catch {
+          return 'es';
+        }
+      })();
+      const notes = getTranslatableText(sale.notes, (sale as any).notesTranslations, currentLanguage);
+      if (notes && notes.trim()) {
         cursorY += 8
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(11)
@@ -421,7 +456,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(10)
         doc.setTextColor(45, 45, 45)
-        const notesLines = doc.splitTextToSize(sale.notes.trim(), pageWidth - margin * 2 - 4) as string[]
+        const notesLines = doc.splitTextToSize(notes.trim(), pageWidth - margin * 2 - 4) as string[]
         notesLines.forEach((line: string, idx: number) => {
           doc.text(line, margin + 2, cursorY + idx * 5)
         })
@@ -453,22 +488,22 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
                 ? relativeUrl
                 : `${typeof window !== 'undefined' ? window.location.origin : ''}${relativeUrl}`
               setShareUrl(absoluteUrl)
-              toast.success('PDF listo y enlace generado')
+              toast.success(t('sales.pdf.ready'))
             } else {
-              toast.success('PDF generado correctamente')
+              toast.success(t('sales.pdf.generated'))
             }
           } else {
             const errorData = await response.json().catch(() => ({}))
-            toast.error(errorData?.error || 'PDF descargado, pero no se pudo guardar el enlace')
+            toast.error(errorData?.error || t('sales.pdf.downloadError'))
           }
         } catch (uploadError) {
           console.error('Error subiendo PDF de venta:', uploadError)
-          toast.error('PDF descargado, pero no se pudo guardar el enlace')
+          toast.error(t('sales.pdf.downloadError'))
         }
       }
     } catch (error) {
       console.error('Error al exportar la venta:', error)
-      toast.error('No se pudo generar el PDF')
+      toast.error(t('sales.pdf.generateError'))
     } finally {
       setIsExporting(false)
     }
@@ -531,8 +566,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl sm:max-w-4xl h-[85vh] flex flex-col overflow-hidden p-0">
-        <DialogHeader className="sticky top-0 z-10 backdrop-blur bg-white/80 dark:bg-[#101010]/80 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+      <DialogContent className="lg:max-w-2xl max-w-3xl sm:max-w-4xl h-[85vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        <DialogHeader className="sticky top-0 z-10 backdrop-blur bg-white/80 dark:bg-[#101010]/80 border-b border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-4">
           <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">Venta {sale.saleNumber}</DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
             Registrada el {sale.createdAt ? formatDateTime(sale.createdAt) : 'Sin fecha'} · {paymentLabel}
@@ -542,44 +577,99 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
               {statusToken.label}
             </Badge>
             <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-0">
-              Total: BOB {Number(sale?.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+              Total: {formatCurrency(Number(sale?.total || 0))}
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-4">
           <div className="space-y-6">
-            <section className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Cliente</h3>
-                <p className="mt-2 text-base font-medium text-gray-900 dark:text-white">
-                  {sale.customer
-                    ? `${sale.customer.name ?? ''} ${sale.customer.lastName ?? ''}`.trim() || 'Cliente sin registrar'
-                    : 'Cliente sin registrar'}
+            <section className="flex flex-row gap-3 sm:gap-6 items-start">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Cliente</h3>
+                <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
+                  {customerName}
                 </p>
                 {sale.customer?.email && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{sale.customer.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{sale.customer.email}</p>
                 )}
                 {sale.customer?.phone && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{sale.customer.phone}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{sale.customer.phone}</p>
                 )}
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Atendido por</h3>
-                <p className="mt-2 text-base font-medium text-gray-900 dark:text-white">
+              <div className="flex-1 min-w-0 border-l border-gray-200 dark:border-gray-700 pl-3 sm:pl-6">
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Atendido por</h3>
+                <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
                   {sale.user?.fullName ?? 'Usuario no asignado'}
                 </p>
                 {sale.user?.email && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{sale.user.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{sale.user.email}</p>
                 )}
               </div>
             </section>
+
+            {/* Información de sucursal si el plan tiene más de 1 */}
+            {/* Nota: SalesUser no tiene relación directa con Branch, la sucursal se obtiene de otras fuentes si es necesario */}
 
             <section className="overflow-hidden">
               <header className="px-4 py-3">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Detalle de productos</h3>
               </header>
-              <div className="overflow-x-auto">
+
+              {/* Vista de cards para móvil */}
+              <div className="md:hidden space-y-3 px-4 pb-4">
+                {sale.items.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                    No hay productos registrados en esta venta.
+                  </div>
+                ) : (
+                  sale.items.map((item) => {
+                    const displayName = item.product?.name ?? 'Producto eliminado'
+                    return (
+                      <div
+                        key={item.id || `${item.productId}-${item.quantity}`}
+                        className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#0d0d0d] p-4 space-y-3"
+                      >
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-900 dark:text-white">{displayName}</p>
+                          {item.trackingCodes && item.trackingCodes.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {item.trackingCodes.map((code) => (
+                                <Badge key={code} variant="secondary" className="bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border-0 text-xs">
+                                  #{code}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="pt-2 border-t border-gray-200 dark:border-[#2a2a2a]">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cantidad</p>
+                              <p className="font-medium text-gray-900 dark:text-white text-sm">{item.quantity}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio Unit.</p>
+                              <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                {formatCurrency(Number(item.unitPrice || 0))}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Subtotal</p>
+                              <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                                {formatCurrency(Number(item.subtotal || 0))}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* Vista de tabla para desktop */}
+              <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-200 dark:border-[#2a2a2a]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 dark:bg-[#161616]">
@@ -590,31 +680,39 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sale.items.map((item) => (
-                      <TableRow key={item.id || `${item.productId}-${item.quantity}`} className="border-gray-200 dark:border-gray-800">
-                        <TableCell className="text-sm text-gray-900 dark:text-white">
-                          {item.product?.name ?? 'Producto eliminado'}
-                          {item.trackingCodes && item.trackingCodes.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {item.trackingCodes.map((code) => (
-                                <Badge key={code} variant="secondary" className="bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border-0">
-                                  #{code}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">
-                          {item.quantity}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">
-                          BOB {Number(item.unitPrice || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-900 dark:text-white text-right font-semibold">
-                          BOB {Number(item.subtotal || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                    {sale.items.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-gray-500 dark:text-gray-400">
+                          No hay productos registrados en esta venta.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      sale.items.map((item) => (
+                        <TableRow key={item.id || `${item.productId}-${item.quantity}`} className="border-gray-200 dark:border-gray-800">
+                          <TableCell className="text-sm text-gray-900 dark:text-white">
+                            {item.product?.name ?? 'Producto eliminado'}
+                            {item.trackingCodes && item.trackingCodes.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {item.trackingCodes.map((code) => (
+                                  <Badge key={code} variant="secondary" className="bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 border-0">
+                                    #{code}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-700 dark:text-gray-300">
+                            {formatCurrency(Number(item.unitPrice || 0))}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-900 dark:text-white text-right font-semibold">
+                            {formatCurrency(Number(item.subtotal || 0))}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -624,52 +722,63 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug }: Sa
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Subtotal</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  BOB {Number(sale.subtotal || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                  {formatCurrency(Number(sale.subtotal || 0))}
                 </span>
               </div>
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Descuento</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  BOB {Number(sale.discount || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                  {formatCurrency(Number(sale.discount || 0))}
                 </span>
               </div>
               <div className="flex justify-between text-base font-semibold text-gray-900 dark:text-white border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
                 <span>Total</span>
                 <span>
-                  BOB {Number(sale.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                  {formatCurrency(Number(sale.total || 0))}
                 </span>
               </div>
-              {sale.notes && (
-                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                  <h4 className="font-semibold uppercase tracking-wide text-xs text-gray-500 dark:text-gray-400 mb-1">Notas</h4>
-                  <p>{sale.notes}</p>
-                </div>
-              )}
+              {(() => {
+                const currentLanguage = (() => {
+                  try {
+                    const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+                    return prefs?.language || 'es';
+                  } catch {
+                    return 'es';
+                  }
+                })();
+                const notes = getTranslatableText(sale.notes, (sale as any).notesTranslations, currentLanguage);
+                return notes && (
+                  <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                    <h4 className="font-semibold uppercase tracking-wide text-xs text-gray-500 dark:text-gray-400 mb-1">Notas</h4>
+                    <p>{notes}</p>
+                  </div>
+                );
+              })()}
             </section>
           </div>
         </div>
 
-        <DialogFooter className="sticky bottom-0 z-10 backdrop-blur bg-white/80 dark:bg-[#101010]/80 border-t border-gray-200 dark:border-gray-800 px-6 py-4 flex flex-col sm:flex-row items-center justify-center sm:justify-center gap-3">
+        <DialogFooter className="sticky bottom-0 z-10 backdrop-blur bg-white/80 dark:bg-[#101010]/80 border-t border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-4">
+          <div className="w-full flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3">
           <Button
             variant="new"
-            className="rounded-full"
+            className="rounded-full w-auto"
             onClick={handleExportPdf}
             disabled={!sale || isExporting}
           >
-            <FileDown className="mr-2 h-4 w-4" />
             {shareUrl ? "Ver PDF" : isExporting ? "Generando..." : "Exportar PDF"}
           </Button>
           <Button
             variant="outline"
-            className="rounded-full"
+            className="rounded-full w-auto"
             onClick={handlePrint}
           >
-            <Printer className="mr-2 h-4 w-4" />
             Imprimir
           </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" className="rounded-full w-auto" onClick={() => onOpenChange(false)}>
             Cerrar
           </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

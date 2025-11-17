@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Plus, CheckCircle, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -27,6 +29,7 @@ interface PermissionSasHeaderProps {
 }
 
 export function PermissionSasHeader({ title, description, stats, onNewClick, customerSlug, onAssignAll }: PermissionSasHeaderProps) {
+  const t = useTranslations()
   const [assignDialog, setAssignDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -46,7 +49,7 @@ export function PermissionSasHeader({ title, description, stats, onNewClick, cus
       }
 
       const data = await response.json()
-      toast.success("Permisos asignados correctamente", {
+      toast.success(t('permissions.assignSuccess'), {
         description: data.message,
       })
 
@@ -54,7 +57,7 @@ export function PermissionSasHeader({ title, description, stats, onNewClick, cus
       onAssignAll?.()
     } catch (error: any) {
       console.error("Error al asignar permisos:", error)
-      toast.error("Error al asignar permisos", {
+      toast.error(t('permissions.assignError'), {
         description: error.message || "No se pudieron asignar los permisos",
       })
     } finally {

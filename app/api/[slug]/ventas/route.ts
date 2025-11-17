@@ -143,6 +143,18 @@ export async function POST(
       throw AppError.validation('No se pudo asociar el usuario de ventas')
     }
 
+    // Traducir notas automáticamente si existen
+    let notesTranslations = undefined
+    if (validatedData.notes && validatedData.notes.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        notesTranslations = await translateText(validatedData.notes, sourceLanguage)
+      } catch (error) {
+        console.error('Error traduciendo notas de venta:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
+
     // Crear venta con datos validados
     const sale = await SaleService.createSale(organizationId, {
       userId: salesUser.id,
@@ -154,6 +166,7 @@ export async function POST(
       discount: validatedData.discount || 0,
       total: validatedData.total,
       notes: validatedData.notes || null,
+      notesTranslations,
       items: validatedData.items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,

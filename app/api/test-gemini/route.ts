@@ -17,46 +17,41 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    // Intentar inicializar el cliente con el nuevo SDK
-    const client = new GoogleGenAI({ apiKey })
+    // Importar la función para listar modelos disponibles
+    const { listAvailableModels } = await import('@/lib/services/ai/gemini-service')
     
-    // Intentar con diferentes modelos disponibles (según documentación oficial)
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-    let workingModelName = ''
-    let lastError = null
+    // Listar modelos disponibles
+    const modelsInfo = await listAvailableModels()
     
-    for (const modelNameToTry of modelsToTry) {
-      try {
-        // Usar el nuevo formato de la API según documentación oficial
-        const response = await client.models.generateContent({
-          model: modelNameToTry,
-          contents: 'Responde solo con "OK"',
-        })
-        
-        if (response.text) {
-          workingModelName = modelNameToTry
-          break
-        }
-      } catch (error: any) {
-        lastError = error
-        console.log(`Modelo ${modelNameToTry} no disponible:`, error.message)
-        continue
-      }
-    }
-    
-    if (!workingModelName) {
-      throw new Error(`Ninguno de los modelos está disponible. Último error: ${lastError?.message || 'Desconocido'}`)
+    if (modelsInfo.working.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Ningún modelo disponible',
+        details: 'No se encontraron modelos disponibles en tu cuenta. Verifica en Google AI Studio (https://aistudio.google.com/) que los modelos estén habilitados.',
+        tested: modelsInfo.tested,
+        testedDetails: modelsInfo.details,
+        apiKeyLength: apiKey.length,
+        apiKeyPrefix: apiKey.substring(0, 10) + '...',
+        sdk: '@google/genai',
+        apiVersion: 'v1beta',
+        recommendation: 'Verifica en Google AI Studio qué modelos están habilitados en tu cuenta. Puede ser necesario habilitar los modelos manualmente.',
+        howToCheck: '1. Ve a https://aistudio.google.com/ 2. Inicia sesión con tu cuenta de Google 3. Ve a la sección de modelos o configuración 4. Verifica qué modelos están habilitados',
+      }, { status: 200 }) // Cambiar a 200 para que se muestre la información
     }
 
     return NextResponse.json({
       success: true,
       message: 'API key válida y funcionando',
-      modelUsed: workingModelName,
-      availableModels: modelsToTry,
+      workingModels: modelsInfo.working,
+      availableModels: modelsInfo.available,
+      testedModels: modelsInfo.tested,
+      testedDetails: modelsInfo.details,
+      recommendedModel: modelsInfo.working[0],
       apiKeyLength: apiKey.length,
       apiKeyPrefix: apiKey.substring(0, 10) + '...',
-      note: `Usa el modelo "${workingModelName}" en tu configuración`,
-      sdk: '@google/genai (nuevo SDK oficial)',
+      note: `Modelos disponibles: ${modelsInfo.working.join(', ')}. Se recomienda usar "${modelsInfo.working[0]}".`,
+      sdk: '@google/genai',
+      apiVersion: 'v1beta',
     })
   } catch (error: any) {
     console.error('Error al probar Gemini API:', error)

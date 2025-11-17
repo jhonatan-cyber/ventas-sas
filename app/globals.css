@@ -251,6 +251,139 @@
   --sidebar-primary: oklch(0.77 0.16 70);
   --ring: var(--primary);
 }
+[data-sas-color="red"] {
+  --primary: oklch(0.577 0.245 27.325);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.577 0.245 27.325);
+  --ring: var(--primary);
+}
+[data-sas-color="pink"] {
+  --primary: oklch(0.7 0.15 340);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.7 0.15 340);
+  --ring: var(--primary);
+}
+[data-sas-color="teal"] {
+  --primary: oklch(0.65 0.14 200);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.65 0.14 200);
+  --ring: var(--primary);
+}
+[data-sas-color="cyan"] {
+  --primary: oklch(0.7 0.15 220);
+  --primary-foreground: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.7 0.15 220);
+  --ring: var(--primary);
+}
+[data-sas-color="indigo"] {
+  --primary: oklch(0.6 0.15 280);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.6 0.15 280);
+  --ring: var(--primary);
+}
+[data-sas-color="yellow"] {
+  --primary: oklch(0.85 0.18 95);
+  --primary-foreground: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.85 0.18 95);
+  --ring: var(--primary);
+}
+[data-sas-color="emerald"] {
+  --primary: oklch(0.7 0.16 160);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.7 0.16 160);
+  --ring: var(--primary);
+}
+[data-sas-color="rose"] {
+  --primary: oklch(0.65 0.2 15);
+  --primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.65 0.2 15);
+  --ring: var(--primary);
+}
+
+/* Versiones NEON para modo oscuro - Colores súper vibrantes y brillantes */
+.dark [data-sas-color="green"] {
+  --primary: oklch(0.8 0.35 148);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.8 0.35 148);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="blue"] {
+  --primary: oklch(0.8 0.32 264);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.8 0.32 264);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="purple"] {
+  --primary: oklch(0.78 0.33 313);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.78 0.33 313);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="orange"] {
+  --primary: oklch(0.85 0.34 70);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.85 0.34 70);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="red"] {
+  --primary: oklch(0.7 0.4 27.325);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.7 0.4 27.325);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="pink"] {
+  --primary: oklch(0.82 0.33 340);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.82 0.33 340);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="teal"] {
+  --primary: oklch(0.78 0.32 200);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.78 0.32 200);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="cyan"] {
+  --primary: oklch(0.82 0.33 220);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.82 0.33 220);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="indigo"] {
+  --primary: oklch(0.72 0.33 280);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.72 0.33 280);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="yellow"] {
+  --primary: oklch(0.92 0.36 95);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.92 0.36 95);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="emerald"] {
+  --primary: oklch(0.82 0.34 160);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.82 0.34 160);
+  --ring: var(--primary);
+}
+
+.dark [data-sas-color="rose"] {
+  --primary: oklch(0.78 0.38 15);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.78 0.38 15);
+  --ring: var(--primary);
+}
 
 /* Botones de "crear nuevo" (variant=new) usan el color elegido en SAS */
 [data-sas-color] [data-slot="button"][data-variant="new"] {
@@ -302,4 +435,34 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Animaciones adicionales para el login */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
 }

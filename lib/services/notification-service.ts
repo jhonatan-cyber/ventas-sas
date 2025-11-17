@@ -12,6 +12,7 @@ export type NotificationType =
   | 'cash_register_closed'
   | 'user_created'
   | 'product_created'
+  | 'transfer_request'
 
 export interface CreateNotificationData {
   type: NotificationType

@@ -14,6 +14,148 @@ const getGeminiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
+/**
+ * Lista los modelos disponibles en la cuenta
+ * Intenta usar el método del SDK si está disponible, o prueba modelos conocidos
+ */
+export async function listAvailableModels(): Promise<{
+  available: string[];
+  tested: string[];
+  working: string[];
+  details: Array<{ name: string; available: boolean; error?: string }>;
+}> {
+  try {
+    const client = getGeminiClient();
+    const modelsToTest = [
+      "gemini-2.5-flash", // Modelo más reciente según Google AI Studio
+      "gemini-2.0-flash-exp",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-1.5-flash-8b",
+      "gemini-pro", // Modelo legacy
+    ];
+
+    const available: string[] = [];
+    const working: string[] = [];
+    const details: Array<{ name: string; available: boolean; error?: string }> =
+      [];
+
+    // Probar cada modelo con una petición simple
+    for (const modelName of modelsToTest) {
+      try {
+        const response = await client.models.generateContent({
+          model: modelName,
+          contents: "OK",
+        });
+
+        if (response.text) {
+          available.push(modelName);
+          working.push(modelName);
+          details.push({ name: modelName, available: true });
+        } else {
+          details.push({
+            name: modelName,
+            available: false,
+            error: "No response text",
+          });
+        }
+      } catch (error: any) {
+        const errorCode = error?.code || error?.error?.code;
+        const errorMessage = error?.message || error?.error?.message || "";
+        details.push({
+          name: modelName,
+          available: false,
+          error: `${errorCode || "Error"}: ${errorMessage.substring(0, 150)}`,
+        });
+      }
+    }
+
+    return {
+      available,
+      tested: details.map((t) => t.name),
+      working,
+      details,
+    };
+  } catch (error: any) {
+    console.error("Error al listar modelos:", error);
+    return {
+      available: [],
+      tested: [],
+      working: [],
+      details: [
+        {
+          name: "Error general",
+          available: false,
+          error: error?.message || "Error desconocido al listar modelos",
+        },
+      ],
+    };
+  }
+}
+
+/**
+ * Helper para intentar generar contenido con múltiples modelos
+ * Intenta con diferentes modelos hasta encontrar uno que funcione
+ */
+async function tryGenerateContentWithModels(
+  client: any,
+  prompt: string
+): Promise<string> {
+  const modelsToTry = [
+    "gemini-2.5-flash", // Modelo más reciente según Google AI Studio
+    "gemini-2.0-flash-exp",
+    "gemini-2.5-pro",
+    "gemini-1.5-pro",
+    "gemini-pro", // Modelo legacy que puede estar disponible en v1beta
+  ];
+
+  let lastError = null;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const response = await client.models.generateContent({
+        model: modelName,
+        contents: prompt,
+      });
+
+      const text = response.text?.trim() || "";
+      if (text) {
+        return text;
+      }
+    } catch (error: any) {
+      lastError = error;
+      const errorCode = error?.code || error?.error?.code;
+      const errorMessage = error?.message || error?.error?.message || "";
+      const isModelError =
+        errorCode === 404 ||
+        errorMessage.includes("model") ||
+        errorMessage.includes("not found") ||
+        errorMessage.includes("not available") ||
+        errorMessage.includes("404") ||
+        errorMessage.includes("NOT_FOUND");
+
+      if (isModelError) {
+        console.log(
+          `Modelo ${modelName} no disponible (${
+            errorCode || "404"
+          }), intentando siguiente...`
+        );
+        continue;
+      }
+      // Si es otro tipo de error, lanzarlo
+      throw error;
+    }
+  }
+
+  // Si llegamos aquí, ningún modelo funcionó
+  const lastErrorMsg =
+    lastError?.message || lastError?.error?.message || "Desconocido";
+  throw new Error(
+    `Ninguno de los modelos está disponible. Último error: ${lastErrorMsg}. ` +
+      `Verifica en Google AI Studio (https://aistudio.google.com/) qué modelos están disponibles en tu cuenta.`
+  );
+}
+
 export interface GenerateDescriptionOptions {
   name: string;
   brand?: string | null;
@@ -63,25 +205,20 @@ Requisitos:
 
 Genera solo la descripción, sin títulos ni encabezados:`;
 
-      // Intentar con diferentes modelos en orden de preferencia (según documentación oficial)
-      const modelsToTry = [
-        "gemini-2.5-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro",
-      ];
+      // Intentar con diferentes modelos en orden de preferencia
+      // Nota: Los nombres pueden variar según la versión de la API
+      // El SDK @google/genai usa v1beta, que puede tener nombres diferentes
+      const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-pro"];
       let lastError = null;
 
       for (const modelName of modelsToTry) {
         try {
-          // Usar el nuevo formato de la API según documentación oficial
+          // Usar el formato de la API según documentación oficial
           const response = await client.models.generateContent({
             model: modelName,
             contents: prompt,
           });
 
-
-          
           const description = response.text?.trim() || "";
           if (description) {
             return description;
@@ -89,14 +226,21 @@ Genera solo la descripción, sin títulos ni encabezados:`;
         } catch (error: any) {
           lastError = error;
           // Si el error es de modelo, intentar con el siguiente
-          if (
-            error?.message?.includes("model") ||
-            error?.message?.includes("not found") ||
-            error?.message?.includes("not available") ||
-            error?.message?.includes("404")
-          ) {
+          const errorCode = error?.code || error?.error?.code;
+          const errorMessage = error?.message || error?.error?.message || "";
+          const isModelError =
+            errorCode === 404 ||
+            errorMessage.includes("model") ||
+            errorMessage.includes("not found") ||
+            errorMessage.includes("not available") ||
+            errorMessage.includes("404") ||
+            errorMessage.includes("NOT_FOUND");
+
+          if (isModelError) {
             console.log(
-              `Modelo ${modelName} no disponible, intentando siguiente...`
+              `Modelo ${modelName} no disponible (${
+                errorCode || "404"
+              }), intentando siguiente...`
             );
             continue;
           }
@@ -106,10 +250,12 @@ Genera solo la descripción, sin títulos ni encabezados:`;
       }
 
       // Si llegamos aquí, ningún modelo funcionó
+      const lastErrorMsg =
+        lastError?.message || lastError?.error?.message || "Desconocido";
       throw new Error(
-        `Ninguno de los modelos está disponible. Último error: ${
-          lastError?.message || "Desconocido"
-        }`
+        `Ninguno de los modelos está disponible. Último error: ${lastErrorMsg}. ` +
+          `Verifica en Google AI Studio (https://aistudio.google.com/) qué modelos están disponibles en tu cuenta. ` +
+          `El SDK está usando la API v1beta, que puede tener modelos diferentes disponibles.`
       );
     } catch (error: any) {
       console.error("Error al generar descripción con Gemini:", error);
@@ -130,9 +276,16 @@ Genera solo la descripción, sin títulos ni encabezados:`;
         );
       }
 
-      if (error?.message?.includes("model")) {
+      if (
+        error?.message?.includes("model") ||
+        error?.code === 404 ||
+        error?.error?.code === 404
+      ) {
         throw new Error(
-          "Modelo de Gemini no disponible. Verifica que el modelo esté habilitado en tu cuenta."
+          "Modelo de Gemini no disponible. " +
+            "El SDK está usando la API v1beta y los modelos pueden no estar disponibles. " +
+            "Verifica en Google AI Studio (https://aistudio.google.com/) qué modelos están habilitados en tu cuenta. " +
+            "Puede ser necesario habilitar los modelos en tu cuenta o usar un SDK diferente."
         );
       }
 
@@ -159,12 +312,8 @@ ${text}
 
 Traducción:`;
 
-      const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
-
-      const translation = response.text?.trim() || text;
+      const translation =
+        (await tryGenerateContentWithModels(client, prompt)) || text;
 
       return translation;
     } catch (error) {
@@ -196,12 +345,8 @@ ${categoriesList}
 Responde SOLO con el nombre de la categoría más apropiada de la lista, o "null" si ninguna es apropiada.
 No incluyas explicaciones ni texto adicional:`;
 
-      const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
-
-      const suggestion = response.text?.trim().toLowerCase() || "";
+      const suggestionText = await tryGenerateContentWithModels(client, prompt);
+      const suggestion = suggestionText?.trim().toLowerCase() || "";
 
       // Verificar si la sugerencia está en la lista de categorías
       const matchedCategory = existingCategories.find(
@@ -243,13 +388,8 @@ Ejemplos:
 
 Responde SOLO con el JSON, sin texto adicional:`;
 
-      const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
+      const text = (await tryGenerateContentWithModels(client, prompt)) || "";
 
-      const text = response.text?.trim() || "";
-      
       // Intentar parsear el JSON de la respuesta
       try {
         // Limpiar el texto para extraer solo el JSON
@@ -257,8 +397,14 @@ Responde SOLO con el JSON, sin texto adicional:`;
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           return {
-            brand: parsed.brand && parsed.brand !== "null" ? parsed.brand.trim() : null,
-            model: parsed.model && parsed.model !== "null" ? parsed.model.trim() : null,
+            brand:
+              parsed.brand && parsed.brand !== "null"
+                ? parsed.brand.trim()
+                : null,
+            model:
+              parsed.model && parsed.model !== "null"
+                ? parsed.model.trim()
+                : null,
           };
         }
       } catch (parseError) {
@@ -301,12 +447,8 @@ Requisitos:
 
 Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
 
-      const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
-
-      const shortened = response.text?.trim() || productName;
+      const shortened =
+        (await tryGenerateContentWithModels(client, prompt)) || productName;
 
       // Si el resultado acortado es más largo que el original o muy corto, usar truncamiento inteligente
       if (shortened.length > productName.length || shortened.length < 10) {
@@ -314,7 +456,9 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
         if (productName.length > maxLength) {
           const truncated = productName.substring(0, maxLength);
           const lastSpace = truncated.lastIndexOf(" ");
-          return lastSpace > 0 ? truncated.substring(0, lastSpace) + "..." : truncated + "...";
+          return lastSpace > 0
+            ? truncated.substring(0, lastSpace) + "..."
+            : truncated + "...";
         }
         return productName;
       }
@@ -326,7 +470,9 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
       if (productName.length > maxLength) {
         const truncated = productName.substring(0, maxLength);
         const lastSpace = truncated.lastIndexOf(" ");
-        return lastSpace > 0 ? truncated.substring(0, lastSpace) + "..." : truncated + "...";
+        return lastSpace > 0
+          ? truncated.substring(0, lastSpace) + "..."
+          : truncated + "...";
       }
       return productName;
     }
@@ -364,7 +510,9 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
       }
 
       if (!googleApiKey || !googleCx) {
-        console.log("Google Custom Search no configurado para búsqueda de productos");
+        console.log(
+          "Google Custom Search no configurado para búsqueda de productos"
+        );
         return { imageUrl: null, brand: foundBrand, model: foundModel };
       }
 
@@ -380,7 +528,9 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
       // Buscar información del producto y imagen en paralelo
       const [webResponse, imageResponse] = await Promise.all([
         fetch(
-          `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(searchQuery)}&num=3&safe=active`,
+          `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(
+            searchQuery
+          )}&num=3&safe=active`,
           {
             headers: {
               Accept: "application/json",
@@ -388,7 +538,9 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
           }
         ),
         fetch(
-          `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(searchQuery)}&searchType=image&num=3&safe=active`,
+          `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(
+            searchQuery
+          )}&searchType=image&num=3&safe=active`,
           {
             headers: {
               Accept: "application/json",
@@ -403,14 +555,15 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
 
         if (webData.items && webData.items.length > 0) {
           // Buscar el mejor resultado (preferir sitios de e-commerce)
-          const productItem = webData.items.find(
-            (item: any) =>
-              item.link?.includes("product") ||
-              item.displayLink?.includes("amazon") ||
-              item.displayLink?.includes("mercadolibre") ||
-              item.displayLink?.includes("google.com/shopping") ||
-              item.link?.includes("tienda")
-          ) || webData.items[0];
+          const productItem =
+            webData.items.find(
+              (item: any) =>
+                item.link?.includes("product") ||
+                item.displayLink?.includes("amazon") ||
+                item.displayLink?.includes("mercadolibre") ||
+                item.displayLink?.includes("google.com/shopping") ||
+                item.link?.includes("tienda")
+            ) || webData.items[0];
 
           // Intentar obtener imagen del resultado web
           if (productItem.pagemap?.cse_image?.[0]?.src) {
@@ -427,13 +580,14 @@ Responde SOLO con el nombre acortado, sin explicaciones ni texto adicional:`;
 
         if (imageData.items && imageData.items.length > 0) {
           // Priorizar imágenes de productos (preferir resultados de sitios de e-commerce)
-          const productImage = imageData.items.find(
-            (item: any) =>
-              item.link?.includes("product") ||
-              item.displayLink?.includes("amazon") ||
-              item.displayLink?.includes("mercadolibre") ||
-              item.displayLink?.includes("google.com/shopping")
-          ) || imageData.items[0];
+          const productImage =
+            imageData.items.find(
+              (item: any) =>
+                item.link?.includes("product") ||
+                item.displayLink?.includes("amazon") ||
+                item.displayLink?.includes("mercadolibre") ||
+                item.displayLink?.includes("google.com/shopping")
+            ) || imageData.items[0];
 
           imageUrl = productImage.link || null;
         }

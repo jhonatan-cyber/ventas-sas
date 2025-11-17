@@ -1,11 +1,21 @@
 "use client"
 
 import { Category } from "@prisma/client"
-import { ShoppingBag, ChevronRight, Package } from "lucide-react"
-import { useState, useEffect } from "react"
+import { ShoppingBag, ChevronRight, Package, Search, X, ChevronLeft } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface CategoryCardsProps {
   categories: Category[]
@@ -20,6 +30,9 @@ interface CategoryWithCount extends Category {
 export function CategoryCards({ categories, onCategorySelect, customerSlug }: CategoryCardsProps) {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [categoriesWithCounts, setCategoriesWithCounts] = useState<CategoryWithCount[]>(categories)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [pageSize, setPageSize] = useState(12)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Obtener conteos de productos por categoría
   useEffect(() => {
@@ -56,6 +69,58 @@ export function CategoryCards({ categories, onCategorySelect, customerSlug }: Ca
     fetchProductCounts()
   }, [categories, customerSlug])
 
+  // Filtrar categorías por búsqueda
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return categoriesWithCounts
+    }
+    const searchLower = searchTerm.toLowerCase()
+    return categoriesWithCounts.filter(
+      (category) =>
+        category.name.toLowerCase().includes(searchLower) ||
+        (category.description && category.description.toLowerCase().includes(searchLower))
+    )
+  }, [categoriesWithCounts, searchTerm])
+
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredCategories.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedCategories = filteredCategories.slice(startIndex, endIndex)
+
+  // Resetear página cuando cambia el término de búsqueda o el tamaño de página
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, pageSize])
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+  }
+
+  const handleClear = () => {
+    setSearchTerm("")
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1)
+    }
+  }
+
   if (categories.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -81,10 +146,79 @@ export function CategoryCards({ categories, onCategorySelect, customerSlug }: Ca
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-      {categoriesWithCounts.map((category, index) => {
+    <div className="space-y-4 md:space-y-6">
+      {/* Filtros */}
+      <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            {/* Búsqueda */}
+            <div className="flex-1 w-full sm:w-auto">
+              <Label
+                htmlFor="search-categories"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+              >
+                Buscar
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                <Input
+                  id="search-categories"
+                  placeholder="Buscar categorías por nombre o descripción..."
+                  className="pl-10 pr-10 w-full rounded-full"
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
+                    onClick={handleClear}
+                  >
+                    <X className="h-4 w-4 text-gray-400" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Tamaño de página */}
+            <div className="w-full sm:w-[150px]">
+              <Label
+                htmlFor="page-size"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+              >
+                Datos
+              </Label>
+              <Select
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+                value={pageSize.toString()}
+                defaultValue="12"
+              >
+                <SelectTrigger id="page-size" className="w-full rounded-full">
+                  <SelectValue placeholder="Por página" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 por página</SelectItem>
+                  <SelectItem value="12">12 por página</SelectItem>
+                  <SelectItem value="24">24 por página</SelectItem>
+                  <SelectItem value="48">48 por página</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Grid de categorías */}
+      {paginatedCategories.length > 0 ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+            {paginatedCategories.map((category) => {
         const isHovered = hoveredCard === category.id
-        const gradientColor = gradientColors[index % gradientColors.length]
+        // Usar el índice original de la categoría en el array completo para mantener el gradiente consistente
+        const originalIndex = categoriesWithCounts.findIndex(c => c.id === category.id)
+        const gradientColor = gradientColors[originalIndex >= 0 ? originalIndex % gradientColors.length : 0]
         const productCount = category.productCount ?? 0
 
         return (
@@ -187,6 +321,50 @@ export function CategoryCards({ categories, onCategorySelect, customerSlug }: Ca
           </Card>
         )
       })}
+          </div>
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 py-4">
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                Página {currentPage} de {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="rounded-full text-xs sm:text-sm"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1 sm:mr-0" />
+                  <span className="sm:inline">Anterior</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className="rounded-full text-xs sm:text-sm"
+                >
+                  <span className="sm:inline">Siguiente</span>
+                  <ChevronRight className="h-4 w-4 ml-1 sm:ml-0" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 flex items-center justify-center mb-4">
+            <ShoppingBag className="h-12 w-12 text-primary" />
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">No se encontraron categorías</p>
+          <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+            {searchTerm ? "Intenta con otro término de búsqueda" : "No hay categorías registradas"}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

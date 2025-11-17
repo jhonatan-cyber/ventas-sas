@@ -1,6 +1,7 @@
 "use client"
 
 import { RoleSas } from "@prisma/client"
+import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -37,6 +38,7 @@ interface RoleSasFormDialogProps {
 }
 
 export function RoleSasFormDialog({ open, onOpenChange, role, onSave }: RoleSasFormDialogProps) {
+  const t = useTranslations()
   const [nombre, setNombre] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -97,7 +99,7 @@ export function RoleSasFormDialog({ open, onOpenChange, role, onSave }: RoleSasF
                 id="nombre"
                 value={nombre}
                 onChange={(e) => setNombre(capitalizeWords(e.target.value))}
-                placeholder="Ej: Vendedor, Supervisor, Cajero..."
+                placeholder={t('common.placeholders.roleExample')}
                 required
                 disabled={isLoading}
                 className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
@@ -111,7 +113,7 @@ export function RoleSasFormDialog({ open, onOpenChange, role, onSave }: RoleSasF
                 id="descripcion"
                 value={descripcion}
                 onChange={(e) => setDescripcion(capitalizeFirst(e.target.value))}
-                placeholder="Descripción opcional del rol..."
+                placeholder={t('common.placeholders.roleDescription')}
                 rows={3}
                 disabled={isLoading}
                 className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white resize-none"

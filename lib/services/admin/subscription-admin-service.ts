@@ -1,4 +1,4 @@
-import { SubscriptionPlan, Organization } from '@prisma/client'
+import { SubscriptionPlan, Organization, SubscriptionStatus } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 
@@ -41,7 +41,7 @@ export interface UpdateSubscriptionPlanData {
 export class SubscriptionAdminService {
   // Obtener todos los planes con estadísticas
   static async getAllPlans(): Promise<SubscriptionPlanWithStats[]> {
-    return prisma.subscriptionPlan.findMany({
+    const plans = await prisma.subscriptionPlan.findMany({
       include: {
         _count: {
           select: {
@@ -51,11 +51,58 @@ export class SubscriptionAdminService {
       },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Para cada plan, contar también las organizaciones con suscripciones activas
+    const plansWithCounts = await Promise.all(
+      plans.map(async (plan) => {
+        // Obtener IDs únicos de organizaciones con suscripciones activas en la tabla Subscription
+        const activeSubscriptionOrgs = await prisma.subscription.findMany({
+          where: {
+            planId: plan.id,
+            status: {
+              in: [SubscriptionStatus.active, SubscriptionStatus.trial]
+            },
+            OR: [
+              { endDate: null },
+              { endDate: { gt: new Date() } }
+            ]
+          },
+          select: {
+            organizationId: true
+          },
+          distinct: ['organizationId']
+        })
+
+        const activeSubscriptionOrgIds = activeSubscriptionOrgs.map(s => s.organizationId)
+
+        // Contar organizaciones con subscriptionPlanId directo que NO están ya contadas en las suscripciones
+        const directOrgCount = await prisma.organization.count({
+          where: {
+            subscriptionPlanId: plan.id,
+            id: {
+              notIn: activeSubscriptionOrgIds
+            }
+          }
+        })
+
+        // Total = organizaciones con suscripciones activas + organizaciones con plan directo (sin duplicar)
+        const totalOrganizations = activeSubscriptionOrgs.length + directOrgCount
+
+        return {
+          ...plan,
+          _count: {
+            organizations: totalOrganizations
+          }
+        }
+      })
+    )
+
+    return plansWithCounts
   }
 
   // Obtener plan por ID
   static async getPlanById(id: string): Promise<SubscriptionPlanWithStats | null> {
-    return prisma.subscriptionPlan.findUnique({
+    const plan = await prisma.subscriptionPlan.findUnique({
       where: { id },
       include: {
         _count: {
@@ -65,6 +112,50 @@ export class SubscriptionAdminService {
         }
       }
     })
+
+    if (!plan) {
+      return null
+    }
+
+    // Obtener IDs únicos de organizaciones con suscripciones activas en la tabla Subscription
+    const activeSubscriptionOrgs = await prisma.subscription.findMany({
+      where: {
+        planId: plan.id,
+        status: {
+          in: [SubscriptionStatus.active, SubscriptionStatus.trial]
+        },
+        OR: [
+          { endDate: null },
+          { endDate: { gt: new Date() } }
+        ]
+      },
+      select: {
+        organizationId: true
+      },
+      distinct: ['organizationId']
+    })
+
+    const activeSubscriptionOrgIds = activeSubscriptionOrgs.map(s => s.organizationId)
+
+    // Contar organizaciones con subscriptionPlanId directo que NO están ya contadas en las suscripciones
+    const directOrgCount = await prisma.organization.count({
+      where: {
+        subscriptionPlanId: plan.id,
+        id: {
+          notIn: activeSubscriptionOrgIds
+        }
+      }
+    })
+
+    // Total = organizaciones con suscripciones activas + organizaciones con plan directo (sin duplicar)
+    const totalOrganizations = activeSubscriptionOrgs.length + directOrgCount
+
+    return {
+      ...plan,
+      _count: {
+        organizations: totalOrganizations
+      }
+    }
   }
 
   // Crear nuevo plan

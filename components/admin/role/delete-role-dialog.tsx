@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface DeleteRoleDialogProps {
@@ -10,6 +12,8 @@ interface DeleteRoleDialogProps {
 }
 
 export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: DeleteRoleDialogProps) {
+  const t = useTranslations()
+  
   const handleConfirm = () => {
     onConfirm()
     onOpenChange(false)
@@ -20,12 +24,12 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
       <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-gray-900 dark:text-white">
-            ¿Eliminar rol?
+            {t('roles.deleteTitle')}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
             {roleName 
-              ? `Estás a punto de eliminar el rol "${roleName}". Esta acción no se puede deshacer.`
-              : "Estás a punto de eliminar este rol. Esta acción no se puede deshacer."
+              ? `${t('roles.deleteWarning')} "${roleName}". ${t('roles.deleteWarningEnd')}`
+              : t('roles.deleteWarningNoName')
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -34,13 +38,13 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto rounded-full"
           >
-            Cancelar
+            {t('action.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

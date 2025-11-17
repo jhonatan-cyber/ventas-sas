@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { GeminiService } from '@/lib/services/ai/gemini-service'
+import { buildExtractJsonPrompt, buildProductDescriptionPrompt } from '@/lib/services/ai/prompts'
+import { chatCompleteWithOptions } from '@/lib/services/ai/provider'
 
 function shortenProductName(name: string, maxLength = 50): string {
   if (!name) {
@@ -72,9 +73,19 @@ async function enhanceProductInfoWithAI(
   try {
     // Acortar el nombre si es muy largo (más de 60 caracteres)
     let shortenedName = shortenProductName(productName)
-    if (productName.length > 60 && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    if (productName.length > 60) {
       try {
-        shortenedName = await GeminiService.shortenProductName(productName, 60)
+        const shortenPrompt = [
+          "Acorta el siguiente nombre de producto manteniendo marca y modelo si existen.",
+          "Máximo 60 caracteres. Devuelve solo el nombre, sin explicaciones.",
+          `Nombre: ${productName}`
+        ].join('\n')
+        const shortened = await chatCompleteWithOptions([{ role: 'user', content: shortenPrompt }], {
+          temperature: 0.2,
+        })
+        if (shortened && shortened.length > 0 && shortened.length <= 70) {
+          shortenedName = shortened.trim()
+        }
       } catch (error) {
         console.error("Error al acortar nombre con IA:", error)
         // Si falla, mantener el nombre original
@@ -86,12 +97,17 @@ async function enhanceProductInfoWithAI(
     let model = existingModel
     
     if (!brand || !model) {
-      const extracted = await GeminiService.extractBrandAndModel(productName)
-      if (!brand && extracted.brand) {
-        brand = extracted.brand
-      }
-      if (!model && extracted.model) {
-        model = extracted.model
+      try {
+        const extractPrompt = buildExtractJsonPrompt({ text: productName })
+        const text = await chatCompleteWithOptions([{ role: 'user', content: extractPrompt }], { temperature: 0.1 })
+        const jsonMatch = text?.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0])
+          if (!brand && parsed.brand && parsed.brand !== 'null') brand = String(parsed.brand).trim()
+          if (!model && parsed.model && parsed.model !== 'null') model = String(parsed.model).trim()
+        }
+      } catch (error) {
+        console.error("Error al extraer marca/modelo con IA:", error)
       }
     }
     
@@ -99,22 +115,21 @@ async function enhanceProductInfoWithAI(
     let description = existingDescription
     if (!description || description.length < 20) {
       try {
-        description = await GeminiService.generateProductDescription({
-          name: productName,
-          brand: brand || null,
-          model: model || null,
-          existingDescription: existingDescription || null,
-          category: null,
-        })
+        const prompt = buildProductDescriptionPrompt({ name: productName, brand: brand || null, category: null, features: null })
+        const enhancedPrompt =
+          prompt +
+          (model ? `\nModelo: ${model}` : '') +
+          (existingDescription ? `\nDescripción existente (mejórala manteniendo la intención): ${existingDescription}` : '')
+        description = await chatCompleteWithOptions([{ role: 'user', content: enhancedPrompt }], { temperature: 0.4 })
       } catch (error) {
-        console.error("Error al generar descripción con Gemini:", error)
+        console.error("Error al generar descripción con IA:", error)
       }
     }
     
     // Buscar imagen si no existe
     let imageUrl = null
     if (!imageUrl) {
-      const productInfo = await GeminiService.searchProductInfo(productName, brand || null, model || null)
+      const productInfo = await (await import('@/lib/services/ai/gemini-service')).GeminiService.searchProductInfo(productName, brand || null, model || null)
       imageUrl = productInfo.imageUrl
       // Actualizar marca y modelo si se encontraron mejores valores
       if (!brand && productInfo.brand) {
@@ -478,94 +493,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Si ninguna API encontró el producto, intentar con IA usando el código de barras
-    const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-    if (geminiApiKey) {
-      try {
-        console.log("Intentando buscar información con IA usando el código de barras...")
-        
-        // Intentar buscar información del producto usando el código de barras como referencia
-        // Primero intentar extraer información básica del código de barras
-        let productName = `Producto ${barcode}`
-        let foundInfo = false
-        
-        // Intentar buscar información usando Google Custom Search con el código de barras
-        const googleApiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY
-        const googleCx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
-        
-        if (googleApiKey && googleCx) {
-          try {
-            const searchResponse = await fetch(
-              `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCx}&q=${encodeURIComponent(barcode)}&num=3`,
-              {
-                headers: {
-                  'Accept': 'application/json',
-                }
-              }
-            )
-            
-            if (searchResponse.ok) {
-              const searchData = await searchResponse.json()
-              if (searchData.items && searchData.items.length > 0) {
-                const item = searchData.items[0]
-                const title = item.title || ''
-                
-                // Extraer nombre del producto del título
-                if (title) {
-                  productName = title.split(' - ')[0] || title.split(' | ')[0] || title
-                  foundInfo = true
-                }
-              }
-            }
-          } catch (error) {
-            console.error("Error al buscar en Google Custom Search:", error)
-          }
-        }
-        
-        // Si encontramos un nombre, usar IA para generar descripción y buscar más información
-        if (foundInfo || productName) {
-          // Extraer marca y modelo del nombre usando Gemini
-          const extracted = await GeminiService.extractBrandAndModel(productName)
-          const extractedBrand = extracted.brand
-          const extractedModel = extracted.model
-          
-          // Generar descripción usando Gemini
-          let generatedDescription = null
-          try {
-            generatedDescription = await GeminiService.generateProductDescription({
-              name: productName,
-              brand: extractedBrand || null,
-              model: extractedModel || null,
-              existingDescription: null,
-              category: null,
-            })
-          } catch (error) {
-            console.error("Error al generar descripción con Gemini:", error)
-          }
-          
-          // Buscar imagen, marca y modelo usando Google Custom Search
-          const productInfo = await GeminiService.searchProductInfo(
-            productName,
-            extractedBrand || null,
-            extractedModel || null
-          )
-          
-          return NextResponse.json({
-            success: true,
-            source: 'ai_gemini',
-            data: {
-              name: shortenProductName(productName),
-              brand: productInfo.brand || extractedBrand || null,
-              model: productInfo.model || extractedModel || null,
-              description: generatedDescription || `Producto identificado por código de barras ${barcode}`,
-              imageUrl: productInfo.imageUrl || null
-            }
-          })
-        }
-      } catch (error) {
-        console.error("Error al buscar información con IA:", error)
-      }
-    }
+    // Si ninguna API encontró el producto, devolver mensaje estándar
     
     // Si ninguna API ni IA encontró el producto
     return NextResponse.json({

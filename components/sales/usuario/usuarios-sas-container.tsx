@@ -1,8 +1,10 @@
 "use client"
 
 import { UsuarioSas } from "@prisma/client"
+import { User } from "lucide-react"
 import { useState } from "react"
 
+import { UsuariosSasCards } from "./usuarios-sas-cards"
 import { UsuariosSasFilters } from "./usuarios-sas-filters"
 import { UsuariosSasPagination } from "./usuarios-sas-pagination"
 import { UsuariosSasStats } from "./usuarios-sas-stats"
@@ -20,9 +22,10 @@ interface UsuariosSasContainerProps {
   onEdit?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
   onToggleStatus?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
   onDelete?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onView?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
 }
 
-export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onToggleStatus, onDelete }: UsuariosSasContainerProps) {
+export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onToggleStatus, onDelete, onView }: UsuariosSasContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -90,16 +93,41 @@ export function UsuariosSasContainer({ usuarios, sucursalesCount, onEdit, onTogg
         </CardContent>
       </Card>
 
-      {/* Tabla de usuarios sin Card */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
-        <UsuariosSasTable 
-          usuarios={currentUsuarios}
-          sucursalesCount={sucursalesCount}
-          onEditClick={onEdit} 
-          onToggleStatus={onToggleStatus} 
-          onDeleteClick={onDelete} 
-        />
-      </div>
+      {/* Mostrar cards y tabla solo si hay usuarios */}
+      {currentUsuarios.length > 0 ? (
+        <>
+          {/* Cards de usuarios (solo móvil) */}
+          <UsuariosSasCards
+            usuarios={currentUsuarios}
+            sucursalesCount={sucursalesCount}
+            onEdit={onEdit}
+            onToggleStatus={onToggleStatus}
+            onDelete={onDelete}
+            onView={onView}
+          />
+
+          {/* Tabla de usuarios (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+            <UsuariosSasTable 
+              usuarios={currentUsuarios}
+              sucursalesCount={sucursalesCount}
+              onEditClick={onEdit} 
+              onToggleStatus={onToggleStatus} 
+              onDeleteClick={onDelete}
+              onViewClick={onView}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <User className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No hay usuarios registrados</p>
+          </div>
+        </div>
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

@@ -10,6 +10,8 @@
 export function serializeSale(sale: any) {
   return {
     ...sale,
+    customerId: sale.customerId ?? null,
+    customerName: sale.customerName ?? null,
     subtotal: Number(sale.subtotal ?? 0),
     discount: Number(sale.discount ?? 0),
     total: Number(sale.total ?? 0),
@@ -43,6 +45,7 @@ export function serializeSale(sale: any) {
             id: item.product.id,
             name: item.product.name,
             price: Number(item.product.price ?? 0),
+            branchId: item.product.branchId || null,
             imageUrl: item.product.imageUrl,
           }
         : null,
@@ -114,6 +117,7 @@ export function serializeQuotation(quotation: any) {
             id: item.product.id,
             name: item.product.name,
             price: Number(item.product.price ?? 0),
+            branchId: item.product.branchId || null,
           }
         : null,
     })) || [],

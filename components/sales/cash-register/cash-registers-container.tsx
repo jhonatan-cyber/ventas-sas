@@ -9,7 +9,7 @@ import { CashRegistersTable } from "./cash-registers-table"
 
 import type { CashRegisterWithRelations } from "./types"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface CashRegistersContainerProps {
   cashRegisters: CashRegisterWithRelations[]
@@ -18,9 +18,10 @@ interface CashRegistersContainerProps {
   onOpen?: (cashRegister: CashRegisterWithRelations) => void
   onClose?: (cashRegister: CashRegisterWithRelations) => void
   onDelete?: (cashRegister: CashRegisterWithRelations) => void
+  maxBranches?: number | null
 }
 
-export function CashRegistersContainer({ cashRegisters, isLoading = false, onViewDetails, onOpen, onClose, onDelete }: CashRegistersContainerProps) {
+export function CashRegistersContainer({ cashRegisters, isLoading = false, onViewDetails, onOpen, onClose, onDelete, maxBranches }: CashRegistersContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -35,8 +36,9 @@ export function CashRegistersContainer({ cashRegisters, isLoading = false, onVie
   ))
     .map(id => cashRegisters.find(cr => cr.branch?.id === id)?.branch)
     .filter(Boolean)
-  const branchCount = branches.length
-  const shouldShowBranchInfo = branchCount !== 1
+  
+  // Determinar si mostrar información de sucursal basado en maxBranches
+  const shouldShowBranchInfo = maxBranches === undefined || maxBranches === null || maxBranches > 1
 
   // Filtrar cajas por búsqueda, estado y sucursal
   const filteredCashRegisters = cashRegisters.filter(cashRegister => {
@@ -94,51 +96,35 @@ export function CashRegistersContainer({ cashRegisters, isLoading = false, onVie
     setCurrentPage(page)
   }
 
-  const cardTitle = `Cajas (${filteredCashRegisters.length})`
-  const cardDescription = filteredCashRegisters.length === cashRegisters.length
-    ? "Lista completa de cajas registradas"
-    : `Mostrando ${filteredCashRegisters.length} de ${cashRegisters.length} cajas`
-
   return (
     <div className="space-y-6">
       {/* Estadísticas */}
       <CashRegistersStats cashRegisters={cashRegisters} />
 
       {/* Filtros */}
-      <CashRegistersFilters 
-        branches={branches as any[]}
-        onPageSizeChange={handlePageSizeChange}
-        onStatusChange={handleStatusChange}
-        onBranchChange={handleBranchChange}
-        onSearchChange={handleSearchChange}
-      />
-
-      {/* Tabla de cajas */}
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                {cardTitle}
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                {cardDescription}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <CashRegistersTable 
-            cashRegisters={currentCashRegisters} 
-            isLoading={isLoading}
-            onViewDetails={onViewDetails}
-            onOpenClick={onOpen}
-            onCloseClick={onClose}
-            onDeleteClick={onDelete}
-            showBranchInfo={shouldShowBranchInfo}
+        <CardContent className="pt-6">
+          <CashRegistersFilters 
+            branches={branches as any[]}
+            onPageSizeChange={handlePageSizeChange}
+            onStatusChange={handleStatusChange}
+            onBranchChange={handleBranchChange}
+            onSearchChange={handleSearchChange}
+            maxBranches={maxBranches}
           />
         </CardContent>
       </Card>
+
+      {/* Tabla de cajas */}
+      <CashRegistersTable 
+        cashRegisters={currentCashRegisters} 
+        isLoading={isLoading}
+        onViewDetails={onViewDetails}
+        onOpenClick={onOpen}
+        onCloseClick={onClose}
+        onDeleteClick={onDelete}
+        showBranchInfo={shouldShowBranchInfo}
+      />
 
       {/* Paginación */}
       <div className="flex justify-center">

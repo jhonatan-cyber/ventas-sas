@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { useState, useEffect } from "react"
 
 import { DeleteUserDialog } from "./delete-user-dialog"
@@ -17,6 +19,7 @@ interface UsersPageClientProps {
 }
 
 export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
+  const t = useTranslations()
   const [users, setUsers] = useState<UserWithDetails[]>(initialUsers)
   const {
     openDialog,
@@ -68,8 +71,9 @@ export function UsersPageClient({ initialUsers }: UsersPageClientProps) {
       <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <UserHeader
-          title="Gestión de Usuarios"
-          description="Administra todos los usuarios del sistema"
+          title={t('users.title')}
+          description={t('users.description')}
+          newButtonText={t('users.create')}
           onNewClick={handleNewClick}
         />
 

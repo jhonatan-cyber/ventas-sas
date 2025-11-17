@@ -1,12 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Branch } from "@prisma/client";
 import {
-  Building2,
   Mail,
   Phone,
   MapPin,
-  Users,
   Calendar,
   CheckCircle2,
   XCircle,
@@ -26,19 +26,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { formatDateWithPreferences } from "@/lib/utils/preferences";
 
 interface BranchDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  branch: (Branch & {
-    organization?: {
-      id: string;
-      razonSocial: string | null;
-      name: string | null;
-      slug: string | null;
-    } | null;
-    _count?: { usuariosSas: number };
-  }) | null;
+  branch:
+    | (Branch & {
+        organization?: {
+          id: string;
+          razonSocial: string | null;
+          name: string | null;
+          slug: string | null;
+        } | null;
+        _count?: { usuariosSas: number };
+      })
+    | null;
   customerSlug: string;
 }
 
@@ -63,20 +66,21 @@ export function BranchDetailDialog({
   branch,
   customerSlug,
 }: BranchDetailDialogProps) {
+  const t = useTranslations()
   const [usuarios, setUsuarios] = useState<UsuarioAsociado[]>([]);
   const [isLoadingUsuarios, setIsLoadingUsuarios] = useState(false);
 
   const loadUsuarios = useCallback(async () => {
     if (!branch?.id) return;
-    
+
     setIsLoadingUsuarios(true);
     try {
       // Usar endpoint optimizado específico para usuarios de sucursal
       const response = await fetch(
         `/api/${customerSlug}/sucursales/${branch.id}/usuarios`,
         {
-          credentials: 'include',
-          cache: 'no-store' // Evitar cache para obtener datos actualizados
+          credentials: "include",
+          cache: "no-store", // Evitar cache para obtener datos actualizados
         }
       );
       if (response.ok) {
@@ -111,111 +115,112 @@ export function BranchDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
         {/* Header estático */}
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
-          <DialogHeader className="px-0 py-0 space-y-2">
-            <DialogTitle className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-purple-500 dark:bg-purple-600 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <span>Detalles de la Sucursal</span>
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
+          <DialogHeader className="px-0 py-0 space-y-2 text-center sm:text-left">
+            <DialogTitle className="text-base sm:text-lg">
+              {t('branches.details.title')}
             </DialogTitle>
-            <DialogDescription>
-              Información completa de la sucursal y usuarios asociados
+            <DialogDescription className="text-xs sm:text-sm">
+              {t('branches.details.description')}
             </DialogDescription>
           </DialogHeader>
         </div>
 
         {/* Contenido con scroll */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
           {/* Información de la Sucursal */}
           <div className="space-y-3">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              Información General
+            <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              {t('branches.details.generalInfo')}
             </h3>
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-4 border border-gray-200 dark:border-[#2a2a2a]">
-              <div className="flex items-start gap-3">
-             
-                <div className="flex-1 space-y-2.5">
-                  {/* Nombre y Estado en la misma línea */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                        {branch.name}
-                      </p>
-                    </div>
-                    <Badge
-                      className={
-                        branch.isActive
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800 flex-shrink-0"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 flex-shrink-0"
-                      }
-                    >
-                      {branch.isActive ? (
-                        <>
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Activa
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Inactiva
-                        </>
-                      )}
-                    </Badge>
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-[#2a2a2a]">
+              <div className="space-y-3">
+                {/* Nombre y Estado */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+                      {branch.name}
+                    </p>
                   </div>
-
-                  {/* Información de contacto en grid compacto */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {branch.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                        <span className="text-gray-900 dark:text-white truncate">{branch.email}</span>
-                      </div>
+                  <Badge
+                    className={
+                      branch.isActive
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800 flex-shrink-0 w-fit"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 flex-shrink-0 w-fit"
+                    }
+                  >
+                    {branch.isActive ? (
+                      <>
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        {t('branches.stats.active')}
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3 w-3 mr-1" />
+                        {t('branches.stats.inactive')}
+                      </>
                     )}
-                    {branch.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                        <span className="text-gray-900 dark:text-white">{branch.phone}</span>
-                      </div>
-                    )}
-                  </div>
+                  </Badge>
+                </div>
 
-                  {/* Dirección */}
-                  {branch.address && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <MapPin className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-900 dark:text-white">{branch.address}</span>
-                    </div>
-                  )}
-
-                  {/* Estadísticas y fechas en una línea compacta */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200 dark:border-[#2a2a2a]">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-                      <Users className="h-3 w-3" />
-                      <span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{branch._count?.usuariosSas || 0}</span> usuarios
+                {/* Información de contacto */}
+                <div className="space-y-2">
+                  {branch.email && (
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Mail className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-900 dark:text-white truncate">
+                        {branch.email}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  )}
+                  {branch.phone && (
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Phone className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-900 dark:text-white">
+                        {branch.phone}
+                      </span>
+                    </div>
+                  )}
+                  {branch.address && (
+                    <div className="flex items-start gap-2 text-xs sm:text-sm">
+                      <MapPin className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-900 dark:text-white break-words">
+                        {branch.address}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Estadísticas y fechas */}
+                <div className="pt-2 border-t border-gray-200 dark:border-[#2a2a2a] space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                    <span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {branch._count?.usuariosSas || 0}
+                      </span>{" "}
+                      {t('branches.details.users')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-1.5">
                       <Calendar className="h-3 w-3" />
                       <span>
-                        Creada: {new Date(branch.createdAt).toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {t('branches.details.created')}:{" "}
+                        {formatDateWithPreferences(
+                          branch.createdAt,
+                          customerSlug
+                        )}
                       </span>
                     </div>
                     {branch.updatedAt && (
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1.5">
                         <Calendar className="h-3 w-3" />
                         <span>
-                          Actualizada: {new Date(branch.updatedAt).toLocaleDateString("es-ES", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {t('branches.details.updated')}:{" "}
+                          {formatDateWithPreferences(
+                            branch.updatedAt,
+                            customerSlug
+                          )}
                         </span>
                       </div>
                     )}
@@ -229,20 +234,22 @@ export function BranchDetailDialog({
 
           {/* Listado de Usuarios */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                Usuarios Asociados
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                {t('branches.details.associatedUsers')}
               </h3>
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Total: <span className="font-semibold">{usuarios.length}</span>
+                  {t('branches.details.total')}:{" "}
+                  <span className="font-semibold">{usuarios.length}</span>
                 </span>
                 <span className="text-green-600 dark:text-green-400">
-                  Activos: <span className="font-semibold">{usuariosActivos}</span>
+                  {t('branches.details.active')}:{" "}
+                  <span className="font-semibold">{usuariosActivos}</span>
                 </span>
                 <span className="text-gray-500 dark:text-gray-500">
-                  Inactivos: <span className="font-semibold">{usuariosInactivos}</span>
+                  {t('branches.details.inactive')}:{" "}
+                  <span className="font-semibold">{usuariosInactivos}</span>
                 </span>
               </div>
             </div>
@@ -251,7 +258,9 @@ export function BranchDetailDialog({
               <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-8 border border-gray-200 dark:border-[#2a2a2a]">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Cargando usuarios...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t('message.loading')}
+                  </p>
                 </div>
               </div>
             ) : usuarios.length === 0 ? (
@@ -261,7 +270,7 @@ export function BranchDetailDialog({
                     <User className="h-8 w-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 font-medium">
-                    No hay usuarios asociados a esta sucursal
+                    {t('branches.details.noUsers')}
                   </p>
                 </div>
               </div>
@@ -269,65 +278,73 @@ export function BranchDetailDialog({
               <div className="bg-white dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-[#2a2a2a] overflow-hidden">
                 <div className="divide-y divide-gray-200 dark:divide-[#2a2a2a]">
                   {usuarios.map((usuario) => {
-                    const userInitials = `${usuario.nombre?.[0]?.toUpperCase() || ""}${
-                      usuario.apellido?.[0]?.toUpperCase() || ""
-                    }`;
-                    const fullName = `${usuario.nombre || ""} ${usuario.apellido || ""}`.trim();
+                    const userInitials = `${
+                      usuario.nombre?.[0]?.toUpperCase() || ""
+                    }${usuario.apellido?.[0]?.toUpperCase() || ""}`;
+                    const fullName = `${usuario.nombre || ""} ${
+                      usuario.apellido || ""
+                    }`.trim();
 
                     return (
                       <div
                         key={usuario.id}
-                        className="p-4 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+                        className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
                       >
-                        <div className="flex items-center gap-4">
-                          <Avatar className="w-10 h-10 flex-shrink-0">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <Avatar className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
                             {usuario.foto ? (
-                              <AvatarImage 
-                                src={usuario.foto} 
+                              <AvatarImage
+                                src={usuario.foto}
                                 alt={fullName}
                                 key={usuario.foto}
                               />
                             ) : null}
-                            <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold">
-                              {userInitials || <User className="h-5 w-5" />}
+                            <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white font-semibold text-xs sm:text-sm">
+                              {userInitials || (
+                                <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                              )}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-semibold text-gray-900 dark:text-white truncate">
-                                {fullName || "Sin nombre"}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                              <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+                                {fullName || t('branches.details.noName')}
                               </p>
                               <Badge
                                 className={
                                   usuario.isActive
-                                    ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800"
-                                    : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+                                    ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800 w-fit text-xs"
+                                    : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 w-fit text-xs"
                                 }
                               >
-                                {usuario.isActive ? "Activo" : "Inactivo"}
+                                {usuario.isActive ? t('branches.details.active') : t('branches.details.inactive')}
                               </Badge>
                             </div>
-                            <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
                               {usuario.ci && (
-                                <span>
-                                  <span className="font-medium">CI:</span> {usuario.ci}
+                                <span className="truncate">
+                                  <span className="font-medium">CI:</span>{" "}
+                                  {usuario.ci}
                                 </span>
                               )}
                               {usuario.correo && (
-                                <span className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3" />
-                                  {usuario.correo}
+                                <span className="flex items-center gap-1 truncate">
+                                  <Mail className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {usuario.correo}
+                                  </span>
                                 </span>
                               )}
                               {usuario.telefono && (
                                 <span className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
+                                  <Phone className="h-3 w-3 flex-shrink-0" />
                                   {usuario.telefono}
                                 </span>
                               )}
                               {usuario.rol && (
-                                <span className="text-blue-600 dark:text-blue-400">
-                                  <span className="font-medium">Rol:</span> {usuario.rol.nombre}
+                                <span className="text-blue-600 dark:text-blue-400 truncate">
+                                  <span className="font-medium">Rol:</span>{" "}
+                                  {usuario.rol.nombre}
                                 </span>
                               )}
                             </div>
@@ -343,18 +360,17 @@ export function BranchDetailDialog({
         </div>
 
         {/* Footer estático */}
-        <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
+        <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-4 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
           <Button
             type="button"
-            variant="outline"
+            variant="new"
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto rounded-full"
           >
-            Cerrar
+            {t('action.close')}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

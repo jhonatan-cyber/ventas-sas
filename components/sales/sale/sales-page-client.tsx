@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 import { SaleCancelDialog } from "./sale-cancel-dialog"
 import { SaleDeleteDialog } from "./sale-delete-dialog"
@@ -13,6 +14,11 @@ import { SalesSaleWithRelations } from "./types"
 
 import { useSaleActions } from "@/hooks/sales/sale/use-sale-actions"
 
+
+interface SalesBranchSummary {
+  id: string
+  name: string | null
+}
 
 interface SalesPageClientProps {
   initialSales: SalesSaleWithRelations[]
@@ -28,6 +34,9 @@ interface SalesPageClientProps {
       name?: string | null
     } | null
   } | null
+  branches?: SalesBranchSummary[]
+  maxBranches?: number
+  hasOpenCashRegister?: boolean
 }
 
 const normalizeSale = (sale: any): SalesSaleWithRelations => ({
@@ -81,17 +90,48 @@ const normalizeSale = (sale: any): SalesSaleWithRelations => ({
   })),
 })
 
-export function SalesPageClient({ initialSales, customerSlug, currentUser = null }: SalesPageClientProps) {
+export function SalesPageClient({ initialSales, customerSlug, currentUser = null, branches = [], maxBranches, hasOpenCashRegister = false }: SalesPageClientProps) {
+  const t = useTranslations()
   const [sales, setSales] = useState<SalesSaleWithRelations[]>(() => initialSales.map(normalizeSale))
   const [isLoading, setIsLoading] = useState(false)
   const [detailSale, setDetailSale] = useState<SalesSaleWithRelations | null>(null)
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [cancelSale, setCancelSale] = useState<SalesSaleWithRelations | null>(null)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [hasOpenCashRegisterState, setHasOpenCashRegisterState] = useState(hasOpenCashRegister)
 
   useEffect(() => {
     setSales(initialSales.map(normalizeSale))
   }, [initialSales])
+
+  // Función para verificar si hay cajas abiertas
+  const checkOpenCashRegisters = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/${customerSlug}/cajas?page=1&pageSize=1&isOpen=true`)
+      if (response.ok) {
+        const data = await response.json()
+        const hasOpen = (data.total || 0) > 0
+        setHasOpenCashRegisterState(hasOpen)
+      }
+    } catch (error) {
+      console.error("Error al verificar cajas abiertas:", error)
+      // No mostrar error al usuario, solo en consola
+    }
+  }, [customerSlug])
+
+  // Verificar cajas abiertas al montar el componente
+  useEffect(() => {
+    checkOpenCashRegisters()
+  }, [checkOpenCashRegisters])
+
+  // Verificar periódicamente cada 5 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkOpenCashRegisters()
+    }, 5000) // Verificar cada 5 segundos
+
+    return () => clearInterval(interval)
+  }, [checkOpenCashRegisters])
 
   const loadSales = useCallback(async () => {
     try {
@@ -122,9 +162,16 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
     openEditDialog,
     openDeleteDialog,
     closeDialogs,
-    handleSave,
+    handleSave: originalHandleSave,
     handleDelete,
   } = useSaleActions(customerSlug, loadSales)
+
+  // Wrapper para handleSave que también verifica cajas abiertas
+  const handleSave = useCallback(async (data: any) => {
+    await originalHandleSave(data)
+    // Verificar cajas abiertas después de guardar (por si se cerró una caja)
+    await checkOpenCashRegisters()
+  }, [originalHandleSave, checkOpenCashRegisters])
 
   const handleCreateClick = () => {
     openCreateDialog()
@@ -167,7 +214,7 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
         throw new Error(error.error || "Error al anular la venta")
       }
 
-      toast.success("Venta anulada correctamente")
+      toast.success(t('sales.cancelSuccess'))
       closeCancelDialog()
 
       // Recargar ventas
@@ -186,12 +233,13 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
   }, [sales])
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       <SalesHeader
-        title="Gestión de Ventas"
-        description="Registra y supervisa las ventas realizadas"
-        newButtonText="Nueva Venta"
+        title={t('sales.title')}
+        description={t('sales.description')}
+        newButtonText={t('sales.create')}
         onNewClick={handleCreateClick}
+        disabled={!hasOpenCashRegisterState}
       />
 
       <SalesContainer
@@ -201,6 +249,8 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
         onDelete={openDeleteDialog}
         onViewDetails={openDetailsDialog}
         onCancel={openCancelDialog}
+        branches={branches}
+        maxBranches={maxBranches}
       />
 
       <SaleFormDialog
@@ -216,6 +266,7 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
         open={isDeleteDialogOpen}
         onOpenChange={closeDialogs}
         sale={selectedSale}
+        customerSlug={customerSlug}
         onDelete={handleDelete}
       />
 
@@ -230,6 +281,7 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
         }}
         sale={detailSale}
         customerSlug={customerSlug}
+        maxBranches={maxBranches}
       />
 
       <SaleCancelDialog

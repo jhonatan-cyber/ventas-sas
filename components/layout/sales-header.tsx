@@ -4,6 +4,7 @@ import { Building2, LogOut, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useState, useCallback, type CSSProperties } from "react"
+import { useTranslations } from "next-intl"
 
 import { useSidebar } from "./sidebar-context"
 
@@ -45,6 +46,7 @@ export function SalesHeader() {
   const [session, setSession] = useState<SasSession | null>(null)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations()
 
   const fetchUserFromAPI = useCallback(async () => {
     try {
@@ -167,7 +169,7 @@ export function SalesHeader() {
     }
   }, [pathname, fetchUserFromAPI])
 
-  const fullName = session?.fullName || `${session?.nombre || ''} ${session?.apellido || ''}`.trim() || 'Usuario'
+  const fullName = session?.fullName || `${session?.nombre || ''} ${session?.apellido || ''}`.trim() || t('nav.users')
   const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]
 
   useEffect(() => {
@@ -177,18 +179,51 @@ export function SalesHeader() {
     if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
       setTheme(saved)
     }
-    // Cargar color del sistema desde preferencias
+    // Cargar color del sistema desde preferencias (API primero, luego cookies como fallback)
     if (slug) {
-      const prefsRaw = getCookie(`sas-prefs-${slug}`)
-      if (prefsRaw) {
-        try {
-          const prefs = JSON.parse(decodeURIComponent(prefsRaw))
-          const color = prefs.themeColor || 'green'
-          if (typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-sas-color', color)
+      // Intentar cargar desde API
+      fetch(`/api/${slug}/config/preferencias`, {
+        credentials: 'include'
+      })
+        .then((response) => {
+          if (response.ok) {
+            return response.json()
           }
-        } catch {}
-      }
+          return null
+        })
+        .then((data) => {
+          if (data?.success && data.configuration?.themeColor) {
+            const color = data.configuration.themeColor
+            if (typeof document !== 'undefined') {
+              document.documentElement.setAttribute('data-sas-color', color)
+            }
+          } else {
+            // Fallback a cookies si la API no responde
+            const prefsRaw = getCookie(`sas-prefs-${slug}`)
+            if (prefsRaw) {
+              try {
+                const prefs = JSON.parse(decodeURIComponent(prefsRaw))
+                const color = prefs.themeColor || 'green'
+                if (typeof document !== 'undefined') {
+                  document.documentElement.setAttribute('data-sas-color', color)
+                }
+              } catch {}
+            }
+          }
+        })
+        .catch(() => {
+          // Si falla la API, usar cookies como fallback
+          const prefsRaw = getCookie(`sas-prefs-${slug}`)
+          if (prefsRaw) {
+            try {
+              const prefs = JSON.parse(decodeURIComponent(prefsRaw))
+              const color = prefs.themeColor || 'green'
+              if (typeof document !== 'undefined') {
+                document.documentElement.setAttribute('data-sas-color', color)
+              }
+            } catch {}
+          }
+        })
     }
   }, [slug, setTheme])
 
@@ -241,7 +276,7 @@ export function SalesHeader() {
                   else applyTheme('light')
                 }}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
-                title="Tema"
+                title={t('config.preferences.themeColor')}
               >
                 {theme === 'light' ? (
                   <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -262,12 +297,12 @@ export function SalesHeader() {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('header.profile')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]; window.location.href = `/${slug}/perfil` }}>Perfil</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { const slug = session?.customerSlug || pathname.split('/').filter(Boolean)[0]; window.location.href = `/${slug}/perfil` }}>{t('header.profile')}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" /> Salir
+                  <LogOut className="mr-2 h-4 w-4" /> {t('header.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -297,7 +332,7 @@ export function SalesHeader() {
                   else applyTheme('light')
                 }}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
-                title="Tema"
+                title={t('config.preferences.themeColor')}
               >
                 {theme === 'light' ? (
                   <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -310,13 +345,13 @@ export function SalesHeader() {
               <div className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <div className="p-1">
                   <button onClick={() => applyTheme('light')} className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm ${theme==='light'?'font-semibold':''}`}> 
-                    <Sun className="inline h-4 w-4 mr-2" /> Claro
+                    <Sun className="inline h-4 w-4 mr-2" /> {t('header.theme.light')}
                   </button>
                   <button onClick={() => applyTheme('dark')} className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm ${theme==='dark'?'font-semibold':''}`}>
-                    <Moon className="inline h-4 w-4 mr-2" /> Oscuro
+                    <Moon className="inline h-4 w-4 mr-2" /> {t('header.theme.dark')}
                   </button>
                   <button onClick={() => applyTheme('system')} className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm ${theme==='system'?'font-semibold':''}`}>
-                    <Monitor className="inline h-4 w-4 mr-2" /> Sistema
+                    <Monitor className="inline h-4 w-4 mr-2" /> {t('header.theme.system')}
                   </button>
                 </div>
               </div>
@@ -326,7 +361,7 @@ export function SalesHeader() {
             <DropdownMenuTrigger className="flex items-center gap-3 outline-none">
               <div className="hidden sm:flex flex-col items-end mr-1">
                 <span className="text-sm text-gray-900 dark:text-white">{fullName}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{session?.rol || 'Usuario'}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{session?.rol || t('nav.users')}</span>
               </div>
               <Avatar className="w-8 h-8">
                 {session?.foto && <AvatarImage src={session.foto} alt={fullName} />}

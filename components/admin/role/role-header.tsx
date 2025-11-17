@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -19,6 +21,7 @@ export function RoleHeader({
   newButtonText = "Agregar Rol",
   onNewClick
 }: RoleHeaderProps) {
+  const t = useTranslations()
   const canCreate = useHasPermission("roles_crear")
 
   return (
@@ -45,7 +48,7 @@ export function RoleHeader({
           </TooltipTrigger>
           {!canCreate && (
             <TooltipContent>
-              <p>No tiene permiso para crear roles</p>
+              <p>{t('roles.noPermissionToCreate')}</p>
             </TooltipContent>
           )}
         </Tooltip>

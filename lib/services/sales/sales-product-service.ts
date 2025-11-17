@@ -19,12 +19,14 @@ export interface CreateSalesProductData {
   categoryId?: string;
   name: string;
   description?: string;
+  descriptionTranslations?: any; // JSON con traducciones { es, en, pt }
   brand?: string;
   model?: string;
   price: number;
   cost: number;
   stock?: number;
   minStock?: number;
+  reorderPoint?: number;
   sku?: string;
   barcode?: string;
   imageUrl?: string;
@@ -35,12 +37,14 @@ export interface UpdateSalesProductData {
   categoryId?: string;
   name?: string;
   description?: string;
+  descriptionTranslations?: any; // JSON con traducciones { es, en, pt }
   brand?: string;
   model?: string;
   price?: number;
   cost?: number;
   stock?: number;
   minStock?: number;
+  reorderPoint?: number;
   sku?: string;
   barcode?: string;
   imageUrl?: string;
@@ -166,12 +170,14 @@ export class SalesProductService {
         categoryId: data.categoryId,
         name: data.name,
         description: data.description,
+        descriptionTranslations: data.descriptionTranslations,
         brand: data.brand,
         model: data.model,
         price: data.price,
         cost: data.cost,
         stock: data.stock || 0,
         minStock: data.minStock || 0,
+        reorderPoint: data.reorderPoint,
         sku: data.sku,
         barcode: data.barcode,
         imageUrl: data.imageUrl,
@@ -200,6 +206,7 @@ export class SalesProductService {
       where: { id },
       data: {
         ...data,
+        descriptionTranslations: data.descriptionTranslations !== undefined ? data.descriptionTranslations : undefined,
         brand: data.brand !== undefined ? data.brand : undefined,
         model: data.model !== undefined ? data.model : undefined,
       },

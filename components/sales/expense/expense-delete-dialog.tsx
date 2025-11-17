@@ -1,17 +1,23 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { SalesExpenseWithRelations } from "./types"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface ExpenseDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   expense?: SalesExpenseWithRelations
+  customerSlug: string
   onDelete: () => void
 }
 
-export function ExpenseDeleteDialog({ open, onOpenChange, expense, onDelete }: ExpenseDeleteDialogProps) {
+export function ExpenseDeleteDialog({ open, onOpenChange, expense, customerSlug, onDelete }: ExpenseDeleteDialogProps) {
+  const t = useTranslations()
+  
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -21,21 +27,21 @@ export function ExpenseDeleteDialog({ open, onOpenChange, expense, onDelete }: E
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el gasto
+            {t('expenses.deleteWarning')}
             <strong className="block mt-2">
-              "{expense?.name ?? "Gasto"}" - BOB {expense ? Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              "{expense?.name ?? t('expenses.expense')}" - {expense ? formatCurrencyWithPreferences(Number(expense.amount), customerSlug) : '0.00'}
             </strong>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

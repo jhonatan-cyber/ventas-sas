@@ -31,6 +31,7 @@ import {
   SerializedInvoiceWithRelations,
   InvoiceFilters,
 } from "@/lib/services/admin/billing-service";
+import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences";
 
 interface InvoicesTableProps {
   invoices: SerializedInvoiceWithRelations[];
@@ -69,24 +70,17 @@ export const getStatusBadge = (status: string) => {
   );
 };
 
+// Funciones de formateo que usan las preferencias del usuario
 export const formatCurrency = (
   amount: number | string,
   currency: string = "USD"
 ) => {
-  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: currency,
-  }).format(numAmount);
+  // Si se proporciona una moneda específica, usarla; de lo contrario, usar preferencias
+  return formatCurrencyWithPreferences(amount, undefined, currency);
 };
 
 export const formatDate = (date: Date | string) => {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("es-ES", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
+  return formatDateWithPreferences(date);
 };
 
 export function InvoicesTable({
@@ -197,8 +191,9 @@ export function InvoicesTable({
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(
+                        {formatCurrencyWithPreferences(
                           Number(invoice.total),
+                          undefined,
                           invoice.currency
                         )}
                       </span>
@@ -209,7 +204,7 @@ export function InvoicesTable({
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                       <span className="text-sm text-gray-900 dark:text-white">
-                        {formatDate(invoice.issueDate)}
+                        {formatDateWithPreferences(invoice.issueDate)}
                       </span>
                     </div>
                   </TableCell>
@@ -224,7 +219,7 @@ export function InvoicesTable({
                             : "text-gray-900 dark:text-white"
                         }`}
                       >
-                        {formatDate(invoice.dueDate)}
+                        {formatDateWithPreferences(invoice.dueDate)}
                       </span>
                     </div>
                   </TableCell>

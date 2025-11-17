@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Branch } from "@prisma/client"
 import { useState, useEffect } from "react"
 
@@ -24,6 +26,7 @@ interface BranchesPageClientProps {
 }
 
 export function BranchesPageClient({ initialBranches, customerSlug, maxBranches }: BranchesPageClientProps) {
+  const t = useTranslations()
   const [branches, setBranches] = useState(initialBranches)
   
   const {
@@ -67,12 +70,12 @@ export function BranchesPageClient({ initialBranches, customerSlug, maxBranches 
                           activeBranchesCount >= maxBranches
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <BranchesHeader
-        title="Gestión de Sucursales"
-        description="Administra las sucursales de tu organización"
-        newButtonText="Agregar Sucursal"
+        title={t('branches.title')}
+        description={t('branches.description')}
+        newButtonText={t('branches.create')}
         onNewClick={openCreateDialog}
         showNewButton={!hasReachedLimit}
       />
@@ -116,7 +119,7 @@ export function BranchesPageClient({ initialBranches, customerSlug, maxBranches 
         onOpenChange={setConfirmOpen}
         title={confirmTitle}
         description={confirmDesc}
-        confirmText="Confirmar"
+        confirmText={t('common.confirm')}
         confirmColor={confirmColor}
         onConfirm={confirmPerform}
       />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { toast } from "sonner"
 
 export function useUserActions() {
@@ -11,6 +11,17 @@ export function useUserActions() {
   const [detailDialog, setDetailDialog] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(undefined)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, userId: '', userName: '' })
+
+  // Limpiar el usuario seleccionado cuando el diálogo se cierre
+  useEffect(() => {
+    if (!openDialog && selectedUser) {
+      // Pequeño delay para permitir que la animación de cierre se complete
+      const timer = setTimeout(() => {
+        setSelectedUser(undefined)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [openDialog, selectedUser])
 
   const handleNewClick = () => {
     setSelectedUser(undefined)
@@ -76,9 +87,6 @@ export function useUserActions() {
 
       const updatedUser = await response.json()
       
-      setOpenDialog(false)
-      setSelectedUser(undefined)
-      
       // Disparar evento para recargar usuarios
       window.dispatchEvent(new Event('user-updated'))
       
@@ -114,9 +122,13 @@ export function useUserActions() {
         })
       }
       
-      startTransition(() => {
-        router.refresh()
-      })
+      // El formulario cerrará el diálogo, el efecto limpiará el selectedUser
+      // Refrescar la página después de un pequeño delay para permitir que el diálogo se cierre
+      setTimeout(() => {
+        startTransition(() => {
+          router.refresh()
+        })
+      }, 300)
     } catch (error: any) {
       console.error("Error al guardar el usuario:", error)
       const errorMessage = error.message || 'Ocurrió un error inesperado al guardar el usuario.'

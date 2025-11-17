@@ -1,7 +1,12 @@
 "use client"
 
-import { Search } from "lucide-react"
+import { useTranslations } from "next-intl"
 
+import { Search, X } from "lucide-react"
+import { useState, useEffect } from "react"
+
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,6 +41,24 @@ export function PermissionsSasFilters({
   pageSize,
   onPageSizeChange,
 }: PermissionsSasFiltersProps) {
+  const t = useTranslations()
+  const [searchValue, setSearchValue] = useState(searchTerm)
+  const isMobile = useIsMobile()
+
+  useEffect(() => {
+    setSearchValue(searchTerm)
+  }, [searchTerm])
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setSearchTerm(value)
+  }
+
+  const handleClear = () => {
+    setSearchValue("")
+    setSearchTerm("")
+  }
+
   const handlePageSizeChange = (value: string) => {
     onPageSizeChange?.(parseInt(value))
   }
@@ -48,45 +71,29 @@ export function PermissionsSasFilters({
           htmlFor="search-permissions"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          Buscar
+          {t('common.search')}
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="search-permissions"
-            placeholder="Buscar permisos por nombre o descripción..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
+            placeholder={t('common.placeholders.searchPermissions')}
+            value={searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-10 pr-10 w-full rounded-full"
           />
+          {searchValue && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 rounded-full hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
+              onClick={handleClear}
+            >
+              <X className="h-4 w-4 text-gray-400" />
+            </Button>
+          )}
         </div>
-      </div>
-
-      {/* Filtro de categoría */}
-      <div className="w-full sm:w-[180px]">
-        <Label
-          htmlFor="category-filter"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
-        >
-          Categoría
-        </Label>
-        <Select
-          onValueChange={setSelectedCategory}
-          value={selectedCategory}
-          defaultValue="all"
-        >
-          <SelectTrigger id="category-filter" className="w-full">
-            <SelectValue placeholder="Filtrar por categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las categorías</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Checkbox para no usados */}
@@ -112,32 +119,62 @@ export function PermissionsSasFilters({
         </div>
       </div>
 
-      {/* Tamaño de página */}
-      {onPageSizeChange && (
-        <div className="w-full sm:w-[150px]">
+      {/* Filtro de categoría y Tamaño de página - En móvil en grid de 2 columnas */}
+      <div className="grid grid-cols-2 gap-4 w-full sm:contents">
+        {/* Filtro de categoría */}
+        <div className="w-full sm:w-[180px]">
           <Label
-            htmlFor="page-size"
+            htmlFor="category-filter"
             className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
           >
-            Datos
+            Categoría
           </Label>
           <Select
-            onValueChange={handlePageSizeChange}
-            value={pageSize}
-            defaultValue="10"
+            onValueChange={setSelectedCategory}
+            value={selectedCategory}
+            defaultValue="all"
           >
-            <SelectTrigger id="page-size" className="w-full">
-              <SelectValue placeholder="Por página" />
+            <SelectTrigger id="category-filter" className="w-full rounded-full">
+              <SelectValue placeholder={t('common.placeholders.filterByCategory')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="5">5 por página</SelectItem>
-              <SelectItem value="10">10 por página</SelectItem>
-              <SelectItem value="20">20 por página</SelectItem>
-              <SelectItem value="50">50 por página</SelectItem>
+              <SelectItem value="all">{isMobile ? "Todas" : "Todas las categorías"}</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-      )}
+
+        {/* Tamaño de página */}
+        {onPageSizeChange && (
+          <div className="w-full sm:w-[150px]">
+            <Label
+              htmlFor="page-size"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+            >
+              Datos
+            </Label>
+            <Select
+              onValueChange={handlePageSizeChange}
+              value={pageSize}
+              defaultValue="10"
+            >
+              <SelectTrigger id="page-size" className="w-full rounded-full">
+                <SelectValue placeholder={t('common.placeholders.perPage')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 por página</SelectItem>
+                <SelectItem value="10">10 por página</SelectItem>
+                <SelectItem value="20">20 por página</SelectItem>
+                <SelectItem value="50">50 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

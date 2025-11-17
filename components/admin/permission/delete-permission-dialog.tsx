@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +29,8 @@ export function DeletePermissionDialog({
   onConfirm,
   isLoading = false,
 }: DeletePermissionDialogProps) {
+  const t = useTranslations()
+  
   if (!permission) return null
 
   const hasRoles = permission.roleCount > 0
@@ -36,26 +40,26 @@ export function DeletePermissionDialog({
       <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-gray-900 dark:text-white">
-            ¿Eliminar permiso?
+            {t('permissions.delete.title')}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
             {hasRoles ? (
               <>
-                Estás a punto de eliminar el permiso <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
+                {t('permissions.delete.withRoles')} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
                 <br />
                 <br />
-                Este permiso está asignado a <strong>{permission.roleCount}</strong> rol(es):{" "}
+                {t('permissions.delete.withRolesDescription', { count: permission.roleCount })}{" "}
                 <strong>{permission.roles.join(", ")}</strong>.
                 <br />
                 <br />
-                El permiso será eliminado de todos los roles. Esta acción no se puede deshacer.
+                {t('permissions.delete.withRolesEnd')}
               </>
             ) : (
               <>
-                Estás a punto de eliminar el permiso <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
+                {t('permissions.delete.withoutRoles')} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
                 <br />
                 <br />
-                Este permiso no está asignado a ningún rol. Esta acción no se puede deshacer.
+                {t('permissions.delete.withoutRolesDescription')}
               </>
             )}
           </AlertDialogDescription>
@@ -66,14 +70,14 @@ export function DeletePermissionDialog({
             className="w-full sm:w-auto rounded-full"
             disabled={isLoading}
           >
-            Cancelar
+            {t('action.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-full"
             disabled={isLoading}
           >
-            {isLoading ? "Eliminando..." : "Eliminar"}
+            {isLoading ? t('permissions.delete.deleting') : t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

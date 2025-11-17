@@ -35,7 +35,7 @@ export function BranchesPagination({
 
   return (
     <div className="flex items-center justify-center gap-4 py-4">
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 sm:hidden">
         Página {currentPage} de {totalPages}
       </div>
       <div className="flex gap-2">

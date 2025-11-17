@@ -2,6 +2,7 @@
 
 import { Branch } from "@prisma/client";
 import { Search, X, LayoutGrid, List } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProductsFiltersProps {
   onPageSizeChange: (size: number) => void;
@@ -43,7 +45,9 @@ export function ProductsFilters({
   viewMode = "table",
   onViewModeChange,
 }: ProductsFiltersProps) {
+  const t = useTranslations()
   const [searchValue, setSearchValue] = useState("");
+  const isMobile = useIsMobile();
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
@@ -64,13 +68,13 @@ export function ProductsFilters({
           htmlFor="search-products"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          Buscar
+          {t('common.search')}
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="search-products"
-            placeholder="Buscar productos por nombre, SKU, código de barras..."
+            placeholder={t('common.placeholders.searchProducts')}
             className="pl-10 pr-10 w-full rounded-full"
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -90,52 +94,55 @@ export function ProductsFilters({
         </div>
       </div>
 
-      {/* Filtro de estado */}
-      <div className="w-full sm:w-[180px]">
-        <Label
-          htmlFor="status-filter"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
-        >
-          Estado
-        </Label>
-        <Select
-          onValueChange={onStatusChange}
-          value={statusValue}
-          defaultValue="all"
-        >
-          <SelectTrigger id="status-filter" className="w-full rounded-full">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="active">Solo activos</SelectItem>
-            <SelectItem value="inactive">Solo inactivos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Filtro de estado y Tamaño de página - En móvil en grid de 2 columnas */}
+      <div className="grid grid-cols-2 gap-4 w-full sm:contents">
+        {/* Filtro de estado */}
+        <div className="w-full sm:w-[180px]">
+          <Label
+            htmlFor="status-filter"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+          >
+            Estado
+          </Label>
+          <Select
+            onValueChange={onStatusChange}
+            value={statusValue}
+            defaultValue="all"
+          >
+            <SelectTrigger id="status-filter" className="w-full rounded-full">
+              <SelectValue placeholder={t('common.placeholders.filterByStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{isMobile ? "Todos" : "Todos los estados"}</SelectItem>
+              <SelectItem value="active">{isMobile ? "Activos" : "Solo activos"}</SelectItem>
+              <SelectItem value="inactive">{isMobile ? "Inactivos" : "Solo inactivos"}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Tamaño de página */}
-      <div className="w-full sm:w-[150px]">
-        <Label
-          htmlFor="page-size"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
-        >
-          Datos
-        </Label>
-        <Select
-          onValueChange={(value) => onPageSizeChange(Number(value))}
-          defaultValue="10"
-        >
-          <SelectTrigger id="page-size" className="w-full rounded-full">
-            <SelectValue placeholder="Por página" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="5">5 por página</SelectItem>
-            <SelectItem value="10">10 por página</SelectItem>
-            <SelectItem value="20">20 por página</SelectItem>
-            <SelectItem value="50">50 por página</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Tamaño de página */}
+        <div className="w-full sm:w-[150px]">
+          <Label
+            htmlFor="page-size"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+          >
+            Datos
+          </Label>
+          <Select
+            onValueChange={(value) => onPageSizeChange(Number(value))}
+            defaultValue="10"
+          >
+            <SelectTrigger id="page-size" className="w-full rounded-full">
+              <SelectValue placeholder={t('common.placeholders.perPage')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 por página</SelectItem>
+              <SelectItem value="10">10 por página</SelectItem>
+              <SelectItem value="20">20 por página</SelectItem>
+              <SelectItem value="50">50 por página</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
        {/* Filtro de sucursal (solo para administradores) */}
        {isAdmin && branches.length > 0 && (
@@ -169,8 +176,8 @@ export function ProductsFilters({
         </div>
       )}
 
-      {/* Selector de vista */}
-      <div className="w-full sm:w-auto">
+      {/* Selector de vista - solo visible en desktop */}
+      <div className="hidden md:block w-full sm:w-auto">
         <Label
           htmlFor="view-mode"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"

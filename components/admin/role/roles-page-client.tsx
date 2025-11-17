@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { DeleteRoleDialog } from "./delete-role-dialog";
 import { RoleDetailDialog } from "./role-detail-dialog";
 import { RoleFormDialog } from "./role-form-dialog";
@@ -17,6 +19,7 @@ interface RolesPageClientProps {
 }
 
 export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
+  const t = useTranslations()
   const {
     openDialog,
     setOpenDialog,
@@ -46,8 +49,9 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
       <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <RoleHeader
-          title="Gestión de Roles"
-          description="Administra los roles y permisos del sistema"
+          title={t('roles.title')}
+          description={t('roles.description')}
+          newButtonText={t('roles.create')}
           onNewClick={handleNewClick}
         />
 

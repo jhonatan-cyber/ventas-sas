@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Branch } from "@prisma/client";
 import { useState, useEffect } from "react";
 
@@ -28,6 +30,7 @@ export function BranchFormDialog({
   branch,
   onSave,
 }: BranchFormDialogProps) {
+  const t = useTranslations()
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -88,12 +91,12 @@ export function BranchFormDialog({
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {branch ? "Editar Sucursal" : "Nueva Sucursal"}
+              {branch ? t('branches.edit') : t('branches.new')}
             </DialogTitle>
             <DialogDescription>
               {branch
-                ? "Modifica los datos de la sucursal"
-                : "Completa los datos para crear una nueva sucursal"}
+                ? t('branches.editDescription')
+                : t('branches.newDescription')}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -103,40 +106,40 @@ export function BranchFormDialog({
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Nombre <span className="text-red-500">*</span>
+                {t('form.name')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(capitalizeWords(e.target.value))}
-                placeholder="Nombre de la sucursal"
+                placeholder={t('branches.form.namePlaceholder')}
                 required
                 disabled={isLoading}
                 className="rounded-full"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo Electrónico</Label>
+                <Label htmlFor="email">{t('branches.form.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
+                  placeholder={t('branches.form.emailPlaceholder')}
                   disabled={isLoading}
                   className="rounded-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
+                <Label htmlFor="phone">{t('form.phone')}</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Teléfono"
+                  placeholder={t('branches.form.phonePlaceholder')}
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -144,12 +147,12 @@ export function BranchFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
+              <Label htmlFor="address">{t('form.address')}</Label>
               <Input
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(capitalizeWords(e.target.value))}
-                placeholder="Dirección completa de la sucursal"
+                placeholder={t('branches.form.addressPlaceholder')}
                 disabled={isLoading}
                 className="rounded-full"
               />
@@ -165,7 +168,7 @@ export function BranchFormDialog({
               disabled={isLoading}
               className="w-full sm:w-auto rounded-full"
             >
-              Cancelar
+              {t('action.cancel')}
             </Button>
             <Button
               type="submit"
@@ -173,7 +176,7 @@ export function BranchFormDialog({
               disabled={isLoading || !name.trim()}
               className="w-full sm:w-auto rounded-full"
             >
-              {isLoading ? "Agregando..." : branch ? "Actualizar" : "Agregar"}
+              {isLoading ? t('message.saving') : branch ? t('action.update') : t('action.add')}
             </Button>
           </DialogFooter>
         </form>

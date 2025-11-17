@@ -12,6 +12,7 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 interface RevenueChartProps {
   data: Array<{
@@ -20,22 +21,18 @@ interface RevenueChartProps {
     expenses?: number
     profit?: number
   }>
+  slug?: string
 }
 
-export function RevenueChart({ data }: RevenueChartProps) {
+export function RevenueChart({ data, slug }: RevenueChartProps) {
   // Formatear fecha
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
+    return formatDateWithPreferences(dateStr, slug)
   }
 
   // Formatear valor monetario
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-BO', {
-      style: 'currency',
-      currency: 'BOB',
-      minimumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyWithPreferences(value, slug)
   }
 
   return (

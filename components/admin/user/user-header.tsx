@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -19,6 +21,7 @@ export function UserHeader({
   newButtonText = "Agregar Usuario",
   onNewClick
 }: UserHeaderProps) {
+  const t = useTranslations()
   const canCreate = useHasPermission("usuarios_crear")
 
   return (
@@ -45,7 +48,7 @@ export function UserHeader({
           </TooltipTrigger>
           {!canCreate && (
             <TooltipContent>
-              <p>No tiene permiso para crear usuarios</p>
+              <p>{t('users.noPermissionToCreate')}</p>
             </TooltipContent>
           )}
         </Tooltip>

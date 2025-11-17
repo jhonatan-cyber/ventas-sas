@@ -3,6 +3,7 @@
 import { SalesCustomer } from "@prisma/client"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 import { SalesCustomerDeleteDialog } from "./sales-customer-delete-dialog"
 import { SalesCustomerFormDialog } from "./sales-customer-form-dialog"
@@ -18,6 +19,7 @@ interface SalesCustomersPageClientProps {
 }
 
 export function SalesCustomersPageClient({ initialCustomers, customerSlug }: SalesCustomersPageClientProps) {
+  const t = useTranslations()
   const [customers, setCustomers] = useState<SalesCustomer[]>(initialCustomers)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -59,12 +61,12 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
   } = useSalesCustomerActions(customerSlug, loadCustomers, setCustomers)
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <SalesCustomersHeader
-        title="Gestión de Clientes"
-        description="Administra los clientes de tu sistema de ventas"
-        newButtonText="Agregar Cliente"
+        title={t('customers.title')}
+        description={t('customers.description')}
+        newButtonText={t('customers.create')}
         onNewClick={openCreateDialog}
       />
 

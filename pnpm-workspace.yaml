@@ -3,6 +3,7 @@ ignoredBuiltDependencies:
   - '@prisma/engines'
   - '@scarf/scarf'
   - '@sentry/cli'
+  - '@swc/core'
   - '@tree-sitter-grammars/tree-sitter-yaml'
   - core-js
   - core-js-pure

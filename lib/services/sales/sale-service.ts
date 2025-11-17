@@ -2,7 +2,10 @@ import { Sale, SalePaymentMethod, SaleStatus } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 import { NotificationService } from '@/lib/services/notification-service'
+import { InventoryMovementService } from '@/lib/services/sales/inventory-movement-service'
+import { InventoryAlertService } from '@/lib/services/sales/inventory-alert-service'
 import { logDatabase } from '@/lib/utils/logger'
+import { InventoryMovementType } from '@prisma/client'
 import { 
   CursorPaginationOptions, 
   CursorPaginationResult, 
@@ -29,6 +32,7 @@ export interface CreateSaleData {
   discount?: number
   total: number
   notes?: string | null
+  notesTranslations?: any // JSON con traducciones { es, en, pt }
   items: SaleItemInput[]
 }
 
@@ -41,6 +45,7 @@ export interface UpdateSaleData {
   discount?: number
   total?: number
   notes?: string | null
+  notesTranslations?: any // JSON con traducciones { es, en, pt }
   items?: SaleItemInput[]
 }
 
@@ -247,28 +252,85 @@ export class SaleService {
       }
     })
 
-    return prisma.$transaction(async (tx) => {
-      const productMap = new Map<string, { id: string; stock: number; minStock: number | null; name: string; organizationId: string | null }>()
-      const productIds = normalizedItems.map((item) => item.productId)
-      const products = await tx.salesProduct.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, stock: true, minStock: true, name: true, organizationId: true },
-      })
+    // Preparar datos de productos antes de la transacción
+    const productMap = new Map<string, { id: string; stock: number; minStock: number | null; name: string; organizationId: string | null; branchId: string | null }>()
+    const productIds = normalizedItems.map((item) => item.productId)
+    const products = await prisma.salesProduct.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, stock: true, minStock: true, name: true, organizationId: true, branchId: true },
+    })
 
-      products.forEach((product) => productMap.set(product.id, product))
+    products.forEach((product) => productMap.set(product.id, product))
 
-      for (const item of normalizedItems) {
-        const product = productMap.get(item.productId)
-        if (!product) {
-          throw new Error('Producto no encontrado para la venta')
-        }
-        if (product.stock < item.quantity) {
-          throw new Error('Stock insuficiente para el producto seleccionado')
-        }
+    // Validar stock antes de la transacción
+    for (const item of normalizedItems) {
+      const product = productMap.get(item.productId)
+      if (!product) {
+        throw new Error('Producto no encontrado para la venta')
       }
+      if (product.stock < item.quantity) {
+        throw new Error('Stock insuficiente para el producto seleccionado')
+      }
+    }
 
-      const saleNumber = await this.generateSaleNumber(organizationId)
+    // Validar que todos los productos pertenezcan a una única sucursal
+    const branchCheck = new Set<string>()
+    for (const item of normalizedItems) {
+      const p = productMap.get(item.productId)
+      if (!p || !p.branchId) {
+        throw new Error('Todos los productos deben estar asignados a una sucursal')
+      }
+      branchCheck.add(p.branchId)
+      if (branchCheck.size > 1) {
+        throw new Error('Todos los productos de la venta deben pertenecer a la misma sucursal')
+      }
+    }
 
+    // Preparar actualizaciones de stock
+    const stockUpdates: Array<{ productId: string; previousStock: number; quantity: number; branchId: string | null }> = []
+    
+    for (const item of normalizedItems) {
+      const product = productMap.get(item.productId)
+      if (!product) continue
+
+      const previousStock = product.stock
+      stockUpdates.push({
+        productId: item.productId,
+        previousStock,
+        quantity: item.quantity,
+        branchId: product.branchId,
+      })
+    }
+
+    // Determinar sucursal efectiva de la venta (todas las líneas deben pertenecer a la misma)
+    const branchSet = new Set<string>()
+    for (const item of normalizedItems) {
+      const product = productMap.get(item.productId)
+      if (product?.branchId) branchSet.add(product.branchId)
+    }
+    const saleBranchId = branchSet.size === 1 ? Array.from(branchSet)[0] : null
+
+    const saleNumber = await this.generateSaleNumber(organizationId)
+
+    // Si la venta se completa de inmediato, verificar que exista caja abierta en esa sucursal
+    if ((data.status ?? SaleStatus.completed) === SaleStatus.completed) {
+      if (!saleBranchId) {
+        throw new Error('No se pudo determinar la sucursal de la venta')
+      }
+      const hasOpenCash = await prisma.cashRegister.findFirst({
+        where: {
+          organizationId,
+          isOpen: true,
+          branchId: saleBranchId,
+        },
+        select: { id: true },
+      })
+      if (!hasOpenCash) {
+        throw new Error('No hay una caja abierta en la sucursal seleccionada')
+      }
+    }
+
+    return prisma.$transaction(async (tx) => {
       const sale = await tx.sale.create({
         data: {
           organizationId,
@@ -303,6 +365,7 @@ export class SaleService {
         },
       })
 
+      // Actualizar stock dentro de la transacción
       for (const item of normalizedItems) {
         await tx.salesProduct.update({
           where: { id: item.productId },
@@ -319,6 +382,7 @@ export class SaleService {
           where: {
             organizationId,
             isOpen: true,
+            ...(saleBranchId ? { branchId: saleBranchId } : {}),
           },
         })
 
@@ -334,7 +398,36 @@ export class SaleService {
         }
       }
 
-      // Verificar stock bajo después de decrementar (después de la transacción)
+      return { sale, stockUpdates }
+    }).then(async ({ sale, stockUpdates }) => {
+      // Registrar movimientos de inventario después de la transacción
+      for (const update of stockUpdates) {
+        const product = productMap.get(update.productId)
+        if (!product) continue
+
+        const newStock = update.previousStock - update.quantity
+
+        InventoryMovementService.createMovement({
+          organizationId,
+          productId: update.productId,
+          branchId: update.branchId || undefined,
+          movementType: InventoryMovementType.OUT,
+          quantity: -update.quantity,
+          previousStock: update.previousStock,
+          newStock,
+          referenceType: 'sale',
+          referenceId: sale.id,
+          notes: `Venta ${sale.saleNumber}`,
+          userId: data.userId,
+        }).catch((error) => {
+          logDatabase('INVENTORY_MOVEMENT_ERROR', 'inventory_movements', undefined, error as Error, {
+            saleId: sale.id,
+            productId: update.productId,
+          })
+        })
+      }
+
+      // Verificar stock bajo después de decrementar
       Promise.all(
         normalizedItems.map(async (item) => {
           const product = productMap.get(item.productId)
@@ -408,6 +501,32 @@ export class SaleService {
         })
       : undefined
 
+    // Si se actualizan items, validar que todas las líneas pertenezcan a una única sucursal
+    let updateBranchId: string | null = null
+    if (normalizedItems) {
+      const prodIds = Array.from(new Set(normalizedItems.map((i) => i.productId)))
+      const prods = await prisma.salesProduct.findMany({
+        where: { id: { in: prodIds } },
+        select: { id: true, branchId: true, stock: true },
+      })
+      const pmap = new Map(prods.map((p) => [p.id, p]))
+      const bset = new Set<string>()
+      for (const it of normalizedItems) {
+        const p = pmap.get(it.productId)
+        if (!p || !p.branchId) {
+          throw new Error('Todos los productos deben estar asignados a una sucursal')
+        }
+        bset.add(p.branchId)
+        if (bset.size > 1) {
+          throw new Error('Todos los productos de la venta deben pertenecer a la misma sucursal')
+        }
+        if ((p.stock ?? 0) < it.quantity) {
+          throw new Error('Stock insuficiente para el producto seleccionado')
+        }
+      }
+      updateBranchId = Array.from(bset)[0]
+    }
+
     return prisma.$transaction(async (tx) => {
       const { items, ...saleData } = data
 
@@ -422,6 +541,7 @@ export class SaleService {
           discount: saleData.discount,
           total: saleData.total,
           notes: saleData.notes,
+          notesTranslations: saleData.notesTranslations,
         },
       })
 
@@ -517,6 +637,19 @@ export class SaleService {
           where: {
             organizationId,
             isOpen: true,
+            ...(updateBranchId
+              ? { branchId: updateBranchId }
+              : existingSale.items.length > 0
+              ? {
+                  branchId:
+                    (
+                      await tx.salesProduct.findFirst({
+                        where: { id: existingSale.items[0].productId },
+                        select: { branchId: true },
+                      })
+                    )?.branchId || undefined,
+                }
+              : {}),
           },
         })
 

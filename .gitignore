@@ -26,17 +26,12 @@ yarn-error.log*
 next-env.d.ts
 /lib/generated/prisma
 
+#env files
+.env
 
 
-# prisma
-*.db
-*.db-journal
 
-# backups
-/backups
-*.sql
-*.dump
-*.meta.json
+
 
 # allow Prisma migrations SQL files
 !prisma/migrations/**/migration.sql
@@ -54,3 +49,9 @@ temp_file.txt
 # OS
 .DS_Store
 Thumbs.db
+
+.env
+.env
+public/code.txt
+.env
+public/code.txt

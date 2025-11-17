@@ -6,7 +6,7 @@ import type { Organization } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 export type CustomerWithPrimaryOrganization = Customer & {
-  primaryOrganization: Pick<Organization, 'id' | 'name' | 'slug' | 'razonSocial' | 'nit' | 'subscriptionStatus'> | null
+  primaryOrganization: Pick<Organization, 'id' | 'name' | 'slug' | 'razonSocial' | 'nit' | 'address' | 'phone' | 'website' | 'subscriptionStatus'> & { logoUrl?: string | null } | null
 }
 
 /**
@@ -17,7 +17,7 @@ export async function getOrganizationIdBySlug(slug: string): Promise<string | nu
     where: { slug },
     select: { id: true }
   })
-  
+
   return organization?.id || null
 }
 
@@ -96,7 +96,7 @@ export async function getOrganizationBySlug(
 export async function getCustomerBySlug(slug: string): Promise<CustomerWithPrimaryOrganization | null> {
   // Buscar organización por slug
   const organization = await getOrganizationBySlug(slug)
-  
+
   if (!organization) {
     return null
   }
@@ -115,6 +115,10 @@ export async function getCustomerBySlug(slug: string): Promise<CustomerWithPrima
 
   const customer = activeCustomerOrg.customer
 
+  // Extraer logoUrl de settings si existe
+  const settings = organization.settings as Record<string, any> | null
+  const logoUrl = settings?.logoUrl || null
+
   return {
     ...customer,
     primaryOrganization: {
@@ -123,7 +127,11 @@ export async function getCustomerBySlug(slug: string): Promise<CustomerWithPrima
       slug: organization.slug,
       razonSocial: organization.razonSocial,
       nit: organization.nit,
+      address: organization.address,
+      phone: organization.phone,
+      website: organization.website,
       subscriptionStatus: organization.subscriptionStatus,
+      logoUrl: logoUrl,
     },
     razonSocial: organization.razonSocial,
     nit: organization.nit,
@@ -173,7 +181,7 @@ export async function getMaxBranchesByOrganizationId(organizationId: string): Pr
   // Si la organización tiene un plan asignado directamente, usarlo
   if (organization?.subscriptionPlan) {
     const maxBranches = organization.subscriptionPlan.maxBranches
-    
+
     if (maxBranches !== null && maxBranches !== undefined) {
       return maxBranches
     }
@@ -205,7 +213,7 @@ export async function getMaxBranchesByOrganizationId(organizationId: string): Pr
 
   if (activeSubscription?.plan) {
     const maxBranches = activeSubscription.plan.maxBranches
-    
+
     if (maxBranches !== null && maxBranches !== undefined) {
       return maxBranches
     }
@@ -250,7 +258,7 @@ export async function getMaxUsersByOrganizationId(organizationId: string): Promi
   // Si la organización tiene un plan asignado directamente, usarlo
   if (organization?.subscriptionPlan) {
     const maxUsers = organization.subscriptionPlan.maxUsers
-    
+
     if (maxUsers !== null && maxUsers !== undefined) {
       return maxUsers
     }
@@ -282,7 +290,7 @@ export async function getMaxUsersByOrganizationId(organizationId: string): Promi
 
   if (activeSubscription?.plan) {
     const maxUsers = activeSubscription.plan.maxUsers
-    
+
     if (maxUsers !== null && maxUsers !== undefined) {
       return maxUsers
     }
@@ -327,7 +335,7 @@ export async function getMaxProductsByOrganizationId(organizationId: string): Pr
   // Si la organización tiene un plan asignado directamente, usarlo
   if (organization?.subscriptionPlan) {
     const maxProducts = organization.subscriptionPlan.maxProducts
-    
+
     if (maxProducts !== null && maxProducts !== undefined) {
       return maxProducts
     }
@@ -359,7 +367,7 @@ export async function getMaxProductsByOrganizationId(organizationId: string): Pr
 
   if (activeSubscription?.plan) {
     const maxProducts = activeSubscription.plan.maxProducts
-    
+
     if (maxProducts !== null && maxProducts !== undefined) {
       return maxProducts
     }
@@ -379,5 +387,84 @@ export async function getMaxProductsBySlug(slug: string): Promise<number | null>
   }
 
   return getMaxProductsByOrganizationId(organizationId)
+}
+
+/**
+ * Obtiene los módulos permitidos según el plan de suscripción
+ * Busca primero en Organization.subscriptionPlanId, y si no existe, busca en la tabla Subscription
+ * Retorna un array vacío si no hay plan o no tiene módulos definidos
+ */
+export async function getModulesByOrganizationId(organizationId: string): Promise<string[]> {
+  // Primero intentar obtener el plan directamente de la organización
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      subscriptionPlan: {
+        select: {
+          id: true,
+          name: true,
+          modules: true
+        }
+      }
+    }
+  })
+
+  // Si la organización tiene un plan asignado directamente, usarlo
+  if (organization?.subscriptionPlan) {
+    const modules = organization.subscriptionPlan.modules
+
+    if (modules && Array.isArray(modules)) {
+      return modules as string[]
+    }
+  }
+
+  // Si no hay plan asignado directamente, buscar en la tabla Subscription
+  const activeSubscription = await prisma.subscription.findFirst({
+    where: {
+      organizationId,
+      status: {
+        in: [SubscriptionStatus.active, SubscriptionStatus.trial]
+      },
+      OR: [
+        { endDate: null },
+        { endDate: { gt: new Date() } } // Que no esté vencida
+      ]
+    },
+    include: {
+      plan: {
+        select: {
+          id: true,
+          name: true,
+          modules: true
+        }
+      }
+    },
+    orderBy: {
+      startDate: 'desc' // La más reciente primero
+    }
+  })
+
+  if (activeSubscription?.plan) {
+    const modules = activeSubscription.plan.modules
+
+    if (modules && Array.isArray(modules)) {
+      return modules as string[]
+    }
+  }
+
+  return []
+}
+
+/**
+ * Obtiene los módulos permitidos según el plan de suscripción por slug
+ * Retorna un array vacío si no hay plan o no tiene módulos definidos
+ */
+export async function getModulesBySlug(slug: string): Promise<string[]> {
+  const organizationId = await getOrganizationIdByCustomerSlug(slug)
+  if (!organizationId) {
+    return []
+  }
+
+  return getModulesByOrganizationId(organizationId)
 }
 

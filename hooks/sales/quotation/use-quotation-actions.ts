@@ -1,7 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
@@ -20,8 +19,6 @@ interface ConvertOptions {
 }
 
 export function useQuotationActions(customerSlug: string, onQuotationsChange?: () => Promise<void> | void) {
-  const router = useRouter()
-  const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedQuotation, setSelectedQuotation] = useState<SalesQuotationWithRelations | undefined>()
@@ -95,12 +92,9 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
       toast.success(message)
       closeDialogs()
 
+      // Actualizar solo los datos de la tabla sin recargar la página
       if (onQuotationsChange) {
         await Promise.resolve(onQuotationsChange())
-      } else {
-        startTransition(() => {
-          router.refresh()
-        })
       }
     } catch (error: any) {
       toast.error(error.message || "Error al guardar la cotización")
@@ -123,12 +117,9 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
       toast.success("Cotización eliminada")
       closeDialogs()
 
+      // Actualizar solo los datos de la tabla sin recargar la página
       if (onQuotationsChange) {
         await Promise.resolve(onQuotationsChange())
-      } else {
-        startTransition(() => {
-          router.refresh()
-        })
       }
     } catch (error: any) {
       toast.error(error.message || "Error al eliminar la cotización")
@@ -165,12 +156,9 @@ export function useQuotationActions(customerSlug: string, onQuotationsChange?: (
       toast.success(message)
       closeConvertDialog()
 
+      // Actualizar solo los datos de la tabla sin recargar la página
       if (onQuotationsChange) {
         await Promise.resolve(onQuotationsChange())
-      } else {
-        startTransition(() => {
-          router.refresh()
-        })
       }
     } catch (error: any) {
       toast.error(error.message || "No se pudo convertir la cotización")

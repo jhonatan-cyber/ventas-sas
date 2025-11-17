@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Loader2, CheckSquare2 } from "lucide-react"
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { toast } from "sonner"
@@ -26,6 +28,7 @@ interface PermissionSasFormDialogProps {
 }
 
 export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, customerSlug, maxBranches }: PermissionSasFormDialogProps) {
+  const t = useTranslations()
   const [selectedModule, setSelectedModule] = useState<string>("")
   const [selectedActions, setSelectedActions] = useState<string[]>([])
   const [existingPermissionNames, setExistingPermissionNames] = useState<string[]>([])
@@ -136,12 +139,12 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
 
   const handleSubmit = async () => {
     if (!selectedModule) {
-      toast.error("Por favor selecciona un módulo")
+      toast.error(t('permissions.sas.moduleRequired'))
       return
     }
 
     if (selectedActions.length === 0) {
-      toast.error("Por favor selecciona al menos una acción")
+      toast.error(t('permissions.sas.actionsRequired'))
       return
     }
 
@@ -198,7 +201,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
         ? `Se han creado ${newPermissions.length} permiso(s) nuevo(s). ${existingCount} permiso(s) ya existían.`
         : `Se han creado ${newPermissions.length} permiso(s) para el módulo ${modules.find(m => m.id === selectedModule)?.label}`
 
-      toast.success("Permisos registrados correctamente", {
+      toast.success(t('permissions.sas.registeredSuccess'), {
         description: message,
       })
 
@@ -206,7 +209,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error al crear permisos:", error)
-      toast.error("Error al registrar permisos", {
+      toast.error(t('permissions.sas.errorRegistering'), {
         description: error.message || "No se pudieron crear los permisos",
       })
     } finally {
@@ -218,7 +221,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+      <DialogContent className="sm:max-w-[600px] lg:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>Registrar Nuevos Permisos</DialogTitle>
@@ -229,47 +232,51 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
-          <div className="space-y-2">
-            <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Módulo
-            </Label>
-            <Select value={selectedModule} onValueChange={setSelectedModule}>
-              <SelectTrigger id="module" className="rounded-full">
-                <SelectValue placeholder="Selecciona un módulo" />
-              </SelectTrigger>
-              <SelectContent>
-                {modules.map((module) => (
-                  <SelectItem key={module.id} value={module.id}>
-                    {module.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Módulo y Marcar Todos - En una fila de 2 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                Módulo
+              </Label>
+              <Select value={selectedModule} onValueChange={setSelectedModule}>
+                <SelectTrigger id="module" className="rounded-full w-full">
+                  <SelectValue placeholder={t('common.placeholders.selectModule')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {modules.map((module) => (
+                    <SelectItem key={module.id} value={module.id}>
+                      {module.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 opacity-0 pointer-events-none">
+                Acciones
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAllActions}
+                disabled={loadingExistingPermissions || !selectedModule}
+                className="rounded-full text-xs whitespace-nowrap"
+              >
+                <CheckSquare2 className="h-3 w-3 mr-1" />
+                Marcar Todos
+              </Button>
+            </div>
           </div>
+
+          {loadingExistingPermissions && selectedModule && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Cargando permisos existentes...
+            </div>
+          )}
 
           {selectedModule && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  Acciones para {selectedModuleLabel}
-                  {loadingExistingPermissions && (
-                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                      (Cargando permisos existentes...)
-                    </span>
-                  )}
-                </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAllActions}
-                  disabled={loadingExistingPermissions || !selectedModule}
-                  className="rounded-full text-xs"
-                >
-                  <CheckSquare2 className="h-3 w-3 mr-1" />
-                  Marcar Todos
-                </Button>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
                 {actions.map((action) => {
                   const permissionName = PermissionSasService.generatePermissionName(

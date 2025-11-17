@@ -12,6 +12,7 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface ProductsChartProps {
   data: Array<{
@@ -19,19 +20,16 @@ interface ProductsChartProps {
     quantitySold: number
     revenue: number
   }>
+  slug?: string
 }
 
-export function ProductsChart({ data }: ProductsChartProps) {
+export function ProductsChart({ data, slug }: ProductsChartProps) {
   // Limitar a 10 productos y ordenar por cantidad
   const displayData = data.slice(0, 10)
 
   // Formatear valor monetario
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-BO', {
-      style: 'currency',
-      currency: 'BOB',
-      minimumFractionDigits: 0,
-    }).format(value)
+    return formatCurrencyWithPreferences(value, slug)
   }
 
   return (

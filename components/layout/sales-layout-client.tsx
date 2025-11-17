@@ -10,9 +10,10 @@ interface SalesLayoutClientProps {
   children: React.ReactNode
   organizationSlug: string
   maxBranches?: number | null
+  allowedModules?: string[]
 }
 
-export function SalesLayoutClient({ children, organizationSlug, maxBranches }: SalesLayoutClientProps) {
+export function SalesLayoutClient({ children, organizationSlug, maxBranches, allowedModules = [] }: SalesLayoutClientProps) {
   const pathname = usePathname()
   const isLoginPage = pathname.includes('/login')
   const isMaintenancePage = pathname.includes('/en-mantenimiento')
@@ -33,7 +34,9 @@ export function SalesLayoutClient({ children, organizationSlug, maxBranches }: S
     '/gastos',
     '/cajas',
     '/reportes',
+    '/analytics',
     '/configuracion',
+    '/inventario',
   ]
   
   // Verificar si es una ruta de página CMS o blog
@@ -56,7 +59,7 @@ export function SalesLayoutClient({ children, organizationSlug, maxBranches }: S
   return (
     <SidebarProvider>
       <div className="flex h-screen bg-gray-50 dark:bg-[#1a1a1a]">
-        <SalesSidebar organizationSlug={organizationSlug} maxBranches={maxBranches} />
+        <SalesSidebar organizationSlug={organizationSlug} maxBranches={maxBranches} allowedModules={allowedModules} />
         <main className="flex-1 lg:ml-64 overflow-y-auto">
           <SalesHeader />
           <div className="mt-24 lg:mt-16">

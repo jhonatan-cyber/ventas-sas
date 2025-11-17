@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 import { QuotationConvertDialog } from "./quotation-convert-dialog"
 import { QuotationDeleteDialog } from "./quotation-delete-dialog"
@@ -29,6 +30,7 @@ interface QuotationsPageClientProps {
   initialBranches?: BranchSummary[]
   initialIsAdmin?: boolean
   initialUserBranchId?: string | null
+  maxBranches?: number | null
 }
 
 export function QuotationsPageClient({
@@ -40,7 +42,9 @@ export function QuotationsPageClient({
   initialBranches,
   initialIsAdmin = false,
   initialUserBranchId = null,
+  maxBranches,
 }: QuotationsPageClientProps) {
+  const t = useTranslations()
   const initialBranchList = useMemo(() => initialBranches ?? [], [initialBranches])
 
   const [quotations, setQuotations] = useState<SalesQuotationWithRelations[]>(initialQuotations)
@@ -112,7 +116,11 @@ export function QuotationsPageClient({
   const loadQuotations = useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/${customerSlug}/cotizaciones?page=1&pageSize=1000`)
+      // Usar cache: "no-store" para asegurar que siempre obtengamos datos frescos
+      const response = await fetch(`/api/${customerSlug}/cotizaciones?page=1&pageSize=1000`, {
+        cache: "no-store",
+        credentials: "include",
+      })
 
       if (!response.ok) {
         const error = await response.json()
@@ -134,9 +142,17 @@ export function QuotationsPageClient({
     setAvailableBranches(initialBranchList)
   }, [initialBranchList])
 
+  // Solo sincronizar initialQuotations en el montaje inicial
+  // Las actualizaciones posteriores se manejan mediante loadQuotations()
+  const isInitialMount = useRef(true)
   useEffect(() => {
-    setQuotations(initialQuotations.map(normalizeQuotation))
-  }, [initialQuotations, normalizeQuotation])
+    if (isInitialMount.current) {
+      const normalized = initialQuotations.map(normalizeQuotation)
+      setQuotations(normalized)
+      isInitialMount.current = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Solo ejecutar en el montaje inicial, intencionalmente sin dependencias
 
   useEffect(() => {
     setUserBranchId(initialUserBranchId ?? null)
@@ -170,40 +186,59 @@ export function QuotationsPageClient({
     closeDetailsDialog,
     closeConvertDialog,
     handleSave,
-    handleDelete,
-    handleConvert
+    handleDelete: handleDeleteQuotation,
+    handleConvert: handleConvertQuotation
   } = useQuotationActions(customerSlug, async () => {
     await loadQuotations()
     await loadBranches()
   })
 
-  const handleCreateClick = () => {
+  const handleCreateClick = useCallback(() => {
     openCreateDialog()
-  }
+  }, [openCreateDialog])
+
+  // Memoizar los callbacks para evitar recreaciones innecesarias
+  const handleEdit = useCallback((quotation: SalesQuotationWithRelations) => {
+    openEditDialog(quotation)
+  }, [openEditDialog])
+
+  const handleDelete = useCallback((quotation: SalesQuotationWithRelations) => {
+    openDeleteDialog(quotation)
+  }, [openDeleteDialog])
+
+  const handleViewDetails = useCallback((quotation: SalesQuotationWithRelations) => {
+    openDetailsDialog(quotation)
+  }, [openDetailsDialog])
+
+  const handleConvert = useCallback((quotation: SalesQuotationWithRelations) => {
+    openConvertDialog(quotation)
+  }, [openConvertDialog])
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <QuotationsHeader
-        title="Gestión de Cotizaciones"
-        description="Administra las cotizaciones a tus clientes"
-        newButtonText="Agregar Cotización"
+        title={t('quotations.title')}
+        description={t('quotations.description')}
+        newButtonText={t('quotations.create')}
         onNewClick={handleCreateClick}
         newButtonDisabled={isLoading}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
-      <QuotationsContainer 
+      <QuotationsContainer
+        customerSlug={customerSlug} 
         quotations={quotations as any}
         isLoading={isLoading}
         organizationId={organizationId}
-        onEdit={openEditDialog as any}
-        onDelete={openDeleteDialog as any}
-        onViewDetails={openDetailsDialog as any}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onViewDetails={handleViewDetails}
         showBranchColumn={showBranchColumn || isAdmin}
         branches={availableBranches}
         allowBranchFilter={canFilterByBranch}
-        onConvert={openConvertDialog}
+        maxBranches={maxBranches}
+        onConvert={handleConvert}
       />
 
       {/* Modal de crear/editar cotización */}
@@ -216,6 +251,7 @@ export function QuotationsPageClient({
         branches={availableBranches}
         isAdmin={isAdmin}
         currentUserBranchId={userBranchId}
+        maxBranches={maxBranches}
         onSave={handleSave}
         isBusy={isLoading}
       />
@@ -225,14 +261,19 @@ export function QuotationsPageClient({
         open={isDeleteDialogOpen}
         onOpenChange={closeDialogs}
         quotation={selectedQuotation}
-        onDelete={handleDelete}
+        onDelete={handleDeleteQuotation}
       />
 
       <QuotationDetailsDialog
         open={isDetailsDialogOpen}
-        onOpenChange={closeDetailsDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDetailsDialog()
+          }
+        }}
         quotation={detailQuotation}
         customerSlug={customerSlug}
+        maxBranches={maxBranches}
       />
 
       <QuotationConvertDialog
@@ -243,9 +284,10 @@ export function QuotationsPageClient({
           }
         }}
         quotation={convertQuotation}
-        onConfirm={handleConvert}
+        onConfirm={handleConvertQuotation}
         isSubmitting={isConverting}
         customerSlug={customerSlug}
+        maxBranches={maxBranches}
         isAdmin={isAdmin}
         selectedBranchId={convertQuotation?.branchId ?? null}
         userBranchId={userBranchId}

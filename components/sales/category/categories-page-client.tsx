@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Category } from "@prisma/client"
 import { useState, useEffect } from "react"
 
@@ -19,6 +21,7 @@ interface CategoriesPageClientProps {
 }
 
 export function CategoriesPageClient({ initialCategories, customerSlug }: CategoriesPageClientProps) {
+  const t = useTranslations()
   const [categories, setCategories] = useState(initialCategories)
   
   const {
@@ -46,12 +49,12 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
   }, [initialCategories])
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <CategoriesHeader
-        title="Gestión de Categorías"
-        description="Administra las categorías de productos de tu sistema"
-        newButtonText="Agregar Categoría"
+        title={t('categories.title')}
+        description={t('categories.description')}
+        newButtonText={t('categories.create')}
         onNewClick={openCreateDialog}
       />
 
@@ -85,7 +88,7 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
         onOpenChange={setConfirmOpen}
         title={confirmTitle}
         description={confirmDesc}
-        confirmText="Confirmar"
+        confirmText={t('common.confirm')}
         confirmColor={confirmColor}
         onConfirm={confirmPerform}
       />

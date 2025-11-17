@@ -48,7 +48,10 @@ export function PermissionsSasPagination({
   }
 
   return (
-    <div className="flex justify-center mt-6">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6">
+      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 sm:hidden">
+        Página {currentPage} de {totalPages}
+      </div>
       <Pagination>
         <PaginationContent>
           <PaginationItem>
@@ -58,35 +61,39 @@ export function PermissionsSasPagination({
                 e.preventDefault()
                 if (currentPage > 1) onPrevious()
               }}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              className={`rounded-full ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
             />
           </PaginationItem>
           
-          {pages.map((page, index) => {
-            if (page === '...') {
+          {/* Ocultar números de página en móvil, mostrar solo en desktop */}
+          <div className="hidden sm:flex items-center gap-1">
+            {pages.map((page, index) => {
+              if (page === '...') {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
+                  </PaginationItem>
+                )
+              }
+              
+              const pageNum = page as number
               return (
-                <PaginationItem key={`ellipsis-${index}`}>
-                  <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    href="#"
+                    isActive={currentPage === pageNum}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onPageChange(pageNum)
+                    }}
+                    className="rounded-full"
+                  >
+                    {pageNum}
+                  </PaginationLink>
                 </PaginationItem>
               )
-            }
-            
-            const pageNum = page as number
-            return (
-              <PaginationItem key={pageNum}>
-                <PaginationLink
-                  href="#"
-                  isActive={currentPage === pageNum}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onPageChange(pageNum)
-                  }}
-                >
-                  {pageNum}
-                </PaginationLink>
-              </PaginationItem>
-            )
-          })}
+            })}
+          </div>
           
           <PaginationItem>
             <PaginationNext 
@@ -95,7 +102,7 @@ export function PermissionsSasPagination({
                 e.preventDefault()
                 if (currentPage < totalPages) onNext()
               }}
-              className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              className={`rounded-full ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
             />
           </PaginationItem>
         </PaginationContent>

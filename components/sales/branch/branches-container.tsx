@@ -3,6 +3,7 @@
 import { Branch } from "@prisma/client"
 import { useState } from "react"
 
+import { BranchesCards } from "./branches-cards"
 import { BranchesFilters } from "./branches-filters"
 import { BranchesPagination } from "./branches-pagination"
 import { BranchesStats } from "./branches-stats"
@@ -88,8 +89,17 @@ export function BranchesContainer({ branches, onEdit, onToggleStatus, onDelete, 
         </CardContent>
       </Card>
 
-      {/* Tabla de sucursales sin Card */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+      {/* Cards en móvil */}
+      <BranchesCards
+        branches={currentBranches}
+        onEdit={onEdit}
+        onToggleStatus={onToggleStatus}
+        onDelete={onDelete}
+        onViewDetails={onViewDetails}
+      />
+
+      {/* Tabla de sucursales sin Card - Solo en desktop */}
+      <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
           <BranchesTable 
               branches={currentBranches} 
               onEditClick={onEdit} 

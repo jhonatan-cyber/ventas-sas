@@ -60,11 +60,20 @@ function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): AppErro
     
     case 'P2021':
       // Tabla no existe
-      return AppError.internal('Error en la estructura de la base de datos')
+      const tableName = error.meta?.table as string | undefined
+      const message = tableName 
+        ? `La tabla "${tableName}" no existe en la base de datos. Ejecuta las migraciones de Prisma.`
+        : 'Error en la estructura de la base de datos. Ejecuta las migraciones de Prisma.'
+      return AppError.internal(message, process.env.NODE_ENV === 'development' ? { code: error.code, meta: error.meta } : undefined)
     
     case 'P2022':
       // Columna no existe
-      return AppError.internal('Error en la estructura de la base de datos')
+      const columnName = error.meta?.column as string | undefined
+      const tableName2 = error.meta?.table as string | undefined
+      const message2 = columnName && tableName2
+        ? `La columna "${columnName}" no existe en la tabla "${tableName2}". Ejecuta las migraciones de Prisma.`
+        : 'Error en la estructura de la base de datos. Ejecuta las migraciones de Prisma.'
+      return AppError.internal(message2, process.env.NODE_ENV === 'development' ? { code: error.code, meta: error.meta } : undefined)
     
     default:
       // Otro error de Prisma

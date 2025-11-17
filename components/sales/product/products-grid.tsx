@@ -1,7 +1,9 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { SalesProduct, Category, Branch } from "@prisma/client"
-import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles } from "lucide-react"
+import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles, Eye } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,7 +25,11 @@ interface ProductsGridProps {
   onEdit?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
   onDelete?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
   onToggleStatus?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
+  onView?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
 }
+
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { getProductDescription } from "@/lib/utils/product-description"
 
 function formatCurrency(value: number | string | { toNumber?: () => number }) {
   let numericValue = 0
@@ -33,7 +39,7 @@ function formatCurrency(value: number | string | { toNumber?: () => number }) {
     numericValue = typeof value === "string" ? Number(value) : Number(value)
   }
   if (Number.isNaN(numericValue)) return "-"
-  return `$${numericValue.toLocaleString()}`
+  return formatCurrencyWithPreferences(numericValue)
 }
 
 function truncateText(text: string | null | undefined, maxLength = 120) {
@@ -51,7 +57,9 @@ export function ProductsGrid({
   onEdit,
   onDelete,
   onToggleStatus,
+  onView,
 }: ProductsGridProps) {
+  const t = useTranslations()
   if (isLoading) {
     return <CardsGridSkeleton columns={3} />
   }
@@ -76,7 +84,20 @@ export function ProductsGrid({
         {products.map((product) => {
           const isActive = product.isActive
           const isLowStock = product.stock <= product.minStock
-          const description = product.description?.trim() ?? ""
+          // Obtener descripción según el idioma actual
+          const currentLanguage = (() => {
+            try {
+              const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+              return prefs?.language || 'es';
+            } catch {
+              return 'es';
+            }
+          })();
+          const description = getProductDescription(
+            product.description,
+            (product as any).descriptionTranslations,
+            currentLanguage
+          )?.trim() ?? ""
 
           return (
             <Card
@@ -193,9 +214,25 @@ export function ProductsGrid({
                 <div className="flex w-full flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Sparkles className="h-4 w-4" />
-                    <span>{product.category?.name || "Sin categoría"}</span>
+                    <span>{product.category?.name || t('common.noCategory')}</span>
                   </div>
                   <div className="flex flex-1 justify-end gap-2">
+                    {onView && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="rounded-full"
+                            onClick={() => onView(product)}
+                            aria-label="Ver detalles"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Ver detalles</TooltipContent>
+                      </Tooltip>
+                    )}
                     {onEdit && (
                       <Tooltip>
                         <TooltipTrigger asChild>

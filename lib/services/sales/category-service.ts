@@ -21,7 +21,8 @@ export class CategoryService {
     skip: number = 0,
     take: number = 10,
     search?: string,
-    status?: string
+    status?: string,
+    branchId?: string | null
   ) {
     const where: any = {
       organizationId,
@@ -39,6 +40,16 @@ export class CategoryService {
       where.isActive = true
     } else if (status === 'inactive') {
       where.isActive = false
+    }
+
+    // Si se proporciona branchId, filtrar categorías que tienen productos en esa sucursal
+    if (branchId) {
+      where.products = {
+        some: {
+          branchId: branchId,
+          deletedAt: null
+        }
+      }
     }
 
     const [categories, total] = await Promise.all([

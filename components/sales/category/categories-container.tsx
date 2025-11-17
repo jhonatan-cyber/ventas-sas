@@ -1,8 +1,10 @@
 "use client"
 
 import { Category } from "@prisma/client"
+import { Folder } from "lucide-react"
 import { useState } from "react"
 
+import { CategoriesCards } from "./categories-cards"
 import { CategoriesFilters } from "./categories-filters"
 import { CategoriesPagination } from "./categories-pagination"
 import { CategoriesStats } from "./categories-stats"
@@ -82,15 +84,37 @@ export function CategoriesContainer({ categories, onEdit, onToggleStatus, onDele
         </CardContent>
       </Card>
 
-      {/* Tabla de categorías sin Card */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
-        <CategoriesTable 
-          categories={currentCategories} 
-          onEditClick={onEdit} 
-          onToggleStatus={onToggleStatus} 
-          onDeleteClick={onDelete} 
-        />
-      </div>
+      {/* Mostrar cards y tabla solo si hay categorías */}
+      {currentCategories.length > 0 ? (
+        <>
+          {/* Cards de categorías (solo móvil) */}
+          <CategoriesCards
+            categories={currentCategories}
+            onEdit={onEdit}
+            onToggleStatus={onToggleStatus}
+            onDelete={onDelete}
+          />
+
+          {/* Tabla de categorías (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+            <CategoriesTable 
+              categories={currentCategories} 
+              onEditClick={onEdit} 
+              onToggleStatus={onToggleStatus} 
+              onDeleteClick={onDelete} 
+            />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <Folder className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No hay categorías registradas</p>
+          </div>
+        </div>
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

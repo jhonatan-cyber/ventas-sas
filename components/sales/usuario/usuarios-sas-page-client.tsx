@@ -1,9 +1,12 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { UsuarioSas, RoleSas } from "@prisma/client"
 import { useState, useEffect } from "react"
 
 import { UsuarioSasDeleteDialog } from "./usuario-sas-delete-dialog"
+import { UsuarioSasDetailDialog } from "./usuario-sas-detail-dialog"
 import { UsuarioSasFormDialog } from "./usuario-sas-form-dialog"
 import { UsuariosSasContainer } from "./usuarios-sas-container"
 import { UsuariosSasHeader } from "./usuarios-sas-header"
@@ -30,11 +33,13 @@ export function UsuariosSasPageClient({
   customerSlug,
   maxUsers
 }: UsuariosSasPageClientProps) {
+  const t = useTranslations()
   const [usuarios, setUsuarios] = useState(initialUsuarios)
   
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
     selectedUsuario,
     confirmOpen,
     confirmTitle,
@@ -45,6 +50,7 @@ export function UsuariosSasPageClient({
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
     closeDialogs,
     handleSave,
     handleDelete,
@@ -91,12 +97,12 @@ export function UsuariosSasPageClient({
                           activeUsersCount >= maxUsers
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <UsuariosSasHeader
-        title="Gestión de Usuarios"
-        description="Administra los usuarios del sistema SAS"
-        newButtonText="Agregar Usuario"
+        title={t('users.title')}
+        description={t('users.description')}
+        newButtonText={t('users.create')}
         onNewClick={openCreateDialog}
         showNewButton={!hasReachedLimit}
       />
@@ -108,6 +114,7 @@ export function UsuariosSasPageClient({
         onEdit={openEditDialog}
         onToggleStatus={handleToggleStatus}
         onDelete={openDeleteDialog}
+        onView={openViewDialog}
       />
 
       {/* Modal de crear/editar usuario */}
@@ -127,6 +134,17 @@ export function UsuariosSasPageClient({
         onOpenChange={closeDialogs}
         usuario={selectedUsuario}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de detalles del usuario */}
+      <UsuarioSasDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialogs()
+          }
+        }}
+        usuario={selectedUsuario}
       />
 
       <ConfirmActionDialog

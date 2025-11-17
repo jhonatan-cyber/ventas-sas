@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -24,6 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateWithPreferences } from "@/lib/utils/preferences";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface ExpenseFormDialogProps {
   open: boolean;
@@ -32,20 +36,23 @@ interface ExpenseFormDialogProps {
   branches: ExpenseBranchSummary[];
   currentUserBranchId?: string | null;
   isAdmin?: boolean;
+  maxBranches?: number | null;
+  customerSlug: string;
   onSave: (data: any) => Promise<void> | void;
 }
 
+// Las sugerencias de categorías se traducen dinámicamente usando t('expenses.form.categorySuggestions.*')
 const CATEGORY_SUGGESTIONS = [
-  "Servicios",
-  "Insumos",
-  "Transporte",
-  "Salarios",
-  "Alquiler",
-  "Servicios Públicos",
-  "Marketing",
-  "Mantenimiento",
-  "Impuestos",
-  "Otros",
+  "services",
+  "supplies",
+  "transport",
+  "salaries",
+  "rent",
+  "utilities",
+  "marketing",
+  "maintenance",
+  "taxes",
+  "other",
 ];
 
 const capitalizeWords = (value: string) =>
@@ -70,8 +77,12 @@ export function ExpenseFormDialog({
   branches,
   currentUserBranchId = null,
   isAdmin = false,
+  maxBranches,
+  customerSlug,
   onSave,
 }: ExpenseFormDialogProps) {
+  const t = useTranslations()
+  const isMobile = useIsMobile();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -89,7 +100,9 @@ export function ExpenseFormDialog({
     [branchOptions]
   );
   const isAdminUser = Boolean(isAdmin);
-  const adminCanSelectBranch = isAdminUser && hasSelectableBranches;
+  // Ocultar select de sucursal si el plan solo permite una y solo hay una disponible
+  const shouldHideBranchSelect = maxBranches === 1 && selectableBranches.length === 1;
+  const adminCanSelectBranch = isAdminUser && hasSelectableBranches && !shouldHideBranchSelect;
 
   useEffect(() => {
     if (selectableBranches.length > 0) {
@@ -113,6 +126,9 @@ export function ExpenseFormDialog({
         : null;
     const userBranchId = currentUserBranchId ?? null;
 
+    // Si el plan solo permite una sucursal y solo hay una disponible, seleccionarla automáticamente
+    const autoSelectBranchId = shouldHideBranchSelect ? singleBranchId : null;
+
     if (expense) {
       setName(expense.name || "");
       setCategory(expense.category ?? "");
@@ -121,8 +137,8 @@ export function ExpenseFormDialog({
       setDate(expense.date ? expense.date.substring(0, 10) : today);
 
       const prefilledBranch = isAdminUser
-        ? expense.branchId ?? singleBranchId ?? userBranchId ?? "all"
-        : userBranchId ?? expense.branchId ?? singleBranchId ?? "all";
+        ? expense.branchId ?? autoSelectBranchId ?? singleBranchId ?? userBranchId ?? "all"
+        : userBranchId ?? expense.branchId ?? autoSelectBranchId ?? singleBranchId ?? "all";
 
       setBranchId(prefilledBranch || "all");
     } else {
@@ -130,14 +146,14 @@ export function ExpenseFormDialog({
       setCategory("");
       setDescription("");
       setAmount("");
-      setDate(today);
+      setDate("");
       const defaultBranch = isAdminUser
-        ? "all"
-        : userBranchId ?? singleBranchId ?? "all";
+        ? autoSelectBranchId ?? "all"
+        : userBranchId ?? autoSelectBranchId ?? singleBranchId ?? "all";
 
       setBranchId(defaultBranch || "all");
     }
-  }, [selectableBranches, currentUserBranchId, expense, isAdminUser, open]);
+  }, [selectableBranches, currentUserBranchId, expense, isAdminUser, open, shouldHideBranchSelect]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -147,27 +163,28 @@ export function ExpenseFormDialog({
     const numericAmount = parseFloat(amount);
 
     if (!formattedName) {
-      toast.error("El nombre del gasto es requerido");
+      toast.error(t('expenses.form.nameRequired'));
       return;
     }
 
     if (!formattedDescription) {
-      toast.error("Describe brevemente el gasto");
+      toast.error(t('expenses.form.descriptionRequired'));
       return;
     }
 
     if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
-      toast.error("El monto debe ser mayor a 0");
+      toast.error(t('expenses.form.amountRequired'));
       return;
     }
 
-    if (!date) {
-      toast.error("Selecciona la fecha del gasto");
+    if (!date || date.trim() === "") {
+      toast.error(t('expenses.form.dateRequired'));
       return;
     }
 
+    // Solo validar sucursal si el select está visible y es requerido
     if (adminCanSelectBranch && (!branchId || branchId === "all")) {
-      toast.error("Selecciona la sucursal del gasto");
+      toast.error(t('expenses.form.branchRequired'));
       return;
     }
 
@@ -206,12 +223,12 @@ export function ExpenseFormDialog({
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#111111]">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-              {expense ? "Editar gasto" : "Registrar gasto"}
+              {expense ? t('expenses.edit') : t('expenses.new')}
             </DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
               {expense
-                ? "Actualiza la información del gasto registrado"
-                : "Completa los datos para registrar un nuevo gasto operativo"}
+                ? t('expenses.editDescription')
+                : t('expenses.newDescription')}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -220,11 +237,11 @@ export function ExpenseFormDialog({
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-white dark:bg-[#111111]">
             <div className="grid gap-2">
               <Label htmlFor="expenseName">
-                Nombre del gasto <span className="text-red-500">*</span>
+                {t('expenses.form.name')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="expenseName"
-                placeholder="Ej. Compra de insumos"
+                placeholder={t('expenses.form.namePlaceholder')}
                 value={name}
                 onChange={(event) =>
                   setName(capitalizeSentence(event.target.value))
@@ -235,14 +252,14 @@ export function ExpenseFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <div className={`flex gap-4 ${adminCanSelectBranch ? "" : ""}`}>
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 flex flex-col gap-2">
                   <Label htmlFor="expenseCategory" className="text-sm font-medium">
-                    Etiqueta o categoría
+                    {t('expenses.form.category')}
                   </Label>
                   <Input
                     id="expenseCategory"
-                    placeholder="Opcional: Servicios, Alquiler, etc."
+                    placeholder={t('expenses.form.categoryPlaceholder')}
                     value={category}
                     onChange={(event) =>
                       setCategory(capitalizeWords(event.target.value))
@@ -253,9 +270,9 @@ export function ExpenseFormDialog({
                 </div>
 
                 {adminCanSelectBranch && (
-                  <div className="w-[220px] flex flex-col gap-2">
+                  <div className="hidden sm:flex w-[220px] flex-col gap-2">
                     <Label htmlFor="expenseBranch" className="text-sm font-medium">
-                      Sucursal
+                      {t('form.branch')}
                     </Label>
                     <Select
                       value={branchId}
@@ -263,13 +280,13 @@ export function ExpenseFormDialog({
                       disabled={isLoading}
                     >
                       <SelectTrigger id="expenseBranch" className="rounded-full w-full">
-                        <SelectValue placeholder="Seleccionar sucursal" className="text-start" />
+                        <SelectValue placeholder={t('expenses.form.selectBranch')} className="text-start" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl">
-                        <SelectItem value="all">Seleccionar sucursal</SelectItem>
+                        <SelectItem value="all">{t('expenses.form.selectBranch')}</SelectItem>
                         {selectableBranches.map((branch) => (
                           <SelectItem key={branch.id} value={branch.id || ""}>
-                            {branch.name || "Sin nombre"}
+                            {branch.name || t('branches.details.noName')}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -279,27 +296,69 @@ export function ExpenseFormDialog({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {CATEGORY_SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                      category === suggestion
-                        ? "bg-emerald-500 text-white border-emerald-500"
-                        : "text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                    onClick={() => setCategory(suggestion)}
+                {CATEGORY_SUGGESTIONS.map((suggestion) => {
+                  // Mapear las claves a los valores originales para comparación
+                  const originalValues: Record<string, string> = {
+                    services: "Servicios",
+                    supplies: "Insumos",
+                    transport: "Transporte",
+                    salaries: "Salarios",
+                    rent: "Alquiler",
+                    utilities: "Servicios Públicos",
+                    marketing: "Marketing",
+                    maintenance: "Mantenimiento",
+                    taxes: "Impuestos",
+                    other: "Otros",
+                  };
+                  const originalValue = originalValues[suggestion] || suggestion;
+                  return (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                        category === originalValue
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                      onClick={() => setCategory(originalValue)}
+                      disabled={isLoading}
+                    >
+                      {t(`expenses.form.categorySuggestions.${suggestion}`)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Select de sucursal en móvil - debajo de las etiquetas */}
+              {adminCanSelectBranch && (
+                <div className="flex flex-col gap-2 sm:hidden">
+                  <Label htmlFor="expenseBranchMobile" className="text-sm font-medium">
+                    {t('form.branch')}
+                  </Label>
+                  <Select
+                    value={branchId}
+                    onValueChange={setBranchId}
                     disabled={isLoading}
                   >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
+                    <SelectTrigger id="expenseBranchMobile" className="rounded-full w-full">
+                      <SelectValue placeholder={t('expenses.form.selectBranch')} className="text-start" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      <SelectItem value="all">{t('expenses.form.selectBranch')}</SelectItem>
+                      {selectableBranches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id || ""}>
+                          {branch.name || t('branches.details.noName')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="expenseDescription">
-                Descripción <span className="text-red-500">*</span>
+                {t('expenses.form.description')} <span className="text-red-500">*</span>
               </Label>
               <Textarea
                 id="expenseDescription"
@@ -307,38 +366,63 @@ export function ExpenseFormDialog({
                 onChange={(event) =>
                   setDescription(capitalizeSentence(event.target.value))
                 }
-                placeholder="Describe brevemente el gasto, método de pago o cualquier detalle relevante"
+                placeholder={t('expenses.form.descriptionPlaceholder')}
                 disabled={isLoading}
                 rows={4}
-                className="rounded-3xl resize-none"
+                className="rounded-lg resize-none"
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="expenseDate">
-                  Fecha <span className="text-red-500">*</span>
+                  {t('expenses.form.date')} <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="expenseDate"
-                  type="date"
-                  value={date}
-                  onChange={(event) => setDate(event.target.value)}
-                  disabled={isLoading}
-                  className="rounded-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="expenseDate"
+                    type="date"
+                    value={date}
+                    onChange={(event) => setDate(event.target.value)}
+                    disabled={isLoading}
+                    className={cn(
+                      "w-full rounded-full",
+                      // En móviles: ocultar el indicador y los campos de fecha nativos
+                      isMobile && "[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit]:opacity-0 [&::-webkit-datetime-edit-text]:opacity-0 [&::-webkit-datetime-edit-month-field]:opacity-0 [&::-webkit-datetime-edit-day-field]:opacity-0 [&::-webkit-datetime-edit-year-field]:opacity-0 [&::-webkit-inner-spin-button]:opacity-0 [&::-webkit-outer-spin-button]:opacity-0",
+                      // En PC: mostrar todo normalmente
+                      !isMobile && "[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+                    )}
+                    style={date && isMobile ? { color: 'transparent', caretColor: 'transparent' } : undefined}
+                  />
+                  {!date && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:hidden">
+                      <span className="text-sm text-gray-400">dd/mm/aaa</span>
+                    </div>
+                  )}
+                  {date && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:hidden">
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {(() => {
+                          const [year, month, day] = date.split('-').map(Number)
+                          const localDate = new Date(year, month - 1, day)
+                          return formatDateWithPreferences(localDate, customerSlug)
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-2">
                 <Label htmlFor="expenseAmount">
-                  Monto <span className="text-red-500">*</span>
+                  {t('expenses.form.amount')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="expenseAmount"
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0.00"
+                  placeholder={t('common.placeholders.amount')}
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                   disabled={isLoading}
@@ -352,20 +436,20 @@ export function ExpenseFormDialog({
             )}
           </div>
 
-          <DialogFooter className="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-gray-200 bg-white px-6 py-4 dark:border-[#2a2a2a] dark:bg-[#111111] sm:flex-row sm:justify-center">
+          <DialogFooter className="sticky bottom-0 flex flex-col sm:flex-row gap-3 border-t border-gray-200 bg-white px-6 py-4 dark:border-[#2a2a2a] dark:bg-[#111111] sm:justify-center items-stretch sm:items-center">
             <Button
               type="button"
               variant="outline"
-              className="rounded-full"
+              className="rounded-full w-full sm:w-auto"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancelar
+              {t('action.cancel')}
             </Button>
             <Button
               type="submit"
               variant="new"
-              className="rounded-full"
+              className="rounded-full w-full sm:w-auto"
               disabled={
                 isLoading ||
                 !name.trim() ||
@@ -377,7 +461,7 @@ export function ExpenseFormDialog({
                 (adminCanSelectBranch && (!branchId || branchId === "all"))
               }
             >
-              {isLoading ? "Agregando..." : expense ? "Actualizar" : "Agregar"}
+              {isLoading ? t('message.saving') : expense ? t('action.update') : t('action.add')}
             </Button>
           </DialogFooter>
         </form>

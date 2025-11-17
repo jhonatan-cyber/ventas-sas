@@ -1,7 +1,7 @@
 "use client"
 
 import { UsuarioSas } from "@prisma/client"
-import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard, Shield, Building2 } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, User, Mail, Phone, MapPin, CreditCard, Shield, Building2, Eye } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -22,9 +22,10 @@ interface UsuariosSasTableProps {
   onEditClick?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
   onDeleteClick?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
   onToggleStatus?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
+  onViewClick?: (usuario: UsuarioSas & { rol?: any; sucursal?: any }) => void
 }
 
-export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditClick, onDeleteClick, onToggleStatus }: UsuariosSasTableProps) {
+export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditClick, onDeleteClick, onToggleStatus, onViewClick }: UsuariosSasTableProps) {
   const showSucursalColumn = (sucursalesCount || 0) > 1
   if (isLoading) {
     return <TableSkeleton columns={showSucursalColumn ? 6 : 5} rows={5} showActions={true} />
@@ -153,6 +154,21 @@ export function UsuariosSasTable({ usuarios, sucursalesCount, isLoading, onEditC
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {onViewClick && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onViewClick(usuario)}
+                                className="hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalles</TooltipContent>
+                          </Tooltip>
+                        )}
                         {onEditClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>

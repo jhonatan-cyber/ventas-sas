@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { BrowserMultiFormatReader } from "@zxing/library"
 import { ScanLine, X, Check, AlertCircle } from "lucide-react"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
@@ -31,6 +33,7 @@ interface SaleCancelDialogProps {
 }
 
 export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCancelDialogProps) {
+  const t = useTranslations()
   const [isCancelling, setIsCancelling] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [_scanningProductId, setScanningProductId] = useState<string | null>(null)
@@ -150,7 +153,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       })
     } catch (error) {
       console.error('Error al acceder a la cámara:', error)
-      toast.error('No se pudo acceder a la cámara')
+      toast.error(t('common.cameraError'))
       stopScanning()
     }
   }, [stopScanning, validateCode])
@@ -241,8 +244,8 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+      <DialogContent className="lg:max-w-2xl sm:max-w-[700px] max-h-[90vh] overflow-hidden p-0 rounded-lg">
+        <DialogHeader className="sticky top-0 z-10 px-6 sm:px-8 py-5 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
           <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">Anular Venta</DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
             Verifica los códigos únicos de los productos para anular esta venta.
@@ -288,7 +291,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
                     <div className="flex gap-2">
                       <Input
                         key={inputKey}
-                        placeholder="Ingresa o escanea código"
+                        placeholder={t('common.placeholders.scanCode')}
                         className="rounded-full flex-1"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -342,13 +345,13 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
           )}
         </div>
 
-        <DialogFooter className="border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4">
-          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={isCancelling}>
+        <DialogFooter className="sticky bottom-0 z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 sm:px-8 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
+          <Button variant="outline" className="rounded-full w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isCancelling}>
             Cancelar
           </Button>
           <Button
             variant="destructive"
-            className="rounded-full"
+            className="rounded-full w-full sm:w-auto"
             onClick={handleCancel}
             disabled={isCancelling}
           >

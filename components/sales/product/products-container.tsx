@@ -1,8 +1,10 @@
 "use client"
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
+import { Package } from "lucide-react"
 import { useState } from "react"
 
+import { ProductsCards } from "./products-cards"
 import { ProductsFilters } from "./products-filters"
 import { ProductsGrid } from "./products-grid"
 import { ProductsPagination } from "./products-pagination"
@@ -10,6 +12,7 @@ import { ProductsStats } from "./products-stats"
 import { ProductsTable } from "./products-table"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { getProductDescription } from "@/lib/utils/product-description"
 
 
 interface ProductsContainerProps {
@@ -24,6 +27,7 @@ interface ProductsContainerProps {
   onEdit?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
   onToggleStatus?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
   onDelete?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
+  onView?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
 }
 
 export function ProductsContainer({ 
@@ -37,7 +41,8 @@ export function ProductsContainer({
   userBranchId = null,
   onEdit, 
   onToggleStatus, 
-  onDelete 
+  onDelete,
+  onView
 }: ProductsContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
@@ -65,9 +70,23 @@ export function ProductsContainer({
     // Filtrar por búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase()
+      // Obtener descripción para búsqueda (usar idioma actual o español por defecto)
+      const currentLanguage = (() => {
+        try {
+          const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+          return prefs?.language || 'es';
+        } catch {
+          return 'es';
+        }
+      })();
+      const description = getProductDescription(
+        product.description,
+        (product as any).descriptionTranslations,
+        currentLanguage
+      ) || "";
       const matchesSearch = 
         product.name?.toLowerCase().includes(searchLower) ||
-        product.description?.toLowerCase().includes(searchLower) ||
+        description.toLowerCase().includes(searchLower) ||
         product.sku?.toLowerCase().includes(searchLower) ||
         product.barcode?.toLowerCase().includes(searchLower)
       
@@ -137,28 +156,57 @@ export function ProductsContainer({
         </CardContent>
       </Card>
 
-      {viewMode === "table" ? (
-        <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
-          <ProductsTable 
-            products={currentProducts.map(p => ({
-              ...p,
-              price: typeof p.price === 'object' && 'toNumber' in p.price ? p.price.toNumber() : Number(p.price),
-              cost: typeof p.cost === 'object' && 'toNumber' in p.cost ? p.cost.toNumber() : Number(p.cost),
-            })) as any} 
+      {/* Mostrar cards y tabla/grid solo si hay productos */}
+      {currentProducts.length > 0 ? (
+        <>
+          {/* Cards de productos (solo móvil) */}
+          <ProductsCards
+            products={currentProducts}
             showBranchColumn={showBranchColumn}
-            onEditClick={onEdit as any} 
-            onToggleStatus={onToggleStatus as any} 
-            onDeleteClick={onDelete as any} 
+            onEdit={onEdit}
+            onToggleStatus={onToggleStatus}
+            onDelete={onDelete}
+            onView={onView}
           />
-        </div>
+
+          {/* Tabla o Grid de productos (solo desktop) */}
+          <div className="hidden md:block">
+            {viewMode === "table" ? (
+              <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+                <ProductsTable 
+                  products={currentProducts.map(p => ({
+                    ...p,
+                    price: typeof p.price === 'object' && 'toNumber' in p.price ? p.price.toNumber() : Number(p.price),
+                    cost: typeof p.cost === 'object' && 'toNumber' in p.cost ? p.cost.toNumber() : Number(p.cost),
+                  })) as any} 
+                  showBranchColumn={showBranchColumn}
+                  onEditClick={onEdit as any} 
+                  onToggleStatus={onToggleStatus as any} 
+                  onDeleteClick={onDelete as any}
+                  onViewClick={onView as any}
+                />
+              </div>
+            ) : (
+              <ProductsGrid
+                products={currentProducts}
+                showBranchColumn={showBranchColumn}
+                onEdit={onEdit}
+                onToggleStatus={onToggleStatus}
+                onDelete={onDelete}
+                onView={onView}
+              />
+            )}
+          </div>
+        </>
       ) : (
-        <ProductsGrid
-          products={currentProducts}
-          showBranchColumn={showBranchColumn}
-          onEdit={onEdit}
-          onToggleStatus={onToggleStatus}
-          onDelete={onDelete}
-        />
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <Package className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No hay productos registrados</p>
+          </div>
+        </div>
       )}
 
       {/* Paginación */}

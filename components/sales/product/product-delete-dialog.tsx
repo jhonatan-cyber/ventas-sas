@@ -1,6 +1,7 @@
 "use client"
 
 import { SalesProduct, Category } from "@prisma/client"
+import { useTranslations } from "next-intl"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
@@ -12,6 +13,8 @@ interface ProductDeleteDialogProps {
 }
 
 export function ProductDeleteDialog({ open, onOpenChange, product, onDelete }: ProductDeleteDialogProps) {
+  const t = useTranslations()
+  
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -21,20 +24,20 @@ export function ProductDeleteDialog({ open, onOpenChange, product, onDelete }: P
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el producto
+            {t('products.deleteWarning')}
             <strong className="block mt-2">"{product?.name}"</strong>
-            y todos sus datos asociados.
+            {t('products.deleteWarningEnd')}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+        <AlertDialogFooter className="flex flex-col sm:flex-row sm:justify-center gap-3">
+          <AlertDialogCancel className="rounded-full w-full sm:w-auto">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full w-full sm:w-auto"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -2,6 +2,7 @@
 
 import { BrowserMultiFormatReader } from "@zxing/library"
 import { Check, ChevronsUpDown, Plus, Trash2, ScanLine, X, ChevronDown } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -35,6 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 const capitalizeWords = (value: string) =>
   value
@@ -107,6 +109,7 @@ const createEmptyItem = (): SaleItemForm => ({
 })
 
 export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave }: SaleFormDialogProps) {
+  const t = useTranslations()
   const [customers, setCustomers] = useState<SaleCustomerSummary[]>([])
   const [products, setProducts] = useState<SaleProductSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -117,6 +120,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   const [_customerPhoneInput, setCustomerPhoneInput] = useState<string>(DEFAULT_PHONE_PREFIX)
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
   const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0)
+  const [isManualCustomerConfirmed, setIsManualCustomerConfirmed] = useState(false)
   const customerContainerRef = useRef<HTMLDivElement>(null)
   const customerInputRef = useRef<HTMLInputElement>(null)
   const [paymentMethod, setPaymentMethod] = useState<string>('cash')
@@ -127,9 +131,14 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   const [isScanning, setIsScanning] = useState(false)
   const [scanningItemId, setScanningItemId] = useState<string | null>(null)
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null)
+  const [openProductPopovers, setOpenProductPopovers] = useState<Record<string, boolean>>({})
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const scannerVideoRef = useRef<HTMLVideoElement | null>(null)
   const lastScannedCode = useRef<string | null>(null)
+  // Sucursal (según rol)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [branches, setBranches] = useState<Array<{ id: string; name: string | null }>>([])
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -151,7 +160,11 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch(`/api/${customerSlug}/productos?page=1&pageSize=1000`)
+      const params = new URLSearchParams({ page: '1', pageSize: '1000' })
+      if (selectedBranchId) {
+        params.set('branchId', selectedBranchId)
+      }
+      const response = await fetch(`/api/${customerSlug}/productos?${params.toString()}`)
       if (!response.ok) return
       const data = await response.json()
       const mapped: SaleProductSummary[] = (data.products || []).map((product: any) => ({
@@ -164,7 +177,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     } catch (error) {
       console.error('Error al cargar productos:', error)
     }
-  }, [customerSlug])
+  }, [customerSlug, selectedBranchId])
 
   // Filtrar clientes basados en el input
   const filteredCustomers = useMemo(() => {
@@ -187,11 +200,56 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Prefetch en segundo plano para que al abrir el modal ya esté todo listo
+  useEffect(() => {
+    fetchCustomers()
+    fetchProducts()
+  }, [fetchCustomers, fetchProducts])
+
   useEffect(() => {
     if (!open) return
-    setIsLoadingData(true)
-    Promise.all([fetchCustomers(), fetchProducts()]).finally(() => setIsLoadingData(false))
-  }, [open, fetchCustomers, fetchProducts])
+    // Si al abrir aún no hay clientes, mostrar breve estado de carga y forzar fetch
+    if (customers.length === 0) {
+      setIsLoadingData(true)
+      fetchCustomers().finally(() => setIsLoadingData(false))
+    }
+    // Asegurar productos para la sucursal actual
+    fetchProducts()
+  }, [open, fetchCustomers, fetchProducts, customers.length])
+
+  const loadUserAndBranches = useCallback(async () => {
+    try {
+      const userResponse = await fetch(`/api/${customerSlug}/auth/me`)
+      if (userResponse.ok) {
+        const userData = await userResponse.json()
+        const roleName = (userData?.rol?.nombre || '').toLowerCase()
+        const userIsAdmin = roleName.includes('administrador') || roleName === 'admin'
+        setIsAdmin(!!userIsAdmin)
+        const userBranchId = userData?.sucursalId || null
+        if (!userIsAdmin) {
+          setSelectedBranchId(userBranchId)
+        } else {
+          try {
+            const branchesResponse = await fetch(`/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`)
+            if (branchesResponse.ok) {
+              const data = await branchesResponse.json()
+              setBranches((data.branches || []).map((b: any) => ({ id: b.id, name: b.name ?? null })))
+              setSelectedBranchId((prev) => prev ?? userBranchId)
+            }
+          } catch (error) {
+            console.error('Error al cargar sucursales:', error)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error al obtener usuario:', error)
+    }
+  }, [customerSlug])
+
+  // Prefetch user/sucursales
+  useEffect(() => {
+    void loadUserAndBranches()
+  }, [loadUserAndBranches])
 
   useEffect(() => {
     if (!open) return
@@ -199,11 +257,14 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     if (sale) {
       setCustomerId(sale.customerId ?? '')
       const combinedName = `${sale.customer?.name ?? ''} ${sale.customer?.lastName ?? ''}`.trim()
-      setCustomerInputValue(combinedName || (sale as any).customerName || '')
+      const saleCustomerName = (sale as any).customerName || ''
+      setCustomerInputValue(combinedName || saleCustomerName || '')
       setCustomerPhoneInput(normalizePhoneForState(sale.customer?.phone))
       setPaymentMethod(sale.paymentMethod ?? 'cash')
       setDiscount(Number(sale.discount ?? 0).toString())
       setNotes(sale.notes ?? '')
+      // Si hay customerName pero no customerId, significa que fue ingresado manualmente
+      setIsManualCustomerConfirmed(!!saleCustomerName && !sale.customerId)
       const mappedItems =
         sale.items.map((item) => ({
           id: generateTempId(),
@@ -232,6 +293,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
       setNotes('')
       setItems([empty])
       setCodeInputs({ [empty.id]: '' })
+      setIsManualCustomerConfirmed(false)
     }
   }, [sale, open])
 
@@ -312,6 +374,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     setIsCustomerDropdownOpen(false)
     setHighlightedCustomerIndex(0)
     setCustomerPhoneInput(normalizePhoneForState(customer.phone))
+    setIsManualCustomerConfirmed(false) // Resetear cuando se selecciona un cliente registrado
   }
 
   const clearCustomer = () => {
@@ -320,6 +383,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     customerInputRef.current?.focus()
     setHighlightedCustomerIndex(0)
     setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+    setIsManualCustomerConfirmed(false) // Resetear cuando se limpia
   }
 
   const handleManualCustomer = (value: string) => {
@@ -331,6 +395,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     setIsCustomerDropdownOpen(false)
     setHighlightedCustomerIndex(0)
     setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
+    setIsManualCustomerConfirmed(true) // Marcar como confirmado cuando se ingresa manualmente
   }
 
   const handleAddItem = () => {
@@ -353,20 +418,43 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   }
 
   const handleProductSelect = (rowId: string, productId: string) => {
+    const selected = products.find((p) => p.id === productId)
+    // Validación de sucursal única: si hay otros ítems con branchId, impedir elegir de otra sucursal
+    // Nota: los productos traídos ya están filtrados por selectedBranchId (o sucursal de usuario). Esto es una seguridad adicional.
+    const existingBranchIds = new Set<string>()
+    items.forEach((it) => {
+      if (it.product?.id) {
+        const p = products.find((pp) => pp.id === it.productId)
+        // @ts-ignore: permitimos branchId en el objeto product (mapeado desde la API)
+        const b = p && (p as any).branchId
+        if (b) existingBranchIds.add(b)
+      }
+    })
+    // Obtener branch del producto seleccionado si viene en el payload
+    // @ts-ignore
+    const selectedBranch = (selected as any)?.branchId || null
+    if (existingBranchIds.size > 0 && selectedBranch && !existingBranchIds.has(selectedBranch)) {
+      toast.error(t('sales.form.branch') + ': ' + t('common.areYouSure'))
+      // No cambiamos el producto para mantener consistencia
+      setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }))
+      return
+    }
+
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== rowId) return item
-        const product = products.find((prod) => prod.id === productId)
-        const unitPrice = product ? product.price : 0
+        const unitPrice = selected ? selected.price : 0
         return {
           ...item,
           productId,
-          product: product ?? undefined,
+          product: selected ?? undefined,
           unitPrice,
           subtotal: unitPrice * item.quantity,
         }
       }),
     )
+    // Cerrar el Popover después de seleccionar
+    setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }))
   }
 
   const handleQuantityChange = (rowId: string, value: number) => {
@@ -401,7 +489,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   const addCodeToItem = (rowId: string, code: string, fromScanner = false) => {
     const trimmed = code.trim()
     if (!trimmed) {
-      toast.error('Ingresa un código válido')
+      toast.error(t('sales.form.validCodeRequired'))
       return
     }
 
@@ -410,11 +498,11 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
       prev.map((item) => {
         if (item.id !== rowId) return item
         if (item.codes.includes(trimmed)) {
-          toast.info('Este código ya se agregó al producto')
+          toast.info(t('sales.form.codeAlreadyAdded'))
           return item
         }
         if (item.codes.length >= item.quantity) {
-          toast.error('La cantidad de códigos no puede superar las unidades vendidas')
+          toast.error(t('sales.form.codesExceedQuantity'))
           return item
         }
         added = true
@@ -428,7 +516,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
     if (added) {
       setCodeInputs((prev) => ({ ...prev, [rowId]: '' }))
       if (fromScanner) {
-        toast.success('Código escaneado y agregado')
+        toast.success(t('sales.form.codeScannedAndAdded'))
         stopScanning()
       }
     }
@@ -455,6 +543,13 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   const startScanningForItem = async (rowId: string) => {
     try {
       stopScanning()
+      
+      // Verificar que la API de medios está disponible
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error(t('sales.form.cameraNotAvailable'))
+        return
+      }
+      
       setIsScanning(true)
       setScanningItemId(rowId)
       
@@ -493,7 +588,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
       })
     } catch (error) {
       console.error('Error al acceder a la cámara:', error)
-      toast.error('No se pudo acceder a la cámara')
+      toast.error(t('sales.form.cameraAccessError'))
       stopScanning()
     }
   }
@@ -501,33 +596,57 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    // Validación extra: todos los productos deben pertenecer a una única sucursal
+    const branchSet = new Set<string>()
+    for (const it of items) {
+      const p = products.find((pp) => pp.id === it.productId)
+      // @ts-ignore
+      const b = p && (p as any)?.branchId
+      if (b) branchSet.add(b)
+    }
+    if (branchSet.size > 1) {
+      toast.error(t('sales.form.branch') + ': ' + t('common.areYouSure'))
+      return
+    }
+
     if (items.some((item) => !item.productId)) {
-      toast.error('Selecciona un producto para cada ítem')
+      toast.error(t('sales.form.itemsRequired'))
       return
     }
 
     if (items.some((item) => item.quantity <= 0 || Number.isNaN(item.quantity))) {
-      toast.error('La cantidad debe ser mayor a 0')
+      toast.error(t('form.quantityRequired'))
       return
     }
 
     if (items.some((item) => item.unitPrice <= 0 || Number.isNaN(item.unitPrice))) {
-      toast.error('El precio debe ser mayor a 0')
+      toast.error(t('form.priceRequired'))
       return
     }
 
     if (items.some((item) => item.codes.length > 0 && item.codes.length !== item.quantity)) {
-      toast.error('La cantidad de códigos únicos debe coincidir con la cantidad vendida en cada producto')
+      toast.error(t('sales.form.codesQuantityMismatch'))
       return
     }
 
     stopScanning()
 
+    // Validar que se haya ingresado un cliente (ID o nombre)
+    if (!customerId && !customerInputValue.trim()) {
+      toast.error(t('sales.form.customerRequired'))
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     try {
+      // Determinar el customerName: si hay customerId, es null; si no, usar el nombre ingresado
+      const finalCustomerName = customerId ? null : (customerInputValue.trim() || null)
+      
       const savedSale = await onSave({
+        branchId: selectedBranchId || null,
         customerId: customerId || null,
-        customerName: !customerId && customerInputValue.trim() ? customerInputValue.trim() : null,
+        customerName: finalCustomerName,
         status: 'completed',
         paymentMethod,
         subtotal,
@@ -556,21 +675,32 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[92vh] flex flex-col overflow-hidden p-0">
-        <DialogHeader className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
+      <DialogContent
+        onOpenAutoFocus={(e) => {
+          // Evitar que el modal de "Nueva Venta" haga focus automático en el primer input
+          e.preventDefault()
+        }}
+        className="lg:max-w-2xl sm:max-w-[900px] max-h-[92vh] flex flex-col overflow-hidden p-0 rounded-lg"
+      >
+        <DialogHeader className="sticky top-0 z-10 px-6 sm:px-8 py-5 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
           <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-            {sale ? 'Editar Venta' : 'Registrar Venta'}
+            {sale ? t('sales.edit') : t('sales.new')}
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            Completa la información de la venta y agrega los productos vendidos.
+            {sale ? t('sales.editDescription') : t('sales.newDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
+          <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <section className="space-y-3" ref={customerContainerRef}>
               <div className="space-y-2">
-                <Label>Cliente</Label>
+                <div className="flex items-center gap-2">
+                  <Label>{t('sales.form.customer')}</Label>
+                  {isManualCustomerConfirmed && !customerId && customerInputValue.trim() && (
+                    <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
+                  )}
+                </div>
                 <div className="relative">
                   <input
                     ref={customerInputRef}
@@ -582,20 +712,37 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       setIsCustomerDropdownOpen(true)
                       setHighlightedCustomerIndex(0)
                       setCustomerId('')
+                      setIsManualCustomerConfirmed(false) // Resetear cuando se está escribiendo
                     }}
                     onFocus={() => setIsCustomerDropdownOpen(true)}
                     onKeyDown={handleCustomerKeyDown}
-                    placeholder="Selecciona o escribe el nombre del cliente..."
-                    disabled={isLoadingData}
-                    className="w-full px-5 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
+                    placeholder={t('sales.form.customerPlaceholder')}
+                    disabled={false}
+                    className="w-full px-5 py-3 pr-20 sm:pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                    {customerInputValue && !customerId && (
+                      <button
+                        onClick={() => {
+                          const trimmed = customerInputValue.trim()
+                          if (trimmed.length > 0) {
+                            handleManualCustomer(trimmed)
+                          }
+                        }}
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors sm:hidden"
+                        type="button"
+                        disabled={false}
+                        title={t('sales.form.useThisCustomer')}
+                      >
+                        <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
+                      </button>
+                    )}
                     {customerInputValue && (
                       <button
                         onClick={clearCustomer}
                         className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                         type="button"
-                        disabled={isLoadingData}
+                        disabled={false}
                       >
                         <X size={16} className="text-gray-500" />
                       </button>
@@ -604,7 +751,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
                       className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                       type="button"
-                      disabled={isLoadingData}
+                      disabled={false}
                     >
                       <ChevronDown
                         size={16}
@@ -614,9 +761,13 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                   </div>
 
                   {isCustomerDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
+                    <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#0f0f0f] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
                       <div className="max-h-64 overflow-y-auto">
-                        {filteredCustomers.length > 0 ? (
+                        {isLoadingData && customers.length === 0 ? (
+                          <div className="px-5 py-6 text-center text-gray-600 dark:text-gray-300">
+                            {t('sales.form.loadingCustomers')}
+                          </div>
+                        ) : filteredCustomers.length > 0 ? (
                           filteredCustomers.map((customer, index) => (
                             <button
                               key={customer.id}
@@ -625,8 +776,8 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                               onMouseEnter={() => setHighlightedCustomerIndex(index)}
                               className={`w-full text-left px-5 py-3 transition-colors ${
                                 index === highlightedCustomerIndex
-                                  ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:text-white'
-                                  : 'hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-700 dark:text-gray-200'
+                                  ? 'bg-gray-100 dark:bg-[color-mix(in_oklch,var(--primary)_22%,black)] text-gray-900 dark:text-white'
+                                  : 'hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-800 dark:text-gray-200'
                               }`}
                             >
                               <div className="font-semibold">{capitalizeWords(`${customer.name ?? ''} ${customer.lastName ?? ''}`.trim())}</div>
@@ -634,10 +785,10 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                             </button>
                           ))
                         ) : (
-                          <div className="px-5 py-6 text-center text-gray-500 dark:text-gray-400">
+                          <div className="px-5 py-6 text-center text-gray-600 dark:text-gray-300">
                             {customerInputValue.trim()
-                              ? `Presiona Enter para usar "${capitalizeWords(customerInputValue.trim())}"`
-                              : 'No se encontraron clientes'}
+                              ? t('sales.form.pressEnterOrClick').replace('aquí', `"${capitalizeWords(customerInputValue.trim())}"`)
+                              : t('sales.form.noCustomersFound')}
                           </div>
                         )}
                       </div>
@@ -647,15 +798,31 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
               </div>
             </section>
 
+            {isAdmin ? (
+              <section className="space-y-3">
+                <div className="space-y-2">
+                  <Label>{t('sales.form.branch')}</Label>
+                  <Select value={selectedBranchId || undefined} onValueChange={(val) => setSelectedBranchId(val)}>
+                    <SelectTrigger className="rounded-full w-full">
+                      <SelectValue placeholder={t('sales.form.branch')} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {branches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name || t('branches.details.noName')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </section>
+            ) : null}
+
             <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Productos vendidos
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+                  {t('sales.form.items')}
                 </h3>
-                <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleAddItem}>
-                  <Plus className="h-4 w-4" />
-                  Agregar producto
-                </Button>
               </div>
 
               <div className="space-y-3">
@@ -666,10 +833,10 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       key={item.id}
                       className="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111]/60 p-4 space-y-3"
                     >
-                      <div className="grid gap-3 grid-cols-3">
+                      <div className="space-y-3">
                         <div className="space-y-2">
-                          <Label>Producto</Label>
-                          <Popover>
+                          <Label>{t('sales.form.product')}</Label>
+                          <Popover open={openProductPopovers[item.id]} onOpenChange={(open) => setOpenProductPopovers((prev) => ({ ...prev, [item.id]: open }))}>
                             <PopoverTrigger asChild>
                               <Button
                                 type="button"
@@ -677,15 +844,15 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                                 role="combobox"
                                 className="w-full justify-between rounded-full"
                               >
-                                {selectedProduct ? selectedProduct.name : 'Seleccionar producto'}
+                                {selectedProduct ? selectedProduct.name : t('form.select') + ' ' + t('sales.form.product').toLowerCase()}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[320px] p-0">
                               <Command>
-                                <CommandInput placeholder="Buscar producto" />
+                                <CommandInput placeholder={t('action.search') + ' ' + t('sales.form.product').toLowerCase()} />
                                 <CommandList>
-                                  <CommandEmpty>No se encontraron productos</CommandEmpty>
+                                  <CommandEmpty>{t('sales.form.noProducts')}</CommandEmpty>
                                   <CommandGroup>
                                     {products.map((product) => (
                                       <CommandItem
@@ -702,7 +869,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                                         <div className="flex flex-col">
                                           <span>{product.name}</span>
                                           <span className="text-xs text-gray-500">
-                                            BOB {Number(product.price || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                                            {formatCurrencyWithPreferences(Number(product.price || 0))}
                                           </span>
                                         </div>
                                       </CommandItem>
@@ -714,84 +881,78 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                           </Popover>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Cantidad</Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(item.id, Number(e.target.value) || 0)}
-                            className="rounded-full"
-                          />
-                        </div>
+                        {/* Cantidad, Precio y Subtotal en una línea para móvil */}
+                        <div className="grid gap-3 grid-cols-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs">{t('form.quantity')}</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleQuantityChange(item.id, Number(e.target.value) || 0)}
+                              className="rounded-full"
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label>Precio unitario</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.unitPrice}
-                            onChange={(e) => handleUnitPriceChange(item.id, Number(e.target.value) || 0)}
-                            className="rounded-full"
-                          />
+                          <div className="space-y-2">
+                            <Label className="text-xs">{t('sales.form.unitPrice')}</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.unitPrice}
+                              onChange={(e) => handleUnitPriceChange(item.id, Number(e.target.value) || 0)}
+                              className="rounded-full"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">{t('sales.form.subtotal')}</Label>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white pt-2">
+                              {formatCurrencyWithPreferences(item.quantity * item.unitPrice)}
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid gap-3 grid-cols-3">
-                        <div className="space-y-2">
-                          <Label>Subtotal</Label>
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                            BOB {(item.quantity * item.unitPrice).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label>{t('sales.form.trackingCodes')}</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder={t('sales.form.scanCode')}
+                              value={codeInputs[item.id] ?? ''}
+                              onChange={(e) =>
+                                setCodeInputs((prev) => ({
+                                  ...prev,
+                                  [item.id]: e.target.value,
+                                }))
+                              }
+                              className="rounded-full flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="rounded-full shrink-0"
+                              onClick={() => handleManualCodeAdd(item.id)}
+                              disabled={item.codes.length >= item.quantity}
+                            >
+                              <Plus className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">{t('action.add')}</span>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="rounded-full shrink-0"
+                              onClick={() => startScanningForItem(item.id)}
+                              disabled={isLoadingData || item.codes.length >= item.quantity}
+                            >
+                              <ScanLine className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Códigos únicos</Label>
-                          <Input
-                            placeholder="Código o escaneo"
-                            value={codeInputs[item.id] ?? ''}
-                            onChange={(e) =>
-                              setCodeInputs((prev) => ({
-                                ...prev,
-                                [item.id]: e.target.value,
-                              }))
-                            }
-                            className="rounded-full"
-                          />
-                        </div>
-
-                        <div className="flex items-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-full"
-                            onClick={() => handleManualCodeAdd(item.id)}
-                            disabled={item.codes.length >= item.quantity}
-                          >
-                            Agregar
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-full"
-                            onClick={() => startScanningForItem(item.id)}
-                            disabled={isLoadingData || item.codes.length >= item.quantity}
-                          >
-                            <ScanLine className="h-4 w-4" />
-                            Escanear
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full text-rose-600 hover:text-rose-700"
-                            onClick={() => handleRemoveItem(item.id)}
-                            disabled={items.length === 1}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </div>
                       {item.codes.length > 0 && (
                         <div className="flex flex-wrap gap-2">
@@ -812,9 +973,21 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                           ))}
                         </div>
                       )}
-                      {item.codes.length === 0 && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Sin códigos registrados.</p>
-                      )}
+                      <div className="flex items-center justify-between gap-2 sm:justify-end">
+                        {item.codes.length === 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('sales.form.noCodesRegistered')}</p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full text-rose-600 hover:text-rose-700 shrink-0"
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={items.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                       {item.codes.length > 0 && item.codes.length < item.quantity && (
                         <p className="text-xs text-amber-600 dark:text-amber-400">
                           Faltan {item.quantity - item.codes.length} códigos para coincidir con la cantidad vendida.
@@ -824,15 +997,22 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                   )
                 })}
               </div>
+
+              <div className="w-full flex items-center justify-center">
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar producto
+              </Button>
+              </div>
             </section>
 
-            <section className="grid gap-4 grid-cols-4">
+            <section className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label>Subtotal</Label>
-                <Input value={`BOB ${subtotal.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`} readOnly className="rounded-full" />
+                <Label>{t('sales.form.subtotal')}</Label>
+                <Input value={formatCurrencyWithPreferences(subtotal)} readOnly className="rounded-full" />
               </div>
               <div className="space-y-2">
-                <Label>Descuento</Label>
+                <Label>{t('sales.form.discount')}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -848,19 +1028,19 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 />
               </div>
               <div className="space-y-2">
-                <Label>Total</Label>
-                <Input value={`BOB ${total.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`} readOnly className="rounded-full" />
+                <Label>{t('sales.form.total')}</Label>
+                <Input value={formatCurrencyWithPreferences(total)} readOnly className="rounded-full" />
               </div>
               <div className="space-y-2">
-                <Label>Método de pago</Label>
+                <Label>{t('sales.form.paymentMethod')}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger className="rounded-full w-full">
-                    <SelectValue placeholder="Seleccionar" />
+                    <SelectValue placeholder={t('form.select')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl">
                     {paymentOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {t(`sales.form.${option.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -870,25 +1050,25 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
 
             <section className="grid gap-4">
               <div className="space-y-2">
-                <Label>Notas</Label>
+                <Label>{t('sales.form.notes')}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Comentarios adicionales, condiciones, etc."
+                  placeholder={t('sales.form.notesPlaceholder')}
                   className="min-h-[110px] rounded-3xl resize-none"
                 />
               </div>
             </section>
           </div>
 
-          <DialogFooter className="flex w-full justify-center sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Cancelar
+          <DialogFooter className="sticky bottom-0 z-10 flex flex-col sm:flex-row w-full justify-center sm:justify-center items-stretch sm:items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 sm:px-8 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
+            <Button type="button" variant="outline" className="rounded-full w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isLoading}>
+              {t('action.cancel')}
             </Button>
             <Button
               type="submit"
               variant="new"
-              className="rounded-full"
+              className="rounded-full w-full sm:w-auto"
               disabled={
                 isLoading ||
                 items.some((item) => !item.productId) ||
@@ -898,7 +1078,11 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 isLoadingData
               }
             >
-              {isLoading ? 'Guardando...' : sale ? 'Actualizar venta' : 'Registrar venta'}
+              {isLoading
+                ? t('message.saving')
+                : sale
+                ? t('action.update') + ' ' + t('sales.sale').toLowerCase()
+                : t('sales.create')}
             </Button>
           </DialogFooter>
         </form>
@@ -915,7 +1099,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 playsInline
               />
               <Button type="button" variant="secondary" className="rounded-full" onClick={stopScanning}>
-                Detener escaneo
+                {t('sales.form.stopScan')}
               </Button>
             </div>
           </div>

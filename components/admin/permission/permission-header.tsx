@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Shield, Plus, CheckCircle, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -26,6 +28,7 @@ interface PermissionHeaderProps {
 }
 
 export function PermissionHeader({ title, description, stats, onNewClick, onAssignAll }: PermissionHeaderProps) {
+  const t = useTranslations()
   const [assignDialog, setAssignDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -45,7 +48,7 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
       }
 
       const data = await response.json()
-      toast.success("Permisos asignados correctamente", {
+      toast.success(t('permissions.assignSuccess'), {
         description: data.message,
       })
 
@@ -53,8 +56,8 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
       onAssignAll?.()
     } catch (error: any) {
       console.error("Error al asignar permisos:", error)
-      toast.error("Error al asignar permisos", {
-        description: error.message || "No se pudieron asignar los permisos",
+      toast.error(t('permissions.assignError'), {
+        description: error.message || t('permissions.assignErrorDescription'),
       })
     } finally {
       setIsLoading(false)
@@ -80,10 +83,10 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
               onClick={onNewClick}
               variant="outline"
               className="rounded-full"
-              tooltipMessage="No tiene permiso para crear permisos"
+              tooltipMessage={t('permissions.noPermissionToCreate')}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Agregar Permiso
+              {t('permissions.create')}
             </PermissionButton>
           )}
           <PermissionButton
@@ -91,10 +94,10 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
             onClick={() => setAssignDialog(true)}
             className="rounded-full"
             disabled={isLoading || stats.totalPermissions === 0}
-            tooltipMessage="No tiene permiso para asignar permisos"
+            tooltipMessage={t('permissions.noPermissionToAssign')}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Asignar Todos
+            {t('permissions.assignAll')}
           </PermissionButton>
         </div>
       </div>
@@ -102,25 +105,25 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Total Permisos</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('permissions.stats.total')}</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {stats.totalPermissions}
           </div>
         </div>
         <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">En Uso</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('permissions.stats.inUse')}</div>
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
             {stats.totalPermissions - stats.unusedPermissions.length}
           </div>
         </div>
         <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Registrados</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('permissions.stats.registered')}</div>
           <div className="text-2xl font-bold text-violet-600 dark:text-violet-400 mt-1">
             {stats.customPermissions}
           </div>
         </div>
         <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">No Usados</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{t('permissions.stats.unused')}</div>
           <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
             {stats.unusedPermissions.length}
           </div>
@@ -132,10 +135,10 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
         <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-gray-900 dark:text-white">
-              Asignar Todos los Permisos
+              {t('permissions.assignAllTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
-              ¿Estás seguro de que deseas asignar todos los permisos registrados ({stats.totalPermissions} permisos) a los roles "Administrador" y "Super Administrador"?
+              {t('permissions.assignAllDescription', { count: stats.totalPermissions })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-3 justify-center">
@@ -144,7 +147,7 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
               className="rounded-full"
               disabled={isLoading}
             >
-              Cancelar
+              {t('action.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleAssignAll}
@@ -154,12 +157,12 @@ export function PermissionHeader({ title, description, stats, onNewClick, onAssi
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Asignando...
+                  {t('permissions.assigning')}
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Asignar Todos
+                  {t('permissions.assignAll')}
                 </>
               )}
             </AlertDialogAction>

@@ -24,6 +24,7 @@ export interface UpdateExpenseData {
   name?: string
   amount?: number
   description?: string
+  descriptionTranslations?: any // JSON con traducciones { es, en, pt }
   date?: Date
   branchId?: string | null
   category?: string | null
@@ -226,6 +227,7 @@ export class ExpenseService {
         name: data.name,
         category: data.category ?? null,
         description: data.description,
+        descriptionTranslations: data.descriptionTranslations,
         amount: data.amount,
         date: data.date,
         branchId
@@ -256,7 +258,10 @@ export class ExpenseService {
   ): Promise<Expense> {
     return prisma.expense.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        descriptionTranslations: data.descriptionTranslations !== undefined ? data.descriptionTranslations : undefined,
+      },
       include: {
         user: {
           select: {

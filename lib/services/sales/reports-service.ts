@@ -113,6 +113,15 @@ export interface GeneralReport {
   customersCount: number
 }
 
+export interface BranchPerformanceReport {
+  branchId: string
+  branchName: string
+  salesCount: number
+  revenue: number
+  averageTicket: number
+  contribution: number
+}
+
 export class ReportsService {
   /**
    * Generar reporte de ventas
@@ -656,6 +665,67 @@ export class ReportsService {
       productsCount: products.length,
       customersCount: customers.length
     }
+  }
+
+  static async getBranchPerformanceReport(
+    organizationId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<BranchPerformanceReport[]> {
+    const where: any = {
+      organizationId,
+      status: 'completed'
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {}
+      if (startDate) where.createdAt.gte = startDate
+      if (endDate) where.createdAt.lte = endDate
+    }
+
+    const grouped = await prisma.sale.groupBy({
+      by: ['branchId'],
+      where,
+      _count: { _all: true },
+      _sum: { total: true }
+    })
+
+    const branchIds = grouped
+      .map(group => group.branchId)
+      .filter((id): id is string => Boolean(id))
+
+    const branches = await prisma.branch.findMany({
+      where: {
+        organizationId,
+        id: { in: branchIds }
+      },
+      select: {
+        id: true,
+        name: true
+      }
+    })
+
+    const branchMap = new Map(branches.map(branch => [branch.id, branch.name || 'Sucursal']))
+    const totalRevenue = grouped.reduce(
+      (sum, group) => sum + Number(group._sum.total || 0),
+      0
+    )
+
+    return grouped
+      .filter(group => group.branchId)
+      .map(group => {
+        const revenue = Number(group._sum.total || 0)
+        const salesCount = group._count._all || 0
+        return {
+          branchId: group.branchId as string,
+          branchName: branchMap.get(group.branchId as string) || 'Sucursal',
+          salesCount,
+          revenue,
+          averageTicket: salesCount > 0 ? revenue / salesCount : 0,
+          contribution: totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0
+        }
+      })
+      .sort((a, b) => b.revenue - a.revenue)
   }
 }
 

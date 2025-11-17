@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { ProductsPageClient } from "@/components/sales/product/products-page-client"
 import { CategoryService } from "@/lib/services/sales/category-service"
 import { SalesProductService } from "@/lib/services/sales/sales-product-service"
-import { getOrganizationIdByCustomerSlug, getMaxProductsBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug, getMaxProductsBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
 
 export default async function ProductsPage({
   params,
@@ -20,6 +20,9 @@ export default async function ProductsPage({
 
   // Obtener límite de productos del plan
   const maxProducts = await getMaxProductsBySlug(slug)
+
+  // Obtener límite de sucursales del plan
+  const maxBranches = await getMaxBranchesBySlug(slug)
 
   // Obtener el total de productos de la organización (sin filtros de categoría o sucursal)
   // Esto es para verificar el límite del plan
@@ -44,6 +47,7 @@ export default async function ProductsPage({
       initialCategories={categories}
       customerSlug={slug}
       maxProducts={maxProducts}
+      maxBranches={maxBranches}
       totalProducts={totalProducts}
     />
   )

@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import type { CashRegisterWithRelations } from "./types"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -12,6 +14,8 @@ interface CashRegisterDeleteDialogProps {
 }
 
 export function CashRegisterDeleteDialog({ open, onOpenChange, cashRegister, onDelete }: CashRegisterDeleteDialogProps) {
+  const t = useTranslations()
+  
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -21,20 +25,20 @@ export function CashRegisterDeleteDialog({ open, onOpenChange, cashRegister, onD
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente la caja
+            {t('cashRegisters.deleteWarning')}
             <strong className="block mt-2">"{cashRegister?.name}"</strong>
-            y todos sus datos asociados.
+            {t('cashRegisters.deleteWarningEnd')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             className="rounded-full bg-red-600 hover:bg-red-700 text-white"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

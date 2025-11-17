@@ -8,6 +8,8 @@ import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeExpense } from '@/lib/utils/serializers'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createExpenseSchema } from '@/lib/validators/sales-validators'
+import { translateText } from '@/lib/utils/translatable-text'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener todos los gastos con paginación y filtros
 export async function GET(
@@ -134,6 +136,17 @@ export async function POST(
 
     if (validatedData.category) {
       payload.category = validatedData.category
+    }
+
+    // Traducir descripción automáticamente si existe
+    if (validatedData.description && validatedData.description.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        payload.descriptionTranslations = await translateText(validatedData.description, sourceLanguage)
+      } catch (error) {
+        console.error('Error traduciendo descripción de gasto:', error)
+        // Continuar sin traducciones si falla
+      }
     }
 
     const expense = await ExpenseService.createExpense(organizationId, payload)

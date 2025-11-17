@@ -1,7 +1,9 @@
 "use client"
 
-import { Loader2, Shield, CheckCircle2 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
+
+import { Loader2, Shield } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
 import {
@@ -46,10 +48,30 @@ export function RoleSasPermissionsDialog({
   customerSlug,
   onSave,
 }: RoleSasPermissionsDialogProps) {
+  const t = useTranslations()
   const [allPermissions, setAllPermissions] = useState<PermissionSasInfo[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  const loadPermissions = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/${customerSlug}/permisos`)
+      if (!response.ok) {
+        throw new Error("Error al cargar permisos")
+      }
+      const permissions = await response.json()
+      setAllPermissions(permissions)
+    } catch (error) {
+      console.error("Error al cargar permisos:", error)
+      toast.error(t('roles.sas.permissions.loadError'), {
+        description: t('roles.sas.permissions.loadErrorDescription'),
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [customerSlug])
 
   // Cargar permisos disponibles cuando se abre el dialog
   useEffect(() => {
@@ -63,26 +85,7 @@ export function RoleSasPermissionsDialog({
         setSelectedPermissions([])
       }
     }
-  }, [open, role])
-
-  const loadPermissions = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/${customerSlug}/permisos`)
-      if (!response.ok) {
-        throw new Error("Error al cargar permisos")
-      }
-      const permissions = await response.json()
-      setAllPermissions(permissions)
-    } catch (error) {
-      console.error("Error al cargar permisos:", error)
-      toast.error("Error al cargar permisos", {
-        description: "No se pudieron cargar los permisos disponibles",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [open, role, loadPermissions])
 
   const handlePermissionToggle = (permissionName: string) => {
     setSelectedPermissions((prev) =>
@@ -134,14 +137,14 @@ export function RoleSasPermissionsDialog({
     setIsSaving(true)
     try {
       await onSave(selectedPermissions)
-      toast.success("Permisos actualizados", {
-        description: `Los permisos de ${role?.nombre} han sido actualizados exitosamente.`,
+      toast.success(t('roles.sas.permissions.updateSuccess'), {
+        description: t('roles.sas.permissions.updateSuccessDescription', { role: role?.nombre || '' }),
       })
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error al guardar permisos:", error)
-      toast.error("Error al guardar permisos", {
-        description: error.message || "No se pudieron actualizar los permisos",
+      toast.error(t('roles.sas.permissions.updateError'), {
+        description: error.message || t('roles.sas.permissions.updateErrorDescription'),
       })
     } finally {
       setIsSaving(false)
@@ -171,8 +174,9 @@ export function RoleSasPermissionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 rounded-lg">
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur shrink-0">
+      <DialogContent className="sm:max-w-[500px] lg:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
+        {/* Header estático */}
+        <div className="px-6 lg:px-8 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -184,44 +188,44 @@ export function RoleSasPermissionsDialog({
           </DialogHeader>
         </div>
 
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : (
-            <>
-              {/* Barra de acciones rápidas */}
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50/60 dark:bg-[#0c0c0c] flex items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedPermissions.length} de {allPermissions.length} permisos seleccionados
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAll}
-                    className="rounded-full text-xs"
-                  >
-                    Seleccionar Todos
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDeselectAll}
-                    className="rounded-full text-xs"
-                  >
-                    Deseleccionar Todos
-                  </Button>
-                </div>
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Contenido con scroll */}
+          <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
               </div>
+            ) : (
+              <>
+                {/* Barra de acciones rápidas */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-gray-200 dark:border-[#2a2a2a]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedPermissions.length} de {allPermissions.length} permisos seleccionados
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="rounded-full text-xs w-full sm:w-auto"
+                    >
+                      Seleccionar Todos
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeselectAll}
+                      className="rounded-full text-xs w-full sm:w-auto"
+                    >
+                      Deseleccionar Todos
+                    </Button>
+                  </div>
+                </div>
 
-              {/* Lista de permisos por módulo con acordeones - Área scrolleable */}
-              <div className="flex-1 overflow-y-auto min-h-0">
-                <div className="px-6 py-4">
-                  <Accordion type="multiple" className="w-full" defaultValue={modules}>
+                {/* Lista de permisos por módulo con acordeones */}
+                <Accordion type="multiple" className="w-full" defaultValue={modules}>
                   {modules.map((module) => {
                     const modulePerms = permissionsByModule[module]
                     const selectedCount = modulePerms.filter((p) =>
@@ -233,7 +237,7 @@ export function RoleSasPermissionsDialog({
 
                     return (
                       <AccordionItem key={module} value={module} className="border-b border-gray-200 dark:border-[#2a2a2a]">
-                        <div className="flex items-center gap-3 px-4 py-3">
+                        <div className="flex items-center gap-3 py-3">
                           <div className="relative">
                             <Checkbox
                               checked={allSelected}
@@ -266,11 +270,11 @@ export function RoleSasPermissionsDialog({
                           </AccordionTrigger>
                         </div>
                         <AccordionContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                             {modulePerms.map((permission) => (
                               <div
                                 key={permission.name}
-                                className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+                                className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
                               >
                                 <Checkbox
                                   id={`perm-${permission.name}`}
@@ -298,40 +302,41 @@ export function RoleSasPermissionsDialog({
                       </AccordionItem>
                     )
                   })}
-                  </Accordion>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur shrink-0">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-            className="w-full sm:w-auto rounded-full"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || isLoading}
-            className="w-full sm:w-auto rounded-full"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Guardar Permisos
+                </Accordion>
               </>
             )}
-          </Button>
-        </DialogFooter>
+          </div>
+
+          {/* Footer estático */}
+          <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 lg:px-8 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+              className="w-full sm:w-auto rounded-full"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || isLoading}
+              className="w-full sm:w-auto rounded-full"
+            >
+              {isSaving ? (
+                <>
+           
+                  Guardando...
+                </>
+              ) : (
+                <>
+              
+                  Guardar Permisos
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

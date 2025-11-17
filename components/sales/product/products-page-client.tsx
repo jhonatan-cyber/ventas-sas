@@ -2,12 +2,15 @@
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
 import { useState, useEffect, useCallback } from "react"
+import { useTranslations } from "next-intl"
 
 import { CategoryCards } from "./category-cards"
 import { ProductDeleteDialog } from "./product-delete-dialog"
+import { ProductDetailDialog } from "./product-detail-dialog"
 import { ProductFormDialog } from "./product-form-dialog"
 import { ProductsContainer } from "./products-container"
 import { ProductsHeader } from "./products-header"
+import { ProductsExportImportDialog } from "./products-export-import-dialog"
 
 import { useProductActions } from "@/hooks/sales/product/use-product-actions"
 
@@ -15,10 +18,12 @@ interface ProductsPageClientProps {
   initialCategories: Category[]
   customerSlug: string
   maxProducts?: number | null
+  maxBranches?: number | null
   totalProducts?: number
 }
 
-export function ProductsPageClient({ initialCategories, customerSlug, maxProducts, totalProducts = 0 }: ProductsPageClientProps) {
+export function ProductsPageClient({ initialCategories, customerSlug, maxProducts, maxBranches, totalProducts = 0 }: ProductsPageClientProps) {
+  const t = useTranslations()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [products, setProducts] = useState<(SalesProduct & { category: Category | null; branch: Branch | null })[]>([])
   const [categories] = useState<Category[]>(initialCategories)
@@ -29,6 +34,7 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
   const [userBranchId, setUserBranchId] = useState<string | null>(null)
   // Estado para mantener el conteo total de productos (se actualiza cuando se crea/elimina)
   const [currentTotalProducts, setCurrentTotalProducts] = useState(totalProducts)
+  const [isExportImportDialogOpen, setIsExportImportDialogOpen] = useState(false)
 
   // Actualizar el conteo cuando cambie totalProducts desde el servidor
   useEffect(() => {
@@ -111,10 +117,12 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
   const {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
     selectedProduct,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
     closeDialogs,
     handleSave,
     handleDelete,
@@ -134,16 +142,17 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
                           currentTotalProducts >= maxProducts
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <ProductsHeader
-        title="Gestión de Productos"
-        description="Administra los productos de tu inventario"
-        newButtonText="Agregar Producto"
+        title={t('products.title')}
+        description={t('products.description')}
+        newButtonText={t('products.create')}
         onNewClick={openCreateDialog}
         showButton={selectedCategory !== null && !hasReachedLimit}
         showBackButton={selectedCategory !== null}
         onBackClick={() => setSelectedCategory(null)}
+        onExportImportClick={selectedCategory !== null ? () => setIsExportImportDialogOpen(true) : undefined}
       />
 
       {selectedCategory ? (
@@ -160,6 +169,7 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
           onEdit={openEditDialog}
           onToggleStatus={handleToggleStatus}
           onDelete={openDeleteDialog}
+          onView={openViewDialog}
         />
       ) : (
         /* Vista de categorías con cards mejorados */
@@ -177,6 +187,7 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
         product={selectedProduct}
         categories={categories}
         defaultCategoryId={selectedCategory || undefined}
+        maxBranches={maxBranches}
         onSave={handleSave}
       />
 
@@ -186,6 +197,28 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
         onOpenChange={closeDialogs}
         product={selectedProduct}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de detalles del producto */}
+      <ProductDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialogs()
+          }
+        }}
+        product={selectedProduct}
+      />
+
+      {/* Modal de exportación/importación */}
+      <ProductsExportImportDialog
+        open={isExportImportDialogOpen}
+        onOpenChange={setIsExportImportDialogOpen}
+        defaultCategoryId={selectedCategory || undefined}
+        onSuccess={async () => {
+          await loadProducts()
+          await updateTotalProducts()
+        }}
       />
     </div>
   )

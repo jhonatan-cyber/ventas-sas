@@ -1,26 +1,36 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Edit, Trash2, DollarSign } from "lucide-react"
 
-import { SalesExpenseWithRelations } from "./types"
+import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
 
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatDate } from "@/lib/utils/date"
+import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { getTranslatableText } from "@/lib/utils/translatable-text"
 
 
 interface ExpensesTableProps {
   expenses: SalesExpenseWithRelations[]
   isLoading?: boolean
+  branches?: ExpenseBranchSummary[]
+  maxBranches?: number | null
   onEditClick?: (expense: SalesExpenseWithRelations) => void
   onDeleteClick?: (expense: SalesExpenseWithRelations) => void
 }
 
-export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick }: ExpensesTableProps) {
+export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches, onEditClick, onDeleteClick }: ExpensesTableProps) {
+  // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
+  const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
+  const columnCount = shouldHideBranchColumn ? 6 : 7 // Sin columna sucursal: 6, con columna sucursal: 7
+
   if (isLoading) {
-    return <TableSkeleton columns={6} rows={5} showActions={true} />
+    return <TableSkeleton columns={columnCount} rows={5} showActions={true} />
   }
 
   return (
@@ -31,7 +41,9 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Fecha</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Concepto</TableHead>
-              <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
+              {!shouldHideBranchColumn && (
+                <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
+              )}
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Descripción</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Registrado por</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold text-right">Monto</TableHead>
@@ -41,7 +53,7 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
           <TableBody>
             {expenses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={columnCount} className="text-center text-muted-foreground py-12">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                       <DollarSign className="h-8 w-8 text-gray-400" />
@@ -56,7 +68,7 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                   <TableRow key={expense.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors border-b border-gray-100 dark:border-[#2a2a2a]">
                     <TableCell>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatDate(expense.date)}
+                        {formatDateWithPreferences(expense.date)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -69,19 +81,31 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                        {expense.branch?.name ?? "Sin sucursal"}
-                      </span>
-                    </TableCell>
+                    {!shouldHideBranchColumn && (
+                      <TableCell>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                          {expense.branch?.name ?? t('common.noBranch')}
+                        </span>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {expense.description}
+                        {(() => {
+                          const currentLanguage = (() => {
+                            try {
+                              const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+                              return prefs?.language || 'es';
+                            } catch {
+                              return 'es';
+                            }
+                          })();
+                          return getTranslatableText(expense.description, (expense as any).descriptionTranslations, currentLanguage) || expense.description;
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {expense.user?.fullName || "Usuario sin asignar"}
+                        {expense.user?.fullName || t('users.sas.unassignedUser')}
                       </div>
                       {expense.user?.email && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -91,7 +115,7 @@ export function ExpensesTable({ expenses, isLoading, onEditClick, onDeleteClick 
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="font-semibold text-red-600 dark:text-red-400">
-                        BOB {Number(expense.amount).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatCurrencyWithPreferences(Number(expense.amount))}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

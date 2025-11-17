@@ -13,6 +13,7 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
   const { handleError } = useApiError()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<(SalesProduct & { category: Category | null }) | undefined>()
 
   const openCreateDialog = () => {
@@ -44,9 +45,29 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
     setIsDeleteDialogOpen(true)
   }
 
+  const openViewDialog = async (product: SalesProduct & { category: Category | null }) => {
+    try {
+      // Obtener el producto completo desde el API para asegurar que tenemos todos los datos
+      const response = await fetch(`/api/${customerSlug}/productos/${product.id}`)
+      if (response.ok) {
+        const fullProduct = await response.json()
+        setSelectedProduct(fullProduct)
+      } else {
+        // Si falla, usar el producto de la tabla como fallback
+        setSelectedProduct(product)
+      }
+    } catch (error) {
+      console.error('Error al cargar producto completo:', error)
+      // Si falla, usar el producto de la tabla como fallback
+      setSelectedProduct(product)
+    }
+    setIsDetailDialogOpen(true)
+  }
+
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setIsDetailDialogOpen(false)
     setSelectedProduct(undefined)
   }
 
@@ -164,10 +185,12 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
     selectedProduct,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
     closeDialogs,
     handleSave,
     handleDelete,

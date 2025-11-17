@@ -1,12 +1,14 @@
 "use client"
 
 import { RoleSas } from "@prisma/client"
+import { Shield } from "lucide-react"
 import { useState } from "react"
 
 import { RolesSasFilters } from "./roles-sas-filters"
 import { RolesSasPagination } from "./roles-sas-pagination"
 import { RolesSasStats } from "./roles-sas-stats"
 import { RolesSasTable } from "./roles-sas-table"
+import { RolesSasCards } from "./roles-sas-cards"
 
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -88,17 +90,41 @@ export function RolesSasContainer({ roles, onEdit, onToggleStatus, onDelete, onV
         </CardContent>
       </Card>
 
-      {/* Tabla de roles sin Card */}
-      <div className="rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
-        <RolesSasTable 
-          roles={currentRoles} 
-          onEditClick={onEdit} 
-          onToggleStatus={onToggleStatus} 
-          onDeleteClick={onDelete}
-          onViewClick={onView}
-          onManagePermissions={onManagePermissions}
-        />
-      </div>
+      {/* Mostrar cards y tabla solo si hay roles */}
+      {currentRoles.length > 0 ? (
+        <>
+          {/* Cards de roles (solo móvil) */}
+          <RolesSasCards 
+            roles={currentRoles} 
+            onEdit={onEdit} 
+            onToggleStatus={onToggleStatus} 
+            onDelete={onDelete}
+            onView={onView}
+            onManagePermissions={onManagePermissions}
+          />
+
+          {/* Tabla de roles (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+            <RolesSasTable 
+              roles={currentRoles} 
+              onEditClick={onEdit} 
+              onToggleStatus={onToggleStatus} 
+              onDeleteClick={onDelete}
+              onViewClick={onView}
+              onManagePermissions={onManagePermissions}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <Shield className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No hay roles registrados</p>
+          </div>
+        </div>
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

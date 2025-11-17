@@ -1,6 +1,11 @@
 "use client";
+
+import { useTranslations } from "next-intl";
+
+import { DollarSign } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { ExpensesCards } from "./expenses-cards";
 import { ExpensesFilters } from "./expenses-filters";
 import { ExpensesPagination } from "./expenses-pagination";
 import { ExpensesStats } from "./expenses-stats";
@@ -8,6 +13,7 @@ import { ExpensesTable } from "./expenses-table";
 import { ExpenseBranchSummary, SalesExpenseWithRelations } from "./types";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { getTranslatableText } from "@/lib/utils/translatable-text";
 
 interface ExpensesContainerProps {
   expenses: SalesExpenseWithRelations[];
@@ -15,8 +21,10 @@ interface ExpensesContainerProps {
   isLoading?: boolean;
   isAdmin: boolean;
   userBranchId?: string | null;
+  maxBranches?: number | null;
   onEdit?: (expense: SalesExpenseWithRelations) => void;
   onDelete?: (expense: SalesExpenseWithRelations) => void;
+  customerSlug: string;
 }
 
 export function ExpensesContainer({
@@ -25,10 +33,12 @@ export function ExpensesContainer({
   isLoading = false,
   isAdmin,
   userBranchId = null,
+  maxBranches,
   onEdit,
   onDelete,
+  customerSlug,
 }: ExpensesContainerProps) {
-
+  const t = useTranslations()
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -79,7 +89,7 @@ export function ExpensesContainer({
     }
 
     if (branchFilter === "none") {
-      setBranchFilterLabel("Sin sucursal");
+      setBranchFilterLabel(t('common.noBranch'));
       return;
     }
 
@@ -93,9 +103,23 @@ export function ExpensesContainer({
     return expenses.filter((expense) => {
       if (searchTerm.trim() !== "") {
         const searchLower = searchTerm.toLowerCase();
+        // Obtener descripción traducida para búsqueda
+        const currentLanguage = (() => {
+          try {
+            const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+            return prefs?.language || 'es';
+          } catch {
+            return 'es';
+          }
+        })();
+        const description = getTranslatableText(
+          expense.description,
+          (expense as any).descriptionTranslations,
+          currentLanguage
+        ) || expense.description;
         const matchesSearch =
           expense.name.toLowerCase().includes(searchLower) ||
-          expense.description.toLowerCase().includes(searchLower) ||
+          description.toLowerCase().includes(searchLower) ||
           (expense.user?.fullName?.toLowerCase() ?? "").includes(searchLower) ||
           (expense.branch?.name?.toLowerCase() ?? "").includes(searchLower);
 
@@ -189,22 +213,44 @@ export function ExpensesContainer({
             branchLabel={branchFilterLabel}
             startDate={startDate}
             endDate={endDate}
-            showBranchFilter={isAdmin || branchOptions.length > 1}
+            showBranchFilter={isAdmin && !(maxBranches === 1 && branchOptions.length === 1) && branchOptions.length > 1}
+            customerSlug={customerSlug}
           />
         </CardContent>
       </Card>
 
-      {/* Tabla de gastos */}
-      <div className="space-y-3">
-        <div className="rounded-md border border-gray-200 bg-white dark:border-[#2a2a2a] dark:bg-[#1a1a1a] overflow-hidden">
-          <ExpensesTable
+      {/* Mostrar cards y tabla solo si hay gastos */}
+      {currentExpenses.length > 0 ? (
+        <>
+          {/* Cards de gastos (solo móvil) */}
+          <ExpensesCards
             expenses={currentExpenses}
-            isLoading={isLoading}
-            onEditClick={onEdit}
-            onDeleteClick={onDelete}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
+
+          {/* Tabla de gastos (solo desktop) */}
+          <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a] overflow-hidden">
+            <ExpensesTable
+              expenses={currentExpenses}
+              isLoading={isLoading}
+              branches={branchOptions}
+              maxBranches={maxBranches}
+              onEditClick={onEdit}
+              onDeleteClick={onDelete}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-12 rounded-md border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+              <DollarSign className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No hay gastos registrados</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Paginación */}
       <div className="flex justify-center">

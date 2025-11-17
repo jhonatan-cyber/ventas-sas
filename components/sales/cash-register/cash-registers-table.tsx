@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
 
 import type { CashRegisterWithRelations } from "./types"
@@ -9,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatDateTime } from "@/lib/utils/date"
+import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 interface CashRegistersTableProps {
   cashRegisters: CashRegisterWithRelations[]
@@ -27,7 +30,7 @@ const formatCurrency = (value: number | string | { toNumber?: () => number }) =>
   } else {
     numValue = Number(value || 0)
   }
-  return `$${numValue.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
+  return formatCurrencyWithPreferences(numValue)
 }
 
 const getUserFullName = (user?: { nombre: string; apellido: string } | null) => {
@@ -45,6 +48,7 @@ export function CashRegistersTable({
   onDeleteClick,
   showBranchInfo = true,
 }: CashRegistersTableProps) {
+  const t = useTranslations()
   if (isLoading) {
     return <CardsGridSkeleton count={6} columns={3} />
   }
@@ -90,7 +94,7 @@ export function CashRegistersTable({
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{cashRegister.name}</h3>
                     <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                      {formatDateTime(openedAt)}
+                      {formatDateWithPreferences(openedAt)}
                     </p>
                   </div>
                   <Badge className={`${statusClasses} rounded-full px-4 py-1.5 text-xs font-semibold`}>
@@ -104,7 +108,7 @@ export function CashRegistersTable({
                       <span className="text-gray-500 dark:text-gray-400">Sucursal</span>
                       <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
                         <Building2 className="h-4 w-4 text-[color-mix(in_oklch,var(--primary)_70%,white)]" />
-                        {cashRegister.branch?.name || "Sin sucursal"}
+                        {cashRegister.branch?.name || t('common.noBranch')}
                       </span>
                     </div>
                   )}
@@ -119,7 +123,7 @@ export function CashRegistersTable({
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-gray-500 dark:text-gray-400">Fecha de cierre</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {closedAt ? formatDateTime(closedAt) : "Aún sin cerrar"}
+                      {closedAt ? formatDateWithPreferences(closedAt) : "Aún sin cerrar"}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3 pt-2">

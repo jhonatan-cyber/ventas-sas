@@ -7,7 +7,9 @@ import {
   PowerOff,
   Package,
   Building2,
+  Eye,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences";
+import { getProductDescription } from "@/lib/utils/product-description";
 
 // Función para truncar nombre manteniendo el nombre más corto disponible
 function truncateProductName(name: string, maxLength: number = 40): string {
@@ -65,6 +69,7 @@ interface ProductWithRelations {
   brand?: string | null;
   model?: string | null;
   description?: string | null;
+  descriptionTranslations?: any; // JSON con traducciones { es, en, pt }
   price: number;
   cost: number;
   stock: number;
@@ -83,6 +88,7 @@ interface ProductsTableProps {
   onEditClick?: (product: ProductWithRelations) => void;
   onDeleteClick?: (product: ProductWithRelations) => void;
   onToggleStatus?: (product: ProductWithRelations) => void;
+  onViewClick?: (product: ProductWithRelations) => void;
 }
 
 export function ProductsTable({
@@ -92,7 +98,10 @@ export function ProductsTable({
   onEditClick,
   onDeleteClick,
   onToggleStatus,
+  onViewClick,
 }: ProductsTableProps) {
+  const t = useTranslations();
+  
   if (isLoading) {
     return (
       <TableSkeleton
@@ -169,7 +178,20 @@ export function ProductsTable({
                 const truncatedName = truncateProductName(product.name);
                 const brand = product.brand?.trim() ?? "";
                 const model = product.model?.trim() ?? "";
-                const description = product.description?.trim() ?? "";
+                // Obtener descripción según el idioma actual
+                const currentLanguage = (() => {
+                  try {
+                    const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
+                    return prefs?.language || 'es';
+                  } catch {
+                    return 'es';
+                  }
+                })();
+                const description = getProductDescription(
+                  product.description,
+                  product.descriptionTranslations,
+                  currentLanguage
+                )?.trim() ?? "";
                 const hasDescription = description.length > 0;
                 const truncatedDescription = hasDescription
                   ? truncateByWords(description, 6)
@@ -266,12 +288,12 @@ export function ProductsTable({
                     </TableCell>
                     <TableCell>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        ${Number(product.price).toLocaleString()}
+                        {formatCurrencyWithPreferences(Number(product.price))}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        ${Number(product.cost).toLocaleString()}
+                        {formatCurrencyWithPreferences(Number(product.cost))}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -313,6 +335,21 @@ export function ProductsTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {onViewClick && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onViewClick(product)}
+                                className="hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalles</TooltipContent>
+                          </Tooltip>
+                        )}
                         {onEditClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>

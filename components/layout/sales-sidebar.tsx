@@ -12,10 +12,14 @@ import {
   Receipt,
   DollarSign,
   Building2,
-  Settings
+  Settings,
+  Package,
+  TrendingUp
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { useSidebar } from "./sidebar-context"
@@ -23,6 +27,7 @@ import { useSidebar } from "./sidebar-context"
 import type { CSSProperties, ComponentType } from "react"
 
 import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 
@@ -34,55 +39,178 @@ interface NavSection { label: string; items: NavItem[] }
 interface SalesSidebarProps {
   organizationSlug: string
   maxBranches?: number | null
+  allowedModules?: string[]
 }
 
-export function SalesSidebar({ organizationSlug, maxBranches }: SalesSidebarProps) {
+export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [] }: SalesSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { isOpen, close } = useSidebar()
+  const t = useTranslations()
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState<string | null>(null)
+  const [planName, setPlanName] = useState<string | null>(null)
+
+  // Cargar información de la organización desde la API
+  useEffect(() => {
+    const loadOrganizationInfo = async () => {
+      try {
+        // Cargar información de la organización desde la BD
+        const orgResponse = await fetch(`/api/${organizationSlug}/organizacion`, {
+          credentials: 'include'
+        })
+        
+        if (orgResponse.ok) {
+          const orgData = await orgResponse.json()
+          if (orgData.success && orgData.organization) {
+            const org = orgData.organization
+            // Usar razonSocial si existe, sino usar name
+            setCompanyName(org.razonSocial || org.name || null)
+            setCompanyLogo(org.logoUrl || null)
+          }
+        }
+      } catch (error) {
+        // Silenciar errores de red para evitar ruido en la consola
+        // El error "Failed to fetch" puede ocurrir durante desarrollo o si el servidor no está disponible
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          // Error de red, no hacer nada para evitar spam en consola
+        } else {
+          console.error('Error cargando información de organización:', error)
+        }
+      }
+
+      // Leer plan de cookies (temporal, hasta migrar a BD)
+      try {
+        const planRaw = document.cookie.split('; ').find(c => c.startsWith(`sas-plan-${organizationSlug}=`))?.split('=')[1]
+        if (planRaw) {
+          setPlanName(decodeURIComponent(planRaw))
+        }
+      } catch {}
+    }
+
+    loadOrganizationInfo()
+
+    // Escuchar cambios en las preferencias (cuando se actualiza desde configuración)
+    const handleStorageChange = () => {
+      loadOrganizationInfo()
+    }
+
+    // Escuchar eventos personalizados cuando se actualiza el logo o nombre
+    const handleOrganizationUpdate = () => {
+      loadOrganizationInfo()
+    }
+
+    window.addEventListener('companyLogoUpdated', handleStorageChange)
+    window.addEventListener('companyInfoUpdated', handleStorageChange)
+    window.addEventListener('organization-updated', handleOrganizationUpdate)
+    
+    // También verificar periódicamente (por si se actualiza desde otra pestaña)
+    const interval = setInterval(loadOrganizationInfo, 5000) // Verificar cada 5 segundos
+
+    return () => {
+      window.removeEventListener('companyLogoUpdated', handleStorageChange)
+      window.removeEventListener('companyInfoUpdated', handleStorageChange)
+      window.removeEventListener('organization-updated', handleOrganizationUpdate)
+      clearInterval(interval)
+    }
+  }, [organizationSlug])
+
+  // Mapeo de rutas a IDs de módulos
+  const routeToModuleMap: Record<string, string> = {
+    'dashboard': 'dashboard',
+    'ventas': 'ventas',
+    'cajas': 'cajas',
+    'cotizaciones': 'cotizaciones',
+    'gastos': 'gastos',
+    'productos': 'productos',
+    'categorias': 'categorias',
+    'clientes': 'clientes',
+    'usuarios': 'usuarios',
+    'roles': 'roles',
+    'permisos': 'permisos',
+    'sucursales': 'sucursales',
+    'configuracion': 'configuracion',
+    'reportes': 'reportes',
+    'inventario': 'inventario',
+    'analytics': 'analytics',
+  }
+
+  // Función para verificar si un módulo está permitido
+  const isModuleAllowed = (route: string): boolean => {
+    // Si no hay módulos definidos en el plan, mostrar todos (comportamiento por defecto)
+    if (allowedModules.length === 0) {
+      return true
+    }
+    
+    const moduleId = routeToModuleMap[route]
+    if (!moduleId) {
+      // Si la ruta no está mapeada, permitirla por defecto
+      return true
+    }
+    
+    return allowedModules.includes(moduleId)
+  }
 
   const sections: NavSection[] = [
     {
-      label: 'Inicio',
+      label: t('sidebar.home'),
       items: [
-        { title: 'Dashboard', href: `/${organizationSlug}/dashboard`, icon: LayoutDashboard },
-      ],
+        { title: t('nav.dashboard'), href: `/${organizationSlug}/dashboard`, icon: LayoutDashboard },
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
     },
     {
-      label: 'Operación',
+      label: t('sidebar.operation'),
       items: [
-        { title: 'Ventas', href: `/${organizationSlug}/ventas`, icon: ShoppingCart },
-        { title: 'Cajas', href: `/${organizationSlug}/cajas`, icon: Banknote },
-        { title: 'Cotizaciones', href: `/${organizationSlug}/cotizaciones`, icon: Receipt },
-        { title: 'Gastos', href: `/${organizationSlug}/gastos`, icon: DollarSign },
-      ],
+        { title: t('nav.sales'), href: `/${organizationSlug}/ventas`, icon: ShoppingCart },
+        { title: t('nav.cashRegisters'), href: `/${organizationSlug}/cajas`, icon: Banknote },
+        { title: t('nav.quotations'), href: `/${organizationSlug}/cotizaciones`, icon: Receipt },
+        { title: t('nav.expenses'), href: `/${organizationSlug}/gastos`, icon: DollarSign },
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
     },
     {
-      label: 'Catálogo',
+      label: t('sidebar.catalog'),
       items: [
-        { title: 'Productos', href: `/${organizationSlug}/productos`, icon: ShoppingBag },
-        { title: 'Categorías', href: `/${organizationSlug}/categorias`, icon: ShoppingBag },
-        { title: 'Clientes', href: `/${organizationSlug}/clientes`, icon: Users },
-      ],
+        { title: t('nav.products'), href: `/${organizationSlug}/productos`, icon: ShoppingBag },
+        { title: t('nav.categories'), href: `/${organizationSlug}/categorias`, icon: ShoppingBag },
+        { title: t('nav.customers'), href: `/${organizationSlug}/clientes`, icon: Users },
+        // Inventario avanzado: solo visible si el plan permite más de 1 sucursal
+        ...(maxBranches && maxBranches > 1 ? [{ title: t('nav.inventory') || 'Inventario', href: `/${organizationSlug}/inventario`, icon: Package }] : []),
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
     },
     {
-      label: 'Gestión',
+      label: t('sidebar.management'),
       items: [
-        { title: 'Usuarios', href: `/${organizationSlug}/usuarios`, icon: Users },
-        { title: 'Roles', href: `/${organizationSlug}/roles`, icon: Users },
-        { title: 'Permisos', href: `/${organizationSlug}/permisos`, icon: FileText },
+        { title: t('nav.users'), href: `/${organizationSlug}/usuarios`, icon: Users },
+        { title: t('nav.roles'), href: `/${organizationSlug}/roles`, icon: Users },
+        { title: t('nav.permissions'), href: `/${organizationSlug}/permisos`, icon: FileText },
         // Ocultar Sucursales si maxBranches === 1
-        ...(maxBranches !== 1 ? [{ title: 'Sucursales', href: `/${organizationSlug}/sucursales`, icon: Building2 }] : []),
-        { title: 'Configuración', href: `/${organizationSlug}/configuracion`, icon: Settings },
-      ],
+        ...(maxBranches !== 1 ? [{ title: t('nav.branches'), href: `/${organizationSlug}/sucursales`, icon: Building2 }] : []),
+        { title: t('nav.configuration'), href: `/${organizationSlug}/configuracion`, icon: Settings },
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
     },
     {
-      label: 'Reportes',
+      label: t('sidebar.reports'),
       items: [
-        { title: 'Reportes', href: `/${organizationSlug}/reportes`, icon: BarChart3 },
-      ],
+        { title: t('nav.reports'), href: `/${organizationSlug}/reportes`, icon: BarChart3 },
+        { title: t('nav.analytics') || 'Analytics', href: `/${organizationSlug}/analytics`, icon: TrendingUp },
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
     },
-  ]
+  ].filter(section => section.items.length > 0) // Filtrar secciones vacías
 
   const _handleLogout = async () => {
     try {
@@ -121,12 +249,29 @@ export function SalesSidebar({ organizationSlug, maxBranches }: SalesSidebarProp
           {/* Logo y título */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2a2a2a]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="h-5 w-5 text-white" />
-              </div>
+              {companyLogo ? (
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0 bg-transparent">
+                  <Image
+                    src={companyLogo}
+                    alt="Logo empresa"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                  <ShoppingCart className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div>
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Sistema Ventas</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{organizationSlug}</p>
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {companyName || t('app.systemName')}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {planName || organizationSlug}
+                </p>
               </div>
             </div>
             {/* Botón cerrar en móvil */}

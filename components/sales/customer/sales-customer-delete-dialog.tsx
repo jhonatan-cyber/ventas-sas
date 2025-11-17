@@ -1,6 +1,7 @@
 "use client"
 
 import { SalesCustomer } from "@prisma/client"
+import { useTranslations } from "next-intl"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
@@ -12,6 +13,8 @@ interface SalesCustomerDeleteDialogProps {
 }
 
 export function SalesCustomerDeleteDialog({ open, onOpenChange, customer, onDelete }: SalesCustomerDeleteDialogProps) {
+  const t = useTranslations()
+  
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -21,20 +24,20 @@ export function SalesCustomerDeleteDialog({ open, onOpenChange, customer, onDele
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el cliente
+            {t('customers.deleteWarning')}
             <strong className="block mt-2">"{`${customer?.name ?? ""} ${(customer as any)?.lastName ?? ""}`.trim()}"</strong>
-            y todos sus datos asociados.
+            {t('customers.deleteWarningEnd')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             className="rounded-full bg-red-600 hover:bg-red-700 text-white"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

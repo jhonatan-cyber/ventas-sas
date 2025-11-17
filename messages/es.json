@@ -1,0 +1,1335 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "quotations": "Cotizaciones",
+    "sales": "Ventas",
+    "products": "Productos",
+    "customers": "Clientes",
+    "expenses": "Gastos",
+    "reports": "Reportes",
+    "cashRegisters": "Cajas",
+    "configuration": "Configuración",
+    "users": "Usuarios",
+    "roles": "Roles",
+    "permissions": "Permisos",
+    "branches": "Sucursales",
+    "categories": "Categorías",
+    "inventory": "Inventario",
+    "analytics": "Analytics"
+  },
+  "sidebar": {
+    "home": "Inicio",
+    "operation": "Operación",
+    "catalog": "Catálogo",
+    "management": "Gestión",
+    "reports": "Reportes"
+  },
+  "header": {
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "notifications": "Notificaciones",
+    "noNotifications": "No hay notificaciones"
+  },
+  "action": {
+    "create": "Crear",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "refresh": "Actualizar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "view": "Ver",
+    "details": "Detalles",
+    "new": "Nuevo",
+    "back": "Atrás",
+    "convert": "Convertir",
+    "open": "Abrir",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "complete": "Completar",
+    "refresh": "Actualizar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "actions": "Acciones",
+    "manage": "Gestionar",
+    "selectAll": "Marcar Todos",
+    "add": "Agregar",
+    "update": "Actualizar"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "cancelled": "Cancelado",
+    "expired": "Vencido",
+    "converted": "Convertido",
+    "open": "Abierta",
+    "closed": "Cerrada"
+  },
+  "message": {
+    "loading": "Cargando...",
+    "noData": "No hay datos disponibles",
+    "error": "Error",
+    "success": "Éxito",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar?",
+    "saved": "Guardado correctamente",
+    "deleted": "Eliminado correctamente",
+    "errorSaving": "Error al guardar",
+    "errorDeleting": "Error al eliminar",
+    "errorLoading": "Error al cargar",
+    "noResults": "No se encontraron resultados",
+    "actionCannotBeUndone": "Esta acción no se puede deshacer",
+    "saving": "Agregando..."
+  },
+  "form": {
+    "required": "Este campo es obligatorio",
+    "invalid": "Valor inválido",
+    "name": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "quantity": "Cantidad",
+    "price": "Precio",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Descuento",
+    "description": "Descripción",
+    "category": "Categoría",
+    "branch": "Sucursal",
+    "role": "Rol",
+    "select": "Seleccionar",
+    "optional": "Opcional",
+    "requiredField": "Campo obligatorio",
+    "taxId": "CI",
+    "taxIdPlaceholder": "Documento de identidad",
+    "emailPlaceholder": "correo@ejemplo.com",
+    "addressPlaceholder": "Dirección completa",
+    "quantityRequired": "La cantidad debe ser mayor a 0",
+    "priceRequired": "El precio debe ser mayor a 0"
+  },
+  "products": {
+    "title": "Gestión de Productos",
+    "description": "Administra los productos de tu inventario",
+    "create": "Agregar Producto",
+    "new": "Nuevo Producto",
+    "edit": "Editar Producto",
+    "editDescription": "Modifica los datos del producto",
+    "newDescription": "Completa los datos para crear un nuevo producto",
+    "delete": "Eliminar Producto",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente el producto",
+    "deleteWarningEnd": "y todos sus datos asociados.",
+    "stats": {
+      "total": "Total Productos",
+      "lowStock": "Stock Bajo",
+      "outOfStock": "Sin Stock",
+      "inStock": "En Stock"
+    },
+    "filters": {
+      "search": "Buscar productos...",
+      "category": "Todas las categorías",
+      "branch": "Todas las sucursales",
+      "stock": "Estado de stock"
+    },
+    "form": {
+      "name": "Nombre del producto",
+      "description": "Descripción",
+      "price": "Precio",
+      "stock": "Stock",
+      "minStock": "Stock mínimo",
+      "reorderPoint": "Punto de Reorden",
+      "reorderPointPlaceholder": "Opcional: stock para reordenar",
+      "category": "Categoría",
+      "branch": "Sucursal",
+      "image": "Imagen del producto",
+      "barcode": "Código de barras",
+      "sku": "SKU",
+      "brand": "Marca",
+      "model": "Modelo",
+      "cost": "Precio de Compra",
+      "priceSale": "Precio de Venta",
+      "initialStock": "Stock Inicial",
+      "categoryRequired": "Debe seleccionar una categoría",
+      "branchRequired": "Debe seleccionar una sucursal",
+      "selectBranch": "Seleccionar sucursal",
+      "selectCategory": "Seleccionar categoría",
+      "noImage": "Sin imagen",
+      "changePhoto": "Cambiar foto",
+      "selectPhoto": "Seleccionar foto",
+      "scanBarcode": "Escanear código de barras",
+      "stopScan": "Detener escaneo",
+      "improveWithAI": "Mejorar con IA",
+      "generating": "Generando...",
+      "improveDescriptionAI": "Mejorar descripción con IA",
+      "cameraAccessError": "No se pudo acceder a la cámara",
+      "searchingProductInfo": "Buscando información del producto...",
+      "productInfoLoaded": "Información del producto cargada",
+      "productInfoNotFound": "No se encontró información del producto. Por favor, complete los campos manualmente.",
+      "errorSearchingProductInfo": "Error al buscar información del producto",
+      "nameRequired": "Por favor, ingresa al menos el nombre del producto",
+      "generatingDescriptionAI": "Generando descripción con IA...",
+      "infoGenerated": "Información generada",
+      "generatedSuccessfully": "generada exitosamente",
+      "descriptionGeneratedSuccessfully": "Descripción generada exitosamente",
+      "couldNotGenerateDescription": "No se pudo generar la descripción",
+      "errorGeneratingDescription": "Error al generar la descripción. Verifica que la API key esté configurada.",
+      "errorUploadingImage": "Error al subir la imagen"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este producto?",
+      "description": "Se eliminará permanentemente el producto"
+    },
+    "noProducts": "No hay productos registrados",
+    "exportImport": {
+      "title": "Exportar / Importar Productos",
+      "description": "Exporta tus productos a Excel/CSV o impórtalos desde un archivo",
+      "export": "Exportar",
+      "import": "Importar",
+      "format": "Formato",
+      "selectFile": "Seleccionar archivo",
+      "selectedFile": "Archivo seleccionado",
+      "updateExisting": "Actualizar productos existentes (por SKU o código de barras)",
+      "skipErrors": "Continuar aunque haya errores",
+      "downloadTemplate": "Descargar Plantilla Excel",
+      "downloadTemplateCSV": "Descargar Plantilla CSV",
+      "exporting": "Exportando...",
+      "importing": "Importando...",
+      "exportButton": "Exportar Productos",
+      "importButton": "Importar Productos",
+      "exportSuccess": "Exportación completada correctamente",
+      "exportError": "Error al exportar productos",
+      "importSuccess": "Importación completada",
+      "importErrors": "Errores encontrados",
+      "imported": "Creados",
+      "updated": "Actualizados",
+      "skipped": "Omitidos",
+      "row": "Fila",
+      "templateDownloaded": "Plantilla descargada correctamente",
+      "fileRequired": "Selecciona un archivo"
+    },
+    "export": {
+      "success": "Productos exportados correctamente"
+    },
+    "import": {
+      "fileRequired": "Selecciona un archivo",
+      "success": "Productos importados correctamente",
+      "error": "Error al importar productos",
+      "templateDownloaded": "Plantilla descargada correctamente"
+    }
+  },
+  "customers": {
+    "title": "Gestión de Clientes",
+    "description": "Administra los clientes de tu sistema de ventas",
+    "create": "Agregar Cliente",
+    "new": "Nuevo Cliente",
+    "edit": "Editar Cliente",
+    "editDescription": "Modifica los datos del cliente",
+    "newDescription": "Completa los datos para crear un nuevo cliente",
+    "delete": "Eliminar Cliente",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente el cliente",
+    "deleteWarningEnd": "y todos sus datos asociados.",
+    "form": {
+      "ci": "CI",
+      "name": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "ciPlaceholder": "Documento de identidad",
+      "newCustomer": "Completa los datos para crear un nuevo cliente",
+      "editCustomer": "Modifica los datos del cliente"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este cliente?",
+      "description": "Se eliminará permanentemente el cliente"
+    },
+    "noCustomers": "No hay clientes registrados"
+  },
+  "quotations": {
+    "title": "Gestión de Cotizaciones",
+    "description": "Administra las cotizaciones a tus clientes",
+    "create": "Agregar Cotización",
+    "new": "Nueva Cotización",
+    "edit": "Editar Cotización",
+    "editDescription": "Modifica los datos de la cotización",
+    "newDescription": "Completa los datos para crear una nueva cotización",
+    "delete": "Eliminar Cotización",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente la cotización",
+    "deleteWarningEnd": "junto a todos sus productos asociados.",
+    "convert": "Convertir a Venta",
+    "stats": {
+      "total": "Total Cotizaciones",
+      "pending": "Pendientes",
+      "converted": "Convertidas",
+      "expired": "Vencidas"
+    },
+    "filters": {
+      "search": "Buscar cotizaciones...",
+      "status": "Todos los estados",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas"
+    },
+    "form": {
+      "customer": "Cliente",
+      "customerPlaceholder": "Escribe el nombre del cliente (puede no estar registrado)...",
+      "customerNotRegistered": "Cliente no registrado",
+      "noBranch": "Sin sucursal",
+      "items": "Items",
+      "addItem": "Agregar item",
+      "addProduct": "Agregar Producto",
+      "noProducts": "No hay productos agregados",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "total": "Total",
+      "notes": "Notas",
+      "validUntil": "Válida hasta",
+      "branch": "Sucursal",
+      "selectBranch": "Selecciona una sucursal",
+      "phone": "Teléfono",
+      "phonePlaceholder": "Número de teléfono",
+      "customerRequired": "Debe ingresar el nombre del cliente o seleccionar un cliente",
+      "expirationDateRequired": "Debe ingresar la fecha de expiración de la cotización",
+      "itemsRequired": "Debe agregar al menos un producto con cantidad mínima de 1 y precio mayor a 1",
+      "useCustomer": "Usar cliente",
+      "useThisCustomer": "Usar este cliente",
+      "pressEnterOrClick": "Presiona Enter o haz clic aquí para usar este cliente sin registrarlo",
+      "noCustomersFound": "No se encontraron clientes registrados",
+      "customerNameHint": "Nombre del cliente para crearlo automáticamente en la cotización",
+      "price": "Precio",
+      "quantityShort": "Cant.",
+      "useProduct": "Usar producto",
+      "useThisProduct": "Usar este producto",
+      "pressEnterOrClickProduct": "Presiona Enter o haz clic aquí para usar este producto sin registrarlo",
+      "noProductsFound": "No se encontraron productos registrados",
+      "productNameHint": "Nombre del producto para crearlo automáticamente en la cotización",
+      "pdf": {
+        "openingExisting": "Abriendo PDF existente",
+        "ready": "PDF listo y enlace generado",
+        "generated": "PDF generado correctamente",
+        "downloadError": "PDF descargado, pero no se pudo guardar el enlace",
+        "generateError": "No se pudo generar el PDF"
+      },
+      "whatsapp": {
+        "noPhone": "Agrega un teléfono al cliente para enviar la cotización por WhatsApp",
+        "noWhatsappConfig": "Configura un número de WhatsApp en Configuración"
+      },
+      "copyLink": "Copiar",
+      "linkCopied": "Enlace copiado al portapapeles"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "converted": "Convertida",
+      "expired": "Vencida"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta cotización?",
+      "description": "Se eliminará permanentemente la cotización"
+    },
+    "convert": {
+      "confirm": "¿Deseas convertir esta cotización en una venta?",
+      "description": "Esta acción creará una nueva venta con los items de la cotización"
+    },
+    "noQuotations": "No hay cotizaciones registradas",
+    "viewDetails": "Ver detalles",
+    "items": "productos",
+    "units": "unidades"
+  },
+  "sales": {
+    "title": "Gestión de Ventas",
+    "description": "Administra las ventas realizadas",
+    "create": "Agregar Venta",
+    "new": "Nueva Venta",
+    "edit": "Editar Venta",
+    "editDescription": "Modifica los datos de la venta",
+    "newDescription": "Completa los datos para crear una nueva venta",
+    "delete": "¿Eliminar venta?",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará la venta",
+    "sale": "Venta",
+    "by": "por",
+    "cancel": "Cancelar Venta",
+    "cancelSuccess": "Venta anulada correctamente",
+    "pdf": {
+      "openingExisting": "Abriendo PDF existente",
+      "ready": "PDF listo y enlace generado",
+      "generated": "PDF generado correctamente",
+      "downloadError": "PDF descargado, pero no se pudo guardar el enlace",
+      "generateError": "No se pudo generar el PDF"
+    },
+    "stats": {
+      "total": "Total Ventas",
+      "today": "Hoy",
+      "thisMonth": "Este mes",
+      "thisYear": "Este año"
+    },
+    "filters": {
+      "search": "Buscar ventas...",
+      "status": "Todos los estados",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas",
+      "paymentMethod": "Método de pago"
+    },
+    "form": {
+      "customer": "Cliente",
+      "customerPlaceholder": "Escribe el nombre del cliente (puede no estar registrado)...",
+      "customerRequired": "Debe seleccionar o ingresar un cliente",
+      "phone": "Teléfono",
+      "phonePlaceholder": "Número de teléfono",
+      "items": "Items",
+      "addItem": "Agregar item",
+      "addProduct": "Agregar Producto",
+      "noProducts": "No hay productos agregados",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "total": "Total",
+      "paymentMethod": "Método de pago",
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia",
+      "qr": "QR / Billetera",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas adicionales...",
+      "branch": "Sucursal",
+      "itemsRequired": "Debe agregar al menos un producto con cantidad mínima de 1 y precio mayor a 0",
+      "useCustomer": "Usar cliente",
+      "useThisCustomer": "Usar este cliente",
+      "pressEnterOrClick": "Presiona Enter o haz clic aquí para usar este cliente sin registrarlo",
+      "noCustomersFound": "No se encontraron clientes registrados",
+      "customerNameHint": "Nombre del cliente para crearlo automáticamente en la venta",
+      "trackingCodes": "Códigos de seguimiento",
+      "scanCode": "Código o escaneo",
+      "stopScan": "Detener escaneo",
+      "validCodeRequired": "Ingresa un código válido",
+      "codeAlreadyAdded": "Este código ya se agregó al producto",
+      "codesExceedQuantity": "La cantidad de códigos no puede superar las unidades vendidas",
+      "codeScannedAndAdded": "Código escaneado y agregado",
+      "cameraNotAvailable": "La cámara no está disponible en este dispositivo o navegador",
+      "cameraAccessError": "No se pudo acceder a la cámara",
+      "codesQuantityMismatch": "La cantidad de códigos únicos debe coincidir con la cantidad vendida en cada producto",
+      "loadingCustomers": "Cargando clientes...",
+      "noCodesRegistered": "Sin códigos registrados.",
+      "missingCodes": "Faltan {count} códigos para coincidir con la cantidad vendida."
+    },
+    "status": {
+      "completed": "Completada",
+      "pending": "Pendiente",
+      "cancelled": "Cancelada"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta venta?",
+      "description": "Se eliminará permanentemente la venta"
+    },
+    "cancel": {
+      "confirm": "¿Estás seguro de que deseas cancelar esta venta?",
+      "description": "Esta acción no se puede deshacer"
+    },
+    "noSales": "No hay ventas registradas"
+  },
+  "expenses": {
+    "title": "Gestión de Gastos",
+    "description": "Administra los gastos operativos",
+    "create": "Agregar Gasto",
+    "new": "Nuevo Gasto",
+    "edit": "Editar Gasto",
+    "editDescription": "Actualiza la información del gasto registrado",
+    "newDescription": "Completa los datos para registrar un nuevo gasto operativo",
+    "delete": "Eliminar Gasto",
+    "expense": "Gasto",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente el gasto",
+    "stats": {
+      "total": "Total Gastos",
+      "thisMonth": "Este mes",
+      "thisYear": "Este año"
+    },
+    "filters": {
+      "search": "Buscar gastos...",
+      "category": "Todas las categorías",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas"
+    },
+    "form": {
+      "name": "Nombre del gasto",
+      "namePlaceholder": "Ej. Compra de insumos",
+      "nameRequired": "El nombre del gasto es requerido",
+      "category": "Etiqueta o categoría",
+      "categoryPlaceholder": "Opcional: Servicios, Alquiler, etc.",
+      "amount": "Monto",
+      "amountRequired": "El monto debe ser mayor a 0",
+      "date": "Fecha",
+      "dateRequired": "Selecciona la fecha del gasto",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Describe brevemente el gasto, método de pago o cualquier detalle relevante",
+      "descriptionRequired": "Describe brevemente el gasto",
+      "branch": "Sucursal",
+      "selectBranch": "Seleccionar sucursal",
+      "branchRequired": "Selecciona la sucursal del gasto",
+      "categorySuggestions": {
+        "services": "Servicios",
+        "supplies": "Insumos",
+        "transport": "Transporte",
+        "salaries": "Salarios",
+        "rent": "Alquiler",
+        "utilities": "Servicios Públicos",
+        "marketing": "Marketing",
+        "maintenance": "Mantenimiento",
+        "taxes": "Impuestos",
+        "other": "Otros"
+      }
+    },
+    "delete": {
+      "confirm": "¿Estás seguro?",
+      "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el gasto"
+    },
+    "noExpenses": "No hay gastos registrados"
+  },
+  "cashRegisters": {
+    "title": "Gestión de Cajas",
+    "description": "Administra las cajas registradoras",
+    "create": "Agregar Caja",
+    "new": "Nueva Caja",
+    "edit": "Editar Caja",
+    "editDescription": "Modifica los datos de la caja",
+    "newDescription": "Completa los datos para crear una nueva caja registradora",
+    "delete": "Eliminar Caja",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente la caja",
+    "deleteWarningEnd": "y todos sus datos asociados.",
+    "open": "Abrir Caja",
+    "close": "Cerrar Caja",
+    "stats": {
+      "total": "Total Cajas",
+      "open": "Abiertas",
+      "closed": "Cerradas"
+    },
+    "filters": {
+      "search": "Buscar cajas...",
+      "status": "Todos los estados",
+      "branch": "Todas las sucursales"
+    },
+    "form": {
+      "name": "Nombre asignado",
+      "branch": "Sucursal",
+      "selectBranch": "Seleccione una sucursal",
+      "assignedBranch": "Sucursal asignada",
+      "willUseBranch": "Se usará automáticamente tu sucursal asignada",
+      "noBranchesAvailable": "Sin sucursales disponibles",
+      "loadingInfo": "Cargando información...",
+      "initialBalance": "Balance Inicial",
+      "dateTime": "Fecha y hora",
+      "nameRequired": "El nombre de la caja es requerido",
+      "branchRequired": "Debe seleccionar una sucursal"
+    },
+    "status": {
+      "open": "Abierta",
+      "closed": "Cerrada"
+    },
+    "open": {
+      "confirm": "¿Deseas abrir esta caja?",
+      "description": "Ingresa el monto inicial"
+    },
+    "close": {
+      "confirm": "¿Deseas cerrar esta caja?",
+      "description": "Se calculará el balance final"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta caja?",
+      "description": "Se eliminará permanentemente la caja"
+    },
+    "noCashRegisters": "No hay cajas registradas"
+  },
+  "reports": {
+    "title": "Reportes",
+    "description": "Análisis detallado de tus operaciones comerciales",
+    "basic": "Reportes Básicos",
+    "advanced": "Reportes Avanzados",
+    "advancedBadge": "Múltiples Sucursales",
+    "advancedLabel": "Avanzado",
+    "viewFullReport": "Ver reporte completo →",
+    "reports": {
+      "general": {
+        "title": "Reporte General",
+        "description": "Vista general de ingresos, egresos y utilidades"
+      },
+      "sales": {
+        "title": "Reporte de Ventas",
+        "description": "Análisis detallado de ventas, ingresos y tendencias"
+      },
+      "products": {
+        "title": "Reporte de Productos",
+        "description": "Productos más vendidos y estado de inventario"
+      },
+      "expenses": {
+        "title": "Reporte de Gastos",
+        "description": "Desglose de gastos por categoría y período"
+      },
+      "customers": {
+        "title": "Reporte de Clientes",
+        "description": "Clientes principales y análisis por sucursal"
+      },
+      "cashRegisters": {
+        "title": "Reporte de Cajas",
+        "description": "Estado de cajas registradoras y análisis por sucursal"
+      },
+      "aiAdvanced": {
+        "title": "Reporte Inteligente",
+        "description": "Comparativas avanzadas y recomendaciones con IA"
+      }
+    },
+    "tabs": {
+      "sales": "Ventas",
+      "products": "Productos",
+      "customers": "Clientes",
+      "expenses": "Gastos",
+      "cashRegisters": "Cajas",
+      "general": "General"
+    },
+    "filters": {
+      "dateRange": "Rango de fechas",
+      "branch": "Todas las sucursales",
+      "export": "Exportar reporte",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
+      "apply": "Aplicar filtros"
+    },
+    "charts": {
+      "salesByDate": "Ventas por fecha",
+      "topProducts": "Productos más vendidos",
+      "productsByCategory": "Productos por categoría",
+      "paymentMethod": "Métodos de pago",
+      "inventoryStatus": "Estado de inventario",
+      "expensesByCategory": "Gastos por categoría",
+      "customersByPurchases": "Clientes por compras",
+      "cashRegistersByBranch": "Cajas por sucursal"
+    },
+    "export": {
+      "noData": "No hay datos para exportar",
+      "generating": "Generando PDF...",
+      "success": "PDF generado exitosamente",
+      "error": "Error al generar el PDF"
+    },
+    "aiSummary": {
+      "title": "Resumen inteligente",
+      "description": "Análisis resumido generado con IA",
+      "generating": "En proceso",
+      "powered": "IA Activa",
+      "loading": "Generando recomendaciones",
+      "highlights": "Aspectos destacados",
+      "actions": "Acciones sugeridas",
+      "unavailable": "No se pudo generar el resumen inteligente."
+    },
+    "aiAdvanced": {
+      "title": "Reporte Inteligente",
+      "description": "Comparativas por sucursal, oportunidades y riesgos generados con IA",
+      "error": "No se pudo cargar el reporte inteligente",
+      "noData": "Sin datos para exportar",
+      "download": "Descargar informe IA",
+      "exported": "Reporte IA descargado",
+      "updated": "Actualizado: {time}",
+      "opportunities": "Oportunidades",
+      "risks": "Riesgos",
+      "nextActions": "Próximos pasos",
+      "branchHighlights": "Desempeño por sucursal",
+      "branches": "Sucursales",
+      "branch": "Sucursal",
+      "sales": "Ventas",
+      "revenue": "Ingresos",
+      "avgTicket": "Ticket prom.",
+      "topProducts": "Top productos",
+      "topCustomers": "Clientes destacados",
+      "aiInsights": "Resumen IA",
+      "revenueKpi": "Ingresos netos",
+      "netProfit": "Utilidad neta",
+      "margin": "Margen",
+      "expenses": "Gastos",
+      "revenue": "Ingresos",
+      "branchHighlightsTitle": "Sucursales destacadas",
+      "topProductsTitle": "Productos destacados",
+      "topCustomersTitle": "Clientes destacados",
+      "branchInsights": "Desempeño por sucursal"
+    }
+  },
+  "categories": {
+    "title": "Gestión de Categorías",
+    "description": "Administra las categorías de productos",
+    "create": "Agregar Categoría",
+    "new": "Nueva Categoría",
+    "edit": "Editar Categoría",
+    "editDescription": "Modifica los datos de la categoría",
+    "newDescription": "Completa los datos para crear una nueva categoría",
+    "delete": "Eliminar Categoría",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente la categoría",
+    "deleteWarningEnd": "y todos sus datos asociados.",
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Ej: Electrónicos, Ropa, Alimentos...",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción opcional de la categoría..."
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta categoría?",
+      "description": "Se eliminará permanentemente la categoría"
+    },
+    "stats": {
+      "totalProducts": "productos en esta categoría"
+    },
+    "noCategories": "No hay categorías registradas"
+  },
+  "users": {
+    "title": "Gestión de Usuarios",
+    "description": "Administra todos los usuarios del sistema",
+    "create": "Agregar Usuario",
+    "new": "Nuevo Usuario",
+    "edit": "Editar Usuario",
+    "editDescription": "Actualiza la información del usuario",
+    "newDescription": "Completa la información para crear un nuevo usuario",
+    "delete": "Eliminar Usuario",
+    "deleteTitle": "¿Eliminar usuario?",
+    "deleteWarning": "Estás a punto de eliminar el usuario",
+    "deleteWarningEnd": "Esta acción no se puede deshacer.",
+    "deleteWarningNoName": "Estás a punto de eliminar este usuario. Esta acción no se puede deshacer.",
+    "noPermissionToCreate": "No tiene permiso para crear usuarios",
+    "stats": {
+      "total": "Total Usuarios",
+      "active": "Activos",
+      "inactive": "Inactivos"
+    },
+    "filters": {
+      "search": "Buscar usuarios...",
+      "role": "Todos los roles",
+      "branch": "Todas las sucursales",
+      "status": "Todos los estados"
+    },
+    "form": {
+      "ci": "CI (Cédula de Identidad)",
+      "ciPlaceholder": "12345678",
+      "name": "Nombre",
+      "namePlaceholder": "Juan",
+      "lastName": "Apellido",
+      "lastNamePlaceholder": "Pérez",
+      "email": "Email",
+      "emailPlaceholder": "usuario@ejemplo.com",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+59170000000",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle Principal 123",
+      "role": "Rol",
+      "selectRole": "Selecciona un rol",
+      "loadingRoles": "Cargando roles...",
+      "noRolesAvailable": "No hay roles disponibles. Crea roles en el módulo de Roles.",
+      "branch": "Sucursal",
+      "photo": "Foto",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "superAdmin": "Super Administrador",
+      "superAdminDescription": "Acceso completo al sistema"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este usuario?",
+      "description": "Se eliminará permanentemente el usuario"
+    },
+    "noUsers": "No hay usuarios registrados",
+    "limitReached": "Has alcanzado el límite de usuarios permitidos",
+    "sas": {
+      "delete": {
+        "title": "¿Eliminar usuario?",
+        "confirm": "¿Estás seguro?",
+        "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el usuario",
+        "descriptionEnd": "y todos sus datos asociados."
+      },
+      "unassignedUser": "Usuario sin asignar"
+    }
+  },
+  "roles": {
+    "title": "Gestión de Roles",
+    "description": "Administra los roles y permisos del sistema",
+    "create": "Agregar Rol",
+    "new": "Nuevo Rol",
+    "edit": "Editar Rol",
+    "editDescription": "Actualiza la información del rol",
+    "newDescription": "Completa la información para crear un nuevo rol",
+    "delete": "Eliminar Rol",
+    "managePermissions": "Gestionar Permisos",
+    "noPermissionToCreate": "No tiene permiso para crear roles",
+    "stats": {
+      "total": "Total Roles",
+      "active": "Activos",
+      "inactive": "Inactivos"
+    },
+    "filters": {
+      "search": "Buscar roles...",
+      "branch": "Todas las sucursales",
+      "status": "Todos los estados"
+    },
+    "form": {
+      "name": "Nombre del Rol",
+      "namePlaceholder": "Ej: Vendedor",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Describe las funciones y responsabilidades del rol",
+      "branch": "Sucursal"
+    },
+    "permissions": {
+      "title": "Permisos del Rol",
+      "description": "Selecciona los permisos para este rol",
+      "selectAll": "Marcar Todos",
+      "module": "Módulo",
+      "actions": "Acciones",
+      "actionsFor": "Acciones para"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este rol?",
+      "description": "Se eliminará permanentemente el rol"
+    },
+    "deleteTitle": "¿Eliminar rol?",
+    "deleteWarning": "Estás a punto de eliminar el rol",
+    "deleteWarningEnd": "Esta acción no se puede deshacer.",
+    "deleteWarningNoName": "Estás a punto de eliminar este rol. Esta acción no se puede deshacer.",
+    "noRoles": "No hay roles registrados",
+    "sas": {
+      "permissions": {
+        "loadError": "Error al cargar permisos",
+        "loadErrorDescription": "No se pudieron cargar los permisos disponibles",
+        "updateSuccess": "Permisos actualizados",
+        "updateSuccessDescription": "Los permisos de {role} han sido actualizados exitosamente.",
+        "updateError": "Error al guardar permisos",
+        "updateErrorDescription": "No se pudieron actualizar los permisos"
+      },
+      "delete": {
+        "title": "¿Eliminar rol?",
+        "cannotDelete": "No se puede eliminar",
+        "cannotDeleteDescription": "El rol <strong>Administrador</strong> no puede eliminarse por seguridad del sistema.",
+        "confirm": "¿Estás seguro?",
+        "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el rol",
+        "descriptionEnd": "y se desactivará a los usuarios que tengan asignado este rol."
+      }
+    }
+  },
+  "permissions": {
+    "title": "Gestión de Permisos",
+    "description": "Administra los permisos del sistema y su asignación a roles",
+    "create": "Agregar Permiso",
+    "delete": "Eliminar Permiso",
+    "assignAll": "Asignar Todos",
+    "assignAllTitle": "Asignar Todos los Permisos",
+    "assignAllDescription": "¿Estás seguro de que deseas asignar todos los permisos registrados ({count} permisos) a los roles \"Administrador\" y \"Super Administrador\"?",
+    "assigning": "Asignando...",
+    "noPermissionToCreate": "No tiene permiso para crear permisos",
+    "noPermissionToAssign": "No tiene permiso para asignar permisos",
+    "stats": {
+      "total": "Total Permisos",
+      "inUse": "En Uso",
+      "registered": "Registrados",
+      "unused": "No Usados",
+      "byCategory": "Por categoría"
+    },
+    "filters": {
+      "search": "Buscar permisos...",
+      "category": "Todas las categorías"
+    },
+    "form": {
+      "title": "Registrar Nuevos Permisos",
+      "description": "Selecciona un módulo y las acciones que deseas registrar como permisos",
+      "module": "Módulo",
+      "modulePlaceholder": "Selecciona un módulo",
+      "actions": "Acciones",
+      "actionsFor": "Acciones para",
+      "selectAll": "Marcar Todos",
+      "loadingExisting": "Cargando permisos existentes...",
+      "moduleRequired": "Por favor selecciona un módulo",
+      "actionsRequired": "Por favor selecciona al menos una acción",
+      "allRegistered": "Todos los permisos ya están registrados",
+      "allRegisteredDescription": "Todos los permisos seleccionados para el módulo {module} ya existen en el sistema",
+      "registeredSuccess": "Permisos registrados correctamente",
+      "registeredDescription": "Se han creado {newCount} permiso(s) nuevo(s). {existingCount} permiso(s) ya existían.",
+      "registeredDescriptionSimple": "Se han creado {count} permiso(s) para el módulo {module}",
+      "errorRegistering": "Error al registrar permisos",
+      "errorRegisteringDescription": "No se pudieron crear los permisos",
+      "existing": "Existente",
+      "alreadyExists": "Ya existe",
+      "new": "Nuevo",
+      "selectedPermissions": "Permisos seleccionados",
+      "selectedCount": "({existingCount} existente(s), {newCount} nuevo(s))",
+      "adding": "Agregando..."
+    },
+    "delete": {
+      "title": "¿Eliminar permiso?",
+      "confirm": "¿Estás seguro de que deseas eliminar este permiso?",
+      "description": "Se eliminará permanentemente el permiso",
+      "withRoles": "Estás a punto de eliminar el permiso",
+      "withRolesDescription": "Este permiso está asignado a {count} rol(es):",
+      "withRolesEnd": "El permiso será eliminado de todos los roles. Esta acción no se puede deshacer.",
+      "withoutRoles": "Estás a punto de eliminar el permiso",
+      "withoutRolesDescription": "Este permiso no está asignado a ningún rol. Esta acción no se puede deshacer.",
+      "deleting": "Eliminando..."
+    },
+    "noPermissions": "No hay permisos registrados",
+    "loadingExisting": "Cargando permisos existentes...",
+    "assignSuccess": "Permisos asignados correctamente",
+    "assignError": "Error al asignar permisos",
+    "assignErrorDescription": "No se pudieron asignar los permisos",
+    "deleteSuccess": "Permiso eliminado correctamente",
+    "deleteError": "Error al eliminar permiso",
+    "deleteErrorDescription": "No se pudo eliminar el permiso",
+    "toggleStatusSuccess": "Estado del permiso actualizado",
+    "toggleStatusError": "Error al cambiar estado",
+    "toggleStatusErrorDescription": "No se pudo cambiar el estado del permiso",
+    "sas": {
+      "moduleRequired": "Por favor selecciona un módulo",
+      "actionsRequired": "Por favor selecciona al menos una acción",
+      "registeredSuccess": "Permisos registrados correctamente",
+      "errorRegistering": "Error al registrar permisos",
+      "deleteSuccess": "Permiso eliminado correctamente",
+      "deleteError": "Error al eliminar permiso",
+      "deleteErrorDescription": "No se pudo eliminar el permiso",
+      "toggleStatusSuccess": "Estado del permiso actualizado",
+      "toggleStatusError": "Error al cambiar estado",
+      "toggleStatusErrorDescription": "No se pudo cambiar el estado del permiso"
+    }
+  },
+  "branches": {
+    "title": "Gestión de Sucursales",
+    "description": "Administra las sucursales de tu organización",
+    "create": "Agregar Sucursal",
+    "new": "Nueva Sucursal",
+    "edit": "Editar Sucursal",
+    "editDescription": "Modifica los datos de la sucursal",
+    "newDescription": "Completa los datos para crear una nueva sucursal",
+    "delete": "Eliminar Sucursal",
+    "deleteWarning": "Esta acción no se puede deshacer. Se eliminará permanentemente la sucursal",
+    "deleteWarningEnd": "y todos sus datos asociados.",
+    "stats": {
+      "total": "Total Sucursales",
+      "active": "Activas",
+      "inactive": "Inactivas",
+      "description": "Sucursales registradas en el sistema"
+    },
+    "filters": {
+      "search": "Buscar sucursales...",
+      "status": "Todos los estados"
+    },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Nombre de la sucursal",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección completa de la sucursal",
+      "phone": "Teléfono",
+      "phonePlaceholder": "Teléfono",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "correo@ejemplo.com"
+    },
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta sucursal?",
+      "description": "Se eliminará permanentemente la sucursal"
+    },
+    "details": {
+      "title": "Detalles de la Sucursal",
+      "description": "Información completa de la sucursal y usuarios asociados",
+      "generalInfo": "Información General",
+      "associatedUsers": "Usuarios Asociados",
+      "total": "Total",
+      "active": "Activos",
+      "inactive": "Inactivos",
+      "created": "Creada",
+      "updated": "Actualizada",
+      "users": "usuarios",
+      "noUsers": "No hay usuarios asociados a esta sucursal",
+      "noName": "Sin nombre"
+    },
+    "noBranches": "No hay sucursales registradas"
+  },
+  "config": {
+    "title": "Configuración",
+    "sections": {
+      "company": "Empresa",
+      "preferences": "Preferencias"
+    },
+    "company": {
+      "name": "Nombre de la empresa",
+      "taxId": "NIT / RUC",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "address": "Dirección",
+      "phoneNote": "Este número se usará para WhatsApp. El código de país se toma automáticamente de las preferencias.",
+      "website": "Sitio web",
+      "logo": "Logo de la empresa",
+      "owner": "Información del dueño",
+      "ownerName": "Nombre",
+      "ownerEmail": "Correo electrónico",
+      "notEditable": "No editable",
+      "updateInfo": "Actualizar información",
+      "updating": "Actualizando...",
+      "saveInBrowser": "Se guardará en tu navegador"
+    },
+    "preferences": {
+      "currency": "Moneda",
+      "dateFormat": "Formato de fecha",
+      "language": "Idioma de la interfaz",
+      "languageNote": "El idioma se aplicará en toda la interfaz del sistema.",
+      "themeColor": "Color del sistema",
+      "phoneCountryCode": "Código de país para teléfonos",
+      "currencyNote": "La moneda se utilizará en ventas, cotizaciones y reportes.",
+      "dateFormatNote": "El formato se aplicará en toda la interfaz del sistema.",
+      "phoneCodeNote": "Este código se usará automáticamente al ingresar números de teléfono en cotizaciones y clientes.",
+      "themeColorNote": "Personaliza el color principal de la interfaz. Los cambios se aplican inmediatamente.",
+      "autoSave": "Las preferencias se guardan automáticamente en la base de datos y se aplican inmediatamente."
+    },
+    "plan": {
+      "title": "Plan de suscripción",
+      "plan": "Plan",
+      "status": "Estado",
+      "expires": "Vence",
+      "period": "Período",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "noDate": "Sin fecha (renovación)",
+      "noActivePlan": "No hay un plan activo. Contacta a administración."
+    },
+    "save": "Guardar",
+    "saved": "Configuración guardada correctamente",
+    "error": "Error al guardar la configuración"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Ingrese sus datos para iniciar sesión en su cuenta",
+      "email": "Correo",
+      "emailPlaceholder": "Correo electrónico o CI",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Contraseña",
+      "submit": "Iniciar sesión",
+      "loading": "Iniciando sesión...",
+      "error": "Error al iniciar sesión",
+      "errorConnection": "Error de conexión. Por favor, intenta nuevamente.",
+      "errorConnectionShort": "Error de conexión",
+      "emailOrCiRequired": "El correo electrónico o CI es requerido",
+      "success": "Sesión iniciada correctamente",
+      "invalidCredentials": "Credenciales inválidas",
+      "systemName": "Sistema de Ventas",
+      "welcome": "Bienvenido",
+      "welcomeBack": "de nuevo",
+      "systemDescription": "Sistema de gestión de ventas",
+      "systemSubDescription": "Gestiona tu negocio de manera eficiente y profesional",
+      "managementSystem": "Sistema de Gestión",
+      "intelligent": "Inteligente",
+      "feature1": "Gestión completa de inventario",
+      "feature2": "Reportes en tiempo real",
+      "feature3": "Multi-sucursal y multi-usuario",
+      "imageAlt": "Sistema de gestión de ventas",
+      "copyright": "© {year} Sistema de Ventas SAS. Todos los derechos reservados."
+    }
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "pt": "Português"
+  },
+  "app": {
+    "systemName": "Sistema Ventas"
+  },
+  "pagination": {
+    "page": "Página",
+    "of": "de",
+    "itemsPerPage": "Elementos por página",
+    "showing": "Mostrando",
+    "to": "a",
+    "ofItems": "de"
+  },
+  "common": {
+    "yes": "Sí",
+    "no": "No",
+    "confirm": "Confirmar",
+    "areYouSure": "¿Estás seguro?",
+    "noBranch": "Sin sucursal",
+    "noCategory": "Sin categoría",
+    "notes": "Notas",
+    "branch": "Sucursal",
+    "optional": "Opcional",
+    "data": "Datos",
+    "perPage": "por página",
+    "cameraError": "No se pudo acceder a la cámara",
+    "select": "Seleccionar",
+    "all": "Todos",
+    "none": "Ninguno",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "thisWeek": "Esta semana",
+    "thisMonth": "Este mes",
+    "thisYear": "Este año",
+    "lastMonth": "Mes pasado",
+    "lastYear": "Año pasado",
+    "custom": "Personalizado",
+    "search": "Buscar",
+    "placeholders": {
+      "searchCustomers": "Buscar clientes por nombre, apellido, email, teléfono, CI...",
+      "searchProducts": "Buscar productos por nombre, SKU, código de barras...",
+      "searchQuotations": "Buscar por número, cliente o notas...",
+      "searchSales": "Buscar por número, cliente o notas...",
+      "searchExpenses": "Buscar por concepto, descripción o responsable...",
+      "searchBranches": "Buscar sucursales por nombre, dirección, teléfono, email...",
+      "searchCategories": "Buscar categorías por nombre o descripción...",
+      "searchCashRegisters": "Buscar por nombre o sucursal...",
+      "searchPermissions": "Buscar permisos por nombre o descripción...",
+      "searchRoles": "Buscar roles por nombre o descripción...",
+      "searchUsers": "Buscar usuarios por nombre, CI, correo, teléfono...",
+      "allBranches": "Todas las sucursales",
+      "filterByStatus": "Filtrar por estado",
+      "filterByBranch": "Filtrar por sucursal",
+      "filterByCategory": "Filtrar por categoría",
+      "perPage": "Por página",
+      "selectModule": "Selecciona un módulo",
+      "selectRole": "Seleccionar rol",
+      "selectBranch": "Seleccionar sucursal",
+      "selectPaymentMethod": "Selecciona el método de pago",
+      "quantity": "Cantidad",
+      "price": "Precio",
+      "subtotal": "Subtotal",
+      "discount": "Descuento",
+      "barcodeOrSerial": "Código de barras o serie",
+      "scanCode": "Ingresa o escanea código",
+      "productName": "Escribe el nombre del producto (puede no estar registrado)...",
+      "amount": "0.00",
+      "dateFormat": "dd/mm/aaaa",
+      "email": "correo@ejemplo.com",
+      "taxId": "Cédula de Identidad",
+      "name": "Nombre",
+      "lastName": "Apellido",
+      "address": "Dirección completa",
+      "additionalNotes": "Notas adicionales para la venta (opcional)",
+      "roleExample": "Ej: Vendedor, Supervisor, Cajero...",
+      "roleDescription": "Descripción opcional del rol..."
+    }
+  },
+  "inventory": {
+    "title": "Inventario Avanzado",
+    "description": "Gestiona alertas, movimientos, transferencias y ajustes de inventario",
+    "tabs": {
+      "alerts": "Alertas",
+      "movements": "Movimientos",
+      "transfers": "Transferencias",
+      "adjustments": "Ajustes"
+    },
+    "alerts": {
+      "title": "Alertas de Stock Bajo",
+      "description": "Productos con stock bajo o en punto de reorden",
+      "noAlerts": "No hay alertas de stock bajo",
+      "currentStock": "Stock actual",
+      "reorderPoint": "Punto de reorden",
+      "belowMin": "Bajo mínimo",
+      "atReorder": "En reorden"
+    },
+    "movements": {
+      "title": "Historial de Movimientos",
+      "description": "Registro de todos los movimientos de inventario",
+      "noMovements": "No hay movimientos registrados",
+      "product": "Producto",
+      "type": "Tipo",
+      "quantity": "Cantidad",
+      "stock": "Stock",
+      "user": "Usuario",
+      "date": "Fecha",
+      "types": {
+        "in": "Entrada",
+        "out": "Venta",
+        "adjustment": "Ajuste",
+        "transferIn": "Transferencia Entrada",
+        "transferOut": "Transferencia Salida"
+      }
+    },
+    "transfers": {
+      "title": "Transferencias entre Sucursales",
+      "description": "Gestiona transferencias de productos entre sucursales",
+      "new": "Nueva Transferencia",
+      "noTransfers": "No hay transferencias registradas",
+      "product": "Producto",
+      "maxQuantity": "Máximo disponible",
+      "from": "Desde",
+      "to": "Hacia",
+      "quantity": "Cantidad",
+      "statusHeader": "Estado",
+      "requestedBy": "Solicitado por",
+      "date": "Fecha",
+      "fillAllFields": "Completa todos los campos",
+      "differentBranches": "Las sucursales deben ser diferentes",
+      "invalidQuantity": "La cantidad debe ser un número mayor a 0",
+      "insufficientStock": "Stock insuficiente. Stock disponible: {stock}, solicitado: {quantity}",
+      "created": "Transferencia creada",
+      "approved": "Transferencia aprobada",
+      "rejected": "Transferencia rechazada",
+      "completed": "Transferencia completada",
+      "error": "Error al procesar transferencia",
+      "fromBranch": "Sucursal Origen",
+      "toBranch": "Sucursal Destino",
+      "selectFromBranch": "Seleccionar sucursal origen",
+      "selectToBranch": "Seleccionar sucursal destino",
+      "selectProduct": "Seleccionar producto",
+      "notesPlaceholder": "Notas opcionales...",
+      "createDescription": "Crea una nueva transferencia de productos entre sucursales",
+      "approveTitle": "Aprobar Transferencia",
+      "rejectTitle": "Rechazar Transferencia",
+      "completeTitle": "Completar Transferencia",
+      "approveDescription": "¿Estás seguro de aprobar esta transferencia?",
+      "rejectDescription": "¿Estás seguro de rechazar esta transferencia?",
+      "completeDescription": "¿Estás seguro de completar esta transferencia? El stock se moverá entre sucursales.",
+      "actionNotesPlaceholder": "Notas opcionales...",
+      "status": {
+        "pending": "Pendiente",
+        "approved": "Aprobada",
+        "rejected": "Rechazada",
+        "inTransit": "En tránsito",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
+      }
+    },
+    "adjustments": {
+      "title": "Ajustes de Inventario",
+      "description": "Ajusta el stock de productos con justificación",
+      "new": "Nuevo Ajuste",
+      "noAdjustments": "No hay ajustes registrados",
+      "product": "Producto",
+      "type": "Tipo",
+      "quantity": "Cantidad",
+      "reason": "Razón",
+      "justification": "Justificación",
+      "user": "Usuario",
+      "date": "Fecha",
+      "fillAllFields": "Completa todos los campos",
+      "created": "Ajuste creado",
+      "error": "Error al crear ajuste",
+      "selectProduct": "Seleccionar producto",
+      "selectType": "Seleccionar tipo",
+      "reasonPlaceholder": "Ej: Pérdida, daño, corrección...",
+      "justificationPlaceholder": "Explica el motivo del ajuste...",
+      "notesPlaceholder": "Notas opcionales...",
+      "createDescription": "Crea un nuevo ajuste de inventario con justificación",
+      "quantityPositive": "La cantidad debe ser mayor a 0",
+      "correctionHint": "Stock final",
+      "types": {
+        "increase": "Aumento",
+        "decrease": "Disminución",
+        "correction": "Corrección"
+      },
+      "reasonSuggestions": {
+        "loss": "Pérdida",
+        "damage": "Daño",
+        "expiration": "Vencimiento",
+        "theft": "Robo",
+        "countingError": "Error de conteo",
+        "return": "Devolución",
+        "correction": "Corrección",
+        "other": "Otros"
+      }
+    }
+  },
+  "analytics": {
+    "title": "Analytics y Business Intelligence",
+    "description": "Análisis avanzado de datos y métricas de tu negocio",
+    "kpis": {
+      "title": "KPIs Principales"
+    },
+    "tabs": {
+      "trends": "Tendencias",
+      "profitability": "Rentabilidad",
+      "segmentation": "Segmentación",
+      "predictions": "Predicciones",
+      "overview": "Resumen"
+    },
+    "trends": {
+      "title": "Análisis de Tendencias",
+      "description": "Evolución de ventas e ingresos en el tiempo"
+    },
+    "profitability": {
+      "title": "Rentabilidad por Producto",
+      "description": "Análisis de ingresos, costos y márgenes de ganancia por producto"
+    },
+    "segmentation": {
+      "title": "Segmentación de Clientes",
+      "description": "Análisis RFM: Recency, Frequency, Monetary"
+    },
+    "predictions": {
+      "title": "Predicciones con Machine Learning",
+      "description": "Pronósticos de ventas futuras basados en datos históricos"
+    },
+    "overview": {
+      "trends": "Tendencias Rápidas",
+      "topProducts": "Top Productos Rentables"
+    },
+    "ai": {
+      "summaryTitle": "Resumen inteligente",
+      "summaryDescription": "Narrativa automática generada con IA.",
+      "highlights": "Puntos destacados",
+      "insightsEmpty": "Sin novedades para este período.",
+      "summaryFallback": "Sin datos disponibles.",
+      "recommendationsTitle": "Recomendaciones e insights",
+      "recommendationsDescription": "Acciones sugeridas y alertas detectadas automáticamente.",
+      "anomaliesTitle": "Anomalías",
+      "noAnomalies": "Sin anomalías relevantes detectadas.",
+      "recommendations": "Recomendaciones",
+      "noRecommendations": "Sin acciones específicas por ahora.",
+      "scenariosTitle": "Escenarios simulados",
+      "scenariosDescription": "Explora impactos potenciales con IA.",
+      "noScenarios": "Sin escenarios disponibles.",
+      "chatTitle": "Asistente conversacional",
+      "chatDescription": "Haz preguntas directas sobre tus métricas.",
+      "chatPlaceholder": "Ej. ¿Cuál fue el margen promedio esta semana?",
+      "chatButton": "Preguntar",
+      "chatIntro": "Hola, soy tu asistente inteligente. Pregúntame sobre tus ventas o KPIs.",
+      "reportTitle": "Reporte ejecutivo con IA",
+      "reportDescription": "Genera un documento listo para compartir con tu equipo.",
+      "reportButton": "Descargar reporte",
+      "reportGenerating": "Generando...",
+      "reportSuccess": "Reporte generado correctamente.",
+      "reportError": "No se pudo generar el reporte."
+    }
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "description": "Gestiona tu información personal y configuración de cuenta",
+    "personalInfo": {
+      "title": "Información Personal",
+      "description": "Actualiza tu información personal y de contacto"
+    },
+    "security": {
+      "title": "Seguridad",
+      "description": "Gestiona tu contraseña y configuración de seguridad",
+      "password": "Contraseña",
+      "lastUpdate": "Última actualización:",
+      "never": "Nunca",
+      "changePassword": "Cambiar Contraseña",
+      "passwordFields": {
+        "allFieldsRequired": "Todos los campos son requeridos",
+        "minLength": "La nueva contraseña debe tener al menos 8 caracteres",
+        "noMatch": "Las contraseñas no coinciden",
+        "samePassword": "La nueva contraseña debe ser diferente a la actual",
+        "error": "Error al cambiar la contraseña",
+        "success": "Contraseña actualizada correctamente",
+        "description": "Ingresa tu contraseña actual y la nueva contraseña",
+        "current": "Contraseña Actual",
+        "new": "Nueva Contraseña",
+        "confirm": "Confirmar Nueva Contraseña",
+        "minLengthHint": "Mínimo 8 caracteres"
+      }
+    },
+    "accountInfo": {
+      "title": "Información de la Cuenta",
+      "role": "Rol",
+      "noRole": "Sin rol",
+      "branch": "Sucursal",
+      "status": "Estado",
+      "createdAt": "Cuenta creada",
+      "lastLogin": "Último acceso"
+    }
+  }
+}

@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatDateTime } from "@/lib/utils/date"
+import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 export interface SalesTableProps {
   sales: SalesSaleWithRelations[]
@@ -93,8 +94,8 @@ export const SalesTable: FC<SalesTableProps> = ({ sales, isLoading, onViewDetail
                   <TableCell className="align-top py-5">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {sale.customer
-                        ? `${sale.customer.name ?? ''} ${sale.customer.lastName ?? ''}`.trim() || 'Cliente sin registrar'
-                        : 'Cliente sin registrar'}
+                        ? `${sale.customer.name ?? ''} ${sale.customer.lastName ?? ''}`.trim() || sale.customerName || 'Cliente sin registrar'
+                        : sale.customerName || 'Cliente sin registrar'}
                     </div>
                     {sale.customer?.email && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">{sale.customer.email}</div>
@@ -102,7 +103,7 @@ export const SalesTable: FC<SalesTableProps> = ({ sales, isLoading, onViewDetail
                   </TableCell>
                   <TableCell className="align-top py-5">
                     <div className="text-sm text-gray-900 dark:text-white">
-                      {sale.createdAt ? formatDateTime(sale.createdAt) : 'Sin fecha'}
+                      {sale.createdAt ? formatDateWithPreferences(sale.createdAt) : 'Sin fecha'}
                     </div>
                   </TableCell>
                   <TableCell className="align-top py-5">
@@ -118,11 +119,11 @@ export const SalesTable: FC<SalesTableProps> = ({ sales, isLoading, onViewDetail
                   </TableCell>
                   <TableCell className="align-top py-5">
                     <div className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      BOB {Number(sale.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                      {formatCurrencyWithPreferences(Number(sale.total || 0))}
                     </div>
                     {Number(sale.discount || 0) > 0 && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Descuento: BOB {Number(sale.discount || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        Descuento: {formatCurrencyWithPreferences(Number(sale.discount || 0))}
                       </div>
                     )}
                   </TableCell>

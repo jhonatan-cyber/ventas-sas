@@ -1,8 +1,10 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { Edit, Trash2, FileText, Eye, ShoppingCart } from "lucide-react"
 
-import type { FC } from "react"
+import { memo } from "react"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { Badge } from "@/components/ui/badge"
@@ -10,11 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-const formatDate = (date: Date | string): string => {
-  const d = new Date(date)
-  return d.toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit", year: "numeric" })
-}
+import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface QuotationsTableProps {
   quotations: SalesQuotationWithRelations[]
@@ -24,6 +22,8 @@ interface QuotationsTableProps {
   onViewDetails?: (quotation: SalesQuotationWithRelations) => void
   onConvertClick?: (quotation: SalesQuotationWithRelations) => void | Promise<void>
   showBranchColumn?: boolean
+  branches?: { id: string; name: string | null }[]
+  maxBranches?: number | null
 }
 
 const statusTokens: Record<string, { label: string; className: string }> = {
@@ -53,9 +53,15 @@ const statusTokens: Record<string, { label: string; className: string }> = {
   },
 }
 
-export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, onConvertClick, showBranchColumn = false }) => {
+const QuotationsTableComponent = memo(({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, onConvertClick, showBranchColumn = false, branches = [], maxBranches }: QuotationsTableProps) => {
+  const t = useTranslations()
+  // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
+  const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
+  const actualShowBranchColumn = showBranchColumn && !shouldHideBranchColumn
+  const columnCount = actualShowBranchColumn ? 6 : 5
+
   if (isLoading) {
-    return <TableSkeleton columns={showBranchColumn ? 6 : 5} rows={5} showActions={true} />
+    return <TableSkeleton columns={columnCount} rows={5} showActions={true} />
   }
 
   return (
@@ -66,7 +72,7 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
             <TableRow className="bg-gray-50 dark:bg-[#2a2a2a] border-b border-gray-200 dark:border-[#2a2a2a]">
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cotización</TableHead>
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Cliente</TableHead>
-              {showBranchColumn && (
+              {actualShowBranchColumn && (
                 <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Sucursal</TableHead>
               )}
               <TableHead className="text-gray-700 dark:text-gray-300 font-semibold">Productos</TableHead>
@@ -78,7 +84,7 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
           <TableBody>
             {quotations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                <TableCell colSpan={columnCount} className="py-12 text-center text-gray-500 dark:text-gray-400">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                       <FileText className="h-10 w-10 text-gray-400" />
@@ -94,14 +100,15 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                 const token = statusTokens[quotation.status] || statusTokens.pending
                 const rawFullName = `${quotation.customer?.name ?? ""} ${quotation.customer?.lastName ?? ""}`.trim()
                 const customerDisplayName = rawFullName || quotation.customerName || "Cliente sin registrar"
-                const branchName = quotation.branch?.name || "Sin sucursal"
+                const branchName = quotation.branch?.name || t('common.noBranch')
                 const customerEmail = quotation.customer?.email || null
                 const hasMissingProductIds = quotation.items?.some((item) => !item.productId)
                 const isConverted = quotation.status === "converted"
+                const canConvert = !isConverted && !hasMissingProductIds
                 const convertTooltip = isConverted
                   ? "La cotización ya fue convertida"
                   : hasMissingProductIds
-                    ? "Puedes asociar productos antes de convertir"
+                    ? "Todos los productos deben estar registrados para convertir"
                     : "Convertir en venta"
 
                 return (
@@ -109,9 +116,9 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                     <TableCell className="align-top py-5">
                       <div className="flex flex-col gap-1">
                         <span className="font-semibold text-gray-900 dark:text-white">{quotation.quotationNumber}</span>
-                        <span className="text-xs uppercase text-gray-500 dark:text-gray-400">Emitida el {formatDate(quotation.createdAt)}</span>
+                        <span className="text-xs uppercase text-gray-500 dark:text-gray-400">Emitida el {formatDateWithPreferences(quotation.createdAt)}</span>
                         {quotation.expiresAt && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Vence: {formatDate(quotation.expiresAt)}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Vence: {formatDateWithPreferences(quotation.expiresAt)}</span>
                         )}
                       </div>
                     </TableCell>
@@ -123,7 +130,7 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                         )}
                       </div>
                     </TableCell>
-                    {showBranchColumn && (
+                    {actualShowBranchColumn && (
                       <TableCell className="align-top py-5">
                         <span className="text-sm text-gray-700 dark:text-gray-300">{branchName}</span>
                       </TableCell>
@@ -136,11 +143,11 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                     </TableCell>
                     <TableCell className="align-top py-5">
                       <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
-                        <span className="font-semibold text-gray-900 dark:text-white">${Number(quotation.total).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{formatCurrencyWithPreferences(Number(quotation.total))}</span>
                         {Number(quotation.discount) > 0 && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Desc: ${Number(quotation.discount).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Desc: {formatCurrencyWithPreferences(Number(quotation.discount))}</span>
                         )}
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Subtotal: ${Number(quotation.subtotal).toLocaleString("es-BO", { minimumFractionDigits: 2 })}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Subtotal: {formatCurrencyWithPreferences(Number(quotation.subtotal))}</span>
                       </div>
                     </TableCell>
                     <TableCell className="align-top py-5">
@@ -148,7 +155,7 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
                     </TableCell>
                     <TableCell className="align-top py-5">
                       <div className="flex justify-end gap-2">
-                        {onConvertClick && !isConverted && (
+                        {onConvertClick && canConvert && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -222,5 +229,9 @@ export const QuotationsTable: FC<QuotationsTableProps> = ({ quotations, isLoadin
       </div>
     </TooltipProvider>
   )
-}
+})
+
+QuotationsTableComponent.displayName = "QuotationsTable"
+
+export const QuotationsTable = QuotationsTableComponent
 

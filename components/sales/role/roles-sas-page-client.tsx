@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { RoleSas } from "@prisma/client";
 import { useState, useEffect } from "react";
 
@@ -30,6 +32,7 @@ export function RolesSasPageClient({
   initialRoles,
   customerSlug,
 }: RolesSasPageClientProps) {
+  const t = useTranslations()
   const [roles, setRoles] = useState(initialRoles);
   
   const {
@@ -62,12 +65,12 @@ export function RolesSasPageClient({
   }, [initialRoles]);
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <RolesSasHeader
-        title="Gestión de Roles"
-        description="Administra los roles del sistema"
-        newButtonText="Agregar Rol"
+        title={t('roles.title')}
+        description={t('roles.description')}
+        newButtonText={t('roles.create')}
         onNewClick={openCreateDialog}
       />
 

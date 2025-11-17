@@ -41,7 +41,6 @@ const saleBaseSchema = z.object({
     .nullable(),
   customerName: z
     .string()
-    .min(1, 'El nombre del cliente es requerido')
     .max(200, 'El nombre del cliente es demasiado largo')
     .optional()
     .nullable(),

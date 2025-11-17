@@ -9,11 +9,12 @@ interface PeriodFilterProps {
 
 export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
   return (
-    <div className="flex gap-2">
+    <div className="grid grid-cols-3 gap-2 w-full sm:w-auto">
       <Button
         variant={period === 'daily' ? 'default' : 'outline'}
         size="sm"
         onClick={() => onPeriodChange('daily')}
+        className="w-full"
       >
         Diario
       </Button>
@@ -21,6 +22,7 @@ export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
         variant={period === 'weekly' ? 'default' : 'outline'}
         size="sm"
         onClick={() => onPeriodChange('weekly')}
+        className="w-full"
       >
         Semanal
       </Button>
@@ -28,6 +30,7 @@ export function PeriodFilter({ period, onPeriodChange }: PeriodFilterProps) {
         variant={period === 'monthly' ? 'default' : 'outline'}
         size="sm"
         onClick={() => onPeriodChange('monthly')}
+        className="w-full"
       >
         Mensual
       </Button>

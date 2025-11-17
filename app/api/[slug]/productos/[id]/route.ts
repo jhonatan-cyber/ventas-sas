@@ -7,6 +7,8 @@ import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { updateProductSchema } from '@/lib/validators/sales-validators'
+import { translateProductDescription } from '@/lib/utils/product-description'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener producto por ID
 export async function GET(
@@ -99,6 +101,21 @@ export async function PUT(
 
     const validatedData = validation.data
 
+    // Traducir descripción automáticamente si se está actualizando
+    let descriptionTranslations = undefined
+    if (validatedData.description !== undefined && validatedData.description !== null && validatedData.description.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        descriptionTranslations = await translateProductDescription(
+          validatedData.description,
+          sourceLanguage
+        )
+      } catch (error) {
+        console.error('Error traduciendo descripción del producto:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
+
     // Obtener usuario para determinar si puede cambiar branchId
     const currentUserForUpdate = await getCurrentSasUser(request, slug)
     const userRoleNameForUpdate = currentUserForUpdate?.rol?.nombre?.toLowerCase() || ''
@@ -110,6 +127,7 @@ export async function PUT(
       categoryId: validatedData.categoryId || undefined,
       name: validatedData.name || undefined,
       description: validatedData.description ?? undefined,
+      descriptionTranslations,
       brand: validatedData.brand ?? undefined,
       model: validatedData.model ?? undefined,
       price: validatedData.price !== undefined ? validatedData.price : undefined,

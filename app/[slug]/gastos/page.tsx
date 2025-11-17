@@ -5,7 +5,7 @@ import { ExpensesPageClient } from "@/components/sales/expense/expenses-page-cli
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import { BranchService } from "@/lib/services/sales/branch-service"
 import { ExpenseService } from "@/lib/services/sales/expense-service"
-import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug, getCustomerBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
 
 const serializeExpense = (expense: any) => ({
   id: expense.id,
@@ -74,6 +74,9 @@ export default async function ExpensesPage({
     address: branch.address ?? null,
   }))
 
+  // Obtener límite de sucursales del plan
+  const maxBranches = await getMaxBranchesBySlug(slug)
+
   return (
     <ExpensesPageClient 
       initialExpenses={expenses} 
@@ -81,6 +84,7 @@ export default async function ExpensesPage({
       currentUserBranchId={currentUserBranchId}
       branches={serializedBranches}
       initialIsAdmin={isAdmin}
+      maxBranches={maxBranches}
     />
   )
 }

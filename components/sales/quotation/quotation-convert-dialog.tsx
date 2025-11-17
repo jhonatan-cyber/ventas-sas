@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Plus, Trash2, QrCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -58,22 +60,17 @@ const generateTempId = () =>
 
 const EMPTY_PRODUCT_VALUE = "__none__";
 
+import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+
 const formatDate = (value?: string | Date | null) => {
   if (!value) return "--";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--";
-  return date.toLocaleDateString("es-BO", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDateWithPreferences(value);
 };
 
-const formatCurrency = (value: unknown) =>
-  Number(value ?? 0).toLocaleString("es-BO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const formatCurrency = (value: unknown) => {
+  const numValue = Number(value ?? 0);
+  return formatCurrencyWithPreferences(numValue);
+};
 
 interface QuotationConvertDialogProps {
   open: boolean;
@@ -96,6 +93,7 @@ interface QuotationConvertDialogProps {
   isAdmin?: boolean;
   selectedBranchId?: string | null;
   userBranchId?: string | null;
+  maxBranches?: number | null;
 }
 
 export function QuotationConvertDialog({
@@ -108,7 +106,9 @@ export function QuotationConvertDialog({
   isAdmin = false,
   selectedBranchId,
   userBranchId,
+  maxBranches,
 }: QuotationConvertDialogProps) {
+  const t = useTranslations();
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [notes, setNotes] = useState<string>("");
   const [products, setProducts] = useState<ProductOption[]>([]);
@@ -399,13 +399,11 @@ export function QuotationConvertDialog({
       prev.map((item) => {
         if (item.id !== itemId) return item;
         if (item.codes.includes(code)) {
-          toast.info("Este código ya fue agregado");
+          toast.info(t('sales.form.codeAlreadyAdded'));
           return item;
         }
         if (item.codes.length >= item.quantity) {
-          toast.error(
-            "La cantidad de códigos no puede superar la cantidad vendida"
-          );
+          toast.error(t('sales.form.codesExceedQuantity'));
           return item;
         }
         return {
@@ -477,7 +475,7 @@ export function QuotationConvertDialog({
               if (lastScannedCodeRef.current === code) return;
               lastScannedCodeRef.current = code;
               addCodeToItem(itemId, code);
-              toast.success("Código escaneado");
+              toast.success(t('sales.form.codeScannedAndAdded'));
               stopScanning();
             }
             if (err && !(err as any).closed) {
@@ -487,7 +485,7 @@ export function QuotationConvertDialog({
         );
       } catch (error) {
         console.error("Error al acceder a la cámara", error);
-        toast.error("No se pudo acceder a la cámara");
+        toast.error(t('common.cameraError'));
         stopScanning();
       }
     },
@@ -552,7 +550,7 @@ export function QuotationConvertDialog({
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className={`grid gap-4 ${maxBranches !== undefined && maxBranches !== null && maxBranches > 1 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                 <div className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] p-4 bg-gray-50 dark:bg-[#111]">
                   <div className="flex items-center justify-between">
                     <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
@@ -574,43 +572,65 @@ export function QuotationConvertDialog({
                     <p>Vence: {formatDate(quotation?.expiresAt)}</p>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] p-4 bg-gray-50 dark:bg-[#111]">
-                  <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
-                    Cliente
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
-                    {(() => {
-                      if (!quotation) return "--";
-                      const fullName = `${quotation.customer?.name ?? ""} ${
-                        quotation.customer?.lastName ?? ""
-                      }`.trim();
-                      return (
-                        fullName ||
-                        quotation.customerName ||
-                        "Cliente sin registrar"
-                      );
-                    })()}
-                  </p>
-                  <div className="mt-3 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                    {quotation?.customerPhone && (
-                      <p>Teléfono: {quotation.customerPhone}</p>
-                    )}
-                    {quotation?.customer?.email && (
-                      <p>Correo: {quotation.customer.email}</p>
+                {/* Card combinado de Cliente y Sucursal en móvil, separados en desktop */}
+                <div className={`${maxBranches !== undefined && maxBranches !== null && maxBranches > 1 ? 'md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4' : ''}`}>
+                  <div className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] p-4 bg-gray-50 dark:bg-[#111]">
+                    <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
+                      Cliente
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                      {(() => {
+                        if (!quotation) return "--";
+                        const fullName = `${quotation.customer?.name ?? ""} ${
+                          quotation.customer?.lastName ?? ""
+                        }`.trim();
+                        return (
+                          fullName ||
+                          quotation.customerName ||
+                          "Cliente sin registrar"
+                        );
+                      })()}
+                    </p>
+                    <div className="mt-3 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                      {quotation?.customerPhone && (
+                        <p>Teléfono: {quotation.customerPhone}</p>
+                      )}
+                      {quotation?.customer?.email && (
+                        <p>Correo: {quotation.customer.email}</p>
+                      )}
+                    </div>
+                    {/* Mostrar sucursal en el mismo card en móvil si maxBranches > 1 */}
+                    {maxBranches !== undefined && maxBranches !== null && maxBranches > 1 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#2a2a2a] md:hidden">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
+                          Sucursal
+                        </p>
+                        <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                          {quotation?.branch?.name ?? t('common.noBranch')}
+                        </p>
+                        {quotation?.branch?.address && (
+                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            {quotation.branch.address}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-                <div className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] p-4 bg-gray-50 dark:bg-[#111]">
-                  <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
-                    Sucursal
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
-                    {quotation?.branch?.name ?? "Sin sucursal"}
-                  </p>
-                  {quotation?.branch?.address && (
-                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                      {quotation.branch.address}
-                    </p>
+                  {/* Card de Sucursal solo en desktop si maxBranches > 1 */}
+                  {maxBranches !== undefined && maxBranches !== null && maxBranches > 1 && (
+                    <div className="hidden md:block rounded-2xl border border-gray-200 dark:border-[#2a2a2a] p-4 bg-gray-50 dark:bg-[#111]">
+                      <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
+                        Sucursal
+                      </p>
+                      <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                        {quotation?.branch?.name ?? t('common.noBranch')}
+                      </p>
+                      {quotation?.branch?.address && (
+                        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                          {quotation.branch.address}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -626,7 +646,7 @@ export function QuotationConvertDialog({
                           className="rounded-3xl border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#0d0d0d] p-4 space-y-3"
                         >
                           <div className="grid gap-3 md:grid-cols-[1.5fr_1fr_1fr_auto]">
-                            <div className="space-y-2">
+                            <div className="space-y-2 w-full md:w-auto">
                               <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                 Producto {index + 1}
                               </Label>
@@ -641,7 +661,7 @@ export function QuotationConvertDialog({
                                 }
                                 disabled={isLoadingProducts}
                               >
-                                <SelectTrigger className="rounded-2xl">
+                                <SelectTrigger className="rounded-2xl w-full">
                                   <SelectValue
                                     placeholder={
                                       item.productName ||
@@ -664,7 +684,45 @@ export function QuotationConvertDialog({
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-2">
+                            {/* Cantidad y Precio: combinados en móvil, separados en desktop */}
+                            <div className="space-y-2 md:hidden">
+                              <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                Cantidad / Precio U.
+                              </Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  value={item.quantity}
+                                  onChange={(event) =>
+                                    handleQuantityChange(
+                                      item.id,
+                                      Number(event.target.value)
+                                    )
+                                  }
+                                  className={`flex-1 rounded-2xl ${(() => {
+                                    const product = products.find((prod) => prod.id === item.productId)
+                                    return product && item.quantity > product.stock ? 'border border-red-500 text-red-600' : ''
+                                  })()}`}
+                                  placeholder={t('common.placeholders.quantity')}
+                                />
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  value={item.unitPrice}
+                                  onChange={(event) =>
+                                    handleUnitPriceChange(
+                                      item.id,
+                                      Number(event.target.value)
+                                    )
+                                  }
+                                  className="flex-1 rounded-2xl"
+                                  placeholder={t('common.placeholders.price')}
+                                />
+                              </div>
+                            </div>
+                            <div className="hidden md:block space-y-2">
                               <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                 Cantidad
                               </Label>
@@ -684,7 +742,7 @@ export function QuotationConvertDialog({
                                 })()}`}
                               />
                             </div>
-                            <div className="space-y-2">
+                            <div className="hidden md:block space-y-2">
                               <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                 Precio U.
                               </Label>
@@ -711,13 +769,13 @@ export function QuotationConvertDialog({
                                   type="text"
                                   readOnly
                                   value={formatCurrency(subtotalItem)}
-                                  className="w-24 rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] text-right font-semibold"
+                                  className="flex-[3] rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] text-right font-semibold"
                                 />
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="rounded-full text-red-500 hover:bg-red-500/10"
+                                  className="flex-[1] rounded-full text-red-500 hover:bg-red-500/10"
                                   onClick={() => handleRemoveItem(item.id)}
                                   disabled={items.length === 1}
                                 >
@@ -733,7 +791,7 @@ export function QuotationConvertDialog({
                                 Códigos únicos
                               </Label>
                               <Input
-                                placeholder="Código de barras o serie"
+                                placeholder={t('common.placeholders.barcodeOrSerial')}
                                 value={codeInputs[item.id] ?? ""}
                                 onChange={(event) =>
                                   setCodeInputs((prev) => ({
@@ -851,15 +909,6 @@ export function QuotationConvertDialog({
                   </Button>
                 </div>
               </div>
-
-              {!!quotation?.notes && (
-                <div className="space-y-2">
-                  <Label>Notas de la cotización</Label>
-                  <div className="rounded-2xl border border-dashed border-gray-300 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#111] px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                    {quotation.notes}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="rounded-2xl border border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#111] p-5">
@@ -868,7 +917,33 @@ export function QuotationConvertDialog({
               </p>
               <div className="mt-4 space-y-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
-                  <div className="space-y-2 md:flex-1">
+                  {/* Subtotal y Descuento: combinados en móvil, separados en desktop */}
+                  <div className="space-y-2 md:hidden">
+                    <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Subtotal / Descuento
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        readOnly
+                        value={formatCurrency(subtotal)}
+                        className="flex-1 rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] text-left font-semibold"
+                        placeholder={t('common.placeholders.subtotal')}
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={discountValue}
+                        onChange={(event) =>
+                          handleDiscountChange(Number(event.target.value))
+                        }
+                        className="flex-1 rounded-2xl"
+                        placeholder={t('common.placeholders.discount')}
+                      />
+                    </div>
+                  </div>
+                  <div className="hidden md:block space-y-2 md:flex-1">
                     <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       Subtotal
                     </Label>
@@ -879,7 +954,7 @@ export function QuotationConvertDialog({
                       className="w-full rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] text-left font-semibold"
                     />
                   </div>
-                  <div className="space-y-2 md:flex-1">
+                  <div className="hidden md:block space-y-2 md:flex-1">
                     <Label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       Descuento
                     </Label>
@@ -910,7 +985,7 @@ export function QuotationConvertDialog({
                         id="quotation-payment-method"
                         className="w-full rounded-2xl"
                       >
-                        <SelectValue placeholder="Selecciona el método de pago" />
+                        <SelectValue placeholder={t('common.placeholders.selectPaymentMethod')} />
                       </SelectTrigger>
                       <SelectContent>
                         {paymentOptions.map((option) => (
@@ -937,7 +1012,7 @@ export function QuotationConvertDialog({
               </Label>
               <Textarea
                 id="quotation-convert-notes"
-                placeholder="Notas adicionales para la venta (opcional)"
+                placeholder={t('common.placeholders.additionalNotes')}
                 className="h-28 w-full rounded-2xl"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -964,7 +1039,7 @@ export function QuotationConvertDialog({
           </Button>
           <Button
             variant="new"
-            className="rounded-full"
+            className="rounded-full w-full sm:w-auto"
             onClick={handleConfirm}
             disabled={disableConfirm}
           >

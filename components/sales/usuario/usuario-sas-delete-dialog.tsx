@@ -1,6 +1,7 @@
 "use client"
 
 import { UsuarioSas } from "@prisma/client"
+import { useTranslations } from "next-intl"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
@@ -12,6 +13,7 @@ interface UsuarioSasDeleteDialogProps {
 }
 
 export function UsuarioSasDeleteDialog({ open, onOpenChange, usuario, onDelete }: UsuarioSasDeleteDialogProps) {
+  const t = useTranslations()
   const handleDelete = () => {
     onDelete()
     onOpenChange(false)
@@ -23,20 +25,20 @@ export function UsuarioSasDeleteDialog({ open, onOpenChange, usuario, onDelete }
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogTitle>{t('users.sas.delete.confirm')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el usuario
+            {t('users.sas.delete.description')}
             <strong className="block mt-2">"{fullName}"</strong>
-            y todos sus datos asociados.
+            {t('users.sas.delete.descriptionEnd')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
-            Eliminar
+            {t('action.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

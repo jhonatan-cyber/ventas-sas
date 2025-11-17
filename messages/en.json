@@ -1,0 +1,596 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "quotations": "Quotes",
+    "sales": "Sales",
+    "products": "Products",
+    "customers": "Customers",
+    "expenses": "Expenses",
+    "reports": "Reports",
+    "cashRegisters": "Boxes",
+    "configuration": "Settings",
+    "users": "Users",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "branches": "Branches",
+    "categories": "Categories"
+  },
+  "sidebar": {
+    "home": "Home",
+    "operation": "Operation",
+    "catalog": "Catalogue",
+    "management": "Management",
+    "reports": "Reports"
+  },
+  "header": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Log out",
+    "theme": {
+      "light": "Sure",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "notifications": "Notifications",
+    "noNotifications": "No notifications"
+  },
+  "action": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "view": "See",
+    "details": "Details",
+    "new": "New",
+    "back": "Back",
+    "convert": "Convert",
+    "open": "Open",
+    "manage": "Manage",
+    "selectAll": "Select All"
+  },
+  "status": {
+    "active": "Asset",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "expired": "Defeated",
+    "converted": "Converted",
+    "open": "Open",
+    "closed": "Closed"
+  },
+  "message": {
+    "loading": "Loading...",
+    "noData": "No data available",
+    "error": "Error",
+    "success": "Success",
+    "confirmDelete": "Are you sure you want to delete?",
+    "saved": "Saved successfully",
+    "deleted": "Successfully deleted",
+    "errorSaving": "Failed to save",
+    "errorDeleting": "Failed to delete",
+    "errorLoading": "Failed to load",
+    "noResults": "No results were found",
+    "actionCannotBeUndone": "This action cannot be undone"
+  },
+  "form": {
+    "required": "This field is required",
+    "invalid": "Invalid value",
+    "name": "Name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "quantity": "Cantidad",
+    "price": "Price",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "description": "Descripción",
+    "category": "Categoría",
+    "branch": "Sucursal",
+    "role": "Rol",
+    "select": "Seleccionar",
+    "optional": "Opcional",
+    "requiredField": "Campo obligatorio"
+  },
+  "products": {
+    "title": "Products",
+    "description": "Gestiona tu inventario de productos",
+    "create": "Nuevo Producto",
+    "edit": "Editar Producto",
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este producto?",
+      "description": "Se eliminará permanentemente el producto"
+    },
+    "stats": {
+      "total": "Total Productos",
+      "lowStock": "Stock Bajo",
+      "outOfStock": "Sin Stock",
+      "inStock": "En Stock"
+    },
+    "filters": {
+      "search": "Buscar productos...",
+      "category": "Todas las categorías",
+      "branch": "Todas las sucursales",
+      "stock": "Estado de stock"
+    },
+    "form": {
+      "name": "Nombre del producto",
+      "description": "Descripción",
+      "price": "Price",
+      "stock": "Stock",
+      "minStock": "Stock mínimo",
+      "category": "Categoría",
+      "branch": "Sucursal",
+      "image": "Imagen del producto",
+      "barcode": "Código de barras",
+      "sku": "SKU"
+    },
+    "noProducts": "No hay productos registrados"
+  },
+  "customers": {
+    "title": "Customers",
+    "description": "Gestiona tu base de clientes",
+    "create": "Nuevo Cliente",
+    "edit": "Editar Cliente",
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar este cliente?",
+      "description": "Se eliminará permanentemente el cliente"
+    },
+    "form": {
+      "ci": "CI",
+      "name": "Name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "ciPlaceholder": "Documento de identidad",
+      "newCustomer": "Completa los datos para crear un nuevo cliente",
+      "editCustomer": "Modify customer data"
+    },
+    "noCustomers": "No hay clientes registrados"
+  },
+  "quotations": {
+    "title": "Quotes",
+    "description": "Gestiona tus cotizaciones",
+    "create": "Nueva Cotización",
+    "edit": "Editar Cotización",
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta cotización?",
+      "description": "Se eliminará permanentemente la cotización"
+    },
+    "convert": {
+      "confirm": "¿Deseas convertir esta cotización en una venta?",
+      "description": "Esta acción creará una nueva venta con los items de la cotización"
+    },
+    "stats": {
+      "total": "Total Cotizaciones",
+      "pending": "Pendientes",
+      "converted": "Convertidas",
+      "expired": "Vencidas"
+    },
+    "filters": {
+      "search": "Buscar cotizaciones...",
+      "status": "All states",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas"
+    },
+    "form": {
+      "customer": "Cliente",
+      "customerPlaceholder": "Enter the customer's name (may not be registered)...",
+      "customerNotRegistered": "Cliente no registrado",
+      "items": "Items",
+      "addItem": "Agregar item",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "total": "Total",
+      "notes": "Notas",
+      "validUntil": "Válida hasta",
+      "branch": "Sucursal"
+    },
+    "status": {
+      "pending": "Pending",
+      "converted": "Convertida",
+      "expired": "Vencida"
+    },
+    "noQuotations": "No hay cotizaciones registradas",
+    "viewDetails": "Ver detalles",
+    "items": "productos",
+    "units": "unidades"
+  },
+  "sales": {
+    "title": "Sales",
+    "description": "Gestiona tus ventas",
+    "create": "Nueva Venta",
+    "edit": "Editar Venta",
+    "delete": {
+      "confirm": "¿Estás seguro de que deseas eliminar esta venta?",
+      "description": "Se eliminará permanentemente la venta"
+    },
+    "cancel": {
+      "confirm": "¿Estás seguro de que deseas cancelar esta venta?",
+      "description": "This action cannot be undone"
+    },
+    "stats": {
+      "total": "Total Ventas",
+      "today": "Hoy",
+      "thisMonth": "Este mes",
+      "thisYear": "Este año"
+    },
+    "filters": {
+      "search": "Buscar ventas...",
+      "status": "All states",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas",
+      "paymentMethod": "Método de pago"
+    },
+    "form": {
+      "customer": "Cliente",
+      "items": "Items",
+      "addItem": "Agregar item",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "total": "Total",
+      "paymentMethod": "Método de pago",
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia",
+      "notes": "Notas",
+      "branch": "Sucursal"
+    },
+    "status": {
+      "completed": "Completada",
+      "cancelled": "Cancelada"
+    },
+    "noSales": "No hay ventas registradas"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "description": "Gestiona tus gastos",
+    "create": "Nuevo Gasto",
+    "edit": "Editar Gasto",
+    "delete": {
+      "confirm": "¿Estás seguro?",
+      "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el gasto"
+    },
+    "stats": {
+      "total": "Total Gastos",
+      "thisMonth": "Este mes",
+      "thisYear": "Este año"
+    },
+    "filters": {
+      "search": "Buscar gastos...",
+      "category": "Todas las categorías",
+      "branch": "Todas las sucursales",
+      "dateRange": "Rango de fechas"
+    },
+    "form": {
+      "name": "Nombre del gasto",
+      "category": "Categoría",
+      "amount": "Monto",
+      "date": "Fecha",
+      "description": "Descripción",
+      "branch": "Sucursal"
+    },
+    "noExpenses": "No hay gastos registrados"
+  },
+  "cashRegisters": {
+    "title": "Boxes",
+    "description": "Manage your cash registers",
+    "create": "New Box",
+    "edit": "Edit Box",
+    "delete": {
+      "confirm": "Are you sure you want to delete this box?",
+      "description": "The box will be permanently deleted."
+    },
+    "open": {
+      "confirm": "Do you want to open this box?",
+      "description": "Enter the initial amount"
+    },
+    "close": {
+      "confirm": "Do you want to close this box?",
+      "description": "The final balance will be calculated"
+    },
+    "stats": {
+      "total": "Total Boxes",
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "filters": {
+      "search": "Searching for boxes...",
+      "status": "All states",
+      "branch": "All the branches"
+    },
+    "form": {
+      "name": "Name of the box",
+      "branch": "Branch",
+      "initialAmount": "Initial amount"
+    },
+    "status": {
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "noCashRegisters": "There are no registered boxes"
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Analyze your business performance",
+    "tabs": {
+      "sales": "Sales",
+      "products": "Products",
+      "customers": "Customers",
+      "expenses": "Expenses",
+      "cashRegisters": "Boxes",
+      "general": "General"
+    },
+    "filters": {
+      "dateRange": "Date range",
+      "branch": "All the branches",
+      "export": "Export report"
+    },
+    "charts": {
+      "salesByDate": "Sales by date",
+      "topProducts": "Best-selling products",
+      "productsByCategory": "Products by category",
+      "paymentMethod": "Payment methods",
+      "inventoryStatus": "Inventory status",
+      "expensesByCategory": "Expenses by category",
+      "customersByPurchases": "Customers by purchases",
+      "cashRegistersByBranch": "Boxes per branch"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "description": "Manage product categories",
+    "create": "New Category",
+    "edit": "Edit Category",
+    "delete": {
+      "confirm": "Are you sure you want to delete this category?",
+      "description": "\"The category will be permanently deleted\""
+    },
+    "form": {
+      "name": "Name of the category",
+      "description": "Description"
+    },
+    "stats": {
+      "totalProducts": "products in this category"
+    },
+    "noCategories": "No registered categories"
+  },
+  "users": {
+    "title": "Users",
+    "description": "Manage system users",
+    "create": "New User",
+    "edit": "Edit User",
+    "delete": {
+      "confirm": "Are you sure you want to delete this user?",
+      "description": "The user will be permanently deleted."
+    },
+    "stats": {
+      "total": "Total Users",
+      "active": "Assets",
+      "inactive": "Inactive"
+    },
+    "filters": {
+      "search": "\"Search users...\"",
+      "role": "All the roles",
+      "branch": "All the branches",
+      "status": "All states"
+    },
+    "form": {
+      "ci": "IQ",
+      "name": "Name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "role": "Role",
+      "branch": "Branch",
+      "photo": "Photo",
+      "password": "Password",
+      "confirmPassword": "Confirm password"
+    },
+    "noUsers": "There are no registered users",
+    "limitReached": "You have reached the limit of permitted users"
+  },
+  "roles": {
+    "title": "Roles",
+    "description": "Manage system roles",
+    "create": "New Role",
+    "edit": "Edit Role",
+    "delete": {
+      "confirm": "Are you sure you want to delete this role?",
+      "description": "The role will be permanently deleted"
+    },
+    "managePermissions": "Manage Permissions",
+    "stats": {
+      "total": "Total Roles",
+      "active": "Assets",
+      "inactive": "Inactive"
+    },
+    "filters": {
+      "search": "Search roles...",
+      "branch": "All the branches",
+      "status": "All states"
+    },
+    "form": {
+      "name": "Role name",
+      "description": "Description",
+      "branch": "Branch"
+    },
+    "permissions": {
+      "title": "Role Permissions",
+      "description": "\"Select permissions for this role\"",
+      "selectAll": "Select All",
+      "module": "Module",
+      "actions": "Actions",
+      "actionsFor": "Actions for"
+    },
+    "noRoles": "There are no registered roles"
+  },
+  "permissions": {
+    "title": "Permissions",
+    "description": "Manage system permissions",
+    "create": "New Permit",
+    "delete": {
+      "confirm": "Are you sure you want to delete this permission?",
+      "description": "The permission will be permanently removed"
+    },
+    "stats": {
+      "total": "Total Permissions",
+      "byCategory": "By category"
+    },
+    "filters": {
+      "search": "Search permissions...",
+      "category": "All categories"
+    },
+    "form": {
+      "module": "Module",
+      "actions": "Actions",
+      "selectAll": "Select All",
+      "modulePlaceholder": "Select a module"
+    },
+    "noPermissions": "No registered permissions",
+    "loadingExisting": "Loading existing permissions..."
+  },
+  "branches": {
+    "title": "Branches",
+    "description": "Manage the branches",
+    "create": "New Branch",
+    "edit": "Edit Branch",
+    "delete": {
+      "confirm": "Are you sure you want to delete this branch?",
+      "description": "The branch will be permanently deleted"
+    },
+    "stats": {
+      "total": "Total Branches",
+      "active": "Active",
+      "inactive": "Inactive",
+      "description": "Branches registered in the system"
+    },
+    "filters": {
+      "search": "Search branches...",
+      "status": "All states"
+    },
+    "form": {
+      "name": "Branch Name",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "details": {
+      "title": "Branch Details",
+      "description": "Complete information of the branch and associated users",
+      "generalInfo": "General Information",
+      "associatedUsers": "Associated Users",
+      "total": "Total",
+      "active": "Assets",
+      "inactive": "Inactive",
+      "created": "Created",
+      "updated": "Updated",
+      "users": "users"
+    },
+    "noBranches": "No registered branches"
+  },
+  "config": {
+    "title": "Settings",
+    "sections": {
+      "company": "Company",
+      "preferences": "Preferences"
+    },
+    "company": {
+      "name": "Company name",
+      "taxId": "Tax ID / RUC",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "phoneNote": "This number will be used for WhatsApp. The country code is automatically taken from preferences."
+    },
+    "preferences": {
+      "currency": "Coin",
+      "dateFormat": "Date format",
+      "language": "Interface language",
+      "languageNote": "The language will be applied throughout the system interface.",
+      "themeColor": "System color",
+      "phoneCountryCode": "Country code for phones"
+    },
+    "save": "Save",
+    "saved": "Settings saved successfully",
+    "error": "Failed to save settings"
+  },
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "subtitle": "Enter your details to log in to your account",
+      "email": "Email",
+      "emailPlaceholder": "Email or ID",
+      "password": "Password",
+      "passwordPlaceholder": "Password",
+      "submit": "Log in",
+      "loading": "Logging in...",
+      "error": "Error logging in",
+      "errorConnection": "Connection error. Please try again.",
+      "errorConnectionShort": "Connection error",
+      "emailOrCiRequired": "Email or ID is required",
+      "success": "Successfully logged in",
+      "invalidCredentials": "Invalid credentials",
+      "systemName": "Sales System",
+      "welcome": "Welcome",
+      "welcomeBack": "back",
+      "systemDescription": "Sales management system",
+      "systemSubDescription": "Manage your business efficiently and professionally",
+      "managementSystem": "Management System",
+      "intelligent": "Intelligent",
+      "feature1": "Complete inventory management",
+      "feature2": "Real-time reports",
+      "feature3": "Multi-branch and multi-user",
+      "imageAlt": "Sales management system",
+      "copyright": "© {year} Sales System SAS. All rights reserved."
+    }
+  },
+  "language": {
+    "es": "Spanish",
+    "en": "English",
+    "pt": "English"
+  },
+  "app": {
+    "systemName": "Sales System"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "itemsPerPage": "Items per page",
+    "showing": "Showing",
+    "to": "a",
+    "ofItems": "of"
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "areYouSure": "Are you sure?",
+    "select": "Select",
+    "all": "Everyone",
+    "none": "None",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "thisYear": "This year",
+    "lastMonth": "Last month",
+    "lastYear": "Last year",
+    "custom": "Customized"
+  }
+}

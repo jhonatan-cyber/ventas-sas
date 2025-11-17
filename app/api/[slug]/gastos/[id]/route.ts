@@ -6,6 +6,8 @@ import { ExpenseService, UpdateExpenseData } from '@/lib/services/sales/expense-
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeExpense } from '@/lib/utils/serializers'
+import { translateText } from '@/lib/utils/translatable-text'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener gasto por ID
 export async function GET(
@@ -103,9 +105,22 @@ export async function PUT(
         : null
       : undefined
 
+    // Traducir descripción automáticamente si se está actualizando
+    let descriptionTranslations = undefined
+    if (description !== undefined && description !== null && description.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        descriptionTranslations = await translateText(description, sourceLanguage)
+      } catch (error) {
+        console.error('Error traduciendo descripción de gasto:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
+
     const updatePayload: UpdateExpenseData = {
       name,
       description,
+      descriptionTranslations,
       amount,
       date: body.date ? new Date(body.date) : undefined,
     }

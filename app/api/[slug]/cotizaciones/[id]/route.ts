@@ -1,3 +1,6 @@
+import { existsSync } from 'fs'
+import { unlink as unlinkPromise } from 'fs/promises'
+import { join } from 'path'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { AppError } from '@/lib/errors/app-error'
@@ -5,6 +8,8 @@ import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeQuotation } from '@/lib/utils/serializers'
+import { translateText } from '@/lib/utils/translatable-text'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 const capitalizeWords = (value: string) =>
   value
@@ -112,6 +117,18 @@ export async function PUT(
         })
       : undefined
 
+    // Traducir notas automáticamente si se están actualizando
+    let notesTranslations = undefined
+    if (body.notes !== undefined && body.notes !== null && body.notes.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        notesTranslations = await translateText(body.notes, sourceLanguage)
+      } catch (error) {
+        console.error('Error traduciendo notas de cotización:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
+
     const quotation = await QuotationService.updateQuotation(id, {
       customerId: body.customerId ?? undefined,
       customerName: body.customerName ?? undefined,
@@ -122,6 +139,7 @@ export async function PUT(
       total: body.total,
       expiresAt: body.expiresAt ? new Date(body.expiresAt) : undefined,
       notes: body.notes,
+      notesTranslations,
       items: normalizedItems
     })
 
@@ -151,6 +169,34 @@ export async function DELETE(
       throw AppError.notFound('Cotización no encontrada')
     }
 
+    // Eliminar el archivo PDF asociado si existe
+    try {
+      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'quotations', slug)
+      
+      // Intentar eliminar PDFs con diferentes nombres posibles
+      // El nombre se sanitiza en el endpoint de export, eliminando caracteres especiales
+      const sanitizeFileName = (name: string) => name.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 80)
+      
+      const possibleFileNames = [
+        `cotizacion-${id}.pdf`,
+        existingQuotation.quotationNumber 
+          ? `${sanitizeFileName(`cotizacion-${existingQuotation.quotationNumber}`)}.pdf` 
+          : null,
+      ].filter(Boolean) as string[]
+
+      for (const fileName of possibleFileNames) {
+        const filePath = join(uploadsDir, fileName)
+        if (existsSync(filePath)) {
+          await unlinkPromise(filePath)
+          console.log(`✅ PDF eliminado: ${filePath}`)
+        }
+      }
+    } catch (pdfError) {
+      // No fallar si no se puede eliminar el PDF, solo registrar el error
+      console.warn('⚠️ No se pudo eliminar el PDF de la cotización:', pdfError)
+    }
+
+    // Eliminar la cotización de la base de datos
     await QuotationService.deleteQuotation(id)
 
     return NextResponse.json({ message: 'Cotización eliminada correctamente' })

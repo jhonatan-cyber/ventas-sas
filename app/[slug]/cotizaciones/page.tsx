@@ -7,7 +7,7 @@ import { QuotationsPageClient } from "@/components/sales/quotation/quotations-pa
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import { BranchService } from "@/lib/services/sales/branch-service"
 import { QuotationService } from "@/lib/services/sales/quotation-service"
-import { getOrganizationIdByCustomerSlug, getCustomerBySlug } from "@/lib/utils/organization"
+import { getOrganizationIdByCustomerSlug, getCustomerBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
 
 
 export default async function QuotationsPage({
@@ -60,6 +60,9 @@ export default async function QuotationsPage({
     address: branch.address ?? null,
   }))
 
+  // Obtener límite de sucursales del plan
+  const maxBranches = await getMaxBranchesBySlug(slug)
+
   const showBranchColumn = isAdmin && serializedBranches.length > 1
   const allowBranchFilter = isAdmin
 
@@ -109,8 +112,9 @@ export default async function QuotationsPage({
   })
 
   // Obtener cotizaciones - Si no hay organizationId, usar array vacío en lugar de redirigir
+  // skip=0, take=1000 para obtener todas las cotizaciones desde el inicio
   const quotations: SalesQuotationWithRelations[] = organizationId
-    ? (await QuotationService.getAllQuotations(organizationId, 1, 1000)).quotations.map(normalizeQuotation)
+    ? (await QuotationService.getAllQuotations(organizationId, 0, 1000)).quotations.map(normalizeQuotation)
     : []
 
   return (
@@ -123,6 +127,7 @@ export default async function QuotationsPage({
       initialBranches={serializedBranches}
       initialIsAdmin={isAdmin}
       initialUserBranchId={currentUserBranchId}
+      maxBranches={maxBranches}
     />
   )
 }

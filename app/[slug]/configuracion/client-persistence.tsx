@@ -2,231 +2,190 @@
 
 import { useEffect } from "react"
 
-function setCookie(name: string, value: string, days = 365) {
-  const isProduction = typeof window !== 'undefined' && window.location.protocol === 'https:'
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Expires=${expires}${isProduction ? '; Secure' : ''}`
-}
-
-type SasPrefs = {
-  currency: string
-  dateFormat: string
-  themeColor: string
-  whatsappNumber: string
-  companyName?: string
-  companyContactName?: string
-  companyEmail?: string
-  companyPhone?: string
-  companyAddress?: string
-  companyWebsite?: string
-  companyLogo?: string
-  branchCount?: number
-}
-
+/**
+ * Componente simplificado para manejar la persistencia visual del color del tema
+ * 
+ * Las preferencias principales (moneda, formato de fecha) ahora se manejan
+ * directamente desde configuracion-client.tsx usando el hook useConfiguration
+ * y se guardan en la base de datos a través de la API.
+ * 
+ * Este componente solo se encarga de:
+ * - Manejar los clicks en los swatches de color
+ * - Aplicar el color visualmente al DOM
+ * - Guardar el color en la API cuando se selecciona
+ */
 export default function ClientPersistence({ slug }: { slug: string }) {
   useEffect(() => {
-    const forms = document.querySelectorAll('form')
-    const formPrefs = forms[0] as HTMLFormElement | null
-    const formBranch = forms[1] as HTMLFormElement | null
-    const logoPreview = document.getElementById('companyLogoPreview') as HTMLDivElement | null
+    let colorClickHandler: ((e: Event) => void) | null = null
 
-    let cachedPrefs: SasPrefs = {
-      currency: '',
-      dateFormat: '',
-      themeColor: 'green',
-      whatsappNumber: '',
-      companyContactName: '',
-      branchCount: undefined,
-    }
-
-    const renderLogoPreview = (url?: string) => {
-      if (!logoPreview) return
-      logoPreview.innerHTML = ''
-      if (url) {
-        const img = document.createElement('img')
-        img.src = url
-        img.alt = 'Logo de la empresa'
-        img.className = 'w-full h-full object-contain'
-        logoPreview.appendChild(img)
-      } else {
-        const span = document.createElement('span')
-        span.textContent = 'Sin logo'
-        span.className = 'text-xs text-gray-400'
-        logoPreview.appendChild(span)
+    /**
+     * Actualiza la selección visual del color y lo guarda en la API
+     */
+    const updateColorSelection = (selectedColor: string) => {
+      // Actualizar el select oculto
+      const currentFormPrefs = document.querySelector('form[data-form="preferencias"]') as HTMLFormElement | null
+      const select = currentFormPrefs?.querySelector('[name="themeColor"]') as HTMLSelectElement | null
+      if (select) {
+        select.value = selectedColor
+        // Disparar evento change para que React se entere
+        select.dispatchEvent(new Event('change', { bubbles: true }))
       }
-    }
 
-    const persistPrefs = (overrides?: Partial<SasPrefs>) => {
-      cachedPrefs = {
-        ...cachedPrefs,
-        ...(overrides || {}),
-      }
-      setCookie(`sas-prefs-${slug}`, JSON.stringify(cachedPrefs))
-    }
+      // Aplicar el color inmediatamente al documento
+      document.documentElement.setAttribute('data-sas-color', selectedColor)
 
-    const readFormIntoPrefs = () => {
-      if (!formPrefs) return
-      const currency = (formPrefs.querySelector('[name="currency"]') as HTMLInputElement)?.value || ''
-      const dateFormat = (formPrefs.querySelector('[name="dateFormat"]') as HTMLInputElement)?.value || ''
-      const themeColor = (formPrefs.querySelector('[name="themeColor"]') as HTMLSelectElement)?.value || 'green'
-      const whatsappNumber = (formPrefs.querySelector('[name="whatsappNumber"]') as HTMLInputElement)?.value || ''
-      const companyName = (formPrefs.querySelector('[name="companyName"]') as HTMLInputElement)?.value || ''
-      const companyContactName = (formPrefs.querySelector('[name="companyContactName"]') as HTMLInputElement)?.value || ''
-      const companyEmail = (formPrefs.querySelector('[name="companyEmail"]') as HTMLInputElement)?.value || ''
-      const companyPhone = (formPrefs.querySelector('[name="companyPhone"]') as HTMLInputElement)?.value || ''
-      const companyAddress = (formPrefs.querySelector('[name="companyAddress"]') as HTMLInputElement)?.value || ''
-      const companyWebsite = (formPrefs.querySelector('[name="companyWebsite"]') as HTMLInputElement)?.value || ''
-      const branchCount = formBranch ? formBranch.querySelectorAll('option').length : cachedPrefs.branchCount
+      // Forzar reflow para aplicar CSS
+      void document.documentElement.offsetHeight
 
-      persistPrefs({
-        currency,
-        dateFormat,
-        themeColor,
-        whatsappNumber,
-        companyName,
-        companyContactName,
-        companyEmail,
-        companyPhone,
-        companyAddress,
-        companyWebsite,
-        branchCount,
-      })
-
-      document.documentElement.setAttribute('data-sas-color', themeColor)
-      const preview = document.getElementById('themeColorPreview') as HTMLDivElement | null
-      if (preview) preview.style.background = 'var(--primary)'
-    }
-
-    const setFormValuesFromPrefs = (prefs: Partial<SasPrefs>) => {
-      if (!formPrefs) return
-      const currency = formPrefs.querySelector('[name="currency"]') as HTMLInputElement | null
-      const dateFormat = formPrefs.querySelector('[name="dateFormat"]') as HTMLInputElement | null
-      const themeColorSelect = formPrefs.querySelector('[name="themeColor"]') as HTMLSelectElement | null
-      const whatsappInput = formPrefs.querySelector('[name="whatsappNumber"]') as HTMLInputElement | null
-      const companyNameInput = formPrefs.querySelector('[name="companyName"]') as HTMLInputElement | null
-      const companyContactNameInput = formPrefs.querySelector('[name="companyContactName"]') as HTMLInputElement | null
-      const companyEmailInput = formPrefs.querySelector('[name="companyEmail"]') as HTMLInputElement | null
-      const companyPhoneInput = formPrefs.querySelector('[name="companyPhone"]') as HTMLInputElement | null
-      const companyAddressInput = formPrefs.querySelector('[name="companyAddress"]') as HTMLInputElement | null
-      const companyWebsiteInput = formPrefs.querySelector('[name="companyWebsite"]') as HTMLInputElement | null
-
-      if (currency && prefs.currency) currency.value = prefs.currency
-      if (dateFormat && prefs.dateFormat) dateFormat.value = prefs.dateFormat
-      if (themeColorSelect && prefs.themeColor) themeColorSelect.value = prefs.themeColor
-      if (whatsappInput && prefs.whatsappNumber) whatsappInput.value = prefs.whatsappNumber
-      if (companyNameInput && prefs.companyName) companyNameInput.value = prefs.companyName
-      if (companyContactNameInput && prefs.companyContactName) companyContactNameInput.value = prefs.companyContactName
-      if (companyEmailInput && prefs.companyEmail) companyEmailInput.value = prefs.companyEmail
-      if (companyPhoneInput && prefs.companyPhone) companyPhoneInput.value = prefs.companyPhone
-      if (companyAddressInput && prefs.companyAddress) companyAddressInput.value = prefs.companyAddress
-      if (companyWebsiteInput && prefs.companyWebsite) companyWebsiteInput.value = prefs.companyWebsite
-
-      if (prefs.themeColor) {
-        document.documentElement.setAttribute('data-sas-color', prefs.themeColor)
+      // Actualizar vista previa y selección visual
+      requestAnimationFrame(() => {
         const preview = document.getElementById('themeColorPreview') as HTMLDivElement | null
-        if (preview) preview.style.background = 'var(--primary)'
-      }
-
-      renderLogoPreview(prefs.companyLogo)
-    }
-
-    // Inicializar valores desde cookie
-    try {
-      const raw = document.cookie.split('; ').find(c => c.startsWith(`sas-prefs-${slug}=`))?.split('=')[1]
-      if (raw) {
-        const prefs = JSON.parse(decodeURIComponent(raw))
-        cachedPrefs = {
-          currency: prefs.currency || '',
-          dateFormat: prefs.dateFormat || '',
-          themeColor: prefs.themeColor || 'green',
-          whatsappNumber: prefs.whatsappNumber || '',
-          companyName: prefs.companyName || '',
-          companyContactName: prefs.companyContactName || '',
-          companyEmail: prefs.companyEmail || '',
-          companyPhone: prefs.companyPhone || '',
-          companyAddress: prefs.companyAddress || '',
-          companyWebsite: prefs.companyWebsite || '',
-          companyLogo: prefs.companyLogo || '',
-          branchCount: prefs.branchCount,
+        if (preview) {
+          preview.style.background = 'var(--primary)'
         }
-        setFormValuesFromPrefs(cachedPrefs)
-      }
-    } catch {}
 
-    if (formPrefs) {
-      formPrefs.addEventListener('change', () => {
-        readFormIntoPrefs()
-      })
-
-      const logoInput = formPrefs.querySelector('[name="companyLogo"]') as HTMLInputElement | null
-      if (logoInput) {
-        logoInput.addEventListener('change', async () => {
-          const file = logoInput.files?.[0]
-          if (!file) {
-            renderLogoPreview(cachedPrefs.companyLogo)
-            return
+        // Actualizar estilos visuales de los botones
+        const swatches = document.querySelectorAll('.color-swatch')
+        swatches.forEach((swatch) => {
+          const swatchColor = (swatch as HTMLElement).dataset.color
+          if (swatchColor === selectedColor) {
+            // Color seleccionado: borde más grueso y sombra
+            swatch.classList.remove('border-2')
+            swatch.classList.add('border-4', 'ring-2', 'ring-offset-2')
+            swatch.classList.add('ring-gray-400', 'dark:ring-gray-600')
+          } else {
+            // Color no seleccionado: borde normal
+            swatch.classList.remove('border-4', 'ring-2', 'ring-offset-2')
+            swatch.classList.remove('ring-gray-400', 'dark:ring-gray-600')
+            swatch.classList.add('border-2')
           }
-          try {
-            const reader = new FileReader()
-            const base64 = await new Promise<string>((resolve, reject) => {
-              reader.onload = () => resolve((reader.result as string).split(',')[1] || '')
-              reader.onerror = () => reject(new Error('No se pudo leer el archivo'))
-              reader.readAsDataURL(file)
-            })
-
-            if (!base64) throw new Error('Archivo inválido')
-
-            const response = await fetch(`/api/${slug}/config/logo`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ logoBase64: base64 })
-            })
-
-            if (!response.ok) {
-              const error = await response.json().catch(() => ({}))
-              throw new Error(error?.error || 'No se pudo guardar el logo')
-            }
-
-            const data = await response.json()
-            const url = data?.url as string | undefined
-            if (url) {
-              const absoluteUrl = new URL(url, window.location.origin).toString()
-              renderLogoPreview(absoluteUrl)
-              persistPrefs({ companyLogo: absoluteUrl })
-            }
-          } catch (error) {
-            console.error('Error cargando logo:', error)
-            renderLogoPreview(cachedPrefs.companyLogo)
-          } finally {
-            logoInput.value = ''
-          }
-        })
-      }
-
-      // Swatches
-      formPrefs.querySelectorAll('.color-swatch').forEach((el) => {
-        el.addEventListener('click', () => {
-          const color = (el as HTMLElement).dataset.color || 'green'
-          const select = formPrefs.querySelector('[name="themeColor"]') as HTMLSelectElement | null
-          if (select) select.value = color
-          readFormIntoPrefs()
         })
       })
 
-      // Inicial persist (en caso de que no haya cookie previa)
-      readFormIntoPrefs()
+      // Guardar en la API
+      fetch(`/api/${slug}/config/preferencias`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ themeColor: selectedColor }),
+      }).catch((error) => {
+        console.error('Error guardando color en API:', error)
+      })
     }
 
-    if (formBranch) {
-      formBranch.addEventListener('change', () => {
-        const branchId = (formBranch.querySelector('[name="branchId"]') as HTMLSelectElement)?.value || ''
-        setCookie(`sas-branch-${slug}`, branchId)
-        const count = formBranch.querySelectorAll('option').length
-        persistPrefs({ branchCount: count })
+    /**
+     * Configura los listeners para los clicks en los swatches de color
+     */
+    const setupColorListeners = () => {
+      if (!colorClickHandler) {
+        colorClickHandler = (e: Event) => {
+          const target = e.target as HTMLElement
+          const swatch = target.closest('.color-swatch') as HTMLElement | null
+
+          if (swatch) {
+            e.preventDefault()
+            e.stopPropagation()
+            const color = swatch.dataset.color || 'green'
+
+            // Actualizar el select antes de aplicar el color
+            const currentFormPrefs = document.querySelector('form[data-form="preferencias"]') as HTMLFormElement | null
+            if (currentFormPrefs) {
+              const select = currentFormPrefs.querySelector('[name="themeColor"]') as HTMLSelectElement | null
+              if (select) {
+                select.value = color
+              }
+            }
+
+            // Aplicar el color
+            updateColorSelection(color)
+          }
+        }
+
+        // Agregar listener al documento (event delegation)
+        document.addEventListener('click', colorClickHandler, true)
+      }
+    }
+
+    // Configurar listeners inmediatamente
+    setupColorListeners()
+
+    // También configurar cuando se agregan nuevos swatches dinámicamente
+    const observer = new MutationObserver(() => {
+      const swatches = document.querySelectorAll('.color-swatch')
+      swatches.forEach((swatch) => {
+        if (!(swatch as any).__colorHandlerAttached) {
+          ;(swatch as any).__colorHandlerAttached = true
+          swatch.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const color = (swatch as HTMLElement).dataset.color || 'green'
+
+            const currentFormPrefs = document.querySelector('form[data-form="preferencias"]') as HTMLFormElement | null
+            if (currentFormPrefs) {
+              const select = currentFormPrefs.querySelector('[name="themeColor"]') as HTMLSelectElement | null
+              if (select) {
+                select.value = color
+              }
+            }
+
+            updateColorSelection(color)
+          })
+        }
       })
+    })
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
+
+    // Cargar color inicial desde la API
+    fetch(`/api/${slug}/config/preferencias`, {
+      credentials: 'include',
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json()
+        }
+        return null
+      })
+      .then((data) => {
+        if (data?.success && data.configuration?.themeColor) {
+          const color = data.configuration.themeColor
+          // Aplicar color sin guardar (ya está en la BD)
+          document.documentElement.setAttribute('data-sas-color', color)
+          
+          // Actualizar selección visual
+          const swatches = document.querySelectorAll('.color-swatch')
+          swatches.forEach((swatch) => {
+            const swatchColor = (swatch as HTMLElement).dataset.color
+            if (swatchColor === color) {
+              swatch.classList.remove('border-2')
+              swatch.classList.add('border-4', 'ring-2', 'ring-offset-2')
+              swatch.classList.add('ring-gray-400', 'dark:ring-gray-600')
+            } else {
+              swatch.classList.remove('border-4', 'ring-2', 'ring-offset-2')
+              swatch.classList.remove('ring-gray-400', 'dark:ring-gray-600')
+              swatch.classList.add('border-2')
+            }
+          })
+        }
+      })
+      .catch(() => {
+        // Si falla, usar color por defecto
+        document.documentElement.setAttribute('data-sas-color', 'green')
+      })
+
+    // Limpiar al desmontar
+    return () => {
+      if (colorClickHandler) {
+        document.removeEventListener('click', colorClickHandler, true)
+      }
+      observer.disconnect()
     }
   }, [slug])
-  return null
+
+  return null // Este componente no renderiza nada
 }
-
-

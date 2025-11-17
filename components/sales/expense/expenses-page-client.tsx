@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -17,6 +18,7 @@ interface ExpensesPageClientProps {
   branches: ExpenseBranchSummary[]
   currentUserBranchId?: string | null
   initialIsAdmin?: boolean
+  maxBranches?: number | null
 }
 
 const normalizeExpense = (expense: any): SalesExpenseWithRelations => ({
@@ -53,7 +55,9 @@ export function ExpensesPageClient({
   branches,
   currentUserBranchId = null,
   initialIsAdmin = false,
+  maxBranches,
 }: ExpensesPageClientProps) {
+  const t = useTranslations()
   const [expenses, setExpenses] = useState<SalesExpenseWithRelations[]>(() => initialExpenses.map(normalizeExpense))
   const [availableBranches, setAvailableBranches] = useState<ExpenseBranchSummary[]>(branches)
   const [isLoading, setIsLoading] = useState(false)
@@ -157,12 +161,12 @@ export function ExpensesPageClient({
   })
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <ExpensesHeader
-        title="Gestión de Gastos"
-        description="Administra los gastos de tu organización"
-        newButtonText="Agregar Gasto"
+        title={t('expenses.title')}
+        description={t('expenses.description')}
+        newButtonText={t('expenses.create')}
         onNewClick={openCreateDialog}
       />
 
@@ -173,8 +177,10 @@ export function ExpensesPageClient({
         isLoading={isLoading}
         isAdmin={isAdmin}
         userBranchId={userBranchId}
+        maxBranches={maxBranches}
         onEdit={openEditDialog}
         onDelete={openDeleteDialog}
+        customerSlug={customerSlug}
       />
 
       {/* Modal de crear/editar gasto */}
@@ -185,6 +191,8 @@ export function ExpensesPageClient({
         branches={availableBranches}
         currentUserBranchId={userBranchId ?? undefined}
         isAdmin={isAdmin}
+        maxBranches={maxBranches}
+        customerSlug={customerSlug}
         onSave={handleSave}
       />
 
@@ -193,6 +201,7 @@ export function ExpensesPageClient({
         open={isDeleteDialogOpen}
         onOpenChange={closeDialogs}
         expense={selectedExpense}
+        customerSlug={customerSlug}
         onDelete={handleDelete}
       />
     </div>

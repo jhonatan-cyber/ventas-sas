@@ -1,4 +1,5 @@
 // Función simple para formatear fechas
+// Si se necesita usar las preferencias del usuario, usar formatDateWithPreferences de lib/utils/preferences.ts
 export function formatDate(date: Date | string): string {
   const d = new Date(date)
   return d.toLocaleDateString('es-BO', { 

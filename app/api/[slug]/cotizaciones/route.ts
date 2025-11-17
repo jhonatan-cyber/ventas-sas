@@ -8,6 +8,8 @@ import { getOrCreateOrganizationForCustomer, getOrganizationIdByCustomerSlug } f
 import { serializeQuotation } from '@/lib/utils/serializers'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createQuotationSchema } from '@/lib/validators/sales-validators'
+import { translateText } from '@/lib/utils/translatable-text'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 const capitalizeWords = (value: string) =>
   value
@@ -141,18 +143,34 @@ export async function POST(
       }
     }
 
+    // Priorizar branchId del body si viene, luego el del usuario
+    const finalBranchId = validatedData.branchId || branchId || undefined
+
     const customerPhone = normalizePhone(validatedData.customerPhone || undefined)
+
+    // Traducir notas automáticamente si existen
+    let notesTranslations = undefined
+    if (validatedData.notes && validatedData.notes.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        notesTranslations = await translateText(validatedData.notes, sourceLanguage)
+      } catch (error) {
+        console.error('Error traduciendo notas de cotización:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
 
     const quotation = await QuotationService.createQuotation(organizationId, {
       customerId: validatedData.customerId || undefined,
       customerName: validatedData.customerName || undefined,
-      branchId: branchId || validatedData.branchId || undefined,
+      branchId: finalBranchId,
       customerPhone,
       subtotal: validatedData.subtotal,
       discount: validatedData.discount || 0,
       total: validatedData.total,
       expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : undefined,
       notes: validatedData.notes || undefined,
+      notesTranslations,
       items: normalizedItems
     })
 

@@ -1,4 +1,5 @@
 import jsPDF from "jspdf"
+import { invalidateConfigCache, formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 const paymentTokens: Record<string, string> = {
   cash: "Efectivo",
@@ -27,6 +28,7 @@ interface SaleData {
   createdAt?: string | null
   customer?: SaleCustomer | null
   customerName?: string | null
+  branch?: { name?: string | null; address?: string | null } | null
   paymentMethod: string
   subtotal: number
   discount: number
@@ -35,7 +37,7 @@ interface SaleData {
   items: SaleItem[]
 }
 
-const formatDateTime = (date?: string | Date | null) => {
+const formatDateTimeBasic = (date?: string | Date | null) => {
   if (!date) return "—"
   const d = new Date(date)
   return d.toLocaleString("es-BO", {
@@ -95,31 +97,111 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
   if (typeof window === 'undefined') return
 
   try {
-    const raw = document.cookie
-      .split("; ")
-      .find((chunk) => chunk.startsWith(`sas-prefs-${customerSlug}=`))
-      ?.split("=")[1]
+    // Cargar preferencias y organización (igual que en cotizaciones)
+    let currencyCode = "BOB"
+    let dateFormat = "dd/MM/yyyy"
+    let themeColorKey = "green"
 
     let companyName = ""
-    let companyContactName = ""
-    let companyEmail = ""
-    let companyPhone = ""
     let companyAddress = ""
+    let companyWebsite = ""
+    let companyNIT = ""
     let companyLogo = ""
+    let ownerName = ""
+    let companyPhone = ""
     let companyWhatsappNumber = ""
 
-    if (raw) {
-      const parsed = JSON.parse(decodeURIComponent(raw))
-      companyName = typeof parsed.companyName === "string" ? parsed.companyName : ""
-      companyContactName = typeof parsed.companyContactName === "string" ? parsed.companyContactName : ""
-      companyEmail = typeof parsed.companyEmail === "string" ? parsed.companyEmail : ""
-      companyPhone = typeof parsed.companyPhone === "string" ? parsed.companyPhone : ""
-      companyAddress = typeof parsed.companyAddress === "string" ? parsed.companyAddress : ""
-      companyLogo = typeof parsed.companyLogo === "string" ? parsed.companyLogo : ""
-      companyWhatsappNumber = typeof parsed.whatsappNumber === "string" ? parsed.whatsappNumber : ""
-    }
+    try {
+      // Preferencias
+      const prefsRes = await fetch(`/api/${customerSlug}/config/preferencias`, { credentials: "include" })
+      if (prefsRes.ok) {
+        const data = await prefsRes.json()
+        if (data?.success && data.configuration) {
+          currencyCode = data.configuration.currency || "BOB"
+          dateFormat = data.configuration.dateFormat || "dd/MM/yyyy"
+          themeColorKey = data.configuration.themeColor || "green"
+        }
+      }
+    } catch {}
 
-    const primaryColor = getPrimaryColor()
+    try {
+      // Organización
+      const orgRes = await fetch(`/api/${customerSlug}/organizacion`, { credentials: "include" })
+      if (orgRes.ok) {
+        const data = await orgRes.json()
+        const org = data?.organization
+        if (org) {
+          companyName = org.razonSocial || org.name || ""
+          companyAddress = org.address || ""
+          companyWebsite = org.website || ""
+          companyNIT = org.nit || ""
+          companyLogo = org.logoUrl || ""
+          ownerName = org.ownerName || ""
+          companyPhone = org.phone || ""
+          if (org.phone) {
+            const digits = org.phone.replace(/\D/g, "")
+            if (digits) companyWhatsappNumber = org.phone.startsWith("+") ? org.phone : `+${digits}`
+          }
+        }
+      }
+    } catch {}
+
+    // Fallback: leer cookie de preferencias si faltan datos clave
+    try {
+      if (!companyName || (!companyPhone && !companyWhatsappNumber) || !companyLogo) {
+        const rawCookie =
+          document.cookie
+            .split("; ")
+            .find((c) => c.startsWith(`sas-prefs-${customerSlug}=`))
+            ?.split("=")[1] ||
+          document.cookie
+            .split("; ")
+            .find((c) => c.startsWith(`sas_prefs=`))
+            ?.split("=")[1]
+
+        if (rawCookie) {
+          const parsed = JSON.parse(decodeURIComponent(rawCookie))
+          companyName = companyName || (parsed.companyName || "")
+          ownerName = ownerName || (parsed.companyContactName || "")
+          companyAddress = companyAddress || (parsed.companyAddress || "")
+          companyWebsite = companyWebsite || (parsed.companyWebsite || "")
+          companyNIT = companyNIT || (parsed.companyNIT || "")
+          companyLogo = companyLogo || (parsed.companyLogo || "")
+          const wpp = parsed.whatsappNumber || parsed.companyWhatsappNumber || ""
+          if (!companyPhone && wpp) {
+            const digits = String(wpp).replace(/\D/g, "")
+            companyWhatsappNumber = wpp.startsWith("+") ? wpp : digits ? `+${digits}` : companyWhatsappNumber
+          }
+        }
+      }
+    } catch {}
+
+    // Mapeo de color de tema (como cotizaciones)
+    const themeColorMap: Record<string, { r: number; g: number; b: number }> = {
+      green: { r: 26, g: 120, b: 102 },
+      blue: { r: 37, g: 99, b: 235 },
+      purple: { r: 147, g: 51, b: 234 },
+      orange: { r: 249, g: 115, b: 22 },
+      red: { r: 220, g: 38, b: 38 },
+      pink: { r: 236, g: 72, b: 153 },
+      teal: { r: 20, g: 184, b: 166 },
+      cyan: { r: 6, g: 182, b: 212 },
+      indigo: { r: 99, g: 102, b: 241 },
+      yellow: { r: 234, g: 179, b: 8 },
+      emerald: { r: 16, g: 185, b: 129 },
+      rose: { r: 225, g: 29, b: 72 },
+    }
+    const primaryColor = themeColorMap[themeColorKey] || getPrimaryColor()
+
+    // Formateadores de moneda y fecha (consistentes con preferencias)
+    const formatCurrency = (value: number) => {
+      invalidateConfigCache(customerSlug)
+      return formatCurrencyWithPreferences(value, customerSlug, currencyCode)
+    }
+    const formatDateFromPrefs = (date?: string | Date | null) => {
+      if (!date) return "—"
+      return formatDateWithPreferences(new Date(date), customerSlug, dateFormat)
+    }
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
@@ -154,15 +236,25 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
     doc.setTextColor(60, 60, 60)
+    if (companyNIT) {
+      doc.text(`NIT: ${companyNIT}`, headerLeftX, headerLeftY)
+      headerLeftY += 5
+    }
     if (companyAddress) {
       doc.text(companyAddress, headerLeftX, headerLeftY)
       headerLeftY += 5
     }
-    if (companyEmail) {
-      doc.text(companyEmail, headerLeftX, headerLeftY)
+    if (companyWebsite) {
+      const websiteDisplay = companyWebsite.replace(/^https?:\/\//, "")
+      doc.text(`Web: ${websiteDisplay}`, headerLeftX, headerLeftY)
       headerLeftY += 5
     }
-    const formattedNow = formatDateTime(new Date())
+    // Mostrar fecha + hora (como en cotizaciones)
+    const now = new Date()
+    const datePart = formatDateFromPrefs(now)
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const formattedNow = `${datePart}, ${hours}:${minutes}`
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b)
     doc.text('Fecha y Hora :', headerLeftX, headerLeftY)
@@ -171,7 +263,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     doc.text(formattedNow, headerLeftX + 30, headerLeftY)
     headerLeftY += 8
 
-    const contactName = companyContactName || companyName || '—'
+    const contactName = ownerName || companyName || '—'
     const contactPhone = companyPhone || companyWhatsappNumber || '—'
     let contactY = contactBlockTop
     doc.setFont('helvetica', 'bold')
@@ -208,9 +300,12 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     const paymentLabel = paymentTokens[saleData.paymentMethod] || saleData.paymentMethod
     const saleDetails: Array<[string, string]> = [
       ['Código', saleData.saleNumber],
-      ['Fecha', formatDateTime(saleData.createdAt)],
+      ['Fecha', formatDateFromPrefs(saleData.createdAt)],
       ['Método de Pago', paymentLabel],
     ]
+    if (saleData.branch) {
+      saleDetails.push(['Sucursal', saleData.branch.name || '—'])
+    }
 
     const drawDetailsColumn = (x: number, title: string, rows: Array<[string, string]>) => {
       let y = cursorY
@@ -248,12 +343,13 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     const colQty = margin + tableWidth * 0.74
     const colSubtotal = margin + tableWidth - 2
 
+    // Header de tabla sin bordes redondeados
     doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
-    doc.roundedRect(margin, tableTop, tableWidth, 9, 3, 3, 'F')
+    doc.rect(margin, tableTop, tableWidth, 9, 'F')
     doc.text('Producto', colProduct, tableTop + 6)
-    doc.text('Precio BOB', colPrice, tableTop + 6)
+    doc.text(`Precio ${currencyCode}`, colPrice, tableTop + 6)
     doc.text('Cantidad', colQty, tableTop + 6)
     doc.text('Subtotal', colSubtotal, tableTop + 6, { align: 'right' })
 
@@ -279,9 +375,9 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
           doc.setFontSize(10)
           doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b)
           doc.setTextColor(255, 255, 255)
-          doc.roundedRect(margin, rowY, tableWidth, 9, 3, 3, 'F')
+          doc.rect(margin, rowY, tableWidth, 9, 'F')
           doc.text('Producto', colProduct, rowY + 6)
-          doc.text('Precio BOB', colPrice, rowY + 6)
+          doc.text(`Precio ${currencyCode}`, colPrice, rowY + 6)
           doc.text('Cantidad', colQty, rowY + 6)
           doc.text('Subtotal', colSubtotal, rowY + 6, { align: 'right' })
           rowY += 11
@@ -298,9 +394,9 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
         descriptionLines.forEach((line: string, idx: number) => {
           doc.text(line, colProduct, rowY + idx * 5)
         })
-        doc.text(`BOB ${Number(item.unitPrice || 0).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`, colPrice, rowY)
+        doc.text(formatCurrency(Number(item.unitPrice || 0)), colPrice, rowY)
         doc.text(String(item.quantity), colQty, rowY)
-        doc.text(`BOB ${Number(item.subtotal || 0).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`, colSubtotal, rowY, { align: 'right' })
+        doc.text(formatCurrency(Number(item.subtotal || 0)), colSubtotal, rowY, { align: 'right' })
 
         rowY += rowHeight
       })
@@ -316,9 +412,9 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     const total = Number(saleData.total ?? 0)
 
     const summaryRows: Array<[string, string]> = [
-      ['SUB TOTAL', `BOB ${Number(subtotal).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`],
-      ['DESCUENTO', `BOB ${Number(discount).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`],
-      ['TOTAL', `BOB ${Number(total).toLocaleString("es-BO", { minimumFractionDigits: 2 })}`],
+      ['SUB TOTAL', formatCurrency(subtotal)],
+      ['DESCUENTO', formatCurrency(discount)],
+      ['TOTAL', formatCurrency(total)],
     ]
 
     doc.setFont('helvetica', 'bold')
@@ -336,7 +432,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
       cursorY += 6
     })
 
-    // Agregar notas si existen
+    // Agregar notas/descripcion de venta si existen
     if (saleData.notes && saleData.notes.trim()) {
       cursorY += 8
       doc.setFont('helvetica', 'bold')
@@ -354,16 +450,43 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
       cursorY += notesLines.length * 5 + 6
     }
 
+    // Guardar el PDF en el servidor y abrir enlace (similar a cotización)
+    const dataUri = doc.output('datauristring')
+    const base64 = dataUri.split(',')[1]
+
+    const fileBaseName = saleData.id
+      ? `venta-${saleData.id}`
+      : `venta-${saleData.saleNumber}`
+
+    try {
+      const response = await fetch(`/api/${customerSlug}/ventas/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: fileBaseName,
+          pdfBase64: base64,
+        }),
+      })
+
+      if (response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        const relativeUrl = payload?.url as string | undefined
+        if (relativeUrl) {
+          const absoluteUrl = relativeUrl.startsWith('http')
+            ? relativeUrl
+            : `${window.location.origin}${relativeUrl}`
+          const cacheBustedUrl = `${absoluteUrl}${absoluteUrl.includes('?') ? '&' : '?'}v=${Date.now()}`
+          window.open(cacheBustedUrl, '_blank', 'noopener,noreferrer')
+          return
+        }
+      }
+    } catch (error) {
+      // fallback a abrir en nueva pestaña desde memoria
+    }
+
     const blob = doc.output('blob')
     const blobUrl = URL.createObjectURL(blob)
-    const printWindow = window.open(blobUrl)
-    if (printWindow) {
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print()
-        }, 500)
-      }
-    }
+    window.open(blobUrl, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('Error al imprimir venta:', error)
   }

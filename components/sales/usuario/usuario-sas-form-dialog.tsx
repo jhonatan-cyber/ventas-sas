@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { UsuarioSas, RoleSas } from "@prisma/client";
 import { InfoIcon } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -43,6 +45,7 @@ export function UsuarioSasFormDialog({
   onSave,
   defaultSucursalId,
 }: UsuarioSasFormDialogProps) {
+  const t = useTranslations()
   const [ci, setCi] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -223,7 +226,7 @@ export function UsuarioSasFormDialog({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           {/* Contenido con scroll */}
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="ci">
                   CI <span className="text-red-500">*</span>
@@ -232,7 +235,7 @@ export function UsuarioSasFormDialog({
                   id="ci"
                   value={ci}
                   onChange={(e) => setCi(e.target.value)}
-                  placeholder="Cédula de Identidad"
+                  placeholder={t('common.placeholders.taxId')}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -246,7 +249,7 @@ export function UsuarioSasFormDialog({
                   id="nombre"
                   value={nombre}
                   onChange={(e) => setNombre(capitalizeWords(e.target.value))}
-                  placeholder="Nombre"
+                  placeholder={t('common.placeholders.name')}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -254,7 +257,7 @@ export function UsuarioSasFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="apellido">
                   Apellido <span className="text-red-500">*</span>
@@ -263,7 +266,7 @@ export function UsuarioSasFormDialog({
                   id="apellido"
                   value={apellido}
                   onChange={(e) => setApellido(capitalizeWords(e.target.value))}
-                  placeholder="Apellido"
+                  placeholder={t('common.placeholders.lastName')}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -286,7 +289,66 @@ export function UsuarioSasFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="direccion">Dirección</Label>
+                <Input
+                  id="direccion"
+                  value={direccion}
+                  onChange={(e) => setDireccion(capitalizeWords(e.target.value))}
+                  placeholder={t('common.placeholders.address')}
+                  disabled={isLoading}
+                  className="rounded-full"
+                />
+              </div>
+            </div>
+
+            {/* Rol y Sucursal - En móvil en grid de 2 columnas cuando se muestra sucursal */}
+            {showSucursalSelector ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rolId">
+                    Rol <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={rolId}
+                    onValueChange={setRolId}
+                    disabled={isLoading}
+                    required
+                  >
+                    <SelectTrigger className="w-full rounded-full">
+                      <SelectValue placeholder={t('common.placeholders.selectRole')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((rol) => (
+                        <SelectItem key={rol.id} value={rol.id}>
+                          {rol.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sucursalId">Sucursal</Label>
+                  <Select
+                    value={sucursalId}
+                    onValueChange={setSucursalId}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="w-full rounded-full">
+                      <SelectValue placeholder={t('common.placeholders.selectBranch')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sucursales.map((sucursal) => (
+                        <SelectItem key={sucursal.id} value={sucursal.id}>
+                          {sucursal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : (
               <div className="space-y-2">
                 <Label htmlFor="rolId">
                   Rol <span className="text-red-500">*</span>
@@ -304,39 +366,6 @@ export function UsuarioSasFormDialog({
                     {roles.map((rol) => (
                       <SelectItem key={rol.id} value={rol.id}>
                         {rol.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="direccion">Dirección</Label>
-                <Input
-                  id="direccion"
-                  value={direccion}
-                  onChange={(e) => setDireccion(capitalizeWords(e.target.value))}
-                  placeholder="Dirección completa"
-                  disabled={isLoading}
-                  className="rounded-full"
-                />
-              </div>
-            </div>
-
-            {showSucursalSelector && (
-              <div className="space-y-2">
-                <Label htmlFor="sucursalId">Sucursal</Label>
-                <Select
-                  value={sucursalId}
-                  onValueChange={setSucursalId}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="w-full rounded-full">
-                    <SelectValue placeholder="Seleccionar sucursal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sucursales.map((sucursal) => (
-                      <SelectItem key={sucursal.id} value={sucursal.id}>
-                        {sucursal.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

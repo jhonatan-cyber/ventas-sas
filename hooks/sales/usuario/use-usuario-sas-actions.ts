@@ -19,6 +19,7 @@ export function useUsuarioSasActions(
   const [_isPending, startTransition] = useTransition()
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<UsuarioWithRelations | undefined>()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmTitle, setConfirmTitle] = useState('')
@@ -41,9 +42,15 @@ export function useUsuarioSasActions(
     setIsDeleteDialogOpen(true)
   }
 
+  const openViewDialog = (usuario: UsuarioWithRelations) => {
+    setSelectedUsuario(usuario)
+    setIsDetailDialogOpen(true)
+  }
+
   const closeDialogs = () => {
     setIsFormDialogOpen(false)
     setIsDeleteDialogOpen(false)
+    setIsDetailDialogOpen(false)
     setSelectedUsuario(undefined)
   }
 
@@ -177,6 +184,7 @@ export function useUsuarioSasActions(
   return {
     isFormDialogOpen,
     isDeleteDialogOpen,
+    isDetailDialogOpen,
     selectedUsuario,
     confirmOpen,
     confirmTitle,
@@ -187,6 +195,7 @@ export function useUsuarioSasActions(
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDialog,
     closeDialogs,
     handleSave,
     handleDelete,

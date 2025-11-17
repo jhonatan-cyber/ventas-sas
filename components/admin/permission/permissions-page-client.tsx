@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -17,6 +19,7 @@ interface PermissionsPageClientProps {
 }
 
 export function PermissionsPageClient({ initialPermissions, initialStats }: PermissionsPageClientProps) {
+  const t = useTranslations()
   const [openDialog, setOpenDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [selectedPermission, setSelectedPermission] = useState<PermissionInfo | null>(null)
@@ -74,7 +77,7 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       }
 
       const data = await response.json()
-      toast.success("Permiso eliminado correctamente", {
+      toast.success(t('permissions.deleteSuccess'), {
         description: data.message,
       })
 
@@ -83,8 +86,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       await reloadData()
     } catch (error: any) {
       console.error("Error al eliminar permiso:", error)
-      toast.error("Error al eliminar permiso", {
-        description: error.message || "No se pudo eliminar el permiso",
+      toast.error(t('permissions.deleteError'), {
+        description: error.message || t('permissions.deleteErrorDescription'),
       })
     } finally {
       setIsDeleting(false)
@@ -124,7 +127,7 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       }
 
       const data = await response.json()
-      toast.success("Estado del permiso actualizado", {
+      toast.success(t('permissions.toggleStatusSuccess'), {
         description: data.message,
       })
 
@@ -132,8 +135,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       await reloadData()
     } catch (error: any) {
       console.error("Error al cambiar estado del permiso:", error)
-      toast.error("Error al cambiar estado", {
-        description: error.message || "No se pudo cambiar el estado del permiso",
+      toast.error(t('permissions.toggleStatusError'), {
+        description: error.message || t('permissions.toggleStatusErrorDescription'),
       })
     }
   }
@@ -143,8 +146,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título */}
         <PermissionHeader
-          title="Gestión de Permisos"
-          description="Administra y visualiza todos los permisos del sistema y su uso en los roles"
+          title={t('permissions.title')}
+          description={t('permissions.description')}
           stats={stats}
           onNewClick={handleNewClick}
           onAssignAll={reloadData}

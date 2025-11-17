@@ -12,6 +12,7 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatDateWithPreferences } from "@/lib/utils/preferences"
 
 interface QuotationChartProps {
   data: Array<{
@@ -20,13 +21,13 @@ interface QuotationChartProps {
     converted: number
     expired: number
   }>
+  slug?: string
 }
 
-export function QuotationChart({ data }: QuotationChartProps) {
+export function QuotationChart({ data, slug }: QuotationChartProps) {
   // Formatear fecha
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
+    return formatDateWithPreferences(dateStr, slug)
   }
 
   return (

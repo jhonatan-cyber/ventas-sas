@@ -42,15 +42,32 @@ self.addEventListener('activate', (event) => {
 
 // Interceptar requests
 self.addEventListener('fetch', (event) => {
+  const request = event.request
+  const method = request.method
+  const url = new URL(request.url)
+
+  // Solo cachear requests GET y HEAD (el Cache API no soporta POST, PUT, DELETE, etc.)
+  if (method !== 'GET' && method !== 'HEAD') {
+    // Para métodos no-GET, simplemente hacer fetch sin cachear
+    event.respondWith(fetch(request))
+    return
+  }
+
+  // No cachear requests a API endpoints
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request))
+    return
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(request).then((response) => {
       // Devolver del cache si está disponible
       if (response) {
         return response
       }
 
       // Intentar fetch de la red
-      return fetch(event.request)
+      return fetch(request)
         .then((response) => {
           // No cachear si no es válido
           if (!response || response.status !== 200 || response.type !== 'basic') {
@@ -60,15 +77,21 @@ self.addEventListener('fetch', (event) => {
           // Clonar la respuesta para cachearla
           const responseToCache = response.clone()
 
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache)
-          })
+          // Solo cachear si es GET o HEAD (verificación adicional)
+          if (method === 'GET' || method === 'HEAD') {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache).catch((error) => {
+                // Silenciar errores de cacheo (puede fallar por varias razones)
+                console.warn('No se pudo cachear el recurso:', error)
+              })
+            })
+          }
 
           return response
         })
         .catch(() => {
           // Si falla, devolver página offline para navegación
-          if (event.request.mode === 'navigate') {
+          if (request.mode === 'navigate') {
             return caches.match('/').catch(() => {
               // Si incluso la página principal falla, devolver una respuesta básica
               return new Response('Sin conexión a internet', {

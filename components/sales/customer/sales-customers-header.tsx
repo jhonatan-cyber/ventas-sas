@@ -1,6 +1,7 @@
 "use client"
 
 import { Plus } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 
@@ -14,9 +15,12 @@ interface SalesCustomersHeaderProps {
 export function SalesCustomersHeader({
   title,
   description,
-  newButtonText = "Nuevo",
+  newButtonText,
   onNewClick
 }: SalesCustomersHeaderProps) {
+  const t = useTranslations()
+  const defaultNewText = newButtonText || t('action.new')
+  
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
@@ -34,7 +38,7 @@ export function SalesCustomersHeader({
         className="w-full sm:w-auto"
       >
         <Plus className="h-4 w-4 mr-2" />
-        {newButtonText}
+        {defaultNewText}
       </Button>
     </div>
   )

@@ -11,6 +11,8 @@ import { getOrganizationIdByCustomerSlug, getMaxProductsByOrganizationId } from 
 import { getRequestContext } from '@/lib/utils/request-context'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createProductSchema } from '@/lib/validators/sales-validators'
+import { translateProductDescription } from '@/lib/utils/product-description'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(
@@ -176,11 +178,27 @@ export async function POST(
       throw AppError.validation('La categoría es requerida')
     }
 
+    // Traducir descripción automáticamente si existe
+    let descriptionTranslations = undefined
+    if (validatedData.description && validatedData.description.trim()) {
+      try {
+        const sourceLanguage = await getOrganizationLocale(slug)
+        descriptionTranslations = await translateProductDescription(
+          validatedData.description,
+          sourceLanguage
+        )
+      } catch (error) {
+        console.error('Error traduciendo descripción del producto:', error)
+        // Continuar sin traducciones si falla
+      }
+    }
+
     const newProduct = await SalesProductService.createProduct(organizationId, {
       branchId, // Asignar sucursal del usuario logueado o seleccionada por admin
       categoryId: validatedData.categoryId,
       name: validatedData.name,
       description: validatedData.description || undefined,
+      descriptionTranslations,
       brand: validatedData.brand || undefined,
       model: validatedData.model || undefined,
       price: validatedData.price ?? 0,

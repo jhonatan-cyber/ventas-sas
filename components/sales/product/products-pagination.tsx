@@ -34,8 +34,8 @@ export function ProductsPagination({
   if (totalPages <= 1) return null
 
   return (
-    <div className="flex items-center justify-center gap-4 py-4">
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 py-4">
+      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
         Página {currentPage} de {totalPages}
       </div>
       <div className="flex gap-2">
@@ -44,20 +44,20 @@ export function ProductsPagination({
           size="sm"
           onClick={handlePrevious}
           disabled={currentPage === 1}
-          className="rounded-full"
+          className="rounded-full text-xs sm:text-sm"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Anterior
+          <ChevronLeft className="h-4 w-4 mr-1 sm:mr-0" />
+          <span className="sm:inline">Anterior</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={handleNext}
           disabled={currentPage === totalPages}
-          className="rounded-full"
+          className="rounded-full text-xs sm:text-sm"
         >
-          Siguiente
-          <ChevronRight className="h-4 w-4" />
+          <span className="sm:inline">Siguiente</span>
+          <ChevronRight className="h-4 w-4 ml-1 sm:ml-0" />
         </Button>
       </div>
     </div>

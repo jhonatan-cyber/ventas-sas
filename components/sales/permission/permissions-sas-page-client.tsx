@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -18,6 +20,7 @@ interface PermissionsSasPageClientProps {
 }
 
 export function PermissionsSasPageClient({ initialPermissions, initialStats, customerSlug, maxBranches }: PermissionsSasPageClientProps) {
+  const t = useTranslations()
   const [openDialog, setOpenDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [selectedPermission, setSelectedPermission] = useState<PermissionSasInfo | null>(null)
@@ -75,7 +78,7 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       }
 
       const data = await response.json()
-      toast.success("Permiso eliminado correctamente", {
+      toast.success(t('permissions.sas.deleteSuccess'), {
         description: data.message,
       })
 
@@ -84,8 +87,8 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       await reloadData()
     } catch (error: any) {
       console.error("Error al eliminar permiso:", error)
-      toast.error("Error al eliminar permiso", {
-        description: error.message || "No se pudo eliminar el permiso",
+      toast.error(t('permissions.sas.deleteError'), {
+        description: error.message || t('permissions.sas.deleteErrorDescription'),
       })
     } finally {
       setIsDeleting(false)
@@ -125,7 +128,7 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       }
 
       const data = await response.json()
-      toast.success("Estado del permiso actualizado", {
+      toast.success(t('permissions.sas.toggleStatusSuccess'), {
         description: data.message,
       })
 
@@ -133,18 +136,18 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       await reloadData()
     } catch (error: any) {
       console.error("Error al cambiar estado del permiso:", error)
-      toast.error("Error al cambiar estado", {
-        description: error.message || "No se pudo cambiar el estado del permiso",
+      toast.error(t('permissions.sas.toggleStatusError'), {
+        description: error.message || t('permissions.sas.toggleStatusErrorDescription'),
       })
     }
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
+    <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6 overflow-x-hidden max-w-full">
       {/* Header con título */}
       <PermissionSasHeader
-        title="Gestión de Permisos"
-        description="Administra y visualiza todos los permisos del sistema y su uso en los roles"
+        title={t('permissions.title')}
+        description={t('permissions.description')}
         stats={stats}
         onNewClick={handleNewClick}
         customerSlug={customerSlug}
