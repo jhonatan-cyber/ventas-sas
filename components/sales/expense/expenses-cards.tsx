@@ -1,7 +1,7 @@
 "use client"
 
 import { SalesExpenseWithRelations } from "./types"
-import { Edit, Trash2, MoreVertical, Calendar, Building2, User, FileText } from "lucide-react"
+import { Edit, Trash2, MoreVertical, Calendar, Building2, User, FileText, Eye } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,10 @@ interface ExpensesCardsProps {
   expenses: SalesExpenseWithRelations[]
   onEdit?: (expense: SalesExpenseWithRelations) => void
   onDelete?: (expense: SalesExpenseWithRelations) => void
+  onView?: (expense: SalesExpenseWithRelations) => void
 }
 
-export function ExpensesCards({ expenses, onEdit, onDelete }: ExpensesCardsProps) {
+export function ExpensesCards({ expenses, onEdit, onDelete, onView }: ExpensesCardsProps) {
   if (expenses.length === 0) {
     return null
   }
@@ -52,15 +53,24 @@ export function ExpensesCards({ expenses, onEdit, onDelete }: ExpensesCardsProps
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(expense)} className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400">
-                          <Edit className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
-                          <span className="text-yellow-600 dark:text-yellow-400">Editar</span>
+                      {onView && (
+                        <DropdownMenuItem onClick={() => onView(expense)} className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400">
+                          <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                          <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                         </DropdownMenuItem>
+                      )}
+                      {onEdit && (
+                        <>
+                          {onView && <DropdownMenuSeparator />}
+                          <DropdownMenuItem onClick={() => onEdit(expense)} className="cursor-pointer text-yellow-600 focus:text-yellow-600 dark:text-yellow-400 dark:focus:text-yellow-400">
+                            <Edit className="h-4 w-4 mr-2 text-yellow-600 dark:text-yellow-400" />
+                            <span className="text-yellow-600 dark:text-yellow-400">Editar</span>
+                          </DropdownMenuItem>
+                        </>
                       )}
                       {onDelete && (
                         <>
-                          <DropdownMenuSeparator />
+                          {(onView || onEdit) && <DropdownMenuSeparator />}
                           <DropdownMenuItem
                             onClick={() => onDelete(expense)}
                             className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"

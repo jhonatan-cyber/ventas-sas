@@ -1,6 +1,6 @@
 "use client"
 
-import { Edit, Trash2, DollarSign } from "lucide-react"
+import { Edit, Trash2, DollarSign, Eye } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
@@ -20,9 +20,10 @@ interface ExpensesTableProps {
   maxBranches?: number | null
   onEditClick?: (expense: SalesExpenseWithRelations) => void
   onDeleteClick?: (expense: SalesExpenseWithRelations) => void
+  onViewClick?: (expense: SalesExpenseWithRelations) => void
 }
 
-export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches, onEditClick, onDeleteClick }: ExpensesTableProps) {
+export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches, onEditClick, onDeleteClick, onViewClick }: ExpensesTableProps) {
   const t = useTranslations()
   // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
@@ -119,6 +120,21 @@ export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches,
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {onViewClick && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onViewClick(expense)}
+                                className="hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalles</TooltipContent>
+                          </Tooltip>
+                        )}
                         {onEditClick && (
                           <Tooltip>
                             <TooltipTrigger asChild>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { ExpenseDeleteDialog } from "./expense-delete-dialog"
+import { ExpenseDetailDialog } from "./expense-detail-dialog"
 import { ExpenseFormDialog } from "./expense-form-dialog"
 import { ExpensesContainer } from "./expenses-container"
 import { ExpensesHeader } from "./expenses-header"
@@ -63,6 +64,8 @@ export function ExpensesPageClient({
   const [isLoading, setIsLoading] = useState(false)
   const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
   const [userBranchId, setUserBranchId] = useState<string | null>(currentUserBranchId ?? null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [selectedExpenseForDetail, setSelectedExpenseForDetail] = useState<SalesExpenseWithRelations | null>(null)
 
   useEffect(() => {
     setExpenses(initialExpenses.map(normalizeExpense))
@@ -180,6 +183,10 @@ export function ExpensesPageClient({
         maxBranches={maxBranches}
         onEdit={openEditDialog}
         onDelete={openDeleteDialog}
+        onView={(expense) => {
+          setSelectedExpenseForDetail(expense)
+          setIsDetailDialogOpen(true)
+        }}
         customerSlug={customerSlug}
       />
 
@@ -203,6 +210,21 @@ export function ExpensesPageClient({
         expense={selectedExpense}
         customerSlug={customerSlug}
         onDelete={handleDelete}
+      />
+
+      {/* Modal de detalles */}
+      <ExpenseDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
+        expense={selectedExpenseForDetail}
+        customerSlug={customerSlug}
+        maxBranches={maxBranches}
+        onEdit={() => {
+          setIsDetailDialogOpen(false)
+          if (selectedExpenseForDetail) {
+            openEditDialog(selectedExpenseForDetail)
+          }
+        }}
       />
     </div>
   )

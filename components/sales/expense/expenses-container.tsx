@@ -24,6 +24,7 @@ interface ExpensesContainerProps {
   maxBranches?: number | null;
   onEdit?: (expense: SalesExpenseWithRelations) => void;
   onDelete?: (expense: SalesExpenseWithRelations) => void;
+  onView?: (expense: SalesExpenseWithRelations) => void;
   customerSlug: string;
 }
 
@@ -36,6 +37,7 @@ export function ExpensesContainer({
   maxBranches,
   onEdit,
   onDelete,
+  onView,
   customerSlug,
 }: ExpensesContainerProps) {
   const t = useTranslations()
@@ -227,6 +229,7 @@ export function ExpensesContainer({
             expenses={currentExpenses}
             onEdit={onEdit}
             onDelete={onDelete}
+            onView={onView}
           />
 
           {/* Tabla de gastos (solo desktop) */}
@@ -238,6 +241,7 @@ export function ExpensesContainer({
               maxBranches={maxBranches}
               onEditClick={onEdit}
               onDeleteClick={onDelete}
+              onViewClick={onView}
             />
           </div>
         </>
