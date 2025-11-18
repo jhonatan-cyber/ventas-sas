@@ -33,16 +33,114 @@ export default async function PermissionsPage() {
     if (!canList) {
       redirect('/administracion/dashboard?error=no_permission')
     }
-
-    // Obtener permisos y estadísticas
-    const [permissions, stats] = await Promise.all([
-      PermissionAdminService.getAllPermissions(),
-      PermissionAdminService.getPermissionStats(),
-    ])
-
-    return <PermissionsPageClient initialPermissions={permissions} initialStats={stats} />
   } catch {
     redirect('/administracion/login')
   }
+
+  // Obtener permisos y estadísticas con manejo de errores
+  let permissions: any[] = []
+  let stats: any = {
+    totalPermissions: 0,
+    systemPermissions: 0,
+    customPermissions: 0,
+    permissionsByCategory: {},
+    mostUsedPermissions: [],
+    unusedPermissions: [],
+  }
+
+  try {
+    const [permissionsResult, statsResult] = await Promise.all([
+      PermissionAdminService.getAllPermissions().catch((err) => {
+        console.error('Error fetching permissions:', err)
+        return []
+      }),
+      PermissionAdminService.getPermissionStats().catch((err) => {
+        console.error('Error fetching permission stats:', err)
+        return stats
+      }),
+    ])
+
+    // Serializar permisos de forma segura
+    permissions = (permissionsResult || []).map((perm: any) => {
+      try {
+        return {
+          name: String(perm.name || ''),
+          description: String(perm.description || ''),
+          category: String(perm.category || ''),
+          roles: Array.isArray(perm.roles) 
+            ? perm.roles.map((r: any) => String(r))
+            : [],
+          roleCount: Number(perm.roleCount || 0),
+          isSystem: Boolean(perm.isSystem ?? false),
+          isActive: perm.isActive === null || perm.isActive === undefined 
+            ? undefined 
+            : Boolean(perm.isActive),
+        }
+      } catch (permError) {
+        console.error('Error mapping permission:', permError, perm)
+        return null
+      }
+    }).filter((perm): perm is NonNullable<typeof perm> => perm !== null)
+
+    // Serializar estadísticas de forma segura
+    if (statsResult) {
+      stats = {
+        totalPermissions: Number(statsResult.totalPermissions || 0),
+        systemPermissions: Number(statsResult.systemPermissions || 0),
+        customPermissions: Number(statsResult.customPermissions || 0),
+        permissionsByCategory: typeof statsResult.permissionsByCategory === 'object' && statsResult.permissionsByCategory !== null
+          ? Object.fromEntries(
+              Object.entries(statsResult.permissionsByCategory).map(([key, value]) => [
+                String(key),
+                Number(value || 0)
+              ])
+            )
+          : {},
+        mostUsedPermissions: Array.isArray(statsResult.mostUsedPermissions)
+          ? statsResult.mostUsedPermissions.map((perm: any) => ({
+              name: String(perm.name || ''),
+              description: String(perm.description || ''),
+              category: String(perm.category || ''),
+              roles: Array.isArray(perm.roles) 
+                ? perm.roles.map((r: any) => String(r))
+                : [],
+              roleCount: Number(perm.roleCount || 0),
+              isSystem: Boolean(perm.isSystem ?? false),
+              isActive: perm.isActive === null || perm.isActive === undefined 
+                ? undefined 
+                : Boolean(perm.isActive),
+            }))
+          : [],
+        unusedPermissions: Array.isArray(statsResult.unusedPermissions)
+          ? statsResult.unusedPermissions.map((perm: any) => ({
+              name: String(perm.name || ''),
+              description: String(perm.description || ''),
+              category: String(perm.category || ''),
+              roles: Array.isArray(perm.roles) 
+                ? perm.roles.map((r: any) => String(r))
+                : [],
+              roleCount: Number(perm.roleCount || 0),
+              isSystem: Boolean(perm.isSystem ?? false),
+              isActive: perm.isActive === null || perm.isActive === undefined 
+                ? undefined 
+                : Boolean(perm.isActive),
+            }))
+          : [],
+      }
+    }
+  } catch (error) {
+    console.error('Error loading permissions data:', error)
+    permissions = []
+    stats = {
+      totalPermissions: 0,
+      systemPermissions: 0,
+      customPermissions: 0,
+      permissionsByCategory: {},
+      mostUsedPermissions: [],
+      unusedPermissions: [],
+    }
+  }
+
+  return <PermissionsPageClient initialPermissions={permissions} initialStats={stats} />
 }
 

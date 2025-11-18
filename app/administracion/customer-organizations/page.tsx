@@ -38,47 +38,95 @@ export default async function CustomerOrganizationsPage() {
     redirect('/administracion/login')
   }
 
-  // Obtener datos iniciales
-  const [customersResult, organizationsResult] = await Promise.all([
-    CustomerOrganizationService.getAllCustomersWithOrganizations({
-      page: 1,
-      pageSize: 100,
-    }),
-    OrganizationAdminService.getAllOrganizations(),
-  ])
+  // Obtener datos iniciales con manejo de errores
+  let customers: any[] = []
+  let organizations: any[] = []
 
-  const customers = customersResult.customers.map((customer: any) => ({
-    id: customer.id,
-    nombre: customer.nombre === null ? undefined : customer.nombre,
-    apellido: customer.apellido === null ? undefined : customer.apellido,
-    email: customer.email === null ? undefined : customer.email,
-    ci: customer.ci === null ? undefined : customer.ci,
-    razonSocial: customer.razonSocial === null ? undefined : customer.razonSocial,
-    organizations: (customer.organizations || []).map((org: any) => ({
-      id: org.id,
-      organizationId: org.organizationId,
-      isActive: org.isActive,
-      joinedAt: org.joinedAt.toISOString(),
-      organization: {
-        id: org.organization.id,
-        name: org.organization.name,
-        razonSocial: org.organization.razonSocial === null ? undefined : org.organization.razonSocial,
-        nit: org.organization.nit === null ? undefined : org.organization.nit,
-        address: org.organization.address === null ? undefined : org.organization.address, // Usar 'address' en lugar de 'direccion'
-        phone: org.organization.phone === null ? undefined : org.organization.phone, // Usar 'phone' en lugar de 'telefono'
-        slug: org.organization.slug,
-        subscriptionStatus: org.organization.subscriptionStatus === null ? undefined : org.organization.subscriptionStatus,
-      },
-    })),
-  }))
+  try {
+    const [customersResult, organizationsResult] = await Promise.all([
+      CustomerOrganizationService.getAllCustomersWithOrganizations({
+        page: 1,
+        pageSize: 100,
+      }).catch((err) => {
+        console.error('Error fetching customers:', err)
+        return { customers: [], total: 0, page: 1, pageSize: 100, totalPages: 0 }
+      }),
+      OrganizationAdminService.getAllOrganizations().catch((err) => {
+        console.error('Error fetching organizations:', err)
+        return []
+      }),
+    ])
 
-  const organizations = organizationsResult.map((org) => ({
-    id: org.id,
-    name: org.name,
-    razonSocial: (org as any).razonSocial,
-    nit: (org as any).nit,
-    slug: org.slug,
-  }))
+    customers = (customersResult?.customers || []).map((customer: any) => {
+      // El modelo Customer no tiene razonSocial, solo nombre y apellido
+      return {
+        id: customer.id || '',
+        nombre: customer.nombre === null || customer.nombre === undefined ? undefined : String(customer.nombre),
+        apellido: customer.apellido === null || customer.apellido === undefined ? undefined : String(customer.apellido),
+        email: customer.email === null || customer.email === undefined ? undefined : String(customer.email),
+        ci: customer.ci === null || customer.ci === undefined ? undefined : String(customer.ci),
+        razonSocial: undefined, // Customer no tiene razonSocial
+        organizations: (customer.organizations || []).map((org: any) => {
+          try {
+            const orgData = org?.organization || {}
+            // Filtrar whiteLabelBranding y otros campos no serializables
+            return {
+              id: String(org.id || ''),
+              organizationId: String(org.organizationId || ''),
+              isActive: Boolean(org.isActive ?? true),
+              joinedAt: org.joinedAt 
+                ? (org.joinedAt instanceof Date ? org.joinedAt.toISOString() : String(org.joinedAt))
+                : new Date().toISOString(),
+              organization: {
+                id: String(orgData.id || ''),
+                name: String(orgData.name || ''),
+                razonSocial: orgData.razonSocial === null || orgData.razonSocial === undefined 
+                  ? undefined 
+                  : String(orgData.razonSocial),
+                nit: orgData.nit === null || orgData.nit === undefined 
+                  ? undefined 
+                  : String(orgData.nit),
+                address: orgData.address === null || orgData.address === undefined 
+                  ? undefined 
+                  : String(orgData.address),
+                phone: orgData.phone === null || orgData.phone === undefined 
+                  ? undefined 
+                  : String(orgData.phone),
+                slug: String(orgData.slug || ''),
+                subscriptionStatus: orgData.subscriptionStatus === null || orgData.subscriptionStatus === undefined
+                  ? undefined
+                  : String(orgData.subscriptionStatus),
+              },
+            }
+          } catch (orgError) {
+            console.error('Error mapping organization:', orgError, org)
+            return null
+          }
+        }).filter((org): org is NonNullable<typeof org> => org !== null),
+      }
+    })
+
+    organizations = (organizationsResult || []).map((org: any) => {
+      // Asegurar que solo se serialicen campos primitivos
+      // Filtrar campos no serializables como _count, subscriptionPlan, etc.
+      return {
+        id: String(org.id || ''),
+        name: String(org.name || ''),
+        razonSocial: org.razonSocial === null || org.razonSocial === undefined 
+          ? undefined 
+          : String(org.razonSocial),
+        nit: org.nit === null || org.nit === undefined 
+          ? undefined 
+          : String(org.nit),
+        slug: String(org.slug || ''),
+      }
+    }).filter((org) => org.id) // Filtrar organizaciones sin ID válido
+  } catch (error) {
+    console.error('Error loading customer organizations data:', error)
+    // En caso de error, retornar arrays vacíos para evitar que la página falle completamente
+    customers = []
+    organizations = []
+  }
 
   return (
     <CustomerOrganizationsPageClient

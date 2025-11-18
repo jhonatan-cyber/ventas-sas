@@ -33,12 +33,53 @@ export default async function RolesPage() {
     if (!canList) {
       redirect('/administracion/dashboard?error=no_permission')
     }
-
-    // Obtener roles
-    const roles = await RoleAdminService.getAllRoles()
-
-    return <RolesPageClient initialRoles={roles} />
-  } catch  {
+  } catch {
     redirect('/administracion/login')
   }
+
+  // Obtener roles con manejo de errores
+  let roles: any[] = []
+
+  try {
+    const rolesResult = await RoleAdminService.getAllRoles().catch((err) => {
+      console.error('Error fetching roles:', err)
+      return []
+    })
+
+    // Serializar roles de forma segura
+    roles = (rolesResult || []).map((role: any) => {
+      try {
+        return {
+          id: String(role.id || ''),
+          name: String(role.name || ''),
+          description: role.description === null || role.description === undefined 
+            ? undefined 
+            : String(role.description),
+          permissions: role.permissions 
+            ? (Array.isArray(role.permissions) 
+                ? role.permissions.map((p: any) => String(p))
+                : typeof role.permissions === 'object'
+                  ? JSON.parse(JSON.stringify(role.permissions))
+                  : [])
+            : [],
+          isActive: Boolean(role.isActive ?? true),
+          createdAt: role.createdAt instanceof Date 
+            ? role.createdAt.toISOString() 
+            : String(role.createdAt || new Date().toISOString()),
+          _count: {
+            organizationMembers: Number(role._count?.organizationMembers || 0),
+            adminUsers: Number(role._count?.adminUsers || 0),
+          },
+        }
+      } catch (roleError) {
+        console.error('Error mapping role:', roleError, role)
+        return null
+      }
+    }).filter((role): role is NonNullable<typeof role> => role !== null)
+  } catch (error) {
+    console.error('Error loading roles data:', error)
+    roles = []
+  }
+
+  return <RolesPageClient initialRoles={roles} />
 }
