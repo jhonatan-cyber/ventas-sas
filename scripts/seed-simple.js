@@ -12,15 +12,15 @@ async function main() {
 
   // Verificar si el usuario ya existe
   const existingUser = await prisma.profile.findUnique({
-    where: { email: 'jhonatananasi@gmail.com' }
+    where: { email: 'jhonatanancasi@gmail.com' }
   })
 
   if (existingUser) {
-    console.log('⚠️  El usuario jhonatananasi@gmail.com ya existe. Actualizando...')
+    console.log('⚠️  El usuario jhonatanancasi@gmail.com ya existe. Actualizando...')
     
     // Actualizar el usuario existente
     await prisma.profile.update({
-      where: { email: 'jhonatananasi@gmail.com' },
+      where: { email: 'jhonatanancasi@gmail.com' },
       data: {
         password: hashedPassword,
         role: 'Super Administrador',
@@ -35,7 +35,7 @@ async function main() {
     // Crear el usuario
     const user = await prisma.profile.create({
       data: {
-        email: 'jhonatananasi@gmail.com',
+        email: 'jhonatanancasi@gmail.com',
         password: hashedPassword,
         fullName: 'Jhonatan Anasi',
         role: 'Super Administrador',

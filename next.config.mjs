@@ -3,6 +3,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  eslint: {
+    // Permitir que el build continúe con warnings de ESLint
+    ignoreDuringBuilds: false,
+  },
   images: {
     // Habilitar optimización de imágenes
     unoptimized: false,
