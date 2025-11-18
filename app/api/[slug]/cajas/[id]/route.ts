@@ -4,7 +4,7 @@ import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getCustomerBySlug, getOrganizationIdByCustomerSlug, getMaxBranchesByOrganizationId } from '@/lib/utils/organization'
+import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeCashRegister } from '@/lib/utils/serializers'
 
 // GET - Obtener caja por ID
@@ -170,7 +170,7 @@ export async function PUT(
     // Actualización normal
     const payload = {
       name: body.name?.trim(),
-      branchId: finalBranchId,
+      branchId: finalBranchId ?? undefined,
       openingBalance: body.openingBalance !== undefined ? Number(body.openingBalance) : undefined,
       currentBalance: body.currentBalance !== undefined ? Number(body.currentBalance) : undefined,
       isOpen: body.isOpen,

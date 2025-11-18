@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { formatDateTime } from "@/lib/utils/date"
 import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 export interface SalesTableProps {

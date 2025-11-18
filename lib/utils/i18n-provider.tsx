@@ -148,8 +148,6 @@ const MINIMAL_MESSAGES = {
     lastMonth: "Mes pasado",
     lastYear: "Año pasado",
     custom: "Personalizado",
-    search: "Buscar",
-    all: "Todos",
     placeholders: {
       amount: "0.00",
       searchSales: "Buscar ventas...",

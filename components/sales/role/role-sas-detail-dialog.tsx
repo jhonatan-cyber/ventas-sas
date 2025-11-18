@@ -51,8 +51,6 @@ export function RoleSasDetailDialog({
   onOpenChange,
   role,
 }: RoleSasDetailDialogProps) {
-  if (!role) return null
-
   const formatDate = (date: Date | string | null) => {
     if (!date) return "N/A"
     return new Date(date).toLocaleString("es-BO", {
@@ -64,8 +62,8 @@ export function RoleSasDetailDialog({
     })
   }
 
-  const permissions = Array.isArray(role.permissions) ? role.permissions : []
-  const userCount = role._count?.usuariosSas || 0
+  const permissions = Array.isArray(role?.permissions) ? role.permissions : []
+  const userCount = role?._count?.usuariosSas || 0
 
   // Función para extraer el módulo del nombre del permiso (formato: modulo_accion)
   const getModuleFromPermission = (permissionName: string): string => {
@@ -75,6 +73,7 @@ export function RoleSasDetailDialog({
 
   // Agrupar permisos por módulo
   const permissionsByModule = useMemo(() => {
+    if (!role) return {}
     const grouped: Record<string, string[]> = {}
     permissions.forEach((perm) => {
       const module = getModuleFromPermission(perm)
@@ -84,7 +83,9 @@ export function RoleSasDetailDialog({
       grouped[module].push(String(perm))
     })
     return grouped
-  }, [permissions])
+  }, [permissions, role])
+
+  if (!role) return null
 
   // Obtener módulos disponibles
   const availableModules = PermissionSasService.getAvailableModules()

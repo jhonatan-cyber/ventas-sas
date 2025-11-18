@@ -232,7 +232,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
               <Card key={chip.label} className="border border-gray-200/70 dark:border-gray-800/60 bg-white/80 dark:bg-[#101010]/80 backdrop-blur">
                 <CardContent className="p-4 sm:p-5 space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                    <chip.icon className="h-4 w-4" />
+                    {chip.icon && <chip.icon />}
                     {chip.label}
                   </div>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">{chip.value}</p>

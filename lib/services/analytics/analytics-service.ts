@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { startOfDay, endOfDay, subDays, subMonths, startOfMonth, endOfMonth, format } from "date-fns"
+import { startOfDay, subDays, subMonths, startOfMonth, endOfMonth, format } from "date-fns"
 
 export interface KPIData {
   id: string
@@ -324,7 +324,7 @@ export class AnalyticsService {
         totalQuantity: 0
       }
 
-      const revenue = Number(item.price) * Number(item.quantity)
+      const revenue = Number(item.unitPrice) * Number(item.quantity)
       const cost = Number(item.product?.cost || 0) * Number(item.quantity)
 
       existing.totalRevenue += revenue

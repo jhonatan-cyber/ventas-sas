@@ -33,6 +33,7 @@ type UsuarioSasWithRelations = UsuarioSas & {
   rol?: { id: string; nombre: string } | null
   sucursal?: { id: string; name: string } | null
   organization?: { id: string; name: string | null; razonSocial: string | null } | null
+  lastLoginAt?: Date | null
 }
 
 interface ProfilePageClientProps {

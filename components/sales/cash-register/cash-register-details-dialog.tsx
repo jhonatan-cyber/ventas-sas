@@ -1,14 +1,13 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import type { CashRegisterWithRelations } from "./types"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { formatDateTime } from "@/lib/utils/date"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
@@ -36,6 +35,7 @@ const getUserFullName = (user?: { nombre: string; apellido: string } | null) => 
 }
 
 export function CashRegisterDetailsDialog({ open, onOpenChange, cashRegister, showBranchInfo = true }: CashRegisterDetailsDialogProps) {
+  const t = useTranslations()
   const isOpen = cashRegister?.isOpen ?? false
   const openedAt = cashRegister?.lastOpenAt || cashRegister?.createdAt
   const closedAt = cashRegister?.lastCloseAt
@@ -144,7 +144,7 @@ export function CashRegisterDetailsDialog({ open, onOpenChange, cashRegister, sh
         setGeneralStats({
           quotationsCount: filteredQuotations.length,
         })
-      } catch (e) {
+      } catch {
         // noop
       } finally {
         setLoadingStats(false)

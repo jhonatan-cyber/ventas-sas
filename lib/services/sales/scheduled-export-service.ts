@@ -3,12 +3,8 @@
  * Maneja exportaciones automáticas mediante cron jobs
  */
 
-import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { ExportService, ExportFormat, ExportEntity } from './export-service'
-import { readFile, unlink } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { ExportFormat, ExportEntity } from './export-service'
 
 export interface ScheduledExport {
   id: string

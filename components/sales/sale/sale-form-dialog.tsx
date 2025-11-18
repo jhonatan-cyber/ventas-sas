@@ -1,14 +1,26 @@
-"use client"
+"use client";
 
-import { BrowserMultiFormatReader } from "@zxing/library"
-import { Check, ChevronsUpDown, Plus, Trash2, ScanLine, X, ChevronDown } from "lucide-react"
-import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { toast } from "sonner"
+import { BrowserMultiFormatReader } from "@zxing/library";
+import {
+  Check,
+  ChevronsUpDown,
+  Plus,
+  Trash2,
+  ScanLine,
+  X,
+  ChevronDown,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { SalesSaleWithRelations, SaleCustomerSummary, SaleProductSummary } from "./types"
+import {
+  SalesSaleWithRelations,
+  SaleCustomerSummary,
+  SaleProductSummary,
+} from "./types";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -16,7 +28,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -24,438 +36,490 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print";
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences";
 
 const capitalizeWords = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/\b\p{L}/gu, (char) => char.toUpperCase())
+  value.toLowerCase().replace(/\b\p{L}/gu, (char) => char.toUpperCase());
 
-const DEFAULT_PHONE_PREFIX = "+591"
-const DEFAULT_PHONE_PREFIX_DIGITS = DEFAULT_PHONE_PREFIX.replace(/\D/g, '')
+const DEFAULT_PHONE_PREFIX = "+591";
+const DEFAULT_PHONE_PREFIX_DIGITS = DEFAULT_PHONE_PREFIX.replace(/\D/g, "");
 
 const normalizePhoneForState = (value?: string | null) => {
-  if (!value) return DEFAULT_PHONE_PREFIX
-  const trimmed = value.trim()
-  if (!trimmed) return DEFAULT_PHONE_PREFIX
-  const digitsOnly = trimmed.replace(/\D/g, '')
+  if (!value) return DEFAULT_PHONE_PREFIX;
+  const trimmed = value.trim();
+  if (!trimmed) return DEFAULT_PHONE_PREFIX;
+  const digitsOnly = trimmed.replace(/\D/g, "");
   const localDigits = digitsOnly.startsWith(DEFAULT_PHONE_PREFIX_DIGITS)
     ? digitsOnly.slice(DEFAULT_PHONE_PREFIX_DIGITS.length)
-    : digitsOnly
-  if (!localDigits) return DEFAULT_PHONE_PREFIX
-  return `${DEFAULT_PHONE_PREFIX}${localDigits}`
-}
+    : digitsOnly;
+  if (!localDigits) return DEFAULT_PHONE_PREFIX;
+  return `${DEFAULT_PHONE_PREFIX}${localDigits}`;
+};
 
 interface SaleFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  sale?: SalesSaleWithRelations
-  customerSlug: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sale?: SalesSaleWithRelations;
+  customerSlug: string;
   currentUser?: {
-    id: string
-    sucursalId?: string | null
-  } | null
-  onSave: (data: any) => Promise<any>
+    id: string;
+    sucursalId?: string | null;
+  } | null;
+  onSave: (data: any) => Promise<any>;
 }
 
 interface SaleItemForm {
-  id: string
-  productId: string
-  product?: SaleProductSummary | null
-  quantity: number
-  unitPrice: number
-  subtotal: number
-  codes: string[]
+  id: string;
+  productId: string;
+  product?: SaleProductSummary | null;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  codes: string[];
 }
 
 const generateTempId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2)
+    : Math.random().toString(36).slice(2);
 
 const _statusOptions = [
-  { value: 'completed', label: 'Completada' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'cancelled', label: 'Cancelada' },
-]
+  { value: "completed", label: "Completada" },
+  { value: "pending", label: "Pendiente" },
+  { value: "cancelled", label: "Cancelada" },
+];
 
 const paymentOptions = [
-  { value: 'cash', label: 'Efectivo' },
-  { value: 'card', label: 'Tarjeta' },
-  { value: 'transfer', label: 'Transferencia' },
-  { value: 'qr', label: 'QR / Billetera' },
-]
+  { value: "cash", label: "Efectivo" },
+  { value: "card", label: "Tarjeta" },
+  { value: "transfer", label: "Transferencia" },
+  { value: "qr", label: "QR / Billetera" },
+];
 
 const createEmptyItem = (): SaleItemForm => ({
   id: generateTempId(),
-  productId: '',
+  productId: "",
   product: undefined,
   quantity: 1,
   unitPrice: 0,
   subtotal: 0,
   codes: [],
-})
+});
 
-export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave }: SaleFormDialogProps) {
-  const t = useTranslations()
-  const [customers, setCustomers] = useState<SaleCustomerSummary[]>([])
-  const [products, setProducts] = useState<SaleProductSummary[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingData, setIsLoadingData] = useState(false)
+export function SaleFormDialog({
+  open,
+  onOpenChange,
+  sale,
+  customerSlug,
+  onSave,
+}: SaleFormDialogProps) {
+  const t = useTranslations();
+  const [customers, setCustomers] = useState<SaleCustomerSummary[]>([]);
+  const [products, setProducts] = useState<SaleProductSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const [customerId, setCustomerId] = useState<string>('')
-  const [customerInputValue, setCustomerInputValue] = useState<string>('')
-  const [_customerPhoneInput, setCustomerPhoneInput] = useState<string>(DEFAULT_PHONE_PREFIX)
-  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
-  const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0)
-  const [isManualCustomerConfirmed, setIsManualCustomerConfirmed] = useState(false)
-  const customerContainerRef = useRef<HTMLDivElement>(null)
-  const customerInputRef = useRef<HTMLInputElement>(null)
-  const [paymentMethod, setPaymentMethod] = useState<string>('cash')
-  const [items, setItems] = useState<SaleItemForm[]>([createEmptyItem()])
-  const [discount, setDiscount] = useState<string>('0')
-  const [notes, setNotes] = useState<string>('')
-  const [codeInputs, setCodeInputs] = useState<Record<string, string>>({})
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanningItemId, setScanningItemId] = useState<string | null>(null)
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null)
-  const [openProductPopovers, setOpenProductPopovers] = useState<Record<string, boolean>>({})
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
-  const scannerVideoRef = useRef<HTMLVideoElement | null>(null)
-  const lastScannedCode = useRef<string | null>(null)
+  const [customerId, setCustomerId] = useState<string>("");
+  const [customerInputValue, setCustomerInputValue] = useState<string>("");
+  const [_customerPhoneInput, setCustomerPhoneInput] =
+    useState<string>(DEFAULT_PHONE_PREFIX);
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [highlightedCustomerIndex, setHighlightedCustomerIndex] = useState(0);
+  const [isManualCustomerConfirmed, setIsManualCustomerConfirmed] =
+    useState(false);
+  const customerContainerRef = useRef<HTMLDivElement>(null);
+  const customerInputRef = useRef<HTMLInputElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [items, setItems] = useState<SaleItemForm[]>([createEmptyItem()]);
+  const [discount, setDiscount] = useState<string>("0");
+  const [notes, setNotes] = useState<string>("");
+  const [codeInputs, setCodeInputs] = useState<Record<string, string>>({});
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanningItemId, setScanningItemId] = useState<string | null>(null);
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [openProductPopovers, setOpenProductPopovers] = useState<
+    Record<string, boolean>
+  >({});
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lastScannedCode = useRef<string | null>(null);
   // Sucursal (según rol)
-  const [isAdmin, setIsAdmin] = useState<boolean>(false)
-  const [branches, setBranches] = useState<Array<{ id: string; name: string | null }>>([])
-  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [branches, setBranches] = useState<
+    Array<{ id: string; name: string | null }>
+  >([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
 
   const fetchCustomers = useCallback(async () => {
     try {
-      const response = await fetch(`/api/${customerSlug}/clientes?page=1&pageSize=1000`)
-      if (!response.ok) return
-      const data = await response.json()
-      const mapped: SaleCustomerSummary[] = (data.customers || []).map((customer: any) => ({
-        id: customer.id,
-        name: customer.name ?? null,
-        lastName: customer.lastName ?? null,
-        email: customer.email ?? null,
-        phone: customer.phone ?? null,
-      }))
-      setCustomers(mapped)
+      const response = await fetch(
+        `/api/${customerSlug}/clientes?page=1&pageSize=1000`
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      const mapped: SaleCustomerSummary[] = (data.customers || []).map(
+        (customer: any) => ({
+          id: customer.id,
+          name: customer.name ?? null,
+          lastName: customer.lastName ?? null,
+          email: customer.email ?? null,
+          phone: customer.phone ?? null,
+        })
+      );
+      setCustomers(mapped);
     } catch (error) {
-      console.error('Error al cargar clientes:', error)
+      console.error("Error al cargar clientes:", error);
     }
-  }, [customerSlug])
+  }, [customerSlug]);
 
   const fetchProducts = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ page: '1', pageSize: '1000' })
+      const params = new URLSearchParams({ page: "1", pageSize: "1000" });
       if (selectedBranchId) {
-        params.set('branchId', selectedBranchId)
+        params.set("branchId", selectedBranchId);
       }
-      const response = await fetch(`/api/${customerSlug}/productos?${params.toString()}`)
-      if (!response.ok) return
-      const data = await response.json()
-      const mapped: SaleProductSummary[] = (data.products || []).map((product: any) => ({
-        id: product.id,
-        name: product.name,
-        price: Number(product.price ?? 0),
-        imageUrl: product.imageUrl ?? null,
-      }))
-      setProducts(mapped)
+      const response = await fetch(
+        `/api/${customerSlug}/productos?${params.toString()}`
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      const mapped: SaleProductSummary[] = (data.products || []).map(
+        (product: any) => ({
+          id: product.id,
+          name: product.name,
+          price: Number(product.price ?? 0),
+          imageUrl: product.imageUrl ?? null,
+        })
+      );
+      setProducts(mapped);
     } catch (error) {
-      console.error('Error al cargar productos:', error)
+      console.error("Error al cargar productos:", error);
     }
-  }, [customerSlug, selectedBranchId])
+  }, [customerSlug, selectedBranchId]);
 
   // Filtrar clientes basados en el input
   const filteredCustomers = useMemo(() => {
-    if (!customerInputValue.trim()) return customers
-    const search = customerInputValue.trim().toLowerCase()
+    if (!customerInputValue.trim()) return customers;
+    const search = customerInputValue.trim().toLowerCase();
     return customers.filter((customer) => {
-      const combined = `${customer.name ?? ''} ${customer.lastName ?? ''}`.trim().toLowerCase()
-      return combined.includes(search)
-    })
-  }, [customers, customerInputValue])
+      const combined = `${customer.name ?? ""} ${customer.lastName ?? ""}`
+        .trim()
+        .toLowerCase();
+      return combined.includes(search);
+    });
+  }, [customers, customerInputValue]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (customerContainerRef.current && !customerContainerRef.current.contains(event.target as Node)) {
-        setIsCustomerDropdownOpen(false)
+      if (
+        customerContainerRef.current &&
+        !customerContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsCustomerDropdownOpen(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Prefetch en segundo plano para que al abrir el modal ya esté todo listo
   useEffect(() => {
-    fetchCustomers()
-    fetchProducts()
-  }, [fetchCustomers, fetchProducts])
+    fetchCustomers();
+    fetchProducts();
+  }, [fetchCustomers, fetchProducts]);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     // Si al abrir aún no hay clientes, mostrar breve estado de carga y forzar fetch
     if (customers.length === 0) {
-      setIsLoadingData(true)
-      fetchCustomers().finally(() => setIsLoadingData(false))
+      setIsLoadingData(true);
+      fetchCustomers().finally(() => setIsLoadingData(false));
     }
     // Asegurar productos para la sucursal actual
-    fetchProducts()
-  }, [open, fetchCustomers, fetchProducts, customers.length])
+    fetchProducts();
+  }, [open, fetchCustomers, fetchProducts, customers.length]);
 
   const loadUserAndBranches = useCallback(async () => {
     try {
-      const userResponse = await fetch(`/api/${customerSlug}/auth/me`)
+      const userResponse = await fetch(`/api/${customerSlug}/auth/me`);
       if (userResponse.ok) {
-        const userData = await userResponse.json()
-        const roleName = (userData?.rol?.nombre || '').toLowerCase()
-        const userIsAdmin = roleName.includes('administrador') || roleName === 'admin'
-        setIsAdmin(!!userIsAdmin)
-        const userBranchId = userData?.sucursalId || null
+        const userData = await userResponse.json();
+        const roleName = (userData?.rol?.nombre || "").toLowerCase();
+        const userIsAdmin =
+          roleName.includes("administrador") || roleName === "admin";
+        setIsAdmin(!!userIsAdmin);
+        const userBranchId = userData?.sucursalId || null;
         if (!userIsAdmin) {
-          setSelectedBranchId(userBranchId)
+          setSelectedBranchId(userBranchId);
         } else {
           try {
-            const branchesResponse = await fetch(`/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`)
+            const branchesResponse = await fetch(
+              `/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`
+            );
             if (branchesResponse.ok) {
-              const data = await branchesResponse.json()
-              setBranches((data.branches || []).map((b: any) => ({ id: b.id, name: b.name ?? null })))
-              setSelectedBranchId((prev) => prev ?? userBranchId)
+              const data = await branchesResponse.json();
+              setBranches(
+                (data.branches || []).map((b: any) => ({
+                  id: b.id,
+                  name: b.name ?? null,
+                }))
+              );
+              setSelectedBranchId((prev) => prev ?? userBranchId);
             }
           } catch (error) {
-            console.error('Error al cargar sucursales:', error)
+            console.error("Error al cargar sucursales:", error);
           }
         }
       }
     } catch (error) {
-      console.error('Error al obtener usuario:', error)
+      console.error("Error al obtener usuario:", error);
     }
-  }, [customerSlug])
+  }, [customerSlug]);
 
   // Prefetch user/sucursales
   useEffect(() => {
-    void loadUserAndBranches()
-  }, [loadUserAndBranches])
+    void loadUserAndBranches();
+  }, [loadUserAndBranches]);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
 
     if (sale) {
-      setCustomerId(sale.customerId ?? '')
-      const combinedName = `${sale.customer?.name ?? ''} ${sale.customer?.lastName ?? ''}`.trim()
-      const saleCustomerName = (sale as any).customerName || ''
-      setCustomerInputValue(combinedName || saleCustomerName || '')
-      setCustomerPhoneInput(normalizePhoneForState(sale.customer?.phone))
-      setPaymentMethod(sale.paymentMethod ?? 'cash')
-      setDiscount(Number(sale.discount ?? 0).toString())
-      setNotes(sale.notes ?? '')
+      setCustomerId(sale.customerId ?? "");
+      const combinedName = `${sale.customer?.name ?? ""} ${
+        sale.customer?.lastName ?? ""
+      }`.trim();
+      const saleCustomerName = (sale as any).customerName || "";
+      setCustomerInputValue(combinedName || saleCustomerName || "");
+      setCustomerPhoneInput(normalizePhoneForState(sale.customer?.phone));
+      setPaymentMethod(sale.paymentMethod ?? "cash");
+      setDiscount(Number(sale.discount ?? 0).toString());
+      setNotes(sale.notes ?? "");
       // Si hay customerName pero no customerId, significa que fue ingresado manualmente
-      setIsManualCustomerConfirmed(!!saleCustomerName && !sale.customerId)
-      const mappedItems =
-        sale.items.map((item) => ({
-          id: generateTempId(),
-          productId: item.productId,
-          product: item.product ?? undefined,
-          quantity: Number(item.quantity ?? 0) || 1,
-          unitPrice: Number(item.unitPrice ?? 0),
-          subtotal: Number(item.subtotal ?? 0),
-          codes: Array.isArray(item.trackingCodes)
-            ? item.trackingCodes.filter((code) => typeof code === 'string').map((code) => code.trim())
-            : [],
-        })) || [createEmptyItem()]
-      setItems(mappedItems)
-      const inputs: Record<string, string> = {}
+      setIsManualCustomerConfirmed(!!saleCustomerName && !sale.customerId);
+      const mappedItems = sale.items.map((item) => ({
+        id: generateTempId(),
+        productId: item.productId,
+        product: item.product ?? undefined,
+        quantity: Number(item.quantity ?? 0) || 1,
+        unitPrice: Number(item.unitPrice ?? 0),
+        subtotal: Number(item.subtotal ?? 0),
+        codes: Array.isArray(item.trackingCodes)
+          ? item.trackingCodes
+              .filter((code) => typeof code === "string")
+              .map((code) => code.trim())
+          : [],
+      })) || [createEmptyItem()];
+      setItems(mappedItems);
+      const inputs: Record<string, string> = {};
       mappedItems.forEach((item) => {
-        inputs[item.id] = ''
-      })
-      setCodeInputs(inputs)
+        inputs[item.id] = "";
+      });
+      setCodeInputs(inputs);
     } else {
-      const empty = createEmptyItem()
-      setCustomerId('')
-      setCustomerInputValue('')
-      setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
-      setPaymentMethod('cash')
-      setDiscount('0')
-      setNotes('')
-      setItems([empty])
-      setCodeInputs({ [empty.id]: '' })
-      setIsManualCustomerConfirmed(false)
+      const empty = createEmptyItem();
+      setCustomerId("");
+      setCustomerInputValue("");
+      setCustomerPhoneInput(DEFAULT_PHONE_PREFIX);
+      setPaymentMethod("cash");
+      setDiscount("0");
+      setNotes("");
+      setItems([empty]);
+      setCodeInputs({ [empty.id]: "" });
+      setIsManualCustomerConfirmed(false);
     }
-  }, [sale, open])
+  }, [sale, open]);
 
   const stopScanning = useCallback(() => {
     if (codeReaderRef.current) {
-      codeReaderRef.current.reset()
-      codeReaderRef.current = null
+      codeReaderRef.current.reset();
+      codeReaderRef.current = null;
     }
     if (videoStream) {
-      videoStream.getTracks().forEach((track) => track.stop())
+      videoStream.getTracks().forEach((track) => track.stop());
     }
-    setVideoStream(null)
-    setIsScanning(false)
-    setScanningItemId(null)
-    lastScannedCode.current = null
-  }, [videoStream])
+    setVideoStream(null);
+    setIsScanning(false);
+    setScanningItemId(null);
+    lastScannedCode.current = null;
+  }, [videoStream]);
 
   useEffect(() => {
     return () => {
-      stopScanning()
-    }
-  }, [stopScanning])
+      stopScanning();
+    };
+  }, [stopScanning]);
 
   useEffect(() => {
     if (!open) {
-      stopScanning()
-      setCodeInputs({})
+      stopScanning();
+      setCodeInputs({});
     }
-  }, [open, stopScanning])
+  }, [open, stopScanning]);
 
   const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-  }, [items])
+    return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  }, [items]);
 
   const total = useMemo(() => {
-    const numericDiscount = parseFloat(discount || '0')
-    return subtotal - (Number.isNaN(numericDiscount) ? 0 : numericDiscount)
-  }, [subtotal, discount])
+    const numericDiscount = parseFloat(discount || "0");
+    return subtotal - (Number.isNaN(numericDiscount) ? 0 : numericDiscount);
+  }, [subtotal, discount]);
 
   const handleCustomerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isCustomerDropdownOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-      setIsCustomerDropdownOpen(true)
-      return
+    if (
+      !isCustomerDropdownOpen &&
+      (e.key === "ArrowDown" || e.key === "ArrowUp")
+    ) {
+      setIsCustomerDropdownOpen(true);
+      return;
     }
 
     switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault()
+      case "ArrowDown":
+        e.preventDefault();
         setHighlightedCustomerIndex((prev) =>
           prev < filteredCustomers.length - 1 ? prev + 1 : prev
-        )
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setHighlightedCustomerIndex((prev) => (prev > 0 ? prev - 1 : prev))
-        break
-      case 'Enter':
-        e.preventDefault()
-        const trimmed = customerInputValue.trim()
-        if (isCustomerDropdownOpen && filteredCustomers[highlightedCustomerIndex]) {
-          selectCustomer(filteredCustomers[highlightedCustomerIndex])
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedCustomerIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        const trimmed = customerInputValue.trim();
+        if (
+          isCustomerDropdownOpen &&
+          filteredCustomers[highlightedCustomerIndex]
+        ) {
+          selectCustomer(filteredCustomers[highlightedCustomerIndex]);
         } else if (trimmed.length > 0) {
-          handleManualCustomer(trimmed)
+          handleManualCustomer(trimmed);
         } else {
-          setIsCustomerDropdownOpen(false)
+          setIsCustomerDropdownOpen(false);
         }
-        break
-      case 'Escape':
-        setIsCustomerDropdownOpen(false)
-        break
+        break;
+      case "Escape":
+        setIsCustomerDropdownOpen(false);
+        break;
     }
-  }
+  };
 
   const selectCustomer = (customer: SaleCustomerSummary) => {
-    setCustomerId(customer.id)
-    const fullName = `${customer.name ?? ''} ${customer.lastName ?? ''}`.trim()
-    setCustomerInputValue(capitalizeWords(fullName))
-    setIsCustomerDropdownOpen(false)
-    setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(normalizePhoneForState(customer.phone))
-    setIsManualCustomerConfirmed(false) // Resetear cuando se selecciona un cliente registrado
-  }
+    setCustomerId(customer.id);
+    const fullName = `${customer.name ?? ""} ${customer.lastName ?? ""}`.trim();
+    setCustomerInputValue(capitalizeWords(fullName));
+    setIsCustomerDropdownOpen(false);
+    setHighlightedCustomerIndex(0);
+    setCustomerPhoneInput(normalizePhoneForState(customer.phone));
+    setIsManualCustomerConfirmed(false); // Resetear cuando se selecciona un cliente registrado
+  };
 
   const clearCustomer = () => {
-    setCustomerId('')
-    setCustomerInputValue('')
-    customerInputRef.current?.focus()
-    setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
-    setIsManualCustomerConfirmed(false) // Resetear cuando se limpia
-  }
+    setCustomerId("");
+    setCustomerInputValue("");
+    customerInputRef.current?.focus();
+    setHighlightedCustomerIndex(0);
+    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX);
+    setIsManualCustomerConfirmed(false); // Resetear cuando se limpia
+  };
 
   const handleManualCustomer = (value: string) => {
-    const trimmed = value.trim()
-    if (trimmed.length === 0) return
-    setCustomerId('')
-    const formatted = capitalizeWords(trimmed)
-    setCustomerInputValue(formatted)
-    setIsCustomerDropdownOpen(false)
-    setHighlightedCustomerIndex(0)
-    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX)
-    setIsManualCustomerConfirmed(true) // Marcar como confirmado cuando se ingresa manualmente
-  }
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return;
+    setCustomerId("");
+    const formatted = capitalizeWords(trimmed);
+    setCustomerInputValue(formatted);
+    setIsCustomerDropdownOpen(false);
+    setHighlightedCustomerIndex(0);
+    setCustomerPhoneInput(DEFAULT_PHONE_PREFIX);
+    setIsManualCustomerConfirmed(true); // Marcar como confirmado cuando se ingresa manualmente
+  };
 
   const handleAddItem = () => {
-    const newItem = createEmptyItem()
-    setItems((prev) => [...prev, newItem])
-    setCodeInputs((prev) => ({ ...prev, [newItem.id]: '' }))
-  }
+    const newItem = createEmptyItem();
+    setItems((prev) => [...prev, newItem]);
+    setCodeInputs((prev) => ({ ...prev, [newItem.id]: "" }));
+  };
 
   const handleRemoveItem = (id: string) => {
-    setItems((prev) => (prev.length > 1 ? prev.filter((item) => item.id !== id) : prev))
+    setItems((prev) =>
+      prev.length > 1 ? prev.filter((item) => item.id !== id) : prev
+    );
     setCodeInputs((prev) => {
-      if (prev[id] === undefined) return prev
-      const updated = { ...prev }
-      delete updated[id]
-      return updated
-    })
+      if (prev[id] === undefined) return prev;
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
     if (scanningItemId === id) {
-      stopScanning()
+      stopScanning();
     }
-  }
+  };
 
   const handleProductSelect = (rowId: string, productId: string) => {
-    const selected = products.find((p) => p.id === productId)
+    const selected = products.find((p) => p.id === productId);
     // Validación de sucursal única: si hay otros ítems con branchId, impedir elegir de otra sucursal
     // Nota: los productos traídos ya están filtrados por selectedBranchId (o sucursal de usuario). Esto es una seguridad adicional.
-    const existingBranchIds = new Set<string>()
+    const existingBranchIds = new Set<string>();
     items.forEach((it) => {
       if (it.product?.id) {
-        const p = products.find((pp) => pp.id === it.productId)
+        const p = products.find((pp) => pp.id === it.productId);
         // @ts-ignore: permitimos branchId en el objeto product (mapeado desde la API)
-        const b = p && (p as any).branchId
-        if (b) existingBranchIds.add(b)
+        const b = p && (p as any).branchId;
+        if (b) existingBranchIds.add(b);
       }
-    })
+    });
     // Obtener branch del producto seleccionado si viene en el payload
     // @ts-ignore
-    const selectedBranch = (selected as any)?.branchId || null
-    if (existingBranchIds.size > 0 && selectedBranch && !existingBranchIds.has(selectedBranch)) {
-      toast.error(t('sales.form.branch') + ': ' + t('common.areYouSure'))
+    const selectedBranch = (selected as any)?.branchId || null;
+    if (
+      existingBranchIds.size > 0 &&
+      selectedBranch &&
+      !existingBranchIds.has(selectedBranch)
+    ) {
+      toast.error(t("sales.form.branch") + ": " + t("common.areYouSure"));
       // No cambiamos el producto para mantener consistencia
-      setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }))
-      return
+      setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }));
+      return;
     }
 
     setItems((prev) =>
       prev.map((item) => {
-        if (item.id !== rowId) return item
-        const unitPrice = selected ? selected.price : 0
+        if (item.id !== rowId) return item;
+        const unitPrice = selected ? selected.price : 0;
         return {
           ...item,
           productId,
           product: selected ?? undefined,
           unitPrice,
           subtotal: unitPrice * item.quantity,
-        }
-      }),
-    )
+        };
+      })
+    );
     // Cerrar el Popover después de seleccionar
-    setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }))
-  }
+    setOpenProductPopovers((prev) => ({ ...prev, [rowId]: false }));
+  };
 
   const handleQuantityChange = (rowId: string, value: number) => {
     setItems((prev) =>
@@ -467,10 +531,10 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
               subtotal: value * item.unitPrice,
               codes: item.codes.slice(0, value),
             }
-          : item,
-      ),
-    )
-  }
+          : item
+      )
+    );
+  };
 
   const handleUnitPriceChange = (rowId: string, value: number) => {
     setItems((prev) =>
@@ -481,46 +545,46 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
               unitPrice: value,
               subtotal: value * item.quantity,
             }
-          : item,
-      ),
-    )
-  }
+          : item
+      )
+    );
+  };
 
   const addCodeToItem = (rowId: string, code: string, fromScanner = false) => {
-    const trimmed = code.trim()
+    const trimmed = code.trim();
     if (!trimmed) {
-      toast.error(t('sales.form.validCodeRequired'))
-      return
+      toast.error(t("sales.form.validCodeRequired"));
+      return;
     }
 
-    let added = false
+    let added = false;
     setItems((prev) =>
       prev.map((item) => {
-        if (item.id !== rowId) return item
+        if (item.id !== rowId) return item;
         if (item.codes.includes(trimmed)) {
-          toast.info(t('sales.form.codeAlreadyAdded'))
-          return item
+          toast.info(t("sales.form.codeAlreadyAdded"));
+          return item;
         }
         if (item.codes.length >= item.quantity) {
-          toast.error(t('sales.form.codesExceedQuantity'))
-          return item
+          toast.error(t("sales.form.codesExceedQuantity"));
+          return item;
         }
-        added = true
+        added = true;
         return {
           ...item,
           codes: [...item.codes, trimmed],
-        }
-      }),
-    )
+        };
+      })
+    );
 
     if (added) {
-      setCodeInputs((prev) => ({ ...prev, [rowId]: '' }))
+      setCodeInputs((prev) => ({ ...prev, [rowId]: "" }));
       if (fromScanner) {
-        toast.success(t('sales.form.codeScannedAndAdded'))
-        stopScanning()
+        toast.success(t("sales.form.codeScannedAndAdded"));
+        stopScanning();
       }
     }
-  }
+  };
 
   const removeCodeFromItem = (rowId: string, code: string) => {
     setItems((prev) =>
@@ -530,124 +594,141 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
               ...item,
               codes: item.codes.filter((existing) => existing !== code),
             }
-          : item,
-      ),
-    )
-  }
+          : item
+      )
+    );
+  };
 
   const handleManualCodeAdd = (rowId: string) => {
-    const value = codeInputs[rowId] ?? ''
-    addCodeToItem(rowId, value, false)
-  }
+    const value = codeInputs[rowId] ?? "";
+    addCodeToItem(rowId, value, false);
+  };
 
   const startScanningForItem = async (rowId: string) => {
     try {
-      stopScanning()
-      
+      stopScanning();
+
       // Verificar que la API de medios está disponible
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        toast.error(t('sales.form.cameraNotAvailable'))
-        return
+        toast.error(t("sales.form.cameraNotAvailable"));
+        return;
       }
-      
-      setIsScanning(true)
-      setScanningItemId(rowId)
-      
-      const reader = new BrowserMultiFormatReader()
+
+      setIsScanning(true);
+      setScanningItemId(rowId);
+
+      const reader = new BrowserMultiFormatReader();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      })
-      codeReaderRef.current = reader
-      setVideoStream(stream)
-      lastScannedCode.current = null
+        video: { facingMode: "environment" },
+      });
+      codeReaderRef.current = reader;
+      setVideoStream(stream);
+      lastScannedCode.current = null;
 
       // Esperar un momento para que el DOM se actualice y el video esté disponible
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       if (scannerVideoRef.current) {
-        scannerVideoRef.current.srcObject = stream
-        scannerVideoRef.current.setAttribute('playsinline', 'true')
-        scannerVideoRef.current.setAttribute('muted', 'true')
-        await scannerVideoRef.current.play()
+        scannerVideoRef.current.srcObject = stream;
+        scannerVideoRef.current.setAttribute("playsinline", "true");
+        scannerVideoRef.current.setAttribute("muted", "true");
+        await scannerVideoRef.current.play();
       }
 
-      reader.decodeFromVideoDevice(null, scannerVideoRef.current as HTMLVideoElement, (result, err) => {
-        if (result) {
-          const scannedCode = result.getText()
-          if (lastScannedCode.current === scannedCode) {
-            return
+      reader.decodeFromVideoDevice(
+        null,
+        scannerVideoRef.current as HTMLVideoElement,
+        (result, err) => {
+          if (result) {
+            const scannedCode = result.getText();
+            if (lastScannedCode.current === scannedCode) {
+              return;
+            }
+            lastScannedCode.current = scannedCode;
+            addCodeToItem(rowId, scannedCode, true);
           }
-          lastScannedCode.current = scannedCode
-          addCodeToItem(rowId, scannedCode, true)
-        }
-        if (err && !(err as any).closed) {
-          if (!err.message || !err.message.toLowerCase().includes('no multiformat readers')) {
-            // Silenciar errores esperados de escaneo
+          if (err && !(err as any).closed) {
+            if (
+              !err.message ||
+              !err.message.toLowerCase().includes("no multiformat readers")
+            ) {
+              // Silenciar errores esperados de escaneo
+            }
           }
         }
-      })
+      );
     } catch (error) {
-      console.error('Error al acceder a la cámara:', error)
-      toast.error(t('sales.form.cameraAccessError'))
-      stopScanning()
+      console.error("Error al acceder a la cámara:", error);
+      toast.error(t("sales.form.cameraAccessError"));
+      stopScanning();
     }
-  }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
     // Validación extra: todos los productos deben pertenecer a una única sucursal
-    const branchSet = new Set<string>()
+    const branchSet = new Set<string>();
     for (const it of items) {
-      const p = products.find((pp) => pp.id === it.productId)
+      const p = products.find((pp) => pp.id === it.productId);
       // @ts-ignore
-      const b = p && (p as any)?.branchId
-      if (b) branchSet.add(b)
+      const b = p && (p as any)?.branchId;
+      if (b) branchSet.add(b);
     }
     if (branchSet.size > 1) {
-      toast.error(t('sales.form.branch') + ': ' + t('common.areYouSure'))
-      return
+      toast.error(t("sales.form.branch") + ": " + t("common.areYouSure"));
+      return;
     }
 
     if (items.some((item) => !item.productId)) {
-      toast.error(t('sales.form.itemsRequired'))
-      return
+      toast.error(t("sales.form.itemsRequired"));
+      return;
     }
 
-    if (items.some((item) => item.quantity <= 0 || Number.isNaN(item.quantity))) {
-      toast.error(t('form.quantityRequired'))
-      return
+    if (
+      items.some((item) => item.quantity <= 0 || Number.isNaN(item.quantity))
+    ) {
+      toast.error(t("form.quantityRequired"));
+      return;
     }
 
-    if (items.some((item) => item.unitPrice <= 0 || Number.isNaN(item.unitPrice))) {
-      toast.error(t('form.priceRequired'))
-      return
+    if (
+      items.some((item) => item.unitPrice <= 0 || Number.isNaN(item.unitPrice))
+    ) {
+      toast.error(t("form.priceRequired"));
+      return;
     }
 
-    if (items.some((item) => item.codes.length > 0 && item.codes.length !== item.quantity)) {
-      toast.error(t('sales.form.codesQuantityMismatch'))
-      return
+    if (
+      items.some(
+        (item) => item.codes.length > 0 && item.codes.length !== item.quantity
+      )
+    ) {
+      toast.error(t("sales.form.codesQuantityMismatch"));
+      return;
     }
 
-    stopScanning()
+    stopScanning();
 
     // Validar que se haya ingresado un cliente (ID o nombre)
     if (!customerId && !customerInputValue.trim()) {
-      toast.error(t('sales.form.customerRequired'))
-      setIsLoading(false)
-      return
+      toast.error(t("sales.form.customerRequired"));
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Determinar el customerName: si hay customerId, es null; si no, usar el nombre ingresado
-      const finalCustomerName = customerId ? null : (customerInputValue.trim() || null)
-      
+      const finalCustomerName = customerId
+        ? null
+        : customerInputValue.trim() || null;
+
       const savedSale = await onSave({
         branchId: selectedBranchId || null,
         customerId: customerId || null,
         customerName: finalCustomerName,
-        status: 'completed',
+        status: "completed",
         paymentMethod,
         subtotal,
         discount: Number(discount || 0),
@@ -660,34 +741,34 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
           subtotal: item.quantity * item.unitPrice,
           trackingCodes: item.codes,
         })),
-      })
+      });
 
       // Solo imprimir si es una nueva venta (no edición)
-      if (!sale && savedSale && typeof window !== 'undefined') {
+      if (!sale && savedSale && typeof window !== "undefined") {
         setTimeout(async () => {
-          await generateSalePdfAndPrint(savedSale, customerSlug)
-        }, 500)
+          await generateSalePdfAndPrint(savedSale, customerSlug);
+        }, 500);
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         onOpenAutoFocus={(e) => {
           // Evitar que el modal de "Nueva Venta" haga focus automático en el primer input
-          e.preventDefault()
+          e.preventDefault();
         }}
         className="lg:max-w-2xl sm:max-w-[900px] max-h-[92vh] flex flex-col overflow-hidden p-0 rounded-lg"
       >
         <DialogHeader className="sticky top-0 z-10 px-6 sm:px-8 py-5 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
           <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-            {sale ? t('sales.edit') : t('sales.new')}
+            {sale ? t("sales.edit") : t("sales.new")}
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            {sale ? t('sales.editDescription') : t('sales.newDescription')}
+            {sale ? t("sales.editDescription") : t("sales.newDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -696,10 +777,15 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
             <section className="space-y-3" ref={customerContainerRef}>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label>{t('sales.form.customer')}</Label>
-                  {isManualCustomerConfirmed && !customerId && customerInputValue.trim() && (
-                    <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
-                  )}
+                  <Label>{t("sales.form.customer")}</Label>
+                  {isManualCustomerConfirmed &&
+                    !customerId &&
+                    customerInputValue.trim() && (
+                      <Check
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    )}
                 </div>
                 <div className="relative">
                   <input
@@ -707,16 +793,19 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                     type="text"
                     value={customerInputValue}
                     onChange={(e) => {
-                      const formatted = e.target.value.length === 0 ? '' : capitalizeWords(e.target.value)
-                      setCustomerInputValue(formatted)
-                      setIsCustomerDropdownOpen(true)
-                      setHighlightedCustomerIndex(0)
-                      setCustomerId('')
-                      setIsManualCustomerConfirmed(false) // Resetear cuando se está escribiendo
+                      const formatted =
+                        e.target.value.length === 0
+                          ? ""
+                          : capitalizeWords(e.target.value);
+                      setCustomerInputValue(formatted);
+                      setIsCustomerDropdownOpen(true);
+                      setHighlightedCustomerIndex(0);
+                      setCustomerId("");
+                      setIsManualCustomerConfirmed(false); // Resetear cuando se está escribiendo
                     }}
                     onFocus={() => setIsCustomerDropdownOpen(true)}
                     onKeyDown={handleCustomerKeyDown}
-                    placeholder={t('sales.form.customerPlaceholder')}
+                    placeholder={t("sales.form.customerPlaceholder")}
                     disabled={false}
                     className="w-full px-5 py-3 pr-20 sm:pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm"
                   />
@@ -724,17 +813,20 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                     {customerInputValue && !customerId && (
                       <button
                         onClick={() => {
-                          const trimmed = customerInputValue.trim()
+                          const trimmed = customerInputValue.trim();
                           if (trimmed.length > 0) {
-                            handleManualCustomer(trimmed)
+                            handleManualCustomer(trimmed);
                           }
                         }}
                         className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors sm:hidden"
                         type="button"
                         disabled={false}
-                        title={t('sales.form.useThisCustomer')}
+                        title={t("sales.form.useThisCustomer")}
                       >
-                        <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
+                        <Check
+                          size={16}
+                          className="text-emerald-600 dark:text-emerald-400"
+                        />
                       </button>
                     )}
                     {customerInputValue && (
@@ -748,14 +840,18 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       </button>
                     )}
                     <button
-                      onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+                      onClick={() =>
+                        setIsCustomerDropdownOpen(!isCustomerDropdownOpen)
+                      }
                       className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                       type="button"
                       disabled={false}
                     >
                       <ChevronDown
                         size={16}
-                        className={`text-gray-500 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`text-gray-500 transition-transform ${
+                          isCustomerDropdownOpen ? "rotate-180" : ""
+                        }`}
                       />
                     </button>
                   </div>
@@ -765,7 +861,7 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       <div className="max-h-64 overflow-y-auto">
                         {isLoadingData && customers.length === 0 ? (
                           <div className="px-5 py-6 text-center text-gray-600 dark:text-gray-300">
-                            {t('sales.form.loadingCustomers')}
+                            {t("sales.form.loadingCustomers")}
                           </div>
                         ) : filteredCustomers.length > 0 ? (
                           filteredCustomers.map((customer, index) => (
@@ -773,22 +869,39 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                               key={customer.id}
                               type="button"
                               onClick={() => selectCustomer(customer)}
-                              onMouseEnter={() => setHighlightedCustomerIndex(index)}
+                              onMouseEnter={() =>
+                                setHighlightedCustomerIndex(index)
+                              }
                               className={`w-full text-left px-5 py-3 transition-colors ${
                                 index === highlightedCustomerIndex
-                                  ? 'bg-gray-100 dark:bg-[color-mix(in_oklch,var(--primary)_22%,black)] text-gray-900 dark:text-white'
-                                  : 'hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-800 dark:text-gray-200'
+                                  ? "bg-gray-100 dark:bg-[color-mix(in_oklch,var(--primary)_22%,black)] text-gray-900 dark:text-white"
+                                  : "hover:bg-gray-100 dark:hover:bg-[#1f1f1f] text-gray-800 dark:text-gray-200"
                               }`}
                             >
-                              <div className="font-semibold">{capitalizeWords(`${customer.name ?? ''} ${customer.lastName ?? ''}`.trim())}</div>
-                              {customer.email && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{customer.email}</div>}
+                              <div className="font-semibold">
+                                {capitalizeWords(
+                                  `${customer.name ?? ""} ${
+                                    customer.lastName ?? ""
+                                  }`.trim()
+                                )}
+                              </div>
+                              {customer.email && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  {customer.email}
+                                </div>
+                              )}
                             </button>
                           ))
                         ) : (
                           <div className="px-5 py-6 text-center text-gray-600 dark:text-gray-300">
                             {customerInputValue.trim()
-                              ? t('sales.form.pressEnterOrClick').replace('aquí', `"${capitalizeWords(customerInputValue.trim())}"`)
-                              : t('sales.form.noCustomersFound')}
+                              ? t("sales.form.pressEnterOrClick").replace(
+                                  "aquí",
+                                  `"${capitalizeWords(
+                                    customerInputValue.trim()
+                                  )}"`
+                                )
+                              : t("sales.form.noCustomersFound")}
                           </div>
                         )}
                       </div>
@@ -801,15 +914,18 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
             {isAdmin ? (
               <section className="space-y-3">
                 <div className="space-y-2">
-                  <Label>{t('sales.form.branch')}</Label>
-                  <Select value={selectedBranchId || undefined} onValueChange={(val) => setSelectedBranchId(val)}>
+                  <Label>{t("sales.form.branch")}</Label>
+                  <Select
+                    value={selectedBranchId || undefined}
+                    onValueChange={(val) => setSelectedBranchId(val)}
+                  >
                     <SelectTrigger className="rounded-full w-full">
-                      <SelectValue placeholder={t('sales.form.branch')} />
+                      <SelectValue placeholder={t("sales.form.branch")} />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl">
                       {branches.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
-                          {b.name || t('branches.details.noName')}
+                          {b.name || t("branches.details.noName")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -821,13 +937,15 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
             <section className="space-y-3">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
-                  {t('sales.form.items')}
+                  {t("sales.form.items")}
                 </h3>
               </div>
 
               <div className="space-y-3">
                 {items.map((item) => {
-                  const selectedProduct = products.find((product) => product.id === item.productId)
+                  const selectedProduct = products.find(
+                    (product) => product.id === item.productId
+                  );
                   return (
                     <div
                       key={item.id}
@@ -835,8 +953,16 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                     >
                       <div className="space-y-3">
                         <div className="space-y-2">
-                          <Label>{t('sales.form.product')}</Label>
-                          <Popover open={openProductPopovers[item.id]} onOpenChange={(open) => setOpenProductPopovers((prev) => ({ ...prev, [item.id]: open }))}>
+                          <Label>{t("sales.form.product")}</Label>
+                          <Popover
+                            open={openProductPopovers[item.id]}
+                            onOpenChange={(open) =>
+                              setOpenProductPopovers((prev) => ({
+                                ...prev,
+                                [item.id]: open,
+                              }))
+                            }
+                          >
                             <PopoverTrigger asChild>
                               <Button
                                 type="button"
@@ -844,32 +970,53 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                                 role="combobox"
                                 className="w-full justify-between rounded-full"
                               >
-                                {selectedProduct ? selectedProduct.name : t('form.select') + ' ' + t('sales.form.product').toLowerCase()}
+                                {selectedProduct
+                                  ? selectedProduct.name
+                                  : t("form.select") +
+                                    " " +
+                                    t("sales.form.product").toLowerCase()}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[320px] p-0">
                               <Command>
-                                <CommandInput placeholder={t('action.search') + ' ' + t('sales.form.product').toLowerCase()} />
+                                <CommandInput
+                                  placeholder={
+                                    t("action.search") +
+                                    " " +
+                                    t("sales.form.product").toLowerCase()
+                                  }
+                                />
                                 <CommandList>
-                                  <CommandEmpty>{t('sales.form.noProducts')}</CommandEmpty>
+                                  <CommandEmpty>
+                                    {t("sales.form.noProducts")}
+                                  </CommandEmpty>
                                   <CommandGroup>
                                     {products.map((product) => (
                                       <CommandItem
                                         key={product.id}
                                         value={product.name}
-                                        onSelect={() => handleProductSelect(item.id, product.id)}
+                                        onSelect={() =>
+                                          handleProductSelect(
+                                            item.id,
+                                            product.id
+                                          )
+                                        }
                                       >
                                         <Check
                                           className={cn(
-                                            'mr-2 h-4 w-4',
-                                            product.id === item.productId ? 'opacity-100' : 'opacity-0',
+                                            "mr-2 h-4 w-4",
+                                            product.id === item.productId
+                                              ? "opacity-100"
+                                              : "opacity-0"
                                           )}
                                         />
                                         <div className="flex flex-col">
                                           <span>{product.name}</span>
                                           <span className="text-xs text-gray-500">
-                                            {formatCurrencyWithPreferences(Number(product.price || 0))}
+                                            {formatCurrencyWithPreferences(
+                                              Number(product.price || 0)
+                                            )}
                                           </span>
                                         </div>
                                       </CommandItem>
@@ -884,45 +1031,62 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                         {/* Cantidad, Precio y Subtotal en una línea para móvil */}
                         <div className="grid gap-3 grid-cols-3">
                           <div className="space-y-2">
-                            <Label className="text-xs">{t('form.quantity')}</Label>
+                            <Label className="text-xs">
+                              {t("form.quantity")}
+                            </Label>
                             <Input
                               type="number"
                               min="1"
                               value={item.quantity}
-                              onChange={(e) => handleQuantityChange(item.id, Number(e.target.value) || 0)}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Number(e.target.value) || 0
+                                )
+                              }
                               className="rounded-full"
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs">{t('sales.form.unitPrice')}</Label>
+                            <Label className="text-xs">
+                              {t("sales.form.unitPrice")}
+                            </Label>
                             <Input
                               type="number"
                               min="0"
                               step="0.01"
                               value={item.unitPrice}
-                              onChange={(e) => handleUnitPriceChange(item.id, Number(e.target.value) || 0)}
+                              onChange={(e) =>
+                                handleUnitPriceChange(
+                                  item.id,
+                                  Number(e.target.value) || 0
+                                )
+                              }
                               className="rounded-full"
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs">{t('sales.form.subtotal')}</Label>
+                            <Label className="text-xs">
+                              {t("sales.form.subtotal")}
+                            </Label>
                             <div className="text-sm font-semibold text-gray-900 dark:text-white pt-2">
-                              {formatCurrencyWithPreferences(item.quantity * item.unitPrice)}
+                              {formatCurrencyWithPreferences(
+                                item.quantity * item.unitPrice
+                              )}
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-
                         <div className="space-y-2 sm:col-span-2">
-                          <Label>{t('sales.form.trackingCodes')}</Label>
+                          <Label>{t("sales.form.trackingCodes")}</Label>
                           <div className="flex gap-2">
                             <Input
-                              placeholder={t('sales.form.scanCode')}
-                              value={codeInputs[item.id] ?? ''}
+                              placeholder={t("sales.form.scanCode")}
+                              value={codeInputs[item.id] ?? ""}
                               onChange={(e) =>
                                 setCodeInputs((prev) => ({
                                   ...prev,
@@ -939,20 +1103,24 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                               disabled={item.codes.length >= item.quantity}
                             >
                               <Plus className="h-4 w-4 sm:mr-2" />
-                              <span className="hidden sm:inline">{t('action.add')}</span>
+                              <span className="hidden sm:inline">
+                                {t("action.add")}
+                              </span>
                             </Button>
                             <Button
                               type="button"
                               variant="outline"
                               className="rounded-full shrink-0"
                               onClick={() => startScanningForItem(item.id)}
-                              disabled={isLoadingData || item.codes.length >= item.quantity}
+                              disabled={
+                                isLoadingData ||
+                                item.codes.length >= item.quantity
+                              }
                             >
                               <ScanLine className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-
                       </div>
                       {item.codes.length > 0 && (
                         <div className="flex flex-wrap gap-2">
@@ -964,7 +1132,9 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                               #{code}
                               <button
                                 type="button"
-                                onClick={() => removeCodeFromItem(item.id, code)}
+                                onClick={() =>
+                                  removeCodeFromItem(item.id, code)
+                                }
                                 className="ml-1 text-gray-500 hover:text-rose-500 dark:text-gray-400 dark:hover:text-rose-400"
                               >
                                 <X className="h-3 w-3" />
@@ -975,7 +1145,9 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                       )}
                       <div className="flex items-center justify-between gap-2 sm:justify-end">
                         {item.codes.length === 0 && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('sales.form.noCodesRegistered')}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {t("sales.form.noCodesRegistered")}
+                          </p>
                         )}
                         <Button
                           type="button"
@@ -988,39 +1160,51 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      {item.codes.length > 0 && item.codes.length < item.quantity && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          Faltan {item.quantity - item.codes.length} códigos para coincidir con la cantidad vendida.
-                        </p>
-                      )}
+                      {item.codes.length > 0 &&
+                        item.codes.length < item.quantity && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                            Faltan {item.quantity - item.codes.length} códigos
+                            para coincidir con la cantidad vendida.
+                          </p>
+                        )}
                     </div>
-                  )
+                  );
                 })}
               </div>
 
               <div className="w-full flex items-center justify-center">
-              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleAddItem}>
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar producto
-              </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={handleAddItem}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar producto
+                </Button>
               </div>
             </section>
 
             <section className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label>{t('sales.form.subtotal')}</Label>
-                <Input value={formatCurrencyWithPreferences(subtotal)} readOnly className="rounded-full" />
+                <Label>{t("sales.form.subtotal")}</Label>
+                <Input
+                  value={formatCurrencyWithPreferences(subtotal)}
+                  readOnly
+                  className="rounded-full"
+                />
               </div>
               <div className="space-y-2">
-                <Label>{t('sales.form.discount')}</Label>
+                <Label>{t("sales.form.discount")}</Label>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={discount}
                   onFocus={() => {
-                    if (discount === '0' || discount === '0.00') {
-                      setDiscount('')
+                    if (discount === "0" || discount === "0.00") {
+                      setDiscount("");
                     }
                   }}
                   onChange={(e) => setDiscount(e.target.value)}
@@ -1028,14 +1212,18 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t('sales.form.total')}</Label>
-                <Input value={formatCurrencyWithPreferences(total)} readOnly className="rounded-full" />
+                <Label>{t("sales.form.total")}</Label>
+                <Input
+                  value={formatCurrencyWithPreferences(total)}
+                  readOnly
+                  className="rounded-full"
+                />
               </div>
               <div className="space-y-2">
-                <Label>{t('sales.form.paymentMethod')}</Label>
+                <Label>{t("sales.form.paymentMethod")}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger className="rounded-full w-full">
-                    <SelectValue placeholder={t('form.select')} />
+                    <SelectValue placeholder={t("form.select")} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl">
                     {paymentOptions.map((option) => (
@@ -1050,11 +1238,11 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
 
             <section className="grid gap-4">
               <div className="space-y-2">
-                <Label>{t('sales.form.notes')}</Label>
+                <Label>{t("sales.form.notes")}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t('sales.form.notesPlaceholder')}
+                  placeholder={t("sales.form.notesPlaceholder")}
                   className="min-h-[110px] rounded-3xl resize-none"
                 />
               </div>
@@ -1062,8 +1250,14 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
           </div>
 
           <DialogFooter className="sticky bottom-0 z-10 flex flex-col sm:flex-row w-full justify-center sm:justify-center items-stretch sm:items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 sm:px-8 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur">
-            <Button type="button" variant="outline" className="rounded-full w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              {t('action.cancel')}
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full w-full sm:w-auto"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              {t("action.cancel")}
             </Button>
             <Button
               type="submit"
@@ -1074,22 +1268,28 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 items.some((item) => !item.productId) ||
                 subtotal <= 0 ||
                 total < 0 ||
-                items.some((item) => item.codes.length > 0 && item.codes.length !== item.quantity) ||
+                items.some(
+                  (item) =>
+                    item.codes.length > 0 && item.codes.length !== item.quantity
+                ) ||
                 isLoadingData
               }
             >
               {isLoading
-                ? t('message.saving')
+                ? t("message.saving")
                 : sale
-                ? t('action.update') + ' ' + t('sales.sale').toLowerCase()
-                : t('sales.create')}
+                ? t("action.update") + " " + t("sales.sale").toLowerCase()
+                : t("sales.create")}
             </Button>
           </DialogFooter>
         </form>
 
         {isScanning && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/70" onClick={stopScanning} />
+            <div
+              className="absolute inset-0 bg-black/70"
+              onClick={stopScanning}
+            />
             <div className="relative z-[121] flex flex-col items-center gap-4">
               <video
                 ref={scannerVideoRef}
@@ -1098,13 +1298,18 @@ export function SaleFormDialog({ open, onOpenChange, sale, customerSlug, onSave 
                 muted
                 playsInline
               />
-              <Button type="button" variant="secondary" className="rounded-full" onClick={stopScanning}>
-                {t('sales.form.stopScan')}
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-full"
+                onClick={stopScanning}
+              >
+                {t("sales.form.stopScan")}
               </Button>
             </div>
           </div>
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

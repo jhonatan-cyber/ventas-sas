@@ -3,7 +3,6 @@ import { Sale, SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { NotificationService } from '@/lib/services/notification-service'
 import { InventoryMovementService } from '@/lib/services/sales/inventory-movement-service'
-import { InventoryAlertService } from '@/lib/services/sales/inventory-alert-service'
 import { logDatabase } from '@/lib/utils/logger'
 import { InventoryMovementType } from '@prisma/client'
 import { 

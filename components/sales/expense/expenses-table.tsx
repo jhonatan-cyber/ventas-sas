@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Edit, Trash2, DollarSign } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
 
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { formatDate } from "@/lib/utils/date"
 import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { getTranslatableText } from "@/lib/utils/translatable-text"
 
@@ -25,6 +23,7 @@ interface ExpensesTableProps {
 }
 
 export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches, onEditClick, onDeleteClick }: ExpensesTableProps) {
+  const t = useTranslations()
   // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
   const columnCount = shouldHideBranchColumn ? 6 : 7 // Sin columna sucursal: 6, con columna sucursal: 7

@@ -11,7 +11,6 @@ import { InventoryTransferService } from '@/lib/services/sales/inventory-transfe
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 export async function GET(
   request: NextRequest,

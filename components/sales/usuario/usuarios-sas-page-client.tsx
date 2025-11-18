@@ -144,7 +144,7 @@ export function UsuariosSasPageClient({
             closeDialogs()
           }
         }}
-        usuario={selectedUsuario}
+        usuario={selectedUsuario ?? null}
       />
 
       <ConfirmActionDialog

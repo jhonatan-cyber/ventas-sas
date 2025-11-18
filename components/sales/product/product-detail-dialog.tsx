@@ -24,12 +24,12 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { formatDateTime } from "@/lib/utils/date"
 
 type ProductWithRelations = SalesProduct & {
     category: Category | null
-    branch: Branch | null
+    branch?: Branch | null
 }
 
 interface ProductDetailDialogProps {

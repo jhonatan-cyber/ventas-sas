@@ -3,8 +3,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 
 import { AppError } from '@/lib/errors/app-error'
 import { BackupService } from '@/lib/services/sales/backup-service'

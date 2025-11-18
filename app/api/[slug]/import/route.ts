@@ -12,7 +12,6 @@ import { ImportService, ImportFormat, ImportEntity } from '@/lib/services/sales/
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { getRequestContext } from '@/lib/utils/request-context'
 
 export async function POST(
   request: NextRequest,
@@ -103,7 +102,7 @@ export async function POST(
       if (tempFilePath) {
         await unlink(tempFilePath)
       }
-    } catch (error) {
+    } catch {
       // Ignorar error si no se puede eliminar
     }
 

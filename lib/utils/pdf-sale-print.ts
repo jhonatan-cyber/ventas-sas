@@ -200,7 +200,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     }
     const formatDateFromPrefs = (date?: string | Date | null) => {
       if (!date) return "—"
-      return formatDateWithPreferences(new Date(date), customerSlug, dateFormat)
+      return formatDateWithPreferences(new Date(date), customerSlug)
     }
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()

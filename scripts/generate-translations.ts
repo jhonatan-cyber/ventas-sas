@@ -32,11 +32,11 @@ async function generateTranslations() {
       console.log('⏳ Esto puede tomar varios minutos debido a los límites de la API...\n')
       
       let translatedCount = 0
-      const totalStrings = Object.values(sourceContent).reduce((count, value) => {
+      const totalStrings = Object.values(sourceContent).reduce((count: number, value) => {
         const countStrings = (obj: any): number => {
           if (typeof obj === 'string') return 1
           if (typeof obj === 'object' && obj !== null) {
-            return Object.values(obj).reduce((sum, v) => sum + countStrings(v), 0)
+            return Object.values(obj).reduce((sum: number, v) => sum + countStrings(v as any), 0)
           }
           return 0
         }

@@ -3,15 +3,17 @@
  * Soporta importación desde Excel y CSV
  */
 
-import * as XLSX from 'xlsx'
-import { parse } from 'csv-parse/sync'
 import { readFile } from 'fs/promises'
 
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/utils/logger'
+import { parse } from 'csv-parse/sync'
+import * as XLSX from 'xlsx'
+
 import { SalesProductService, CreateSalesProductData } from './sales-product-service'
-import { translateText } from '@/lib/utils/translatable-text'
+
+import { prisma } from '@/lib/prisma'
 import { getOrganizationLocale } from '@/lib/utils/i18n-server'
+import { logger } from '@/lib/utils/logger'
+import { translateText } from '@/lib/utils/translatable-text'
 
 export type ImportFormat = 'excel' | 'csv'
 export type ImportEntity = 'products' | 'customers'
@@ -194,8 +196,6 @@ export class ImportService {
         }
       }
       return undefined
-    } else if (defaults?.defaultCategoryId) {
-      categoryId = defaults.defaultCategoryId
     }
 
     const name = getValue(['Nombre', 'name', 'nombre'])?.toString().trim()

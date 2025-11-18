@@ -53,7 +53,7 @@ export async function GET(
         whatsappCountryCode: config.whatsappCountryCode,
         createdAt: config.createdAt,
         updatedAt: config.updatedAt,
-        defaultBranch: config.defaultBranch,
+        defaultBranch: config.defaultBranchId,
       },
     })
   } catch (error) {

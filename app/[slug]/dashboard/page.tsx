@@ -17,9 +17,8 @@ import { AnalyticsDashboardClient } from "@/components/analytics/analytics-dashb
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QuotationService } from "@/lib/services/sales/quotation-service"
 import { SalesDashboardService } from "@/lib/services/sales/sales-dashboard-service"
-import { formatDate } from "@/lib/utils/date"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
-import { FormattedDate } from "@/components/dashboard/dashboard-formatters"
+import { FormattedDate, FormattedCurrency } from "@/components/dashboard/dashboard-formatters"
 import { formatCurrencyWithPreferencesFromServer } from "@/lib/utils/preferences"
 
 

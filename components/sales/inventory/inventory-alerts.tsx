@@ -142,7 +142,7 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
               </div>
               <div className="ml-4 text-right">
                 <Badge
-                  variant={alert.currentStock <= alert.minStock ? "destructive" : "warning"}
+                  variant={alert.currentStock <= alert.minStock ? "destructive" : "default"}
                   className="text-xs"
                 >
                   {alert.currentStock <= alert.minStock

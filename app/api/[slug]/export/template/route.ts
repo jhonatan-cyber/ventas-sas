@@ -9,7 +9,6 @@ import { AppError } from '@/lib/errors/app-error'
 import { ExportService, ExportFormat, ExportEntity } from '@/lib/services/sales/export-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
-import { getRequestContext } from '@/lib/utils/request-context'
 
 export async function GET(
   request: NextRequest,
@@ -56,7 +55,7 @@ export async function GET(
       ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       : 'text/csv'
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': mimeType,
         'Content-Disposition': `attachment; filename="${result.fileName}"`,

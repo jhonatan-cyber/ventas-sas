@@ -10,6 +10,8 @@ import { getOrCreateOrganizationForCustomer, getCustomerBySlug } from '@/lib/uti
 import { serializeSale } from '@/lib/utils/serializers'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createSaleSchema } from '@/lib/validators/sales-validators'
+import { translateText } from '@/lib/utils/translatable-text'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null

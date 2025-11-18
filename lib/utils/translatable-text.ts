@@ -2,7 +2,6 @@
  * Utilidades para manejar textos traducibles (descripciones, notas, etc.) en múltiples idiomas
  */
 
-import { readPreferences } from "./preferences";
 
 export interface TextTranslations {
   es?: string;
@@ -26,12 +25,7 @@ export function getTranslatableText(
 
   // Si no se proporciona el idioma actual, intentar obtenerlo de las preferencias
   if (!currentLanguage) {
-    try {
-      const prefs = readPreferences();
-      currentLanguage = prefs?.language || "es";
-    } catch {
-      currentLanguage = "es";
-    }
+    currentLanguage = "es";
   }
 
   // Normalizar el idioma (asegurar que sea 'es', 'en' o 'pt')

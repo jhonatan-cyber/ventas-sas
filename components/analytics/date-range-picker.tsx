@@ -19,7 +19,7 @@ interface DateRangePickerProps {
 export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePickerProps) {
   const [open, setOpen] = useState(false)
 
-  const handleSelect = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
+  const handleSelect: any = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
     if (range?.from && range?.to) {
       onDateRangeChange({ start: range.from, end: range.to })
       setOpen(false)

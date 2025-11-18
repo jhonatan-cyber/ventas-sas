@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl"
 
 import { Loader2, CheckSquare2 } from "lucide-react"
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"

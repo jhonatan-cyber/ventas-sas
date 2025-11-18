@@ -80,11 +80,11 @@ export class InventoryAlertService {
       }
 
       // Obtener usuarios administradores de la organización
-      const adminUsers = await prisma.salesUser.findMany({
+      const adminUsers = await prisma.usuarioSas.findMany({
         where: {
           organizationId,
           isActive: true,
-          role: {
+          rol: {
             nombre: {
               contains: 'administrador',
               mode: 'insensitive',

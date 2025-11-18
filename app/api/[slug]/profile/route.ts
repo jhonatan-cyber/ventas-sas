@@ -107,7 +107,7 @@ export async function PUT(
       phone: data.phone,
       address: data.address,
       ci: data.ci,
-      foto: data.foto || null,
+      foto: data.foto || undefined,
     })
 
     // No retornar la contraseña

@@ -30,9 +30,6 @@ next-env.d.ts
 .env
 
 
-
-
-
 # allow Prisma migrations SQL files
 !prisma/migrations/**/migration.sql
 

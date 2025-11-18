@@ -1,5 +1,6 @@
 "use client"
 
+import { AlertTriangle } from "lucide-react"
 import {
   PieChart,
   Pie,
@@ -10,7 +11,6 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { AlertTriangle } from "lucide-react"
 
 interface InventoryStatusChartProps {
   activeProducts: number
@@ -25,8 +25,6 @@ const COLORS = {
   'Stock Bajo': '#f59e0b',
   'Sin Stock': '#ef4444',
 }
-
-const COLORS_ARRAY = ['#10b981', '#6b7280', '#f59e0b', '#ef4444']
 
 export function InventoryStatusChart({
   activeProducts,
@@ -93,7 +91,10 @@ export function InventoryStatusChart({
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, value, percent }) => {
+              label={(props: any) => {
+                const name = props.name || ''
+                const value = props.value || 0
+                const percent = props.percent || 0
                 if (percent < 0.05) return '' // Ocultar etiquetas muy pequeñas
                 return `${name}\n${value} (${(percent * 100).toFixed(1)}%)`
               }}
@@ -117,7 +118,7 @@ export function InventoryStatusChart({
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
-              formatter={(value: number, name: string, props: any) => {
+              formatter={(value: number, name: string) => {
                 const percent = ((value / total) * 100).toFixed(1)
                 return [`${value.toLocaleString()} productos (${percent}%)`, name]
               }}

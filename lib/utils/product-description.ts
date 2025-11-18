@@ -3,7 +3,6 @@
  * @deprecated Usar getTranslatableText de translatable-text.ts en su lugar
  */
 
-import { readPreferences } from "./preferences";
 
 export interface DescriptionTranslations {
   es?: string;
@@ -25,14 +24,9 @@ export function getProductDescription(
     return null;
   }
 
-  // Si no se proporciona el idioma actual, intentar obtenerlo de las preferencias
+  // Si no se proporciona el idioma actual, usar 'es' por defecto
   if (!currentLanguage) {
-    try {
-      const prefs = readPreferences();
-      currentLanguage = prefs?.language || "es";
-    } catch {
-      currentLanguage = "es";
-    }
+    currentLanguage = "es";
   }
 
   // Normalizar el idioma (asegurar que sea 'es', 'en' o 'pt')

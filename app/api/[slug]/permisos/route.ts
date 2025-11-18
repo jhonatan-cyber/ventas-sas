@@ -4,7 +4,6 @@ import { AppError } from '@/lib/errors/app-error'
 import { PermissionSasService } from '@/lib/services/sales/permission-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { validateRequestBody } from '@/lib/utils/validation-helper'
 
 // GET - Obtener todos los permisos
 export async function GET(

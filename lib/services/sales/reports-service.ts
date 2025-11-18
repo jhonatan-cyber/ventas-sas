@@ -683,16 +683,41 @@ export class ReportsService {
       if (endDate) where.createdAt.lte = endDate
     }
 
-    const grouped = await prisma.sale.groupBy({
-      by: ['branchId'],
+    // Obtener todas las ventas y agrupar por branchId manualmente
+    const sales = await prisma.sale.findMany({
       where,
-      _count: { _all: true },
-      _sum: { total: true }
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                branchId: true
+              }
+            }
+          }
+        }
+      }
     })
 
-    const branchIds = grouped
-      .map(group => group.branchId)
-      .filter((id): id is string => Boolean(id))
+    // Agrupar por branchId desde los productos de los items
+    const branchStatsMap = new Map<string, { count: number; total: number }>()
+    for (const sale of sales) {
+      const branchIds = sale.items
+        .map(item => item.product?.branchId)
+        .filter((id): id is string => Boolean(id))
+      
+      // Si hay múltiples branchIds, usar el primero o agrupar por cada uno
+      const branchId = branchIds[0] || null
+      if (branchId) {
+        const existing = branchStatsMap.get(branchId) || { count: 0, total: 0 }
+        branchStatsMap.set(branchId, {
+          count: existing.count + 1,
+          total: existing.total + Number(sale.total)
+        })
+      }
+    }
+
+    const branchIds = Array.from(branchStatsMap.keys())
 
     const branches = await prisma.branch.findMany({
       where: {
@@ -705,20 +730,24 @@ export class ReportsService {
       }
     })
 
-    const branchMap = new Map(branches.map(branch => [branch.id, branch.name || 'Sucursal']))
-    const totalRevenue = grouped.reduce(
-      (sum, group) => sum + Number(group._sum.total || 0),
+    const branchNameMap = new Map(branches.map(branch => [branch.id, branch.name || 'Sucursal']))
+    const totalRevenue = Array.from(branchStatsMap.values()).reduce(
+      (sum, stats) => sum + stats.total,
       0
     )
 
-    return grouped
+    return Array.from(branchStatsMap.entries()).map(([branchId, stats]) => ({
+      branchId,
+      _count: { _all: stats.count },
+      _sum: { total: stats.total }
+    }))
       .filter(group => group.branchId)
       .map(group => {
         const revenue = Number(group._sum.total || 0)
         const salesCount = group._count._all || 0
         return {
           branchId: group.branchId as string,
-          branchName: branchMap.get(group.branchId as string) || 'Sucursal',
+          branchName: branchNameMap.get(group.branchId as string) || 'Sucursal',
           salesCount,
           revenue,
           averageTicket: salesCount > 0 ? revenue / salesCount : 0,

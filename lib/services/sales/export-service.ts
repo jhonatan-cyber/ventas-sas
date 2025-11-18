@@ -4,15 +4,10 @@
  */
 
 import * as XLSX from 'xlsx'
-import { createObjectCsvWriter } from 'csv-writer'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
 import { getTranslatableText } from '@/lib/utils/translatable-text'
-import { readPreferences } from '@/lib/utils/preferences'
 
 export type ExportFormat = 'excel' | 'csv'
 export type ExportEntity = 'products' | 'customers' | 'sales' | 'quotations' | 'expenses'
@@ -82,14 +77,8 @@ export class ExportService {
         }
       }
 
-      // Obtener idioma actual para traducciones
-      let currentLanguage = 'es'
-      try {
-        const prefs = readPreferences()
-        currentLanguage = prefs?.language || 'es'
-      } catch {
-        currentLanguage = 'es'
-      }
+      // Obtener idioma actual para traducciones (por defecto 'es')
+      const currentLanguage = 'es'
 
       // Preparar datos para exportación
       const exportData = products.map((product) => {
@@ -231,14 +220,8 @@ export class ExportService {
         }
       }
 
-      // Obtener idioma actual para traducciones
-      let currentLanguage = 'es'
-      try {
-        const prefs = readPreferences()
-        currentLanguage = prefs?.language || 'es'
-      } catch {
-        currentLanguage = 'es'
-      }
+      // Obtener idioma actual para traducciones (por defecto 'es')
+      const currentLanguage = 'es'
 
       const exportData = sales.map((sale) => {
         const notes = getTranslatableText(

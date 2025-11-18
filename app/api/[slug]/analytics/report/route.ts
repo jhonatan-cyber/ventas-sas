@@ -4,7 +4,7 @@ import { AnalyticsAIService } from "@/lib/services/analytics/analytics-ai-servic
 import { getCurrentSasUser } from "@/lib/utils/get-current-user"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
 import { handleApiError, createErrorContext } from "@/lib/utils/error-handler"
-import { AppError } from "@/lib/utils/app-error"
+import { AppError } from "@/lib/errors/app-error"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {

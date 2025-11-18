@@ -108,7 +108,7 @@ export function RolesSasPageClient({
             closeDialogs()
           }
         }}
-        role={selectedRole}
+        role={selectedRole ?? null}
       />
 
       {/* Modal de gestión de permisos */}

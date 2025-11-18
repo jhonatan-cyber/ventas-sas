@@ -23,8 +23,8 @@ export interface CreateOrganizationData {
   address: string; // Dirección de la empresa (requerido)
   phone: string; // Teléfono de la empresa (requerido)
   slug: string; // Slug único de la empresa (requerido, generado desde razón social)
-  ownerId: string; // ID del cliente dueño (requerido, customerId)
-  customerId: string; // ID del cliente dueño (requerido, mismo que ownerId)
+  ownerId?: string; // ID del cliente dueño (opcional, se crea automáticamente desde customerId)
+  customerId: string; // ID del cliente dueño (requerido, se usa para crear el ownerId)
   subscriptionPlanId?: string;
   subscriptionStatus?: OrganizationSubscriptionStatus;
   subscriptionStartDate?: Date;

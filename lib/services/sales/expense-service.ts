@@ -17,6 +17,7 @@ export interface CreateExpenseData {
   date: Date
   branchId?: string | null
   category?: string | null
+  descriptionTranslations?: any // JSON con traducciones { es, en, pt }
 }
 
 export interface UpdateExpenseData {
