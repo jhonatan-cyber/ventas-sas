@@ -10,11 +10,12 @@ import {
   Building2,
   CalendarDays,
   User,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+} from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 
-import { SalesQuotationWithRelations } from "./types";
+import { SalesQuotationWithRelations } from "./types"
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

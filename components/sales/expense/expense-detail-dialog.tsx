@@ -1,7 +1,8 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { Calendar, Building2, User, DollarSign, FileText, Tag } from "lucide-react"
+
+import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations } from "./types"
 
@@ -9,8 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { formatDateTime } from "@/lib/utils/date"
+import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { getTranslatableText } from "@/lib/utils/translatable-text"
 
 interface ExpenseDetailDialogProps {
@@ -52,7 +53,7 @@ export function ExpenseDetailDialog({
     currentLanguage
   ) || expense.description
 
-  const showBranchInfo = maxBranches === undefined || maxBranches > 1
+  const showBranchInfo = maxBranches == null || (maxBranches != null && maxBranches > 1)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
