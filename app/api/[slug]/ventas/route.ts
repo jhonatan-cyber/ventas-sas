@@ -6,12 +6,12 @@ import { prisma } from '@/lib/prisma'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { SaleService } from '@/lib/services/sales/sale-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrCreateOrganizationForCustomer, getCustomerBySlug } from '@/lib/utils/organization'
 import { serializeSale } from '@/lib/utils/serializers'
+import { translateText } from '@/lib/utils/translatable-text'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createSaleSchema } from '@/lib/validators/sales-validators'
-import { translateText } from '@/lib/utils/translatable-text'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null
