@@ -24,14 +24,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-/lib/generated/prisma
+
 
 #env files
 .env
 
-
-# allow Prisma migrations SQL files
-!prisma/migrations/**/migration.sql
 
 # temp files
 temp_file.txt
