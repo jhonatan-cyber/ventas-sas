@@ -42,7 +42,7 @@ export function addSecurityHeaders(
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live", // unsafe-eval para Next.js
       "style-src 'self' 'unsafe-inline'", // unsafe-inline necesario para estilos inline de componentes
       "img-src 'self' data: https: blob:",
-      "font-src 'self' data:",
+      "font-src 'self' data: https://r2cdn.perplexity.ai",
       "connect-src 'self' https://vercel.live https://*.vercel-insights.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
@@ -50,7 +50,7 @@ export function addSecurityHeaders(
     ].join('; ')
 
     response.headers.set('Content-Security-Policy', cspDirectives)
-    
+
     // Report-Only mode para desarrollo (opcional)
     if (process.env.NODE_ENV === 'development' && process.env.CSP_REPORT_ONLY === 'true') {
       response.headers.set('Content-Security-Policy-Report-Only', cspDirectives)
