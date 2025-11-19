@@ -1,11 +1,13 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { ArrowLeft, Download, TrendingDown, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
+
+import { ExpensesByCategoryChart } from "./charts/expenses-by-category-chart"
+import { ReportAiSummary } from "./report-ai-summary"
 
 import type { ExpensesReport } from "@/lib/services/sales/reports-service"
 
@@ -13,10 +15,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { exportExpensesReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { ExpensesByCategoryChart } from "./charts/expenses-by-category-chart"
-import { ReportAiSummary } from "./report-ai-summary"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface ExpensesReportClientProps {

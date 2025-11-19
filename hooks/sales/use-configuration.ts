@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+
 import { invalidateConfigCache } from '@/lib/utils/preferences'
 
 interface Configuration {
@@ -230,7 +231,7 @@ export function useConfiguration(
     if (autoLoad && customerSlug) {
       loadConfiguration()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [autoLoad, customerSlug]) // loadConfiguration es estable gracias a useCallback
 
   return {

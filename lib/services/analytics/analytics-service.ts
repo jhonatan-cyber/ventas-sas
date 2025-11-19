@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma"
 import { startOfDay, subDays, subMonths, startOfMonth, endOfMonth, format } from "date-fns"
+
+import { prisma } from "@/lib/prisma"
 
 export interface KPIData {
   id: string
@@ -517,7 +518,7 @@ export class AnalyticsService {
     const b = (sumY - m * sumX) / n
 
     // Calcular desviación estándar para intervalos de confianza
-    const meanY = sumY / n
+    // const meanY = sumY / n
     const variance = dataPoints.reduce((sum, p) => {
       const predicted = m * p.dayIndex + b
       return sum + Math.pow(p.value - predicted, 2)

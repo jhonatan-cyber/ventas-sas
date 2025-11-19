@@ -3,8 +3,8 @@ import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
-import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 const updateProfileSchema = z.object({
   email: z.string().email('Email inválido').optional(),

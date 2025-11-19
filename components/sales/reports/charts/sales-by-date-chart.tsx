@@ -1,5 +1,6 @@
 "use client"
 
+import { TrendingUp } from "lucide-react"
 import {
   LineChart,
   Line,
@@ -12,9 +13,8 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { formatDate } from "@/lib/utils/date"
-import { TrendingUp } from "lucide-react"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface SalesByDateChartProps {
   data: Array<{

@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Loader2, CheckSquare2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 

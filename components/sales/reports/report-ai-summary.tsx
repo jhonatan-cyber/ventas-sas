@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
 import { Sparkles, Lightbulb, Loader2 } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 
 import type { BasicReportType, ReportAISummary } from "@/lib/services/sales/report-ai-service"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface ReportAiSummaryProps {
   customerSlug: string

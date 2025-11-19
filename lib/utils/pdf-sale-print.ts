@@ -1,4 +1,5 @@
 import jsPDF from "jspdf"
+
 import { invalidateConfigCache, formatCurrencyWithPreferences, formatDateWithPreferences } from "@/lib/utils/preferences"
 
 const paymentTokens: Record<string, string> = {
@@ -37,18 +38,6 @@ interface SaleData {
   items: SaleItem[]
 }
 
-const formatDateTimeBasic = (date?: string | Date | null) => {
-  if (!date) return "—"
-  const d = new Date(date)
-  return d.toLocaleString("es-BO", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
 const getPrimaryColor = (): { r: number; g: number; b: number } => {
   const fallback = { r: 26, g: 120, b: 102 }
   if (typeof window === 'undefined') return fallback
@@ -71,7 +60,7 @@ const getPrimaryColor = (): { r: number; g: number; b: number } => {
         b: Number(rgbMatch[3])
       }
     }
-  } catch {}
+  } catch { }
 
   return fallback
 }
@@ -99,7 +88,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
   try {
     // Cargar preferencias y organización (igual que en cotizaciones)
     let currencyCode = "BOB"
-    let dateFormat = "dd/MM/yyyy"
+    // dateFormat removed as it was unused
     let themeColorKey = "green"
 
     let companyName = ""
@@ -118,11 +107,11 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
         const data = await prefsRes.json()
         if (data?.success && data.configuration) {
           currencyCode = data.configuration.currency || "BOB"
-          dateFormat = data.configuration.dateFormat || "dd/MM/yyyy"
+          // dateFormat = data.configuration.dateFormat || "dd/MM/yyyy"
           themeColorKey = data.configuration.themeColor || "green"
         }
       }
-    } catch {}
+    } catch { }
 
     try {
       // Organización
@@ -144,7 +133,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
           }
         }
       }
-    } catch {}
+    } catch { }
 
     // Fallback: leer cookie de preferencias si faltan datos clave
     try {
@@ -174,7 +163,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
           }
         }
       }
-    } catch {}
+    } catch { }
 
     // Mapeo de color de tema (como cotizaciones)
     const themeColorMap: Record<string, { r: number; g: number; b: number }> = {
@@ -480,7 +469,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
           return
         }
       }
-    } catch (error) {
+    } catch {
       // fallback a abrir en nueva pestaña desde memoria
     }
 
@@ -491,4 +480,3 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     console.error('Error al imprimir venta:', error)
   }
 }
-

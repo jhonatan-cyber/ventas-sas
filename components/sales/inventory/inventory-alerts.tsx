@@ -4,13 +4,13 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
 import { AlertTriangle, Package } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useEffect, useState, useCallback } from "react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface LowStockAlert {
@@ -33,16 +33,12 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
   const [alerts, setAlerts] = useState<LowStockAlert[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    loadAlerts()
-  }, [customerSlug])
-
-  const loadAlerts = async () => {
+  const loadAlerts = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/${customerSlug}/inventory/alerts`)
       const data = await response.json()
-      
+
       if (data.success) {
         setAlerts(data.alerts || [])
       }
@@ -51,7 +47,11 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [customerSlug])
+
+  useEffect(() => {
+    loadAlerts()
+  }, [loadAlerts])
 
   if (isLoading) {
     return (

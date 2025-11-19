@@ -1,7 +1,6 @@
 "use client"
 
 import { Calendar, Building2, User, DollarSign, FileText, Tag } from "lucide-react"
-
 import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations } from "./types"

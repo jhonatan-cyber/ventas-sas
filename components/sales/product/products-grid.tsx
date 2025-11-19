@@ -1,9 +1,9 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
 import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles, Eye } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

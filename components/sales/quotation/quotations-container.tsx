@@ -1,7 +1,7 @@
 "use client"
 
+import { FileText } from "lucide-react"
 import { useTranslations } from "next-intl"
-
 import { FC, memo, useMemo, useState, useEffect } from "react"
 
 import { QuotationsCards } from "./quotations-cards"
@@ -12,7 +12,6 @@ import { QuotationsTable } from "./quotations-table"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { Card, CardContent } from "@/components/ui/card"
-import { FileText } from "lucide-react"
 import { getTranslatableText } from "@/lib/utils/translatable-text"
 
 const QuotationsTableComponent = QuotationsTable as unknown as FC<any>

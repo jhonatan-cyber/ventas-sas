@@ -4,15 +4,16 @@
 
 "use client"
 
-import { useState } from "react"
-import { useTranslations } from "next-intl"
 import { Package, AlertTriangle, RefreshCw, ArrowRightLeft } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useState } from "react"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { InventoryAdjustments } from "./inventory-adjustments"
 import { InventoryAlerts } from "./inventory-alerts"
 import { InventoryMovements } from "./inventory-movements"
 import { InventoryTransfers } from "./inventory-transfers"
-import { InventoryAdjustments } from "./inventory-adjustments"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface InventoryPageClientProps {
   customerSlug: string

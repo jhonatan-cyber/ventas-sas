@@ -1,11 +1,13 @@
 "use client"
 
+import { format } from "date-fns"
+import { Brain } from "lucide-react"
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts"
+
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { format } from "date-fns"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Brain } from "lucide-react"
+
 
 interface SalesPredictionsChartProps {
   data: Array<{

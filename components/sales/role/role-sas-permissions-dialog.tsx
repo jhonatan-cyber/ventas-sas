@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Loader2, Shield } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -71,7 +70,7 @@ export function RoleSasPermissionsDialog({
     } finally {
       setIsLoading(false)
     }
-  }, [customerSlug])
+  }, [customerSlug, t])
 
   // Cargar permisos disponibles cuando se abre el dialog
   useEffect(() => {
@@ -325,12 +324,12 @@ export function RoleSasPermissionsDialog({
             >
               {isSaving ? (
                 <>
-           
+
                   Guardando...
                 </>
               ) : (
                 <>
-              
+
                   Guardar Permisos
                 </>
               )}

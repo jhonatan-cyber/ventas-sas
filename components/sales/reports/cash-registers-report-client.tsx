@@ -6,15 +6,16 @@ import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
+import { CashRegistersByBranchChart } from "./charts/cash-registers-by-branch-chart"
+
 import type { CashRegisterReport } from "@/lib/services/sales/reports-service"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { exportCashRegistersReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { CashRegistersByBranchChart } from "./charts/cash-registers-by-branch-chart"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface CashRegistersReportClientProps {

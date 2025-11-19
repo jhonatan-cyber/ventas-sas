@@ -3,11 +3,12 @@
  * Crea backups de la base de datos y archivos importantes
  */
 
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/utils/logger'
+import { existsSync } from 'fs'
 import { writeFile, mkdir, readdir, unlink } from 'fs/promises'
 import { join } from 'path'
-import { existsSync } from 'fs'
+
+import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/utils/logger'
 
 export interface BackupOptions {
   organizationId?: string // Si se especifica, solo backup de esa organización
@@ -34,11 +35,11 @@ export class BackupService {
   /**
    * Crear backup completo de una organización
    */
-  static async createOrganizationBackup(organizationId: string, options: BackupOptions = {}): Promise<BackupResult> {
+  static async createOrganizationBackup(organizationId: string, _options: BackupOptions = {}): Promise<BackupResult> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
       const backupDir = join(process.cwd(), 'backups', organizationId)
-      
+
       if (!existsSync(backupDir)) {
         await mkdir(backupDir, { recursive: true })
       }
@@ -179,7 +180,7 @@ export class BackupService {
   static async listBackups(organizationId: string): Promise<Array<{ fileName: string; size: number; createdAt: Date }>> {
     try {
       const backupDir = join(process.cwd(), 'backups', organizationId)
-      
+
       if (!existsSync(backupDir)) {
         return []
       }

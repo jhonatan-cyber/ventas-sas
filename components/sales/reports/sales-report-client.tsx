@@ -1,11 +1,15 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { ArrowLeft, Download, TrendingUp, ShoppingCart, DollarSign, BarChart3 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
+
+import { PaymentMethodChart } from "./charts/payment-method-chart"
+import { SalesByDateChart } from "./charts/sales-by-date-chart"
+import { TopProductsChart } from "./charts/top-products-chart"
+import { ReportAiSummary } from "./report-ai-summary"
 
 import type { SalesReport } from "@/lib/services/sales/reports-service"
 
@@ -13,12 +17,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { exportSalesReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { SalesByDateChart } from "./charts/sales-by-date-chart"
-import { PaymentMethodChart } from "./charts/payment-method-chart"
-import { TopProductsChart } from "./charts/top-products-chart"
-import { ReportAiSummary } from "./report-ai-summary"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface SalesReportClientProps {

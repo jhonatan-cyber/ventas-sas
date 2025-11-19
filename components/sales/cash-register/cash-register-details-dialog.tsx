@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { useEffect, useMemo, useState } from "react"
+
 import type { CashRegisterWithRelations } from "./types"
 
 import { Badge } from "@/components/ui/badge"

@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import { DollarSign } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { ExpensesCards } from "./expenses-cards";
@@ -99,7 +98,7 @@ export function ExpensesContainer({
       branchOptions.find((branch) => branch.id === branchFilter)?.name ||
       "Sucursal seleccionada";
     setBranchFilterLabel(branchName);
-  }, [branchFilter, branchOptions]);
+  }, [branchFilter, branchOptions, t]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((expense) => {

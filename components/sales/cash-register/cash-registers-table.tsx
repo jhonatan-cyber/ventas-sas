@@ -1,8 +1,8 @@
 "use client"
 
+import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
 import { useTranslations } from "next-intl"
 
-import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
 
 import type { CashRegisterWithRelations } from "./types"
 

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import { translateText, translateObject } from '@/lib/services/translation/auto-translate-service'
 
 export const runtime = 'nodejs'

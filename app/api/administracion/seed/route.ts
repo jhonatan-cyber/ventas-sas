@@ -1,8 +1,8 @@
+import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import bcrypt from 'bcryptjs'
 
 /**
  * Endpoint para ejecutar el seed de la base de datos

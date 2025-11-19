@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import { RoleSas } from "@prisma/client";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 
 import { RoleSasDeleteDialog } from "./role-sas-delete-dialog";

@@ -1,5 +1,6 @@
-import { chatCompleteWithOptions } from "@/lib/services/ai/provider"
 import { ReportsService, GeneralReport, SalesReport, ProductsReport, ExpensesReport, BranchPerformanceReport } from "./reports-service"
+
+import { chatCompleteWithOptions } from "@/lib/services/ai/provider"
 
 export type BasicReportType = "general" | "sales" | "products" | "expenses"
 

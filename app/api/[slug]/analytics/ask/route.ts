@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { AppError } from "@/lib/errors/app-error"
 import { AnalyticsAIService } from "@/lib/services/analytics/analytics-ai-service"
+import { handleApiError, createErrorContext } from "@/lib/utils/error-handler"
 import { getCurrentSasUser } from "@/lib/utils/get-current-user"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
-import { handleApiError, createErrorContext } from "@/lib/utils/error-handler"
-import { AppError } from "@/lib/errors/app-error"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {

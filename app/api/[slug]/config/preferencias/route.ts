@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { ConfigurationSasService } from '@/lib/services/sales/configuration-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 
 export const runtime = 'nodejs'
 

@@ -3,8 +3,8 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/utils/logger'
 import { NotificationService } from '@/lib/services/notification-service'
+import { logger } from '@/lib/utils/logger'
 
 export interface LowStockAlert {
   productId: string

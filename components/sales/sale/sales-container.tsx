@@ -1,8 +1,8 @@
 "use client"
 
+import { Receipt } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { Receipt } from "lucide-react"
 
 import { SalesCards } from "./sales-cards"
 import { SalesFilters } from "./sales-filters"

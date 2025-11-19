@@ -1,9 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Edit, Trash2, FileText, Eye, ShoppingCart } from "lucide-react"
-
+import { useTranslations } from "next-intl"
 import { memo } from "react"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"

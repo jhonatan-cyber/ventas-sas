@@ -1,5 +1,6 @@
 "use client"
 
+import { CreditCard } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -14,7 +15,6 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { CreditCard } from "lucide-react"
 
 interface PaymentMethodChartProps {
   data: {

@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { SaleService, UpdateSaleData } from '@/lib/services/sales/sale-service'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
 import { serializeSale } from '@/lib/utils/serializers'
 import { translateText } from '@/lib/utils/translatable-text'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null

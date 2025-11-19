@@ -1,5 +1,6 @@
 "use client"
 
+import { Tag } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -13,7 +14,6 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tag } from "lucide-react"
 
 interface ProductsByCategoryChartProps {
   data: Array<{

@@ -2,9 +2,9 @@
 
 import { Building2, LogOut, Sun, Moon, Monitor, Menu } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import { useEffect, useState, useCallback, type CSSProperties } from "react"
-import { useTranslations } from "next-intl"
 
 import { useSidebar } from "./sidebar-context"
 

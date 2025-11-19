@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Settings } from "lucide-react"
+import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
 interface KPICustomizerProps {

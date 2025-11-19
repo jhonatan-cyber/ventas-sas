@@ -1,9 +1,10 @@
 "use client"
 
+import { format } from "date-fns"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { format } from "date-fns"
 
 interface TrendsChartProps {
   data: Array<{ date: string; value: number; label?: string }>

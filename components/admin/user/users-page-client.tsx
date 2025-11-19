@@ -1,7 +1,6 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-
 import { useState, useEffect } from "react"
 
 import { DeleteUserDialog } from "./delete-user-dialog"

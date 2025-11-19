@@ -1,7 +1,5 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useTranslations } from "next-intl"
 import {
   BarChart3,
   TrendingUp,
@@ -21,19 +19,23 @@ import {
   Download,
   Loader2
 } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { KPICard } from "./kpi-card"
-import { TrendsChart } from "./trends-chart"
-import { ProductProfitabilityTable } from "./product-profitability-table"
 import { CustomerSegmentationChart } from "./customer-segmentation-chart"
-import { SalesPredictionsChart } from "./sales-predictions-chart"
-import { KPICustomizer } from "./kpi-customizer"
 import { DateRangePicker } from "./date-range-picker"
+import { KPICard } from "./kpi-card"
+import { KPICustomizer } from "./kpi-customizer"
+import { ProductProfitabilityTable } from "./product-profitability-table"
+import { SalesPredictionsChart } from "./sales-predictions-chart"
+import { TrendsChart } from "./trends-chart"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+
 
 interface AnalyticsPageClientProps {
   organizationId: string

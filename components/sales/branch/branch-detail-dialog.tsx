@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 
 import { Branch } from "@prisma/client";
 import {
@@ -12,6 +11,7 @@ import {
   XCircle,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, useEffect, useCallback } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

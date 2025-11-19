@@ -25,9 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDateWithPreferences } from "@/lib/utils/preferences";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { formatDateWithPreferences } from "@/lib/utils/preferences";
 
 interface ExpenseFormDialogProps {
   open: boolean;

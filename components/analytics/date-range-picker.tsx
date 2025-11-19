@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { format } from "date-fns"
 import { Calendar } from "lucide-react"
+import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format } from "date-fns"
 
 interface DateRangePickerProps {
   dateRange: { start: Date; end: Date } | null

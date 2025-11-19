@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 
 import { UsuarioSas, RoleSas } from "@prisma/client";
 import { InfoIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";

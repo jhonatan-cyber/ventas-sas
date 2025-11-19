@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { chatCompleteWithOptions, type AIProvider } from "@/lib/services/ai/provider";
 import {
 	buildCategoryPrompt,
 	buildExtractJsonPrompt,
@@ -9,6 +8,7 @@ import {
 	buildProductTitlesPrompt,
 	buildTranslatePrompt,
 } from "@/lib/services/ai/prompts";
+import { chatCompleteWithOptions, type AIProvider } from "@/lib/services/ai/provider";
 
 type Action = "description" | "titles" | "tags" | "translate" | "categorize" | "extract";
 

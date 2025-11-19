@@ -2,9 +2,10 @@
  * Servicio de historial de movimientos de inventario
  */
 
+import { InventoryMovementType } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { InventoryMovementType } from '@prisma/client'
 
 export interface CreateMovementData {
   organizationId: string

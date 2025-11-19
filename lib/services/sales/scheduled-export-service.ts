@@ -3,8 +3,9 @@
  * Maneja exportaciones automáticas mediante cron jobs
  */
 
-import { logger } from '@/lib/utils/logger'
 import { ExportFormat, ExportEntity } from './export-service'
+
+import { logger } from '@/lib/utils/logger'
 
 export interface ScheduledExport {
   id: string
@@ -76,11 +77,11 @@ export class ScheduledExportService {
   /**
    * Ejecutar exportación programada
    */
-  static async executeScheduledExport(scheduledExportId: string): Promise<{ success: boolean; error?: string }> {
+  static async executeScheduledExport(_scheduledExportId: string): Promise<{ success: boolean; error?: string }> {
     try {
       // TODO: Obtener de base de datos
       // const scheduledExport = await prisma.scheduledExport.findUnique({ where: { id: scheduledExportId } })
-      
+
       // Por ahora, retornamos error ya que no tenemos la tabla
       return {
         success: false,
@@ -107,23 +108,23 @@ export class ScheduledExportService {
   /**
    * Calcular próxima ejecución basada en expresión cron
    */
-  private static calculateNextRun(cron: string): Date {
+  private static calculateNextRun(_cron: string): Date {
     // Implementación simplificada
     // En producción, usar una librería como node-cron
     const now = new Date()
     const nextRun = new Date(now)
-    
+
     // Por defecto, ejecutar mañana a la misma hora
     nextRun.setDate(nextRun.getDate() + 1)
     nextRun.setHours(9, 0, 0, 0) // 9 AM
-    
+
     return nextRun
   }
 
   /**
    * Obtener todas las exportaciones programadas de una organización
    */
-  static async getScheduledExports(organizationId: string): Promise<ScheduledExport[]> {
+  static async getScheduledExports(_organizationId: string): Promise<ScheduledExport[]> {
     // TODO: Implementar cuando se agregue la tabla
     return []
   }

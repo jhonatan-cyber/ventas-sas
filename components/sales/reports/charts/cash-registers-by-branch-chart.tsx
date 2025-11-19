@@ -1,5 +1,6 @@
 "use client"
 
+import { Building2 } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -13,7 +14,6 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Building2 } from "lucide-react"
 
 interface CashRegistersByBranchChartProps {
   data: Array<{

@@ -1,9 +1,9 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 
 import { BrowserMultiFormatReader } from "@zxing/library"
 import { ScanLine, X, Check, AlertCircle } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { toast } from "sonner"
 
@@ -100,7 +100,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
     try {
       stopScanning()
       setIsScanning(true)
-      
+
       const reader = new BrowserMultiFormatReader()
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
@@ -108,7 +108,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       setCodeReaderRef(reader)
       setVideoStream(stream)
       setScanningProductId(productId)
-      
+
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       const video = document.getElementById('scanner-video') as HTMLVideoElement
@@ -122,14 +122,14 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       reader.decodeFromVideoDevice(null, video as HTMLVideoElement, (result, err) => {
         if (result) {
           const scannedCode = result.getText()
-          
+
           // Validar el código antes de agregarlo
           if (!validateCode(productId, scannedCode)) {
             toast.error(`El código "${scannedCode}" no pertenece a este producto`)
             stopScanning()
             return
           }
-          
+
           setScannedCodes(prev => {
             const newCodes = { ...prev }
             if (!newCodes[productId]) {
@@ -156,7 +156,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       toast.error(t('common.cameraError'))
       stopScanning()
     }
-  }, [stopScanning, validateCode])
+  }, [stopScanning, validateCode, t])
 
   useEffect(() => {
     return () => {
@@ -210,7 +210,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       if (!item.productId) continue
       const expectedCodes = item.trackingCodes || []
       const scannedCount = scannedCodes[item.productId]?.size || 0
-      
+
       if (scannedCount !== expectedCodes.length) {
         toast.error(`Faltan códigos para ${item.product?.name || 'producto'}. Se requiere ${expectedCodes.length}, se han escaneado ${scannedCount}.`)
         return
@@ -220,7 +220,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       const scannedSet = scannedCodes[item.productId] || new Set()
       const expectedSet = new Set(expectedCodes)
       const hasValidCodes = Array.from(scannedSet).every(code => expectedSet.has(code))
-      
+
       if (!hasValidCodes) {
         toast.error(`Algunos códigos para ${item.product?.name || 'producto'} no coinciden con los de la venta.`)
         return

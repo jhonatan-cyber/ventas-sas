@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import { Search, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { ExpenseBranchSummary } from "./types";

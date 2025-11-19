@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Category } from "@prisma/client"
+import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { CategoriesContainer } from "./categories-container"

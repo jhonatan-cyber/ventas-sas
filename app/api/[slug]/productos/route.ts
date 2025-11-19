@@ -6,13 +6,13 @@ import { SalesProductService } from '@/lib/services/sales/sales-product-service'
 import { requireCSRF } from '@/lib/utils/csrf-protection'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { logBusinessOperation } from '@/lib/utils/logger'
 import { getOrganizationIdByCustomerSlug, getMaxProductsByOrganizationId } from '@/lib/utils/organization'
+import { translateProductDescription } from '@/lib/utils/product-description'
 import { getRequestContext } from '@/lib/utils/request-context'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createProductSchema } from '@/lib/validators/sales-validators'
-import { translateProductDescription } from '@/lib/utils/product-description'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener todos los productos con paginación y filtros
 export async function GET(

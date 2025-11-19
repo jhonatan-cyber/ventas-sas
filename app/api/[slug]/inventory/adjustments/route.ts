@@ -2,6 +2,7 @@
  * API endpoint para ajustes de inventario
  */
 
+import { AdjustmentType } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { AppError } from '@/lib/errors/app-error'
@@ -9,7 +10,6 @@ import { InventoryAdjustmentService } from '@/lib/services/sales/inventory-adjus
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { AdjustmentType } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,

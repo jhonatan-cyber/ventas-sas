@@ -2,9 +2,9 @@ import { redirect } from "next/navigation"
 
 import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { ThemeProvider } from "@/components/theme-provider"
+import { prisma } from "@/lib/prisma"
 import { I18nProvider } from "@/lib/utils/i18n-provider"
 import { getMaxBranchesBySlug, getModulesBySlug } from "@/lib/utils/organization"
-import { prisma } from "@/lib/prisma"
 
 export default async function SalesLayout({
   children,

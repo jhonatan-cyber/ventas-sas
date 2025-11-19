@@ -1,8 +1,8 @@
 'use client'
 
+import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
-import { AlertCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

@@ -1,18 +1,18 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
 import { ArrowLeft, Download, Sparkles, TrendingUp, Activity, Target, Users, Package, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import type { AdvancedReportResponse } from "@/lib/services/sales/report-ai-service"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface AiReportPageClientProps {

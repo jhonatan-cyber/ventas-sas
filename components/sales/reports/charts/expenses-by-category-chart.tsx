@@ -1,5 +1,6 @@
 "use client"
 
+import { TrendingDown } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -14,7 +15,6 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { TrendingDown } from "lucide-react"
 
 interface ExpensesByCategoryChartProps {
   data: Array<{

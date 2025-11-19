@@ -1,11 +1,15 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { ArrowLeft, Download, Package, ShoppingCart, TrendingDown, AlertTriangle, DollarSign, Tag } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
+
+import { InventoryStatusChart } from "./charts/inventory-status-chart"
+import { ProductsByCategoryChart } from "./charts/products-by-category-chart"
+import { TopProductsChart } from "./charts/top-products-chart"
+import { ReportAiSummary } from "./report-ai-summary"
 
 import type { ProductsReport } from "@/lib/services/sales/reports-service"
 
@@ -13,12 +17,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { exportProductsReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { TopProductsChart } from "./charts/top-products-chart"
-import { ProductsByCategoryChart } from "./charts/products-by-category-chart"
-import { InventoryStatusChart } from "./charts/inventory-status-chart"
-import { ReportAiSummary } from "./report-ai-summary"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface ProductsReportClientProps {

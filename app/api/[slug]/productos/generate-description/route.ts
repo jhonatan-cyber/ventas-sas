@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { AppError } from '@/lib/errors/app-error'
-import { chatCompleteWithOptions, type AIProvider } from '@/lib/services/ai/provider'
 import { buildInventoryDescriptionPrompt } from '@/lib/services/ai/prompts'
+import { chatCompleteWithOptions, type AIProvider } from '@/lib/services/ai/provider'
 
 // POST - Generar o mejorar descripción de producto
 export async function POST(

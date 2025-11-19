@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "build": "next build",
-    "postbuild": "prisma migrate deploy && node scripts/seed-simple.js",
+    "postbuild": "node scripts/safe-migrate.cjs && node scripts/seed-simple.js",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",

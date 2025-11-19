@@ -1,9 +1,11 @@
 "use client"
 
 import jsPDF from "jspdf"
-import type { SalesReport, GeneralReport, ProductsReport, ExpensesReport, CustomersReport, CashRegisterReport } from "@/lib/services/sales/reports-service"
-import { formatCurrencyWithPreferences, getCurrency } from "./preferences"
+
 import { formatDate } from "./date"
+import { formatCurrencyWithPreferences, getCurrency } from "./preferences"
+
+import type { SalesReport, GeneralReport, ProductsReport, ExpensesReport, CustomersReport, CashRegisterReport } from "@/lib/services/sales/reports-service"
 
 interface CompanyInfo {
   companyName: string
@@ -210,7 +212,7 @@ function addSeparator(doc: jsPDF, y: number, pageWidth: number, margin: number) 
     if (setDrawColor && typeof setDrawColor === 'function') {
       setDrawColor(200, 200, 200)
     }
-  } catch (e) {
+  } catch {
     // Continuar sin color personalizado si hay error
   }
   doc.line(margin, y, pageWidth - margin, y)
@@ -228,7 +230,7 @@ function addTable(
   margin: number,
   columnWidths?: number[]
 ): number {
-  const primaryColor = getPrimaryColor()
+
   let y = startY
   const rowHeight = 7
   const headerHeight = 8
@@ -242,7 +244,7 @@ function addTable(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(30, 30, 30)
-  
+
   // Dibujar línea superior del encabezado
   doc.line(margin, y, pageWidth - margin, y)
   y += 2
@@ -427,25 +429,25 @@ export async function exportSalesReportToPDF(
     qr: 'QR / Billetera'
   }
 
-    const paymentRows = Object.entries(report.byPaymentMethod)
-      .filter(([_, data]) => data.count > 0)
-      .map(([method, data]) => [
-        paymentLabels[method] || method,
-        data.count.toString(),
-        formatCurrencyWithPreferences(data.amount, customerSlug, companyInfo.currencyCode)
-      ])
+  const paymentRows = Object.entries(report.byPaymentMethod)
+    .filter(([_, data]) => data.count > 0)
+    .map(([method, data]) => [
+      paymentLabels[method] || method,
+      data.count.toString(),
+      formatCurrencyWithPreferences(data.amount, customerSlug, companyInfo.currencyCode)
+    ])
 
-    if (paymentRows.length > 0) {
-      cursorY = addTable(
-        doc,
-        cursorY,
-        ['Método', 'Cantidad', 'Monto'],
-        paymentRows,
-        pageWidth,
-        margin,
-        [50, 30, 50]
-      )
-    }
+  if (paymentRows.length > 0) {
+    cursorY = addTable(
+      doc,
+      cursorY,
+      ['Método', 'Cantidad', 'Monto'],
+      paymentRows,
+      pageWidth,
+      margin,
+      [50, 30, 50]
+    )
+  }
 
   doc.save(`reporte-ventas-${new Date().toISOString().split('T')[0]}.pdf`)
 }
@@ -464,7 +466,7 @@ export async function exportGeneralReportToPDF(
   const companyInfo = getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
+
   const margin = 16
 
   let cursorY = await addPDFHeader(doc, 'Reporte General', companyInfo, pageWidth, margin)

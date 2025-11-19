@@ -4,11 +4,11 @@ import { AppError } from '@/lib/errors/app-error'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import { translateProductDescription } from '@/lib/utils/product-description'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { updateProductSchema } from '@/lib/validators/sales-validators'
-import { translateProductDescription } from '@/lib/utils/product-description'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 
 // GET - Obtener producto por ID
 export async function GET(

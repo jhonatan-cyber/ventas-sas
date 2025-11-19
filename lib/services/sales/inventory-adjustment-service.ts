@@ -2,10 +2,12 @@
  * Servicio de ajustes de inventario con justificación
  */
 
+import { AdjustmentType, InventoryMovementType } from '@prisma/client'
+
+import { InventoryMovementService } from './inventory-movement-service'
+
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { AdjustmentType, InventoryMovementType } from '@prisma/client'
-import { InventoryMovementService } from './inventory-movement-service'
 
 export interface CreateAdjustmentData {
   organizationId: string

@@ -1,12 +1,12 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 
 import { ShoppingCart, TrendingDown, Package, Users, DollarSign, Receipt, BarChart3, TrendingUp, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface ReportCard {
   id: string
@@ -105,12 +105,11 @@ interface ReportsContainerProps {
 export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainerProps) {
   const t = useTranslations()
   const router = useRouter()
-  
+
   // Determinar si mostrar reportes avanzados (más de una sucursal permitida)
   const isAdvanced = (maxBranches ?? 1) > 1
   const basicReports = getBasicReports(t)
   const advancedReports = getAdvancedReports(t)
-  const allReports = isAdvanced ? [...basicReports, ...advancedReports] : basicReports
 
   const renderReportCard = (report: ReportCard) => {
     const Icon = report.icon

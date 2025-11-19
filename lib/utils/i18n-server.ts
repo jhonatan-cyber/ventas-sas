@@ -3,8 +3,8 @@
  * Obtiene el idioma desde las preferencias de la base de datos
  */
 
-import { prisma } from '@/lib/prisma'
 import { defaultLocale, type Locale } from '@/i18n'
+import { prisma } from '@/lib/prisma'
 
 /**
  * Obtiene el idioma de una organización desde la base de datos

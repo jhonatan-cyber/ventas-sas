@@ -7,6 +7,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+
 import { translateText } from '@/lib/services/translation/auto-translate-service'
 
 /**

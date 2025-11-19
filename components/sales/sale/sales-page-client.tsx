@@ -1,8 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { useTranslations } from "next-intl"
 
 import { SaleCancelDialog } from "./sale-cancel-dialog"
 import { SaleDeleteDialog } from "./sale-delete-dialog"

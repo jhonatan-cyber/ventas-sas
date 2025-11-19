@@ -6,9 +6,10 @@
 "use client"
 
 import { Globe } from "lucide-react"
-import { useTranslations } from "next-intl"
-import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { useEffect, useState } from "react"
+
+import type { Locale } from "@/i18n"
 
 import {
   Select,
@@ -17,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Locale } from "@/i18n"
 
 const LANGUAGES: { value: Locale; label: string }[] = [
   { value: "es", label: "Español" },
@@ -30,7 +30,7 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
-  const t = useTranslations()
+  // const t = useTranslations()
   const params = useParams()
   const slug = customerSlug || (params?.slug as string | undefined)
   const [currentLanguage, setCurrentLanguage] = useState<Locale>("es")
@@ -53,7 +53,7 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
       console.warn('[LanguageSelector] Idioma inválido o vacío:', newLanguage)
       return
     }
-    
+
     const validLanguage = newLanguage as Locale
     console.log('[LanguageSelector] Cambiando idioma a:', validLanguage, 'slug:', slug)
     setCurrentLanguage(validLanguage)
@@ -62,7 +62,7 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
     if (typeof window !== "undefined") {
       localStorage.setItem("sas-language-preference", validLanguage)
       console.log('[LanguageSelector] Idioma guardado en localStorage')
-      
+
       // Si hay slug, intentar actualizar también en la base de datos
       // Solo si el usuario está autenticado (verificamos con un GET primero)
       if (slug) {
@@ -103,14 +103,14 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
           // Continuar de todas formas, el cambio en localStorage ya está hecho
         }
       }
-      
+
       // Disparar evento para actualizar el provider (funciona con o sin slug)
       const event1 = new CustomEvent("language-updated", {
         detail: { slug: slug || null, language: validLanguage },
       })
       window.dispatchEvent(event1)
       console.log('[LanguageSelector] Evento language-updated disparado')
-      
+
       // También disparar un evento personalizado para cambios en localStorage
       // Esto ayuda cuando no hay slug
       const event2 = new CustomEvent("localStorage-language-changed", {

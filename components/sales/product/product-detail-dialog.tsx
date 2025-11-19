@@ -24,8 +24,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { formatDateTime } from "@/lib/utils/date"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 type ProductWithRelations = SalesProduct & {
     category: Category | null

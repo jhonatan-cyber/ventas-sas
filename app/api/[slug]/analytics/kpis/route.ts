@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { AnalyticsService } from '@/lib/services/analytics/analytics-service'
+import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 
 export async function GET(
   request: NextRequest,

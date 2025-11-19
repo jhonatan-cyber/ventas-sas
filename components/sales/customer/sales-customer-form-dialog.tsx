@@ -1,8 +1,8 @@
 "use client"
 
 import { SalesCustomer } from "@prisma/client"
-import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
+import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"

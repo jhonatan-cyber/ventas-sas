@@ -19,6 +19,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -27,7 +28,6 @@ import { useSidebar } from "./sidebar-context"
 import type { CSSProperties, ComponentType } from "react"
 
 import { Button } from "@/components/ui/button"
-import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 

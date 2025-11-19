@@ -1,5 +1,6 @@
 "use client"
 
+import { Package } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -14,7 +15,6 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { Package } from "lucide-react"
 
 interface TopProductsChartProps {
   data: Array<{

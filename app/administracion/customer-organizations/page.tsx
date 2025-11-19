@@ -12,17 +12,17 @@ export default async function CustomerOrganizationsPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
   const token = cookieStore.get('admin-auth-token')?.value
-  
+
   if (!token) {
     redirect('/administracion/login')
   }
-  
+
   try {
     const payload = await AdminJWTService.verifyToken(token!)
     if (!payload) {
       redirect('/administracion/login')
     }
-    
+
     // Validar acceso de administrador
     const hasAccess = await AuthService.hasAdminAccess(payload.userId)
     if (!hasAccess) {
@@ -74,23 +74,23 @@ export default async function CustomerOrganizationsPage() {
               id: String(org.id || ''),
               organizationId: String(org.organizationId || ''),
               isActive: Boolean(org.isActive ?? true),
-              joinedAt: org.joinedAt 
+              joinedAt: org.joinedAt
                 ? (org.joinedAt instanceof Date ? org.joinedAt.toISOString() : String(org.joinedAt))
                 : new Date().toISOString(),
               organization: {
                 id: String(orgData.id || ''),
                 name: String(orgData.name || ''),
-                razonSocial: orgData.razonSocial === null || orgData.razonSocial === undefined 
-                  ? undefined 
+                razonSocial: orgData.razonSocial === null || orgData.razonSocial === undefined
+                  ? undefined
                   : String(orgData.razonSocial),
-                nit: orgData.nit === null || orgData.nit === undefined 
-                  ? undefined 
+                nit: orgData.nit === null || orgData.nit === undefined
+                  ? undefined
                   : String(orgData.nit),
-                address: orgData.address === null || orgData.address === undefined 
-                  ? undefined 
+                address: orgData.address === null || orgData.address === undefined
+                  ? undefined
                   : String(orgData.address),
-                phone: orgData.phone === null || orgData.phone === undefined 
-                  ? undefined 
+                phone: orgData.phone === null || orgData.phone === undefined
+                  ? undefined
                   : String(orgData.phone),
                 slug: String(orgData.slug || ''),
                 subscriptionStatus: orgData.subscriptionStatus === null || orgData.subscriptionStatus === undefined
@@ -102,7 +102,7 @@ export default async function CustomerOrganizationsPage() {
             console.error('Error mapping organization:', orgError, org)
             return null
           }
-        }).filter((org): org is NonNullable<typeof org> => org !== null),
+        }).filter((org: any): org is NonNullable<typeof org> => org !== null),
       }
     })
 
@@ -112,11 +112,11 @@ export default async function CustomerOrganizationsPage() {
       return {
         id: String(org.id || ''),
         name: String(org.name || ''),
-        razonSocial: org.razonSocial === null || org.razonSocial === undefined 
-          ? undefined 
+        razonSocial: org.razonSocial === null || org.razonSocial === undefined
+          ? undefined
           : String(org.razonSocial),
-        nit: org.nit === null || org.nit === undefined 
-          ? undefined 
+        nit: org.nit === null || org.nit === undefined
+          ? undefined
           : String(org.nit),
         slug: String(org.slug || ''),
       }

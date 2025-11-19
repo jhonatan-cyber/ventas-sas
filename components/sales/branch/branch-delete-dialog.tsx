@@ -1,8 +1,8 @@
 "use client"
 
+import { Branch } from "@prisma/client"
 import { useTranslations } from "next-intl"
 
-import { Branch } from "@prisma/client"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 

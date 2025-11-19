@@ -13,7 +13,7 @@ type BranchWithRelations = Branch & {
 export function useBranchActions(
   customerSlug: string,
   setBranches?: (branches: BranchWithRelations[] | ((prev: BranchWithRelations[]) => BranchWithRelations[])) => void,
-  maxBranches?: number | null
+  _maxBranches?: number | null
 ) {
   const router = useRouter()
   const [_isPending, startTransition] = useTransition()
@@ -23,7 +23,7 @@ export function useBranchActions(
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmTitle, setConfirmTitle] = useState('')
   const [confirmDesc, setConfirmDesc] = useState<string>('')
-  const [confirmColor, setConfirmColor] = useState<'red'|'orange'|'green'>('orange')
+  const [confirmColor, setConfirmColor] = useState<'red' | 'orange' | 'green'>('orange')
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null)
   const [selectedBranch, setSelectedBranch] = useState<BranchWithRelations | undefined>()
 
@@ -84,7 +84,7 @@ export function useBranchActions(
       const message = selectedBranch ? "Sucursal actualizada" : "Sucursal creada"
       toast.success(message)
       closeDialogs()
-      
+
       // Actualizar estado local en tiempo real
       if (setBranches) {
         if (selectedBranch) {
@@ -124,7 +124,7 @@ export function useBranchActions(
 
       toast.success("Sucursal eliminada")
       closeDialogs()
-      
+
       // Actualizar estado local en tiempo real
       if (setBranches) {
         setBranches((prevBranches) => prevBranches.filter((branch) => branch.id !== selectedBranch.id))
@@ -141,7 +141,7 @@ export function useBranchActions(
   const handleToggleStatus = async (branch: BranchWithRelations) => {
     const newStatus = !branch.isActive
     const count = branch?._count?.usuariosSas || 0
-    
+
     // Función para actualizar el estado de la sucursal
     const updateBranchStatus = async () => {
       const response = await fetch(`/api/${customerSlug}/sucursales/${branch.id}`, {
@@ -156,7 +156,7 @@ export function useBranchActions(
       }
 
       const updatedBranch = await response.json()
-      
+
       // Actualizar estado local en tiempo real
       if (setBranches) {
         setBranches((prevBranches) =>
@@ -165,10 +165,10 @@ export function useBranchActions(
           )
         )
       }
-      
+
       toast.success(newStatus ? "Sucursal activada" : "Sucursal desactivada")
     }
-    
+
     // Si está desactivando y no tiene usuarios asignados, hacer la acción directamente sin confirmación
     if (newStatus === false && count === 0) {
       try {
@@ -178,7 +178,7 @@ export function useBranchActions(
       }
       return
     }
-    
+
     // Si está desactivando y tiene usuarios, mostrar confirmación
     if (newStatus === false) {
       setConfirmTitle('Desactivar sucursal')
@@ -188,7 +188,7 @@ export function useBranchActions(
       setConfirmOpen(true)
       return
     }
-    
+
     // Si está activando, hacer la acción directamente
     try {
       await updateBranchStatus()
@@ -196,7 +196,7 @@ export function useBranchActions(
       toast.error(error.message || "Error al cambiar el estado de la sucursal")
     }
   }
-  
+
   const confirmPerform = async () => {
     if (!pendingAction) return
     try {

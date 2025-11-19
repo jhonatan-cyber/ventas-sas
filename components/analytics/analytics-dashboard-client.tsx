@@ -9,6 +9,7 @@ import { ProductsChart } from "./products-chart"
 import { QuotationChart } from "./quotation-chart"
 import { RevenueChart } from "./revenue-chart"
 import { SalesChart } from "./sales-chart"
+
 import { Badge } from "@/components/ui/badge"
 
 interface AnalyticsDashboardClientProps {

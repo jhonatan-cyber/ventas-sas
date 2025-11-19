@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import jsPDF from "jspdf"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -84,7 +83,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
 
   useEffect(() => {
     if (typeof document === "undefined") return
-    
+
     // Cargar moneda desde la API
     const loadCurrency = async () => {
       try {
@@ -528,6 +527,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     paymentLabel,
     currencyCode,
     items,
+    t
   ])
 
   const handlePrint = useCallback(async () => {
@@ -760,24 +760,24 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
 
         <DialogFooter className="sticky bottom-0 z-10 backdrop-blur bg-white/80 dark:bg-[#101010]/80 border-t border-gray-200 dark:border-gray-800 px-6 sm:px-8 py-4">
           <div className="w-full flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3">
-          <Button
-            variant="new"
-            className="rounded-full w-auto"
-            onClick={handleExportPdf}
-            disabled={!sale || isExporting}
-          >
-            {shareUrl ? "Ver PDF" : isExporting ? "Generando..." : "Exportar PDF"}
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full w-auto"
-            onClick={handlePrint}
-          >
-            Imprimir
-          </Button>
-          <Button variant="outline" className="rounded-full w-auto" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
+            <Button
+              variant="new"
+              className="rounded-full w-auto"
+              onClick={handleExportPdf}
+              disabled={!sale || isExporting}
+            >
+              {shareUrl ? "Ver PDF" : isExporting ? "Generando..." : "Exportar PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-full w-auto"
+              onClick={handlePrint}
+            >
+              Imprimir
+            </Button>
+            <Button variant="outline" className="rounded-full w-auto" onClick={() => onOpenChange(false)}>
+              Cerrar
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Search, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"

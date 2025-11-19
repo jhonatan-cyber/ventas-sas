@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { getOllamaBaseUrl, ollamaGenerate } from "@/lib/services/ai/ollama-service";
 
 // GET /api/test-ollama?model=deepseek-r1:8b

@@ -1,8 +1,8 @@
 "use client"
 
+import { Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 
-import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"

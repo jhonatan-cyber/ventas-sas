@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { prisma } from '@/lib/prisma'
 import { PasswordService } from '@/lib/services/password-service'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
-import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { prisma } from '@/lib/prisma'
+import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'La contraseña actual es requerida'),

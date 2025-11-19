@@ -1,6 +1,7 @@
+import { AnalyticsService, KPIData, ProductProfitability, TrendData } from "./analytics-service"
+
 import { chatCompleteWithOptions } from "@/lib/services/ai/provider"
 
-import { AnalyticsService, KPIData, ProductProfitability, TrendData } from "./analytics-service"
 
 interface DateRangeInput {
   start: Date

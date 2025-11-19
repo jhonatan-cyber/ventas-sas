@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Plus, Trash2, QrCode } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 

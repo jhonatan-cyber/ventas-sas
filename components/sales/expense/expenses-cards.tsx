@@ -1,7 +1,8 @@
 "use client"
 
-import { SalesExpenseWithRelations } from "./types"
 import { Edit, Trash2, MoreVertical, Calendar, Building2, User, FileText, Eye } from "lucide-react"
+
+import { SalesExpenseWithRelations } from "./types"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

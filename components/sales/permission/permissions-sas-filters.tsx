@@ -1,11 +1,10 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 
 import { Search, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface PermissionsSasFiltersProps {
   searchTerm: string

@@ -1,11 +1,12 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { ArrowLeft, Download, Users, ShoppingCart, UserCheck, UserX } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
+
+import { CustomersByPurchasesChart } from "./charts/customers-by-purchases-chart"
 
 import type { CustomersReport } from "@/lib/services/sales/reports-service"
 
@@ -13,10 +14,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { formatDate } from "@/lib/utils/date"
 import { exportCustomersReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { CustomersByPurchasesChart } from "./charts/customers-by-purchases-chart"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface CustomersReportClientProps {
@@ -52,7 +52,7 @@ export function CustomersReportClient({ customerSlug }: CustomersReportClientPro
   }, [fetchReport])
 
   const t = useTranslations()
-  
+
   const handleExport = useCallback(async () => {
     if (!report) {
       toast.error(t('reports.export.noData'))
@@ -69,7 +69,7 @@ export function CustomersReportClient({ customerSlug }: CustomersReportClientPro
       console.error("Error al exportar PDF:", error)
       toast.error(t('reports.export.error'))
     }
-  }, [report, customerSlug, startDate, endDate])
+  }, [report, customerSlug, startDate, endDate, t])
 
   if (isLoading) {
     return (
@@ -305,4 +305,3 @@ export function CustomersReportClient({ customerSlug }: CustomersReportClientPro
     </div>
   )
 }
-

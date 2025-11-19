@@ -1,20 +1,20 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { ArrowLeft, Download, DollarSign, TrendingUp, ShoppingCart, TrendingDown, Receipt, Package, Users, Percent } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
+
+import { ReportAiSummary } from "./report-ai-summary"
 
 import type { GeneralReport } from "@/lib/services/sales/reports-service"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 import { exportGeneralReportToPDF } from "@/lib/utils/pdf-reports-export"
-import { ReportAiSummary } from "./report-ai-summary"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 
 interface GeneralReportClientProps {

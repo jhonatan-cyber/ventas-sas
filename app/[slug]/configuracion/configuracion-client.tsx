@@ -1,9 +1,9 @@
 "use client";
 
 import { Settings, Building2, CreditCard, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
 
 import ClientPersistence from "./client-persistence";
 import { RenewalDialogClient } from "./renewal-dialog-client";
@@ -16,32 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConfiguration } from "@/hooks/sales/use-configuration";
 
 // Constantes
-const PHONE_COUNTRY_CODES = [
-  { value: "+591", label: "+591 BO" },
-  { value: "+1", label: "+1 US/CA" },
-  { value: "+52", label: "+52 MX" },
-  { value: "+54", label: "+54 AR" },
-  { value: "+55", label: "+55 BR" },
-  { value: "+56", label: "+56 CL" },
-  { value: "+57", label: "+57 CO" },
-  { value: "+51", label: "+51 PE" },
-  { value: "+58", label: "+58 VE" },
-  { value: "+593", label: "+593 EC" },
-  { value: "+595", label: "+595 PY" },
-  { value: "+598", label: "+598 UY" },
-  { value: "+34", label: "+34 ES" },
-  { value: "+44", label: "+44 GB" },
-  { value: "+49", label: "+49 DE" },
-  { value: "+33", label: "+33 FR" },
-  { value: "+39", label: "+39 IT" },
-  { value: "+86", label: "+86 CN" },
-  { value: "+81", label: "+81 JP" },
-  { value: "+82", label: "+82 KR" },
-  { value: "+91", label: "+91 IN" },
-  { value: "+7", label: "+7 RU" },
-  { value: "+61", label: "+61 AU" },
-  { value: "+27", label: "+27 ZA" },
-] as const;
+
 
 type PhonePattern = {
   prefix: string;
@@ -68,9 +43,9 @@ const PHONE_COUNTRY_CODE_PATTERNS: PhonePattern[] = [
 // Funciones de utilidad
 const parsePhoneNumber = (phone: string | null | undefined): { code: string; number: string } => {
   if (!phone) return { code: "+591", number: "" };
-  
+
   const digits = phone.replace(/\D/g, "");
-  
+
   for (const pattern of PHONE_COUNTRY_CODE_PATTERNS) {
     if (pattern.minLength && digits.length < pattern.minLength) continue;
     if (digits.startsWith(pattern.prefix)) {
@@ -80,7 +55,7 @@ const parsePhoneNumber = (phone: string | null | undefined): { code: string; num
       };
     }
   }
-  
+
   return { code: "+591", number: digits };
 };
 
@@ -100,7 +75,7 @@ const ensureHttps = (url: string): string => {
 const updateLogoPreview = (previewId: string, imageUrl: string) => {
   const preview = document.getElementById(previewId);
   if (!preview) return;
-  
+
   preview.innerHTML = "";
   const img = document.createElement("img");
   img.src = imageUrl;
@@ -200,14 +175,14 @@ export function ConfiguracionClient({
   // Sincronizar estado local cuando se carga la configuración
   useEffect(() => {
     if (!configuration) return;
-    
+
     const newConfig = {
       currency: configuration.currency,
       dateFormat: configuration.dateFormat,
       whatsappCountryCode: configuration.whatsappCountryCode,
       language: configuration.language,
     };
-    
+
     setLocalConfig((prev) => {
       // Comparación eficiente sin JSON.stringify
       if (
@@ -225,7 +200,7 @@ export function ConfiguracionClient({
   // Guardar el plan en cookies para que el sidebar lo pueda leer (temporal, hasta migrar sidebar)
   useEffect(() => {
     if (!activeSubscription?.plan?.name) return;
-    
+
     const planName = activeSubscription.plan.name;
     const expires = new Date(
       Date.now() + COOKIE_EXPIRY_YEARS * 365 * 24 * 60 * 60 * 1000
@@ -234,9 +209,8 @@ export function ConfiguracionClient({
       typeof window !== "undefined" && window.location.protocol === "https:";
     document.cookie = `sas-plan-${customerSlug}=${encodeURIComponent(
       planName
-    )}; Path=/; SameSite=Lax; Expires=${expires}${
-      isProduction ? "; Secure" : ""
-    }`;
+    )}; Path=/; SameSite=Lax; Expires=${expires}${isProduction ? "; Secure" : ""
+      }`;
   }, [activeSubscription?.plan?.name, customerSlug]);
 
   // Función para guardar configuración con debounce
@@ -273,7 +247,7 @@ export function ConfiguracionClient({
         saveTimeoutRef.current = null;
       }, DEBOUNCE_DELAY);
     },
-    [configuration, updateConfig, reload]
+    [configuration, updateConfig, reload, t]
   );
 
   // Cleanup del timeout al desmontar
@@ -394,12 +368,12 @@ export function ConfiguracionClient({
     } finally {
       setIsSaving(false);
     }
-  }, [customerSlug, customer.primaryOrganization?.slug]);
+  }, [customerSlug, customer.primaryOrganization?.slug, getValue, localConfig.whatsappCountryCode]);
 
   // Cargar logo inicial
   useEffect(() => {
     if (activeTab !== "empresa") return;
-    
+
     const logoUrl = customer.primaryOrganization?.logoUrl;
     if (!logoUrl) return;
 
@@ -515,8 +489,8 @@ export function ConfiguracionClient({
                     <span>
                       {activeSubscription.endDate
                         ? new Date(
-                            activeSubscription.endDate
-                          ).toLocaleDateString()
+                          activeSubscription.endDate
+                        ).toLocaleDateString()
                         : t('config.plan.noDate')}
                     </span>
                   </div>
@@ -693,8 +667,8 @@ export function ConfiguracionClient({
                         });
                         // Disparar evento para que el I18nProvider actualice el idioma
                         if (typeof window !== 'undefined') {
-                          window.dispatchEvent(new CustomEvent('language-updated', { 
-                            detail: { slug: customerSlug, language: newLanguage } 
+                          window.dispatchEvent(new CustomEvent('language-updated', {
+                            detail: { slug: customerSlug, language: newLanguage }
                           }));
                         }
                       }}
@@ -711,40 +685,40 @@ export function ConfiguracionClient({
                   </div>
                 </div>
 
-                  <div className="space-y-2">
-                    <Label>{t('config.preferences.themeColor')}</Label>
-                    <select
-                      name="themeColor"
-                      value={getValue("themeColor") || "green"}
-                      onChange={(e) => {
-                        saveConfiguration({ themeColor: e.target.value || null });
-                      }}
-                      disabled={isLoadingConfig}
-                      className="w-full border rounded-full px-3 py-2 bg-gray-50 dark:bg-[#2a2a2a] hidden"
-                    >
-                      {THEME_COLORS.map((color) => (
-                        <option key={color.value} value={color.value}>
+                <div className="space-y-2">
+                  <Label>{t('config.preferences.themeColor')}</Label>
+                  <select
+                    name="themeColor"
+                    value={getValue("themeColor") || "green"}
+                    onChange={(e) => {
+                      saveConfiguration({ themeColor: e.target.value || null });
+                    }}
+                    disabled={isLoadingConfig}
+                    className="w-full border rounded-full px-3 py-2 bg-gray-50 dark:bg-[#2a2a2a] hidden"
+                  >
+                    {THEME_COLORS.map((color) => (
+                      <option key={color.value} value={color.value}>
+                        {color.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="grid grid-cols-4 gap-3">
+                    {THEME_COLORS.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        data-color={color.value}
+                        onClick={() => saveConfiguration({ themeColor: color.value })}
+                        className="color-swatch h-12 rounded-lg border-2 border-gray-200 dark:border-[#2a2a2a] hover:scale-105 transition-transform relative"
+                        style={{ background: color.bg } as React.CSSProperties}
+                        title={color.label}
+                      >
+                        <span className={`text-xs font-semibold drop-shadow ${color.textColor}`}>
                           {color.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="grid grid-cols-4 gap-3">
-                      {THEME_COLORS.map((color) => (
-                        <button
-                          key={color.value}
-                          type="button"
-                          data-color={color.value}
-                          onClick={() => saveConfiguration({ themeColor: color.value })}
-                          className="color-swatch h-12 rounded-lg border-2 border-gray-200 dark:border-[#2a2a2a] hover:scale-105 transition-transform relative"
-                          style={{ background: color.bg } as React.CSSProperties}
-                          title={color.label}
-                        >
-                          <span className={`text-xs font-semibold drop-shadow ${color.textColor}`}>
-                            {color.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {t('config.preferences.themeColorNote')}
                   </p>

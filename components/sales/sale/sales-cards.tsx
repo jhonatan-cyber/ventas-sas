@@ -1,7 +1,8 @@
 "use client"
 
-import { SalesSaleWithRelations } from "./types"
 import { Receipt, Edit, Trash2, Ban, MoreVertical, DollarSign, CalendarDays, User, ShoppingCart } from "lucide-react"
+
+import { SalesSaleWithRelations } from "./types"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

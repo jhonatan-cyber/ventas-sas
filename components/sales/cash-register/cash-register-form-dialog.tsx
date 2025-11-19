@@ -42,16 +42,6 @@ const formatDateForName = (date: Date) =>
     year: "numeric",
   });
 
-const getDefaultCashRegisterName = () => {
-  const now = new Date();
-  const weekday = now
-    .toLocaleDateString("es-BO", { weekday: "long" })
-    .toLowerCase();
-  return `Caja ${
-    weekday.charAt(0).toUpperCase() + weekday.slice(1)
-  } ${formatDateForName(now)}`;
-};
-
 const getCurrentDateTimeDisplay = () =>
   new Date().toLocaleString("es-BO", {
     weekday: "long",
@@ -69,7 +59,7 @@ export function CashRegisterFormDialog({
   cashRegister,
   customerSlug,
   onSave,
-  maxBranches,
+  maxBranches: _maxBranches,
   openCashRegisters = [],
 }: CashRegisterFormDialogProps) {
   const t = useTranslations()
@@ -93,23 +83,23 @@ export function CashRegisterFormDialog({
         const data = await response.json();
         const allBranchesData = data.branches || [];
         setAllBranches(allBranchesData); // Guardar todas las sucursales
-        
+
         // Si el usuario NO es administrador, no necesitamos filtrar (no verá el select)
         if (!currentUser?.isAdmin) {
           setBranches(allBranchesData);
           return;
         }
-        
+
         // Para administradores: filtrar sucursales con cajas abiertas
         const branchesWithOpenCashRegister = new Set(
           openCashRegisters
             .filter(register => register.isOpen && register.branchId)
             .map(register => register.branchId)
         );
-        
+
         // Si estamos editando una caja existente, no filtrar su sucursal actual
         const currentBranchId = cashRegister?.branchId;
-        
+
         // Filtrar sucursales: mostrar solo las que no tienen caja abierta
         // O la sucursal actual si estamos editando
         const availableBranches = allBranchesData.filter((branch: any) => {
@@ -120,7 +110,7 @@ export function CashRegisterFormDialog({
           // Para nuevas cajas o otras sucursales, solo mostrar si no tienen caja abierta
           return !branchesWithOpenCashRegister.has(branch.id);
         });
-        
+
         setBranches(availableBranches);
       }
     } catch (error) {
@@ -138,8 +128,8 @@ export function CashRegisterFormDialog({
       if (response.ok) {
         const userData = await response.json();
         // Verificar si el usuario es administrador (rol nombre "Administrador")
-        const isAdmin = userData.rol?.nombre?.toLowerCase() === 'administrador' || 
-                       userData.rol?.name?.toLowerCase() === 'administrador';
+        const isAdmin = userData.rol?.nombre?.toLowerCase() === 'administrador' ||
+          userData.rol?.name?.toLowerCase() === 'administrador';
         setCurrentUser({
           isAdmin,
           branchId: userData.sucursalId || userData.branchId || null
@@ -175,9 +165,8 @@ export function CashRegisterFormDialog({
       const now = new Date();
       const weekday = now.toLocaleDateString("es-BO", { weekday: "long" }).toLowerCase();
       const formattedDate = formatDateForName(now);
-      setName(`${t('cashRegisters.title').split(' ')[0]} ${
-        weekday.charAt(0).toUpperCase() + weekday.slice(1)
-      } ${formattedDate}`);
+      setName(`${t('cashRegisters.title').split(' ')[0]} ${weekday.charAt(0).toUpperCase() + weekday.slice(1)
+        } ${formattedDate}`);
       setBranchId("");
       setOpeningBalance("0");
     }
@@ -195,7 +184,7 @@ export function CashRegisterFormDialog({
       // Si el usuario NO es administrador, usar su sucursal automáticamente
       // Si el usuario ES administrador, permitir selección manual
       let branchIdForSubmit: string | undefined = undefined
-      
+
       if (!currentUser?.isAdmin && currentUser?.branchId) {
         // Usuario NO administrador: usar su sucursal automáticamente
         branchIdForSubmit = currentUser.branchId
@@ -209,7 +198,7 @@ export function CashRegisterFormDialog({
         // Por defecto: sin sucursal
         branchIdForSubmit = undefined
       }
-      
+
       await onSave({
         name: name.trim(),
         branchId: branchIdForSubmit,
@@ -224,7 +213,7 @@ export function CashRegisterFormDialog({
   // 1. El usuario NO es administrador - se usa su sucursal automáticamente
   // NOTA: Para administradores, siempre mostrar el select si hay sucursales disponibles
   // (incluso si maxBranches === 1, el admin puede elegir la sucursal)
-  const shouldHideBranchSelect = 
+  const shouldHideBranchSelect =
     currentUser !== null && !currentUser.isAdmin
 
   useEffect(() => {
@@ -299,9 +288,9 @@ export function CashRegisterFormDialog({
               <div className="space-y-2">
                 <Label>{t('form.branch')}</Label>
                 <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                  {branches.find(b => b.id === currentUser.branchId)?.name || 
-                   (allBranches?.find((b: any) => b.id === currentUser.branchId)?.name) || 
-                   t('cashRegisters.form.assignedBranch')}
+                  {branches.find(b => b.id === currentUser.branchId)?.name ||
+                    (allBranches?.find((b: any) => b.id === currentUser.branchId)?.name) ||
+                    t('cashRegisters.form.assignedBranch')}
                   <p className="text-xs mt-1 text-gray-500 dark:text-gray-500">
                     {t('cashRegisters.form.willUseBranch')}
                   </p>
@@ -368,7 +357,7 @@ export function CashRegisterFormDialog({
             )}
             {/* Fecha y hora actual */}
             <div className="space-y-2">
-                <Label htmlFor="currentDateTime">{t('cashRegisters.form.dateTime')}</Label>
+              <Label htmlFor="currentDateTime">{t('cashRegisters.form.dateTime')}</Label>
               <Input
                 id="currentDateTime"
                 value={currentDateTime}
@@ -397,8 +386,8 @@ export function CashRegisterFormDialog({
               {isLoading
                 ? t('message.saving')
                 : cashRegister
-                ? t('action.update')
-                : t('action.add')}
+                  ? t('action.update')
+                  : t('action.add')}
             </Button>
           </DialogFooter>
         </form>

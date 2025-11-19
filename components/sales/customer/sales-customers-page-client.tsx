@@ -1,9 +1,9 @@
 "use client"
 
 import { SalesCustomer } from "@prisma/client"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useTranslations } from "next-intl"
 
 import { SalesCustomerDeleteDialog } from "./sales-customer-delete-dialog"
 import { SalesCustomerFormDialog } from "./sales-customer-form-dialog"

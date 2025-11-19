@@ -1,16 +1,16 @@
 "use client"
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
-import { useState, useEffect, useCallback } from "react"
 import { useTranslations } from "next-intl"
+import { useState, useEffect, useCallback } from "react"
 
 import { CategoryCards } from "./category-cards"
 import { ProductDeleteDialog } from "./product-delete-dialog"
 import { ProductDetailDialog } from "./product-detail-dialog"
 import { ProductFormDialog } from "./product-form-dialog"
 import { ProductsContainer } from "./products-container"
-import { ProductsHeader } from "./products-header"
 import { ProductsExportImportDialog } from "./products-export-import-dialog"
+import { ProductsHeader } from "./products-header"
 
 import { useProductActions } from "@/hooks/sales/product/use-product-actions"
 
