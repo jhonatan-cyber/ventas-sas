@@ -8,6 +8,8 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_2nmfAb9SVBcO@ep-quiet-glitter-adhaxx8r-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
+    // Usa DIRECT_URL para migraciones (requerido para Supabase)
+    // Si no existe DIRECT_URL, usa DATABASE_URL como fallback
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
   },
 });
