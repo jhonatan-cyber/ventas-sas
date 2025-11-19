@@ -10,6 +10,6 @@ export default defineConfig({
   datasource: {
     // Usa DIRECT_URL para migraciones (requerido para Supabase)
     // Si no existe DIRECT_URL, usa DATABASE_URL como fallback
-    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    url: (process.env.DIRECT_URL || process.env.DATABASE_URL) as string,
   },
 });
