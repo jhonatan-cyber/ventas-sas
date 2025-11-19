@@ -119,7 +119,7 @@ export async function GET() {
       userExists: !!existingUser,
       userId: existingUser?.id || null
     })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { error: 'Error al verificar estado del seed' },
       { status: 500 }

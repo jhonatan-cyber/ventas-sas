@@ -707,13 +707,14 @@ export function QuotationDetailsDialog({
     fetchImageAsDataUrl,
     companyName,
     companyAddress,
+    formatDateTime,
+    t,
     companyPhone,
     companyWhatsappNumber,
     companyWebsite,
     companyNIT,
     ownerName,
     showBranchInfo,
-    dateFormat,
     themeColor,
   ]);
 
@@ -792,7 +793,7 @@ export function QuotationDetailsDialog({
     if (typeof window !== "undefined") {
       window.open(customerWhatsappLink, "_blank", "noopener,noreferrer");
     }
-  }, [customerWhatsapp, customerWhatsappLink]);
+  }, [customerWhatsapp, customerWhatsappLink, t]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

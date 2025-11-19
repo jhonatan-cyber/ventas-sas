@@ -216,7 +216,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
     }
   }
 
-  const selectedModuleLabel = modules.find(m => m.id === selectedModule)?.label || ""
+  // const selectedModuleLabel = modules.find(m => m.id === selectedModule)?.label || ""
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

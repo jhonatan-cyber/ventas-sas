@@ -139,7 +139,7 @@ export function QuotationFormDialog({
       id: branch.id,
       name: branch.name ?? t('common.noBranch'),
     }))
-  }, [branches])
+  }, [branches, t])
 
   // Ocultar select de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchSelect = maxBranches === 1 && branchOptions.length === 1

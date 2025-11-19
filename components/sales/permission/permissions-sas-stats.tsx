@@ -12,7 +12,7 @@ interface PermissionsSasStatsProps {
 export function PermissionsSasStats({ permissions }: PermissionsSasStatsProps) {
   const total = permissions.length
   const active = permissions.filter((p) => p.isActive ?? true).length
-  const inactive = permissions.filter((p) => !(p.isActive ?? true)).length
+  const _inactive = permissions.filter((p) => !(p.isActive ?? true)).length
   const inUse = permissions.filter((p) => p.roleCount > 0).length
   const unused = permissions.filter((p) => p.roleCount === 0).length
   const activePercentage = total > 0 ? Math.round((active / total) * 100) : 0

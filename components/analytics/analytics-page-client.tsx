@@ -42,7 +42,7 @@ interface AnalyticsPageClientProps {
   customerSlug: string
 }
 
-export function AnalyticsPageClient({ organizationId, customerSlug }: AnalyticsPageClientProps) {
+export function AnalyticsPageClient({ organizationId: _organizationId, customerSlug }: AnalyticsPageClientProps) {
   const t = useTranslations()
   const [kpis, setKpis] = useState<any[]>([])
   const [trends, setTrends] = useState<any[]>([])

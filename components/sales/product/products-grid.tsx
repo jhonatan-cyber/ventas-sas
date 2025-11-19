@@ -1,6 +1,5 @@
 "use client"
 
-
 import { SalesProduct, Category, Branch } from "@prisma/client"
 import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles, Eye } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -10,13 +9,15 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
+import { getProductDescription } from "@/lib/utils/product-description"
 
 interface ProductsGridProps {
   products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
@@ -27,9 +28,6 @@ interface ProductsGridProps {
   onToggleStatus?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
   onView?: (product: SalesProduct & { category: Category | null; branch: Branch | null }) => void
 }
-
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { getProductDescription } from "@/lib/utils/product-description"
 
 function formatCurrency(value: number | string | { toNumber?: () => number }) {
   let numericValue = 0

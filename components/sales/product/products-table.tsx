@@ -9,7 +9,6 @@ import {
   Building2,
   Eye,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,8 +99,6 @@ export function ProductsTable({
   onToggleStatus,
   onViewClick,
 }: ProductsTableProps) {
-  const t = useTranslations();
-  
   if (isLoading) {
     return (
       <TableSkeleton

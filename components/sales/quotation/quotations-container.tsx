@@ -96,7 +96,7 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
     }
 
     return options
-  }, [branches, quotations])
+  }, [branches, quotations, t])
 
   // Filtrar cotizaciones por búsqueda y estado
   const filteredQuotations = useMemo(() => {

@@ -48,7 +48,7 @@ export function QuotationsFilters({
   selectedBranchId = null,
   onBranchChange,
   showBranchFilter = false,
-  maxBranches,
+  maxBranches: _maxBranches,
 }: QuotationsFiltersProps) {
   const t = useTranslations()
   const [searchValue, setSearchValue] = useState("")
@@ -87,7 +87,7 @@ export function QuotationsFilters({
       hasUnassignedBranch:
         includeUnassigned || branches.some((branch) => branch?.id === "none"),
     }
-  }, [branches])
+  }, [branches, t])
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-end">

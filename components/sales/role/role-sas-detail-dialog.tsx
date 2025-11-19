@@ -62,7 +62,6 @@ export function RoleSasDetailDialog({
     })
   }
 
-  const permissions = Array.isArray(role?.permissions) ? role.permissions : []
   const userCount = role?._count?.usuariosSas || 0
 
   // Función para extraer el módulo del nombre del permiso (formato: modulo_accion)
@@ -70,6 +69,11 @@ export function RoleSasDetailDialog({
     const parts = String(permissionName).split('_')
     return parts[0] || 'unknown'
   }
+
+  // Memoizar permisos para evitar cambios en cada render
+  const permissions = useMemo(() => {
+    return Array.isArray(role?.permissions) ? role.permissions : []
+  }, [role?.permissions])
 
   // Agrupar permisos por módulo
   const permissionsByModule = useMemo(() => {

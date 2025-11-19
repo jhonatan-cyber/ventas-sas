@@ -1,6 +1,5 @@
 "use client";
 
-
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Plus, Trash2, QrCode } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -29,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences";
 
 const paymentOptions = [
   { value: "cash", label: "Efectivo" },
@@ -59,8 +59,6 @@ const generateTempId = () =>
     : Math.random().toString(36).slice(2);
 
 const EMPTY_PRODUCT_VALUE = "__none__";
-
-import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 const formatDate = (value?: string | Date | null) => {
   if (!value) return "--";
@@ -413,7 +411,7 @@ export function QuotationConvertDialog({
       })
     );
     setCodeInputs((prev) => ({ ...prev, [itemId]: "" }));
-  }, []);
+  }, [t]);
 
   const removeCodeFromItem = useCallback((itemId: string, code: string) => {
     setItems((prev) =>
@@ -496,6 +494,7 @@ export function QuotationConvertDialog({
       lastScannedCodeRef,
       readerRef,
       stopScanning,
+      t,
     ]
   );
 
