@@ -214,14 +214,25 @@ export async function POST(request: NextRequest) {
       isFirstInvoice,
     })
 
+    logger.info('Llamando a EmailService.sendCredentials', {
+      email,
+      organizationName: organization.razonSocial || organization.name,
+      isFirstInvoice,
+    })
+
     if (!result.success) {
+      logger.error('Error al enviar credenciales por email', {
+        error: result.error,
+        email,
+        invoiceId,
+      })
       return NextResponse.json(
         { error: result.error || 'Error al enviar el email' },
         { status: 500 }
       )
     }
 
-    logger.info('Credenciales enviadas por email', {
+    logger.info('Credenciales enviadas por email exitosamente', {
       invoiceId,
       organizationId: organization.id,
       email,

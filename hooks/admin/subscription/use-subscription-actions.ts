@@ -9,6 +9,7 @@ export function useSubscriptionActions() {
   const [isPending, startTransition] = useTransition()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<any>(undefined)
+  const [detailDialog, setDetailDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, subscriptionId: '', organizationName: '' })
 
   const handleNewClick = () => {
@@ -19,6 +20,11 @@ export function useSubscriptionActions() {
   const handleEdit = (subscription: any) => {
     setSelectedSubscription(subscription)
     setOpenDialog(true)
+  }
+
+  const handleView = (subscription: any) => {
+    setSelectedSubscription(subscription)
+    setDetailDialog(true)
   }
 
   const handleDeleteClick = (subscriptionId: string, organizationName: string) => {
@@ -137,8 +143,11 @@ export function useSubscriptionActions() {
     openDialog,
     setOpenDialog,
     selectedSubscription,
+    detailDialog,
+    setDetailDialog,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,

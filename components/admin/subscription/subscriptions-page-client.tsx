@@ -1,6 +1,7 @@
 "use client"
 
 import { DeleteSubscriptionDialog } from "./delete-subscription-dialog"
+import { SubscriptionDetailDialog } from "./subscription-detail-dialog"
 import { SubscriptionFormDialog } from "./subscription-form-dialog"
 import { SubscriptionsContainer } from "./subscriptions-container"
 
@@ -20,8 +21,11 @@ export function SubscriptionsPageClient({ initialSubscriptions }: SubscriptionsP
     openDialog,
     setOpenDialog,
     selectedSubscription,
+    detailDialog,
+    setDetailDialog,
     handleNewClick,
     handleEdit,
+    handleView,
     handleSave,
     handleToggleStatus,
     handleDeleteClick,
@@ -42,6 +46,7 @@ export function SubscriptionsPageClient({ initialSubscriptions }: SubscriptionsP
         <SubscriptionsContainer 
           subscriptions={initialSubscriptions} 
           onEdit={handleEdit}
+          onViewDetails={handleView}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDeleteClick}
         />
@@ -53,12 +58,18 @@ export function SubscriptionsPageClient({ initialSubscriptions }: SubscriptionsP
           onSave={handleSave}
         />
 
-            <DeleteSubscriptionDialog
-              open={deleteDialog.open}
-              onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
-              onConfirm={handleDeleteConfirm}
-              organizationName={deleteDialog.organizationName}
-            />
+        <SubscriptionDetailDialog
+          open={detailDialog}
+          onOpenChange={setDetailDialog}
+          subscription={selectedSubscription ?? null}
+        />
+
+        <DeleteSubscriptionDialog
+          open={deleteDialog.open}
+          onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+          onConfirm={handleDeleteConfirm}
+          organizationName={deleteDialog.organizationName}
+        />
       </div>
     </AdminLayout>
   )

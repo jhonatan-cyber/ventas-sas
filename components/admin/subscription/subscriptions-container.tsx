@@ -13,11 +13,12 @@ import type { SubscriptionWithDetails } from "./types"
 interface SubscriptionsContainerProps {
   subscriptions: SubscriptionWithDetails[]
   onEdit?: (subscription: SubscriptionWithDetails) => void
+  onViewDetails?: (subscription: SubscriptionWithDetails) => void
   onToggleStatus?: (subscriptionId: string, currentStatus: string) => void
   onDelete?: (subscriptionId: string, organizationName: string) => void
 }
 
-export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, onDelete }: SubscriptionsContainerProps) {
+export function SubscriptionsContainer({ subscriptions, onEdit, onViewDetails, onToggleStatus, onDelete }: SubscriptionsContainerProps) {
   const [pageSize, setPageSize] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -95,7 +96,7 @@ export function SubscriptionsContainer({ subscriptions, onEdit, onToggleStatus, 
       {/* Tabla de suscripciones (desktop) - Solo mostrar si hay suscripciones */}
       {subscriptions.length > 0 && (
         <div className="hidden md:block rounded-md border border-gray-200 dark:border-[#2a2a2a]">
-          <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onToggleStatus={onToggleStatus} onDelete={onDelete} />
+          <SubscriptionsTable subscriptions={currentSubscriptions} onEdit={onEdit} onViewDetails={onViewDetails} onToggleStatus={onToggleStatus} onDelete={onDelete} />
         </div>
       )}
       {/* Paginación - Solo mostrar si hay suscripciones */}

@@ -21,6 +21,13 @@ export interface CredentialsEmailData {
   isFirstInvoice?: boolean
 }
 
+export interface PasswordResetEmailData {
+  email: string
+  resetUrl: string
+  userName: string
+  organizationName: string
+}
+
 export class EmailService {
   /**
    * Enviar credenciales por email usando Resend
@@ -362,6 +369,219 @@ export class EmailService {
 
             <p style="margin-top: 32px; color: #333333; font-size: 14px; line-height: 1.8; letter-spacing: 0.2px;">
               Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos. Estamos aquí para ayudarte.
+            </p>
+          </div>
+          <div class="footer">
+            <p style="margin: 0;">Este es un email automático, por favor no responda.</p>
+            <p style="margin: 5px 0 0 0;">© ${new Date().getFullYear()} ${data.organizationName}. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }
+
+  /**
+   * Enviar email de recuperación de contraseña
+   */
+  static async sendPasswordReset(data: PasswordResetEmailData): Promise<{ success: boolean; error?: string }> {
+    try {
+      const resendApiKey = process.env.RESEND_API_KEY
+      const mailFrom = process.env.MAIL_FROM || 'Soporte Nuwevet <onboarding@resend.dev>'
+
+      if (!resendApiKey) {
+        logger.error('RESEND_API_KEY no está configurada')
+        return {
+          success: false,
+          error: 'Configuración de email no encontrada'
+        }
+      }
+
+      const resend = new Resend(resendApiKey)
+
+      const subject = `Recuperación de contraseña - ${data.organizationName}`
+
+      const htmlContent = this.generatePasswordResetEmailTemplate(data)
+
+      logger.info('Enviando email de recuperación de contraseña', {
+        to: data.email,
+        organization: data.organizationName,
+        from: mailFrom,
+      })
+
+      // En desarrollo, logueamos el contenido del email
+      if (process.env.NODE_ENV === 'development') {
+        console.log('\n=== EMAIL DE RECUPERACIÓN DE CONTRASEÑA ===')
+        console.log('To:', data.email)
+        console.log('Subject:', subject)
+        console.log('Reset URL:', data.resetUrl)
+        console.log('HTML Content Length:', htmlContent.length)
+        console.log('==========================================\n')
+      }
+
+      // Intentar enviar el email
+      const result = await resend.emails.send({
+        from: mailFrom,
+        to: data.email,
+        subject,
+        html: htmlContent,
+      })
+
+      if (result.error) {
+        logger.error('Error al enviar email de recuperación con Resend', result.error)
+        
+        // Mensaje de error más específico y útil
+        let errorMessage = result.error.message || 'Error al enviar el email'
+        
+        if (result.error.message?.includes('testing emails') || 
+            result.error.message?.includes('verify a domain')) {
+          errorMessage = `Resend solo permite enviar emails de prueba a direcciones verificadas (actualmente: jhonatanancasi@gmail.com). Para enviar a "${data.email}", por favor verifica un dominio en https://resend.com/domains y actualiza la variable MAIL_FROM para usar ese dominio.`
+        }
+        
+        return {
+          success: false,
+          error: errorMessage
+        }
+      }
+
+      logger.info('Email de recuperación enviado exitosamente', {
+        emailId: result.data?.id,
+        to: data.email,
+      })
+
+      return { success: true }
+    } catch (error) {
+      logger.error('Error al enviar email de recuperación de contraseña', error as Error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al enviar el email'
+      }
+    }
+  }
+
+  private static generatePasswordResetEmailTemplate(data: PasswordResetEmailData): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Recuperación de Contraseña - ${data.organizationName}</title>
+        <style>
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+          }
+          .header { 
+            background-color: #f5f5f5;
+            color: #333333;
+            padding: 30px; 
+            text-align: center; 
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+          }
+          .header p {
+            margin: 0;
+            font-size: 16px;
+            color: #666666;
+          }
+          .content { 
+            padding: 30px; 
+          }
+          .button { 
+            display: inline-block; 
+            padding: 12px 30px; 
+            background-color: #ffffff;
+            color: #333333;
+            text-decoration: none; 
+            border-radius: 6px; 
+            margin: 20px 0;
+            font-weight: 600;
+            transition: background-color 0.3s, border-color 0.3s;
+            border: 1px solid #d1d5db;
+          }
+          .button:hover {
+            background-color: #f0f0f0;
+            border-color: #a0a0a0;
+          }
+          .footer { 
+            text-align: center; 
+            padding: 20px; 
+            color: #666666;
+            font-size: 12px; 
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+          }
+          .important-note {
+            margin-top: 30px; 
+            padding: 15px; 
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 4px; 
+            color: #92400e;
+            font-size: 14px;
+          }
+          .important-note strong {
+            color: #92400e;
+          }
+          .url-box {
+            text-align: center;
+            margin: 25px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            word-break: break-all;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Recuperación de Contraseña</h1>
+            <p>Restablece tu contraseña de acceso</p>
+          </div>
+          <div class="content">
+            <p style="font-size: 16px; color: #333333;">Estimado/a <strong>${data.userName}</strong>,</p>
+            
+            <p style="font-size: 16px; color: #666666; margin-top: 15px;">
+              Recibimos una solicitud para restablecer tu contraseña en <strong>${data.organizationName}</strong>.
+            </p>
+
+            <div class="url-box">
+              <a href="${data.resetUrl}" class="button">Restablecer Contraseña</a>
+            </div>
+
+            <p style="font-size: 14px; color: #666666; margin-top: 20px;">
+              O copia y pega este enlace en tu navegador:
+            </p>
+            <p style="font-size: 12px; color: #999999; word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+              ${data.resetUrl}
+            </p>
+
+            <div class="important-note">
+              <strong>Importante:</strong> Este enlace expirará en 1 hora. Si no solicitaste este cambio, puedes ignorar este email de forma segura.
+            </div>
+
+            <p style="margin-top: 20px; color: #666666; font-size: 14px;">
+              Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
             </p>
           </div>
           <div class="footer">

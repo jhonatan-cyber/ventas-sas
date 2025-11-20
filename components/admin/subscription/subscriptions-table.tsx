@@ -8,6 +8,7 @@ import {
   Calendar,
   Building2,
   User,
+  Eye,
 } from "lucide-react";
 
 import type { SubscriptionWithDetails } from "./types"
@@ -35,6 +36,7 @@ import { useHasPermission } from "@/hooks/admin/use-user-permissions";
 interface SubscriptionsTableProps {
   subscriptions: SubscriptionWithDetails[];
   onEdit?: (subscription: SubscriptionWithDetails) => void;
+  onViewDetails?: (subscription: SubscriptionWithDetails) => void;
   onToggleStatus?: (subscriptionId: string, currentStatus: string) => void;
   onDelete?: (subscriptionId: string, organizationName: string) => void;
 }
@@ -42,10 +44,12 @@ interface SubscriptionsTableProps {
 export function SubscriptionsTable({
   subscriptions,
   onEdit,
+  onViewDetails,
   onToggleStatus,
   onDelete,
 }: SubscriptionsTableProps) {
   const canEdit = useHasPermission("suscripciones_editar");
+  const canViewDetails = useHasPermission("suscripciones_listar");
   const canDelete = useHasPermission("suscripciones_eliminar");
   const canActivate = useHasPermission("suscripciones_activar");
   const canDeactivate = useHasPermission("suscripciones_desactivar");
@@ -232,6 +236,26 @@ export function SubscriptionsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => onViewDetails?.(subscription)}
+                              disabled={!canViewDetails}
+                            >
+                              <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {canViewDetails
+                            ? "Ver detalles"
+                            : "No tiene permiso para ver detalles"}
+                        </TooltipContent>
+                      </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span>

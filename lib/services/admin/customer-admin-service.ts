@@ -211,15 +211,90 @@ export class CustomerAdminService {
 
   // Actualizar cliente
   static async updateCustomer(id: string, data: UpdateCustomerData): Promise<PrismaCustomer> {
+    // Obtener el cliente actual para comparar valores
+    const currentCustomer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        organizations: {
+          where: { isActive: true },
+          select: {
+            organizationId: true,
+          },
+        },
+      },
+    })
+
+    if (!currentCustomer) {
+      throw new Error('Cliente no encontrado')
+    }
+
     const updateData: any = { ...data }
+    
     // Actualizar el cliente
     const result = await prisma.customer.update({
       where: { id },
       data: updateData
     })
 
-    // Nota: Ya no se sincronizan automáticamente usuarios, roles ni sucursales en el sistema SAS
-    // Estos deben actualizarse manualmente desde el módulo correspondiente
+    // Sincronizar con UsuarioSas en todas las organizaciones asociadas
+    // Buscar UsuarioSas que coincidan por CI o email en cada organización
+    const organizationIds = currentCustomer.organizations.map(co => co.organizationId)
+    
+    if (organizationIds.length > 0) {
+      // Preparar datos de actualización para UsuarioSas
+      const usuarioSasUpdateData: any = {}
+      
+      // Mapear campos de Customer a UsuarioSas
+      if (data.nombre !== undefined) {
+        usuarioSasUpdateData.nombre = data.nombre
+      }
+      if (data.apellido !== undefined) {
+        usuarioSasUpdateData.apellido = data.apellido
+      }
+      if (data.ci !== undefined) {
+        usuarioSasUpdateData.ci = data.ci
+      }
+      if (data.email !== undefined) {
+        usuarioSasUpdateData.email = data.email
+      }
+      if (data.phone !== undefined) {
+        usuarioSasUpdateData.phone = data.phone
+      }
+      if (data.address !== undefined) {
+        usuarioSasUpdateData.address = data.address
+      }
+      if (data.isActive !== undefined) {
+        usuarioSasUpdateData.isActive = data.isActive
+      }
+
+      // Solo actualizar si hay campos para sincronizar
+      if (Object.keys(usuarioSasUpdateData).length > 0) {
+        // Construir condiciones OR para buscar por CI o email (usando valores anteriores)
+        const orConditions: any[] = []
+        
+        // Buscar por CI anterior (si existe)
+        if (currentCustomer.ci) {
+          orConditions.push({ ci: currentCustomer.ci })
+        }
+        
+        // Buscar por email anterior (si existe)
+        if (currentCustomer.email) {
+          orConditions.push({ email: currentCustomer.email })
+        }
+
+        // Si hay condiciones OR, buscar y actualizar UsuarioSas
+        if (orConditions.length > 0) {
+          await prisma.usuarioSas.updateMany({
+            where: {
+              organizationId: { in: organizationIds },
+              OR: orConditions,
+              deletedAt: null, // Solo actualizar usuarios no eliminados
+            },
+            data: usuarioSasUpdateData,
+          })
+        }
+      }
+    }
 
     return result
   }

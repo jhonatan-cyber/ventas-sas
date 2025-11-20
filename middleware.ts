@@ -75,10 +75,15 @@ export function middleware(request: NextRequest) {
   const excluded = ['', 'administracion']
   if (first && !excluded.includes(first)) {
     const isLogin = pathname.startsWith(`/${first}/login`)
+    const isResetPassword = pathname.startsWith(`/${first}/reset-password`)
     const hasAuthToken = Boolean(request.cookies.get('sas-auth-token')?.value)
     const hasSession = Boolean(request.cookies.get('sas-session')?.value)
+    // Permitir acceso a login y reset-password sin autenticación
+    if (isLogin || isResetPassword) {
+      return NextResponse.next()
+    }
     if (!hasAuthToken && !hasSession) {
-      return isLogin ? NextResponse.next() : NextResponse.redirect(new URL(`/${first}/login`, request.url))
+      return NextResponse.redirect(new URL(`/${first}/login`, request.url))
     }
     // Permitir acceder a la página de login aunque exista token
     // para evitar bucles cuando falte o sea inválida la sas-session

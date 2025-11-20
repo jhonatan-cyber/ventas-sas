@@ -120,6 +120,7 @@ model Organization {
   rolesSas                 RoleSas[]
   sales                    Sale[]
   sasSessions              SasSession[]
+  passwordResetTokens      PasswordResetToken[]
   salesUsers               SalesUser[]
   usuariosSas              UsuarioSas[]
   abTests                  AbTest[]
@@ -682,6 +683,7 @@ model UsuarioSas {
   closedCashRegisters  CashRegister[] @relation("CashRegisterClosedBy")
   openedCashRegisters  CashRegister[] @relation("CashRegisterOpenedBy")
   sasSessions          SasSession[]
+  passwordResetTokens  PasswordResetToken[]
   organization         Organization   @relation(fields: [organizationId], references: [id])
   rol                  RoleSas?       @relation(fields: [rolId], references: [id])
   sucursal             Branch?        @relation(fields: [sucursalId], references: [id])
@@ -715,6 +717,25 @@ model SasSession {
   @@index([lastActivityAt])
   @@index([expiresAt])
   @@map("sales_sas_sessions")
+}
+
+model PasswordResetToken {
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  token           String       @unique
+  email           String
+  organizationId  String       @map("organization_id")
+  expiresAt       DateTime     @map("expires_at")
+  usedAt          DateTime?    @map("used_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  user            UsuarioSas   @relation(fields: [userId], references: [id])
+
+  @@index([token])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model SecurityLog {
