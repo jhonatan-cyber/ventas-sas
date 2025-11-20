@@ -169,7 +169,7 @@ export class OrganizationAdminService {
             ownerId: ownerProfile.id,
             subscriptionStatus:
               organizationData.subscriptionStatus ||
-              OrganizationSubscriptionStatus.trial,
+              OrganizationSubscriptionStatus.active,
             subscriptionStartDate:
               organizationData.subscriptionStartDate || new Date(),
             subscriptionEndDate:

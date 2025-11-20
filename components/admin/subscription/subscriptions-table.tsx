@@ -12,6 +12,7 @@ import {
 
 import type { SubscriptionWithDetails } from "./types"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,9 +50,16 @@ export function SubscriptionsTable({
   const canActivate = useHasPermission("suscripciones_activar");
   const canDeactivate = useHasPermission("suscripciones_desactivar");
 
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date: Date | string | null) => {
     if (!date) return "-";
-    return new Date(date).toLocaleDateString("es-ES");
+    // Si es string, parsearlo primero
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // Obtener año, mes y día directamente sin conversión de zona horaria
+    // Usar UTC para evitar problemas de zona horaria
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    return `${day}/${month}/${year}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -138,9 +146,15 @@ export function SubscriptionsTable({
                 >
                   <TableCell>
                     <div className="flex items-center gap-3 py-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-white" />
-                      </div>
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage 
+                          src={subscription.organization?.whiteLabelBranding?.logoUrl || undefined} 
+                          alt={subscription.organization?.razonSocial || subscription.organization?.name || "Empresa"}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-semibold">
+                          {(subscription.organization?.razonSocial || subscription.organization?.name || "E").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-gray-900 dark:text-white">

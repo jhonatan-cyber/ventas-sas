@@ -1,19 +1,19 @@
 "use client";
 
-import { DollarSign, X } from "lucide-react"
+import { X } from "lucide-react";
 
-import { formatDate, formatCurrency } from "./invoices-table"
+import { formatDate } from "./invoices-table";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service"
+} from "@/components/ui/dialog";
+import { SerializedInvoiceWithRelations } from "@/lib/services/admin/billing-service";
 
 interface InvoiceDetailDialogProps {
   invoice: SerializedInvoiceWithRelations | null;
@@ -67,6 +67,18 @@ export function InvoiceDetailDialog({
 
   const remainingBalance = Number(invoice.total) - totalPaid;
 
+  // Función para formatear montos sin símbolo de dólar, usando "Bs" al final
+  const formatAmount = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    // Formatear número sin símbolo de moneda (solo número con separadores)
+    const formatted = new Intl.NumberFormat('es-BO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numAmount)
+    // Por ahora siempre mostrar "Bs" al final (se configurará desde módulo de configuración)
+    return `${formatted} Bs`
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
@@ -108,7 +120,24 @@ export function InvoiceDetailDialog({
                   <span className="text-gray-500 dark:text-gray-400 text-xs">
                     Nombre(s) y Apellido(s):
                   </span>
-                  <p className="font-medium mt-0.5">{invoice.billingName}</p>
+                  <p className="font-medium mt-0.5">
+                    {(() => {
+                      // Priorizar el nombre del dueño (owner) si está disponible
+                      if (invoice.organization?.owner?.fullName) {
+                        return invoice.organization.owner.fullName
+                      }
+                      // Si no hay owner, usar el customer
+                      const customer = invoice.organization?.customerOrganizations?.[0]?.customer
+                      if (customer) {
+                        const customerName = `${customer.nombre || ''} ${customer.apellido || ''}`.trim()
+                        if (customerName) {
+                          return customerName
+                        }
+                      }
+                      // Fallback al billingName guardado
+                      return invoice.billingName
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-500 dark:text-gray-400 text-xs">
@@ -202,7 +231,7 @@ export function InvoiceDetailDialog({
                     Subtotal:
                   </span>
                   <span className="font-medium">
-                    {formatCurrency(Number(invoice.subtotal), invoice.currency)}
+                    {formatAmount(Number(invoice.subtotal))}
                   </span>
                 </div>
                 {Number(invoice.tax) > 0 && (
@@ -211,7 +240,7 @@ export function InvoiceDetailDialog({
                       Impuesto:
                     </span>
                     <span className="font-medium">
-                      {formatCurrency(Number(invoice.tax), invoice.currency)}
+                      {formatAmount(Number(invoice.tax))}
                     </span>
                   </div>
                 )}
@@ -221,18 +250,14 @@ export function InvoiceDetailDialog({
                       Descuento:
                     </span>
                     <span className="font-medium text-red-600 dark:text-red-400">
-                      -
-                      {formatCurrency(
-                        Number(invoice.discount),
-                        invoice.currency
-                      )}
+                      -{formatAmount(Number(invoice.discount))}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between pt-1.5 border-t mt-1.5">
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold text-base">
-                    {formatCurrency(Number(invoice.total), invoice.currency)}
+                    {formatAmount(Number(invoice.total))}
                   </span>
                 </div>
                 {totalPaid > 0 && (
@@ -242,7 +267,7 @@ export function InvoiceDetailDialog({
                         Pagado:
                       </span>
                       <span className="font-medium text-green-600 dark:text-green-400">
-                        {formatCurrency(totalPaid, invoice.currency)}
+                        {formatAmount(totalPaid)}
                       </span>
                     </div>
                     {remainingBalance > 0 && (
@@ -251,7 +276,7 @@ export function InvoiceDetailDialog({
                           Saldo Pendiente:
                         </span>
                         <span className="font-semibold text-orange-600 dark:text-orange-400">
-                          {formatCurrency(remainingBalance, invoice.currency)}
+                          {formatAmount(remainingBalance)}
                         </span>
                       </div>
                     )}
@@ -306,10 +331,7 @@ export function InvoiceDetailDialog({
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">
-                          {formatCurrency(
-                            Number(payment.amount),
-                            invoice.currency
-                          )}
+                          {formatAmount(Number(payment.amount))}
                         </span>
                         <Badge
                           variant={
@@ -373,7 +395,6 @@ export function InvoiceDetailDialog({
                 className="rounded-full"
                 onClick={onAddPayment}
               >
-                <DollarSign className="h-4 w-4 mr-2" />
                 Registrar Pago
               </Button>
             )}

@@ -94,7 +94,7 @@ model Organization {
   slug                     String                         @unique
   ownerId                  String                         @map("owner_id")
   subscriptionPlanId       String?                        @map("subscription_plan_id")
-  subscriptionStatus       OrganizationSubscriptionStatus @default(trial) @map("subscription_status")
+  subscriptionStatus       OrganizationSubscriptionStatus @default(active) @map("subscription_status")
   subscriptionStartDate    DateTime?                      @map("subscription_start_date")
   subscriptionEndDate      DateTime?                      @map("subscription_end_date")
   settings                 Json?

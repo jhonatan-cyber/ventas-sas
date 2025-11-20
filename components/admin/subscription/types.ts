@@ -15,6 +15,9 @@ export interface SubscriptionWithDetails {
     slug: string
     razonSocial: string | null
     nit: string | null
+    whiteLabelBranding?: {
+      logoUrl?: string | null
+    } | null
   } | null
   customer?: {
     id: string

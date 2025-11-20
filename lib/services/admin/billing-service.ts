@@ -45,6 +45,19 @@ export interface InvoiceWithRelations {
     id: string
     name: string
     slug: string
+    owner?: {
+      id: string
+      fullName: string | null
+      email: string
+    } | null
+    customerOrganizations?: Array<{
+      customer: {
+        id: string
+        nombre: string | null
+        apellido: string | null
+        email: string | null
+      }
+    }>
   } | null
   subscription?: {
     id: string
@@ -109,6 +122,19 @@ export interface SerializedInvoiceWithRelations {
     id: string
     name: string
     slug: string
+    owner?: {
+      id: string
+      fullName: string | null
+      email: string
+    } | null
+    customerOrganizations?: Array<{
+      customer: {
+        id: string
+        nombre: string | null
+        apellido: string | null
+        email: string | null
+      }
+    }>
   } | null
   subscription?: {
     id: string
@@ -382,6 +408,27 @@ export class BillingService {
               id: true,
               name: true,
               slug: true,
+              owner: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true
+                }
+              },
+              customerOrganizations: {
+                where: { isActive: true },
+                select: {
+                  customer: {
+                    select: {
+                      id: true,
+                      nombre: true,
+                      apellido: true,
+                      email: true
+                    }
+                  }
+                },
+                take: 1
+              }
             }
           },
           subscription: {
@@ -451,15 +498,36 @@ export class BillingService {
 
     try {
       const invoice = await (prisma as any).invoice.findUnique({
-      where: { id },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          }
-        },
+        where: { id },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              owner: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true
+                }
+              },
+              customerOrganizations: {
+                where: { isActive: true },
+                select: {
+                  customer: {
+                    select: {
+                      id: true,
+                      nombre: true,
+                      apellido: true,
+                      email: true
+                    }
+                  }
+                },
+                take: 1
+              }
+            }
+          },
         subscription: {
           select: {
             id: true,

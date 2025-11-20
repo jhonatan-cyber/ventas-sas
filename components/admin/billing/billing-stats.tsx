@@ -18,11 +18,13 @@ interface BillingStatsProps {
 export function BillingStats({ stats }: BillingStatsProps) {
   const formatCurrency = (amount: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD',
+    // Formatear número con separadores de miles y decimales
+    const formatted = new Intl.NumberFormat('es-BO', {
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(numAmount)
+    // Agregar "Bs" al final en lugar del signo de dólar
+    return `${formatted} Bs`
   }
 
   const paidPercentage = stats.totalInvoices > 0 

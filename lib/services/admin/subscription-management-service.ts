@@ -58,6 +58,11 @@ export class SubscriptionManagementService {
               address: true,
               phone: true,
               ownerId: true,
+              whiteLabelBranding: {
+                select: {
+                  logoUrl: true,
+                }
+              },
               customerOrganizations: {
                 where: { isActive: true },
                 select: {
@@ -142,6 +147,13 @@ export class SubscriptionManagementService {
       organization = await prisma.organization.findUnique({
         where: { id: data.organizationId },
         include: {
+          owner: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
+          },
           customerOrganizations: {
             where: { isActive: true },
             include: {
@@ -153,10 +165,8 @@ export class SubscriptionManagementService {
       })
 
       if (organization) {
-        // Obtener el cliente dueño usando ownerId
-        owner = await prisma.customer.findUnique({
-          where: { id: organization.ownerId }
-        })
+        // El owner es un Profile, no un Customer
+        owner = organization.owner
       }
     }
 
@@ -195,13 +205,18 @@ export class SubscriptionManagementService {
       // Obtener datos de facturación: el dueño de la empresa (owner)
       const customer = organization.customerOrganizations[0]?.customer
       
-      // Usar nombre y apellido del dueño como billingName
-      const ownerName = owner ? `${owner.nombre || ''} ${owner.apellido || ''}`.trim() : ''
+      // Usar nombre completo del dueño (Profile) o nombre y apellido del customer
+      let ownerName = ''
+      if (owner?.fullName) {
+        ownerName = owner.fullName
+      } else if (customer) {
+        ownerName = `${customer.nombre || ''} ${customer.apellido || ''}`.trim()
+      }
       const billingName = ownerName || organization.razonSocial || organization.name || 'Cliente'
       
       // El email es requerido, usar el del dueño o un valor por defecto
       const billingEmail = owner?.email || customer?.email || `contacto@${organization.slug || 'empresa'}.com`
-      const billingAddress = organization.address || owner?.address || customer?.address || null
+      const billingAddress = organization.address || customer?.address || null
       const billingTaxId = organization.nit || null
 
       // Calcular el precio según el período de facturación

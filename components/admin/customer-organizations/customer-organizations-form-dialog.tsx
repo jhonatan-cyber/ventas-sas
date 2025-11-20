@@ -1,7 +1,7 @@
 "use client"
 
 import { Organization } from "@prisma/client"
-import { MapPin, Phone, Building2, User } from "lucide-react"
+import { MapPin, Phone, Building2, User, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -216,7 +216,7 @@ export function CustomerOrganizationsFormDialog({
                       className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"
                     >
                       <User className="h-4 w-4" />
-                      Cliente Dueño <span className="text-red-500">*</span>
+                      Cliente  <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={customerId}
@@ -228,12 +228,24 @@ export function CustomerOrganizationsFormDialog({
                         id="customer-select"
                         className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]"
                       >
-                        <SelectValue placeholder={isLoadingCustomers ? "Cargando..." : "Selecciona el dueño de la empresa"} />
+                        {isLoadingCustomers ? (
+                          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Cargando clientes...</span>
+                          </div>
+                        ) : (
+                          <SelectValue placeholder="Selecciona el dueño de la empresa" />
+                        )}
                       </SelectTrigger>
                       <SelectContent>
-                        {customers.length === 0 ? (
-                          <div className="px-2 py-4 text-sm text-gray-500 text-center">
-                            {isLoadingCustomers ? "Cargando clientes..." : "No hay clientes disponibles"}
+                        {isLoadingCustomers ? (
+                          <div className="px-2 py-8 text-sm text-gray-500 dark:text-gray-400 text-center flex flex-col items-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                            <span>Cargando clientes...</span>
+                          </div>
+                        ) : customers.length === 0 ? (
+                          <div className="px-2 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            No hay clientes disponibles
                           </div>
                         ) : (
                           customers.map((customer) => (

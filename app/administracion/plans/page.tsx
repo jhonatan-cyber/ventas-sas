@@ -37,12 +37,38 @@ export default async function PlansPage() {
     // Obtener planes
     const plans = await SubscriptionAdminService.getAllPlans()
 
-    // Convertir Decimal a número para serialización
-    const serializedPlans = plans.map(plan => ({
-      ...plan,
-      priceMonthly: plan.priceMonthly ? Number(plan.priceMonthly) : null,
-      priceYearly: plan.priceYearly ? Number(plan.priceYearly) : null,
-    }))
+    // Convertir Decimal a número y asegurar que modules sea un array para serialización
+    const serializedPlans = plans.map(plan => {
+      // Asegurar que modules sea un array válido
+      let modules: string[] = []
+      if (plan.modules) {
+        try {
+          // Si modules es un string JSON, parsearlo
+          if (typeof plan.modules === 'string') {
+            const parsed = JSON.parse(plan.modules)
+            modules = Array.isArray(parsed) ? parsed.filter((m): m is string => typeof m === 'string') : []
+          } 
+          // Si ya es un array, convertirlo a string[] filtrando valores no string
+          else if (Array.isArray(plan.modules)) {
+            modules = plan.modules.filter((m): m is string => typeof m === 'string')
+          }
+          // Si es un objeto, intentar convertirlo
+          else if (typeof plan.modules === 'object' && plan.modules !== null) {
+            modules = Object.values(plan.modules).filter((m): m is string => typeof m === 'string')
+          }
+        } catch {
+          // Si hay error al parsear, usar array vacío
+          modules = []
+        }
+      }
+
+      return {
+        ...plan,
+        priceMonthly: plan.priceMonthly ? Number(plan.priceMonthly) : null,
+        priceYearly: plan.priceYearly ? Number(plan.priceYearly) : null,
+        modules: modules.length > 0 ? modules : null,
+      }
+    })
 
     return <PlansPageClient initialPlans={serializedPlans} />
   } catch  {

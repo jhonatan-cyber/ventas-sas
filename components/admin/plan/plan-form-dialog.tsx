@@ -10,31 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { PermissionSasService } from "@/lib/services/sales/permission-sas-service"
+import { SAS_MODULES_CONFIG } from "@/lib/config/sas-modules"
 
-// Descripciones de los módulos del sistema SAS
-const MODULE_DESCRIPTIONS: Record<string, string> = {
-  dashboard: 'Panel principal con estadísticas y métricas del negocio',
-  ventas: 'Gestión de ventas y facturación',
-  cajas: 'Control de cajas y puntos de venta',
-  cotizaciones: 'Creación y gestión de cotizaciones',
-  gastos: 'Registro y control de gastos',
-  productos: 'Gestión de productos e inventario',
-  categorias: 'Administración de categorías de productos',
-  clientes: 'Gestión de clientes y contactos',
-  usuarios: 'Administración de usuarios del sistema',
-  roles: 'Gestión de roles y permisos',
-  permisos: 'Configuración de permisos del sistema',
-  sucursales: 'Gestión de sucursales y ubicaciones',
-  configuracion: 'Configuración general del sistema',
-  reportes: 'Generación de reportes y análisis',
-}
-
-// Obtener todos los módulos del sistema SAS y combinarlos con sus descripciones
-const AVAILABLE_MODULES = PermissionSasService.getAvailableModules().map((module) => ({
+// Obtener todos los módulos del sistema SAS con sus descripciones desde la configuración centralizada
+const AVAILABLE_MODULES = SAS_MODULES_CONFIG.map((module) => ({
   id: module.id,
   label: module.label,
-  description: MODULE_DESCRIPTIONS[module.id] || `Módulo ${module.label}`,
+  description: module.description,
 }))
 
 interface PlanFormDialogProps {

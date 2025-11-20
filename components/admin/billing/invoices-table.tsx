@@ -191,11 +191,21 @@ export function InvoicesTable({
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formatCurrencyWithPreferences(
-                          Number(invoice.total),
-                          undefined,
-                          invoice.currency
-                        )}
+                        {(() => {
+                          const amount = Number(invoice.total)
+                          const currency = invoice.currency || 'BOB'
+                          // Formatear número sin símbolo de moneda (solo número con separadores)
+                          const formatted = new Intl.NumberFormat('es-BO', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(amount)
+                          // Agregar símbolo de moneda al final según corresponda
+                          if (currency === 'BOB') {
+                            return `${formatted} Bs`
+                          }
+                          // Para otras monedas, solo el número formateado
+                          return formatted
+                        })()}
                       </span>
                     </div>
                   </TableCell>

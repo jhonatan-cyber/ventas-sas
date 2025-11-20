@@ -1,6 +1,6 @@
 "use client"
 
-import { Edit, Trash2, Power, PowerOff, User, CreditCard, MapPin, Phone, Eye } from "lucide-react"
+import { Edit, Trash2, Power, PowerOff, CreditCard, MapPin, Phone, Eye } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -102,12 +102,9 @@ export function CustomersTable({ customers, isLoading, onViewDetails, onEditClic
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <User className="h-3.5 w-3.5 text-blue-500" />
-                            <span className="font-semibold text-gray-900 dark:text-white">
-                              {displayName}
-                            </span>
-                          </div>
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {displayName}
+                          </span>
                           {customer.email && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 ml-5">{customer.email}</span>
                           )}

@@ -31,8 +31,10 @@ export function CustomerOrganizationsStats({ customers, organizations }: Custome
   const activeOrganizations = organizations.filter(
     (org) => org.subscriptionStatus === 'active' || org.subscriptionStatus === 'trial'
   ).length
+  // Solo contar como inactivas las que tienen estado 'suspended' explícitamente
+  // Si subscriptionStatus es undefined o null, se considera activa (por defecto)
   const inactiveOrganizations = organizations.filter(
-    (org) => org.subscriptionStatus !== 'active' && org.subscriptionStatus !== 'trial'
+    (org) => org.subscriptionStatus === 'suspended'
   ).length
   const totalCustomers = customers.length
 

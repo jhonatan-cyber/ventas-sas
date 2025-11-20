@@ -28,6 +28,7 @@ import { useSidebar } from "./sidebar-context"
 import type { CSSProperties, ComponentType } from "react"
 
 import { Button } from "@/components/ui/button"
+import { getSasRouteToModuleMap } from "@/lib/config/sas-modules"
 import { cn } from "@/lib/utils"
 
 
@@ -115,25 +116,8 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
     }
   }, [organizationSlug])
 
-  // Mapeo de rutas a IDs de módulos
-  const routeToModuleMap: Record<string, string> = {
-    'dashboard': 'dashboard',
-    'ventas': 'ventas',
-    'cajas': 'cajas',
-    'cotizaciones': 'cotizaciones',
-    'gastos': 'gastos',
-    'productos': 'productos',
-    'categorias': 'categorias',
-    'clientes': 'clientes',
-    'usuarios': 'usuarios',
-    'roles': 'roles',
-    'permisos': 'permisos',
-    'sucursales': 'sucursales',
-    'configuracion': 'configuracion',
-    'reportes': 'reportes',
-    'inventario': 'inventario',
-    'analytics': 'analytics',
-  }
+  // Mapeo de rutas a IDs de módulos (obtenido de la configuración centralizada)
+  const routeToModuleMap = getSasRouteToModuleMap()
 
   // Función para verificar si un módulo está permitido
   const isModuleAllowed = (route: string): boolean => {

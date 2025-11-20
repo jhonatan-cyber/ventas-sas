@@ -1,5 +1,10 @@
 import { RoleSas } from "@prisma/client"
 
+import { 
+  getSasModuleIds, 
+  getSasModules, 
+  getSasModuleLabelsMap 
+} from "@/lib/config/sas-modules"
 import { prisma } from "@/lib/prisma"
 
 export interface PermissionSasInfo {
@@ -21,43 +26,13 @@ export interface PermissionSasStats {
   unusedPermissions: PermissionSasInfo[]
 }
 
-// Módulos del sistema SAS
-const SAS_MODULES = [
-  'dashboard',
-  'ventas',
-  'cajas',
-  'cotizaciones',
-  'gastos',
-  'productos',
-  'categorias',
-  'clientes',
-  'usuarios',
-  'roles',
-  'permisos',
-  'sucursales',
-  'configuracion',
-  'reportes',
-]
+// Módulos del sistema SAS (obtenidos de la configuración centralizada)
+const SAS_MODULES = getSasModuleIds()
 
 export class PermissionSasService {
   // Módulos disponibles del sistema SAS
   static getAvailableModules(): Array<{ id: string; label: string }> {
-    return [
-      { id: 'dashboard', label: 'Dashboard' },
-      { id: 'ventas', label: 'Ventas' },
-      { id: 'cajas', label: 'Cajas' },
-      { id: 'cotizaciones', label: 'Cotizaciones' },
-      { id: 'gastos', label: 'Gastos' },
-      { id: 'productos', label: 'Productos' },
-      { id: 'categorias', label: 'Categorías' },
-      { id: 'clientes', label: 'Clientes' },
-      { id: 'usuarios', label: 'Usuarios' },
-      { id: 'roles', label: 'Roles' },
-      { id: 'permisos', label: 'Permisos' },
-      { id: 'sucursales', label: 'Sucursales' },
-      { id: 'configuracion', label: 'Configuración' },
-      { id: 'reportes', label: 'Reportes' },
-    ]
+    return getSasModules()
   }
 
   // Acciones disponibles
@@ -80,22 +55,7 @@ export class PermissionSasService {
 
   // Generar descripción de permiso
   static generatePermissionDescription(module: string, action: string): string {
-    const moduleLabels: Record<string, string> = {
-      'dashboard': 'Dashboard',
-      'ventas': 'Ventas',
-      'cajas': 'Cajas',
-      'cotizaciones': 'Cotizaciones',
-      'gastos': 'Gastos',
-      'productos': 'Productos',
-      'categorias': 'Categorías',
-      'clientes': 'Clientes',
-      'usuarios': 'Usuarios',
-      'roles': 'Roles',
-      'permisos': 'Permisos',
-      'sucursales': 'Sucursales',
-      'configuracion': 'Configuración',
-      'reportes': 'Reportes',
-    }
+    const moduleLabels = getSasModuleLabelsMap()
 
     const actionLabels: Record<string, string> = {
       'listar': 'Ver lista de',
@@ -152,23 +112,7 @@ export class PermissionSasService {
       }
 
       // Determinar categoría basada en el módulo
-      const moduleLabels: Record<string, string> = {
-        'dashboard': 'Dashboard',
-        'ventas': 'Ventas',
-        'cajas': 'Cajas',
-        'cotizaciones': 'Cotizaciones',
-        'gastos': 'Gastos',
-        'productos': 'Productos',
-        'categorias': 'Categorías',
-        'clientes': 'Clientes',
-        'usuarios': 'Usuarios',
-        'roles': 'Roles',
-        'permisos': 'Permisos',
-        'sucursales': 'Sucursales',
-        'configuracion': 'Configuración',
-        'reportes': 'Reportes',
-      }
-
+      const moduleLabels = getSasModuleLabelsMap()
       const category = moduleLabels[permission.module] || 'Personalizado'
 
       permissionMap.set(permission.name, {

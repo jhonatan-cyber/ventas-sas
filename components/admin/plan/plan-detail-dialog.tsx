@@ -26,31 +26,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { PermissionSasService } from "@/lib/services/sales/permission-sas-service"
+import { SAS_MODULES_CONFIG } from "@/lib/config/sas-modules"
 
-// Descripciones de los módulos del sistema SAS
-const MODULE_DESCRIPTIONS: Record<string, string> = {
-  dashboard: 'Panel principal con estadísticas y métricas del negocio',
-  ventas: 'Gestión de ventas y facturación',
-  cajas: 'Control de cajas y puntos de venta',
-  cotizaciones: 'Creación y gestión de cotizaciones',
-  gastos: 'Registro y control de gastos',
-  productos: 'Gestión de productos e inventario',
-  categorias: 'Administración de categorías de productos',
-  clientes: 'Gestión de clientes y contactos',
-  usuarios: 'Administración de usuarios del sistema',
-  roles: 'Gestión de roles y permisos',
-  permisos: 'Configuración de permisos del sistema',
-  sucursales: 'Gestión de sucursales y ubicaciones',
-  configuracion: 'Configuración general del sistema',
-  reportes: 'Generación de reportes y análisis',
-}
-
-// Obtener todos los módulos del sistema SAS y combinarlos con sus descripciones
-const AVAILABLE_MODULES = PermissionSasService.getAvailableModules().map((module) => ({
+// Obtener todos los módulos del sistema SAS con sus descripciones desde la configuración centralizada
+const AVAILABLE_MODULES = SAS_MODULES_CONFIG.map((module) => ({
   id: module.id,
   label: module.label,
-  description: MODULE_DESCRIPTIONS[module.id] || `Módulo ${module.label}`,
+  description: module.description,
 }))
 
 
@@ -299,37 +281,65 @@ export function PlanDetailDialog({
               Módulos Incluidos
             </h3>
             <div className="pl-6">
-              {plan.modules && Array.isArray(plan.modules) && plan.modules.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {plan.modules.map((moduleId: string) => {
-                    const module = AVAILABLE_MODULES.find(m => m.id === moduleId)
-                    if (!module) return null
-                    return (
-                      <div
-                        key={moduleId}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#1a1a1a]"
-                      >
-                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {module.label}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {module.description}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#1a1a1a]">
-                  <XCircle className="h-4 w-4 text-gray-400" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    No hay módulos asignados a este plan
-                  </p>
-                </div>
-              )}
+              {(() => {
+                // Asegurar que modules sea un array válido
+                let modules: string[] = []
+                if (plan.modules) {
+                  try {
+                    // Si modules es un string JSON, parsearlo
+                    if (typeof plan.modules === 'string') {
+                      modules = JSON.parse(plan.modules)
+                    } 
+                    // Si ya es un array, usarlo directamente
+                    else if (Array.isArray(plan.modules)) {
+                      modules = plan.modules
+                    }
+                    // Si es un objeto, intentar convertirlo
+                    else if (typeof plan.modules === 'object') {
+                      modules = Object.values(plan.modules) as string[]
+                    }
+                  } catch {
+                    // Si hay error al parsear, usar array vacío
+                    modules = []
+                  }
+                }
+
+                if (modules.length > 0) {
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {modules.map((moduleId: string) => {
+                        const module = AVAILABLE_MODULES.find(m => m.id === moduleId)
+                        if (!module) return null
+                        return (
+                          <div
+                            key={moduleId}
+                            className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#1a1a1a]"
+                          >
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {module.label}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                {module.description}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                } else {
+                  return (
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-[#2a2a2a] bg-gray-50/50 dark:bg-[#1a1a1a]">
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No hay módulos asignados a este plan
+                      </p>
+                    </div>
+                  )
+                }
+              })()}
             </div>
           </div>
 

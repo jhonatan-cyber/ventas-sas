@@ -1,118 +1,372 @@
+import { Resend } from 'resend'
+
 import { logger } from '@/lib/utils/logger'
 
 export interface CredentialsEmailData {
   email: string
   password: string
+  username: string // CI o email
   organizationName: string
+  organizationSlug: string
   landingUrl: string
   loginUrl: string
   customerName?: string
+  ownerName?: string
+  ownerEmail?: string
+  planName?: string
+  planDescription?: string
+  planPrice?: string
+  subscriptionPeriod?: string
+  subscriptionStatus?: string
+  isFirstInvoice?: boolean
 }
 
 export class EmailService {
   /**
-   * Enviar credenciales por email
+   * Enviar credenciales por email usando Resend
    */
   static async sendCredentials(data: CredentialsEmailData): Promise<{ success: boolean; error?: string }> {
     try {
-      // TODO: Implementar envío real de email usando nodemailer, resend, o similar
-      // Por ahora, solo logueamos la información
-      
-      const emailContent = `
-        Estimado/a ${data.customerName || 'Usuario'},
+      const resendApiKey = process.env.RESEND_API_KEY
+      const mailFrom = process.env.MAIL_FROM || 'Soporte Nuwevet <onboarding@resend.dev>'
 
-        Le enviamos sus credenciales de acceso para ${data.organizationName}:
+      if (!resendApiKey) {
+        logger.error('RESEND_API_KEY no está configurada')
+        return {
+          success: false,
+          error: 'Configuración de email no encontrada'
+        }
+      }
 
-        Correo electrónico: ${data.email}
-        Contraseña: ${data.password}
+      const resend = new Resend(resendApiKey)
 
-        URLs de acceso:
-        - Landing: ${data.landingUrl}
-        - Login: ${data.loginUrl}
+      const subject = data.isFirstInvoice
+        ? `¡Bienvenido a ${data.organizationName}! - Credenciales de acceso`
+        : `Credenciales de acceso - ${data.organizationName}`
 
-        Por favor, guarde esta información de forma segura.
-
-        Saludos,
-        Equipo de Soporte
-      `
+      const htmlContent = this.generateWelcomeEmailTemplate(data)
 
       logger.info('Enviando credenciales por email', {
         to: data.email,
         organization: data.organizationName,
+        isFirstInvoice: data.isFirstInvoice,
       })
 
       // En desarrollo, logueamos el contenido del email
       if (process.env.NODE_ENV === 'development') {
         console.log('\n=== EMAIL DE CREDENCIALES ===')
-        console.log(emailContent)
+        console.log('To:', data.email)
+        console.log('Subject:', subject)
+        console.log('HTML Content Length:', htmlContent.length)
         console.log('===========================\n')
       }
 
-      // TODO: Implementar envío real
-      // Ejemplo con nodemailer:
-      // await transporter.sendMail({
-      //   from: process.env.EMAIL_FROM,
-      //   to: data.email,
-      //   subject: `Credenciales de acceso - ${data.organizationName}`,
-      //   html: generateEmailTemplate(data),
-      // })
+      // Intentar enviar el email
+      const result = await resend.emails.send({
+        from: mailFrom,
+        to: data.email,
+        subject,
+        html: htmlContent,
+      })
+
+      if (result.error) {
+        logger.error('Error al enviar email con Resend', result.error)
+        
+        // Mensaje de error más específico y útil
+        let errorMessage = result.error.message || 'Error al enviar el email'
+        
+        if (result.error.message?.includes('testing emails') || 
+            result.error.message?.includes('verify a domain')) {
+          errorMessage = `Resend solo permite enviar emails de prueba a direcciones verificadas (actualmente: jhonatanancasi@gmail.com). Para enviar a "${data.email}", por favor verifica un dominio en https://resend.com/domains y actualiza la variable MAIL_FROM para usar ese dominio.`
+        }
+        
+        return {
+          success: false,
+          error: errorMessage
+        }
+      }
+
+      logger.info('Email enviado exitosamente', {
+        emailId: result.data?.id,
+        to: data.email,
+      })
 
       return { success: true }
     } catch (error) {
       logger.error('Error al enviar credenciales por email', error as Error)
       return {
         success: false,
-        error: 'Error al enviar el email'
+        error: error instanceof Error ? error.message : 'Error al enviar el email'
       }
     }
   }
 
   /**
-   * Generar plantilla HTML para el email de credenciales
+   * Generar plantilla HTML para el email de bienvenida con credenciales
    */
-  private static generateEmailTemplate(data: CredentialsEmailData): string {
+  private static generateWelcomeEmailTemplate(data: CredentialsEmailData): string {
+    const welcomeSection = data.isFirstInvoice ? `
+      <div style="background-color: #f5f5f5; color: #333333; padding: 50px 30px; text-align: center; border-bottom: 2px solid #e5e5e5;">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">¡Bienvenido</h1>
+        <p style="margin: 12px 0 0 0; font-size: 16px; font-weight: 300; letter-spacing: 1px; color: #666666;">${data.organizationName}</p>
+      </div>
+    ` : ''
+
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4f46e5; color: white; padding: 20px; text-align: center; }
-          .content { padding: 20px; background-color: #f9fafb; }
-          .credentials { background-color: white; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #4f46e5; }
-          .urls { background-color: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
-          .button { display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.7; 
+            color: #333333; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #ffffff;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background-color: #ffffff;
+            border: 1px solid #e5e5e5;
+          }
+          .content { 
+            padding: 50px 40px; 
+          }
+          .section {
+            background-color: #ffffff;
+            padding: 28px 0;
+            margin: 32px 0;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+          }
+          .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333333;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #d1d5db;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+          }
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e5e5;
+          }
+          .info-row:last-child {
+            border-bottom: none;
+          }
+          .info-label {
+            font-weight: 400;
+            color: #666666;
+            flex: 1;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+          }
+          .info-value {
+            color: #333333;
+            flex: 1;
+            text-align: right;
+            font-weight: 500;
+            font-size: 14px;
+          }
+          .credentials-box {
+            background-color: #f5f5f5;
+            color: #333333;
+            padding: 40px 32px;
+            margin: 40px 0;
+            text-align: center;
+            border: 2px solid #d1d5db;
+          }
+          .credentials-box h3 {
+            margin: 0 0 32px 0;
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #333333;
+          }
+          .credential-item {
+            background-color: #ffffff;
+            color: #333333;
+            padding: 20px 24px;
+            margin: 16px 0;
+            border: 1px solid #d1d5db;
+          }
+          .credential-label {
+            font-size: 11px;
+            margin-bottom: 10px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #666666;
+          }
+          .credential-value {
+            font-size: 22px;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            color: #333333;
+          }
+          .button { 
+            display: inline-block; 
+            padding: 16px 40px; 
+            background-color: #f5f5f5; 
+            color: #333333; 
+            text-decoration: none; 
+            margin: 8px 6px;
+            font-weight: 400;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid #d1d5db;
+          }
+          .button:hover {
+            background-color: #e5e5e5;
+            color: #333333;
+          }
+          .footer { 
+            text-align: center; 
+            padding: 40px 20px; 
+            color: #666666; 
+            font-size: 12px; 
+            background-color: #ffffff;
+            border-top: 1px solid #e5e5e5;
+            line-height: 1.8;
+            letter-spacing: 0.5px;
+          }
+          .url-box {
+            text-align: center;
+            margin: 40px 0;
+          }
+          .note-box {
+            margin-top: 32px;
+            padding: 20px 24px;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            color: #333333;
+            font-size: 13px;
+            line-height: 1.7;
+            letter-spacing: 0.3px;
+          }
+          .note-box strong {
+            color: #333333;
+            font-weight: 600;
+          }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="header">
-            <h1>Credenciales de Acceso</h1>
-          </div>
+          ${welcomeSection}
           <div class="content">
-            <p>Estimado/a ${data.customerName || 'Usuario'},</p>
-            <p>Le enviamos sus credenciales de acceso para <strong>${data.organizationName}</strong>:</p>
+            <p style="font-size: 16px; color: #333333; margin-bottom: 24px; letter-spacing: 0.3px;">Estimado/a <strong>${data.customerName || 'Usuario'}</strong>,</p>
             
-            <div class="credentials">
-              <p><strong>Correo electrónico:</strong> ${data.email}</p>
-              <p><strong>Contraseña:</strong> ${data.password}</p>
-            </div>
+            ${data.isFirstInvoice ? `
+              <p style="font-size: 15px; color: #333333; margin-top: 0; line-height: 1.8; letter-spacing: 0.2px;">
+                Nos complace darte la bienvenida a nuestra plataforma. Tu factura ha sido procesada exitosamente y tu cuenta está lista para usar.
+              </p>
+            ` : `
+              <p style="font-size: 15px; color: #333333; margin-top: 0; line-height: 1.8; letter-spacing: 0.2px;">
+                Te enviamos tus credenciales de acceso para <strong>${data.organizationName}</strong>:
+              </p>
+            `}
 
-            <div class="urls">
-              <p><strong>URLs de acceso:</strong></p>
-              <p>
-                <a href="${data.landingUrl}" class="button">Ir a Landing</a>
-                <a href="${data.loginUrl}" class="button">Iniciar Sesión</a>
+            <div class="credentials-box">
+              <h3>🔐 Tus Credenciales de Acceso</h3>
+              <div class="credential-item">
+                <div class="credential-label">Usuario (puedes usar tu correo o tu CI)</div>
+                <div class="credential-value" style="margin-bottom: 10px;">Correo: ${data.email}</div>
+                <div class="credential-value">CI: ${data.password}</div>
+              </div>
+              <div class="credential-item">
+                <div class="credential-label">Contraseña</div>
+                <div class="credential-value">${data.password}</div>
+              </div>
+              <p style="font-size: 12px; margin-top: 20px; padding: 16px; background-color: #ffffff; color: #333333; border: 1px solid #d1d5db; letter-spacing: 0.3px; line-height: 1.6;">
+                <strong>Importante:</strong> Puedes iniciar sesión usando tu <strong>correo electrónico (${data.email})</strong> o tu <strong>CI (${data.password})</strong> como usuario. La contraseña siempre es tu <strong>CI (${data.password})</strong>.
               </p>
             </div>
 
-            <p style="margin-top: 20px;">Por favor, guarde esta información de forma segura.</p>
+            <div class="url-box">
+              <a href="${data.loginUrl}" class="button">Iniciar Sesión</a>
+              <a href="${data.landingUrl}" class="button">Ir al Dashboard</a>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Información de la Empresa</div>
+              <div class="info-row">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">${data.organizationName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">URL de Acceso:</span>
+                <span class="info-value">${data.organizationSlug}</span>
+              </div>
+              ${data.ownerName ? `
+                <div class="info-row">
+                  <span class="info-label">Dueño:</span>
+                  <span class="info-value">${data.ownerName}</span>
+                </div>
+              ` : ''}
+              ${data.ownerEmail ? `
+                <div class="info-row">
+                  <span class="info-label">Email del Dueño:</span>
+                  <span class="info-value">${data.ownerEmail}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            ${data.planName ? `
+              <div class="section">
+                <div class="section-title">Información del Plan</div>
+                <div class="info-row">
+                  <span class="info-label">Plan:</span>
+                  <span class="info-value">${data.planName}</span>
+                </div>
+                ${data.planPrice ? `
+                  <div class="info-row">
+                    <span class="info-label">Precio:</span>
+                    <span class="info-value" style="font-weight: 600;">${data.planPrice}</span>
+                  </div>
+                ` : ''}
+                ${data.planDescription ? `
+                  <div class="info-row">
+                    <span class="info-label">Descripción:</span>
+                    <span class="info-value">${data.planDescription}</span>
+                  </div>
+                ` : ''}
+                ${data.subscriptionPeriod ? `
+                  <div class="info-row">
+                    <span class="info-label">Periodo de Facturación:</span>
+                    <span class="info-value">${data.subscriptionPeriod}</span>
+                  </div>
+                ` : ''}
+                ${data.subscriptionStatus ? `
+                  <div class="info-row">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">${data.subscriptionStatus}</span>
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
+
+            <div class="note-box">
+              <strong>⚠️ Importante:</strong> Por favor, guarda esta información de forma segura. Tu contraseña es tu CI (Cédula de Identidad).
+            </div>
+
+            <p style="margin-top: 32px; color: #333333; font-size: 14px; line-height: 1.8; letter-spacing: 0.2px;">
+              Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos. Estamos aquí para ayudarte.
+            </p>
           </div>
           <div class="footer">
-            <p>Este es un email automático, por favor no responda.</p>
+            <p style="margin: 0;">Este es un email automático, por favor no responda.</p>
+            <p style="margin: 5px 0 0 0;">© ${new Date().getFullYear()} ${data.organizationName}. Todos los derechos reservados.</p>
           </div>
         </div>
       </body>

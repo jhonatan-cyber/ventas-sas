@@ -210,22 +210,30 @@ export function getDateFormat(slug: string): string {
  * @returns La fecha formateada
  */
 export function formatDateWithPreferences(date: Date | string, slug?: string): string {
-  const d = new Date(date)
+  const d = typeof date === 'string' ? new Date(date) : date
   const actualSlug = slug || getSlugFromUrl() || ''
   const dateFormat = getDateFormat(actualSlug)
 
-  // Mapeo de formatos
-  const formatMap: Record<string, Intl.DateTimeFormatOptions> = {
-    'dd/MM/yy': { day: '2-digit', month: '2-digit', year: '2-digit' },
-    'dd/MM/yyyy': { day: '2-digit', month: '2-digit', year: 'numeric' },
-    'MM/dd/yy': { month: '2-digit', day: '2-digit', year: '2-digit' },
-    'MM/dd/yyyy': { month: '2-digit', day: '2-digit', year: 'numeric' },
-    'yyyy-MM-dd': { year: 'numeric', month: '2-digit', day: '2-digit' },
-  }
+  // Obtener año, mes y día en UTC para evitar problemas de zona horaria
+  const year = d.getUTCFullYear()
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
 
-  const options = formatMap[dateFormat] || formatMap['dd/MM/yyyy']
-  
-  return d.toLocaleDateString('es-BO', options)
+  // Formatear según el formato preferido
+  switch (dateFormat) {
+    case 'dd/MM/yy':
+      return `${day}/${month}/${String(year).slice(-2)}`
+    case 'dd/MM/yyyy':
+      return `${day}/${month}/${year}`
+    case 'MM/dd/yy':
+      return `${month}/${day}/${String(year).slice(-2)}`
+    case 'MM/dd/yyyy':
+      return `${month}/${day}/${year}`
+    case 'yyyy-MM-dd':
+      return `${year}-${month}-${day}`
+    default:
+      return `${day}/${month}/${year}`
+  }
 }
 
 /**

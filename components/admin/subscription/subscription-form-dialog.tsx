@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Building2 } from "lucide-react"
+import { Calendar, Building2, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -103,6 +103,32 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
     }
   }, [subscription, open])
 
+  // Calcular automáticamente la fecha de fin basándose en el período de facturación y la fecha de inicio
+  useEffect(() => {
+    if (startDate && billingPeriod) {
+      // Parsear la fecha de inicio (formato YYYY-MM-DD)
+      const [year, month, day] = startDate.split('-').map(Number)
+      const start = new Date(year, month - 1, day) // month - 1 porque los meses en Date son 0-indexed
+      const end = new Date(start)
+      
+      if (billingPeriod === "monthly") {
+        // Agregar 1 mes manteniendo el mismo día
+        end.setMonth(end.getMonth() + 1)
+      } else if (billingPeriod === "yearly") {
+        // Agregar 1 año manteniendo el mismo día
+        end.setFullYear(end.getFullYear() + 1)
+      }
+      
+      // Formatear como YYYY-MM-DD sin problemas de zona horaria
+      const formattedYear = end.getFullYear()
+      const formattedMonth = String(end.getMonth() + 1).padStart(2, '0')
+      const formattedDay = String(end.getDate()).padStart(2, '0')
+      const formattedEndDate = `${formattedYear}-${formattedMonth}-${formattedDay}`
+      
+      setEndDate(formattedEndDate)
+    }
+  }, [startDate, billingPeriod])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -116,14 +142,20 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
         status: subscription ? subscription.status : 'active', // Solo para edición, creación siempre activo
       }
 
-      // Convertir fechas a formato ISO datetime
+      // Convertir fechas a formato ISO datetime usando UTC medianoche del día especificado
       if (startDate) {
-        // Convertir YYYY-MM-DD a ISO datetime (agregar hora medianoche UTC)
-        data.startDate = new Date(startDate + 'T00:00:00.000Z').toISOString()
+        // Parsear la fecha y crear en UTC medianoche para evitar problemas de zona horaria
+        const [year, month, day] = startDate.split('-').map(Number)
+        // Crear fecha en UTC medianoche del día especificado
+        const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+        data.startDate = utcDate.toISOString()
       }
       if (endDate) {
-        // Convertir YYYY-MM-DD a ISO datetime (agregar hora medianoche UTC)
-        data.endDate = new Date(endDate + 'T00:00:00.000Z').toISOString()
+        // Parsear la fecha y crear en UTC medianoche para evitar problemas de zona horaria
+        const [year, month, day] = endDate.split('-').map(Number)
+        // Crear fecha en UTC medianoche del día especificado
+        const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+        data.endDate = utcDate.toISOString()
       }
 
       await onSave(data)
@@ -166,14 +198,32 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
                 </Label>
                 <Select value={organizationId} onValueChange={setOrganizationId} disabled={organizationsLoading || !!subscription}>
                   <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
-                    <SelectValue placeholder={organizationsLoading ? "Cargando..." : subscription ? "No se puede cambiar" : "Selecciona una empresa"} />
+                    {organizationsLoading ? (
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Cargando empresas...</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder={subscription ? "No se puede cambiar" : "Selecciona una empresa"} />
+                    )}
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
-                    {organizations.map((organization) => (
-                      <SelectItem key={organization.id} value={organization.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
-                        {organization.razonSocial || organization.name || 'Empresa sin nombre'}
-                      </SelectItem>
-                    ))}
+                    {organizationsLoading ? (
+                      <div className="px-2 py-8 text-sm text-gray-500 dark:text-gray-400 text-center flex flex-col items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                        <span>Cargando empresas...</span>
+                      </div>
+                    ) : organizations.length === 0 ? (
+                      <div className="px-2 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                        No hay empresas disponibles
+                      </div>
+                    ) : (
+                      organizations.map((organization) => (
+                        <SelectItem key={organization.id} value={organization.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
+                          {organization.razonSocial || organization.name || 'Empresa sin nombre'}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -184,14 +234,32 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
                 </Label>
                 <Select value={planId} onValueChange={setPlanId} disabled={plansLoading}>
                   <SelectTrigger className="rounded-full w-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white">
-                    <SelectValue placeholder={plansLoading ? "Cargando..." : "Selecciona un plan"} />
+                    {plansLoading ? (
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Cargando planes...</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder="Selecciona un plan" />
+                    )}
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] min-w-full">
-                    {plans.map((plan) => (
-                      <SelectItem key={plan.id} value={plan.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
-                        {plan.name}
-                      </SelectItem>
-                    ))}
+                    {plansLoading ? (
+                      <div className="px-2 py-8 text-sm text-gray-500 dark:text-gray-400 text-center flex flex-col items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                        <span>Cargando planes...</span>
+                      </div>
+                    ) : plans.length === 0 ? (
+                      <div className="px-2 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                        No hay planes disponibles
+                      </div>
+                    ) : (
+                      plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id} className="hover:bg-gray-100 dark:hover:bg-[#2a2a2a] whitespace-normal">
+                          {plan.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>

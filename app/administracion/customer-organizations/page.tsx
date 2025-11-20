@@ -119,6 +119,9 @@ export default async function CustomerOrganizationsPage() {
           ? undefined
           : String(org.nit),
         slug: String(org.slug || ''),
+        subscriptionStatus: org.subscriptionStatus === null || org.subscriptionStatus === undefined
+          ? undefined
+          : String(org.subscriptionStatus),
       }
     }).filter((org) => org.id) // Filtrar organizaciones sin ID válido
   } catch (error) {
