@@ -1,3 +1,4 @@
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Inter } from 'next/font/google'
 
 import type { Metadata, Viewport } from 'next'
@@ -68,6 +69,7 @@ export default function RootLayout({
           <ServiceWorkerRegistration />
           <Analytics />
           <ChatWidget />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
