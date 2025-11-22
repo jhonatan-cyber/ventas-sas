@@ -30,6 +30,35 @@ const normalizePhone = (value?: string | null): string | undefined => {
   return sanitized
 }
 
+// Función helper para eliminar el PDF de una cotización
+async function deleteQuotationPDF(slug: string, quotationId: string, quotationNumber: string | null): Promise<void> {
+  try {
+    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'quotations', slug)
+    
+    // Intentar eliminar PDFs con diferentes nombres posibles
+    // El nombre se sanitiza en el endpoint de export, eliminando caracteres especiales
+    const sanitizeFileName = (name: string) => name.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 80)
+    
+    const possibleFileNames = [
+      `cotizacion-${quotationId}.pdf`,
+      quotationNumber 
+        ? `${sanitizeFileName(`cotizacion-${quotationNumber}`)}.pdf` 
+        : null,
+    ].filter(Boolean) as string[]
+
+    for (const fileName of possibleFileNames) {
+      const filePath = join(uploadsDir, fileName)
+      if (existsSync(filePath)) {
+        await unlinkPromise(filePath)
+        console.log(`✅ PDF eliminado: ${filePath}`)
+      }
+    }
+  } catch (pdfError) {
+    // No fallar si no se puede eliminar el PDF, solo registrar el error
+    console.warn('⚠️ No se pudo eliminar el PDF de la cotización:', pdfError)
+  }
+}
+
 // GET - Obtener cotización por ID
 export async function GET(
   request: NextRequest,
@@ -87,11 +116,15 @@ export async function PUT(
       throw AppError.notFound('Cotización no encontrada')
     }
 
-    // Si se actualiza el status directamente
+    // Si se actualiza el status directamente (sin cambios en items), no eliminar PDF
     if (body.status && !body.items) {
       const quotation = await QuotationService.updateStatus(id, body.status)
       return NextResponse.json(serializeQuotation(quotation))
     }
+
+    // Si es una actualización completa (con cambios en items, datos, etc.), eliminar PDF existente
+    // ya que se generará uno nuevo después de editar
+    await deleteQuotationPDF(slug, id, existingQuotation.quotationNumber)
 
     // Actualización completa
     const normalizedItems = Array.isArray(body.items)
@@ -171,31 +204,7 @@ export async function DELETE(
     }
 
     // Eliminar el archivo PDF asociado si existe
-    try {
-      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'quotations', slug)
-      
-      // Intentar eliminar PDFs con diferentes nombres posibles
-      // El nombre se sanitiza en el endpoint de export, eliminando caracteres especiales
-      const sanitizeFileName = (name: string) => name.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 80)
-      
-      const possibleFileNames = [
-        `cotizacion-${id}.pdf`,
-        existingQuotation.quotationNumber 
-          ? `${sanitizeFileName(`cotizacion-${existingQuotation.quotationNumber}`)}.pdf` 
-          : null,
-      ].filter(Boolean) as string[]
-
-      for (const fileName of possibleFileNames) {
-        const filePath = join(uploadsDir, fileName)
-        if (existsSync(filePath)) {
-          await unlinkPromise(filePath)
-          console.log(`✅ PDF eliminado: ${filePath}`)
-        }
-      }
-    } catch (pdfError) {
-      // No fallar si no se puede eliminar el PDF, solo registrar el error
-      console.warn('⚠️ No se pudo eliminar el PDF de la cotización:', pdfError)
-    }
+    await deleteQuotationPDF(slug, id, existingQuotation.quotationNumber)
 
     // Eliminar la cotización de la base de datos
     await QuotationService.deleteQuotation(id)

@@ -13,7 +13,6 @@ import {
 } from "recharts"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { formatDate } from "@/lib/utils/date"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface SalesByDateChartProps {
@@ -44,6 +43,14 @@ export function SalesByDateChart({ data, customerSlug }: SalesByDateChartProps) 
 
   const totalSales = data.reduce((sum, d) => sum + d.count, 0)
   const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0)
+
+  // Formatear fecha a partir de una cadena YYYY-MM-DD sin aplicar zona horaria
+  const formatDateLabel = (value: string) => {
+    if (!value) return ""
+    const [year, month, day] = value.split("-")
+    if (!year || !month || !day) return value
+    return `${day}/${month}/${year}`
+  }
 
   return (
     <Card className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] shadow-sm">
@@ -96,7 +103,7 @@ export function SalesByDateChart({ data, customerSlug }: SalesByDateChartProps) 
             />
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => formatDate(value)}
+              tickFormatter={(value) => formatDateLabel(value as string)}
               tick={{ fontSize: 11, fill: '#6b7280' }}
               stroke="#9ca3af"
               className="dark:stroke-gray-600"
@@ -127,7 +134,7 @@ export function SalesByDateChart({ data, customerSlug }: SalesByDateChartProps) 
                 }
                 return [value.toLocaleString(), 'Cantidad de Ventas']
               }}
-              labelFormatter={(label) => `Fecha: ${formatDate(label)}`}
+              labelFormatter={(label) => `Fecha: ${formatDateLabel(label as string)}`}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}

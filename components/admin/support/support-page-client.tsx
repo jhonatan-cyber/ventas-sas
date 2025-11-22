@@ -1,12 +1,13 @@
 ﻿"use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { SupportFilters } from "./support-filters"
+import { SupportPageHeader } from "./support-page-header"
 import { SupportStats } from "./support-stats"
 import { SupportTicketsTable } from "./support-tickets-table"
-import { TicketDetailDialog } from "./ticket-detail-dialog"
 import { TicketFormDialog } from "./ticket-form-dialog"
 
 import { TicketFilters } from "@/lib/services/admin/support-service"
@@ -82,6 +83,7 @@ interface SupportPageClientProps {
   initialStats: TicketStats
   organizations: Organization[]
   admins: Admin[]
+  isAdmin?: boolean
 }
 
 export function SupportPageClient({
@@ -90,20 +92,30 @@ export function SupportPageClient({
   initialStats,
   organizations,
   admins,
+  isAdmin = true,
 }: SupportPageClientProps) {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets)
   const [total, setTotal] = useState(initialTotal)
   const [stats, setStats] = useState<TicketStats>(initialStats)
   const [loading, setLoading] = useState(false)
+  const [isInitialMount, setIsInitialMount] = useState(true)
   const [filters, setFilters] = useState<TicketFilters>({})
   const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
-  
+
   const [isTicketFormOpen, setIsTicketFormOpen] = useState(false)
-  const [isTicketDetailOpen, setIsTicketDetailOpen] = useState(false)
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
-  const [selectedTicketDetails, setSelectedTicketDetails] = useState<any>(null)
+  const router = useRouter()
+
+  // Debounce para la búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const fetchTickets = useCallback(async () => {
     setLoading(true)
@@ -123,7 +135,7 @@ export function SupportPageClient({
       if (filters.status) params.set("status", filters.status)
       if (filters.priority) params.set("priority", filters.priority)
       if (filters.category) params.set("category", filters.category)
-      if (searchQuery) params.set("search", searchQuery)
+      if (debouncedSearchQuery) params.set("search", debouncedSearchQuery)
 
       const response = await fetch(`/api/administracion/support/tickets?` + params.toString())
       const data = await response.json()
@@ -140,7 +152,7 @@ export function SupportPageClient({
     } finally {
       setLoading(false)
     }
-  }, [filters, page, pageSize, searchQuery])
+  }, [filters, page, pageSize, debouncedSearchQuery])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -156,26 +168,25 @@ export function SupportPageClient({
     }
   }, [filters.organizationId])
 
-  const fetchTicketDetails = async (ticketId: string) => {
-    try {
-      const response = await fetch(`/api/administracion/support/tickets/` + ticketId)
-      const data = await response.json()
-
-      if (data.success) {
-        setSelectedTicketDetails(data.ticket)
-      } else {
-        toast.error(data.message || "Error al cargar detalles del ticket")
-      }
-    } catch (error) {
-      console.error("Error fetching ticket details:", error)
-      toast.error("Error al cargar detalles del ticket")
-    }
-  }
+  // Solo hacer fetch cuando cambien los filtros, búsqueda o página
+  // No hacer fetch en el montaje inicial ya que tenemos datos iniciales del servidor
+  useEffect(() => {
+    setIsInitialMount(false)
+  }, [])
 
   useEffect(() => {
+    if (isInitialMount) {
+      return
+    }
     void fetchTickets()
+  }, [fetchTickets, isInitialMount])
+
+  useEffect(() => {
+    if (isInitialMount) {
+      return
+    }
     void fetchStats()
-  }, [fetchStats, fetchTickets])
+  }, [fetchStats, isInitialMount])
 
   const handleSaveTicket = async (formData: {
     organizationId: string
@@ -210,88 +221,40 @@ export function SupportPageClient({
     }
   }
 
-  const handleUpdateTicket = async (updates: any) => {
-    if (!selectedTicket) return
+  const handleViewTicket = useCallback(async (ticket: Ticket) => {
+    router.push(`/administracion/support/${ticket.id}`)
+  }, [router])
 
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/administracion/support/tickets/` + selectedTicket.id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        toast.success("Ticket actualizado exitosamente")
-        if (selectedTicketDetails) {
-          fetchTicketDetails(selectedTicket.id)
-        }
-        fetchTickets()
-        fetchStats()
-      } else {
-        toast.error(data.message || "Error al actualizar ticket")
-      }
-    } catch (error) {
-      console.error("Error updating ticket:", error)
-      toast.error("Error al actualizar ticket")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAddComment = async (content: string, isInternal: boolean) => {
-    if (!selectedTicket) return
-
-    try {
-      const response = await fetch(`/api/administracion/support/tickets/` + selectedTicket.id + `/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content,
-          isInternal,
-          authorType: 'admin',
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        toast.success("Comentario agregado exitosamente")
-        if (selectedTicket) {
-          fetchTicketDetails(selectedTicket.id)
-        }
-        fetchTickets()
-      } else {
-        toast.error(data.message || "Error al agregar comentario")
-        throw new Error(data.message || "Error al agregar comentario")
-      }
-    } catch (error) {
-      console.error("Error adding comment:", error)
-      toast.error("Error al agregar comentario")
-      throw error
-    }
-  }
-
-  const handleViewTicket = async (ticket: Ticket) => {
-    setSelectedTicket(ticket)
-    setIsTicketDetailOpen(true)
-    await fetchTicketDetails(ticket.id)
-  }
-
-  const handleFiltersChange = (newFilters: TicketFilters) => {
+  const handleFiltersChange = useCallback((newFilters: TicketFilters) => {
     setFilters(newFilters)
     setPage(1)
-  }
+  }, [])
 
-  const handleSearchChange = (query: string) => {
+  const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query)
     setPage(1)
-  }
+  }, [])
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage)
+  }, [])
+
+  // Memorizar las props de la tabla para evitar re-renderizados innecesarios
+  const tableProps = useMemo(() => ({
+    tickets,
+    total,
+    loading,
+    page,
+    pageSize,
+    onViewTicket: handleViewTicket,
+    onPageChange: handlePageChange,
+    isAdmin,
+  }), [tickets, total, loading, page, pageSize, handleViewTicket, handlePageChange, isAdmin])
 
   return (
     <div className="space-y-6">
+      <SupportPageHeader onNewTicketClick={() => setIsTicketFormOpen(true)} />
+
       <SupportStats stats={stats} />
 
       <SupportFilters
@@ -301,18 +264,10 @@ export function SupportPageClient({
         admins={admins}
         onFiltersChange={handleFiltersChange}
         onSearchChange={handleSearchChange}
-        onNewTicketClick={() => setIsTicketFormOpen(true)}
+        isAdmin={isAdmin}
       />
 
-      <SupportTicketsTable
-        tickets={tickets}
-        total={total}
-        loading={loading}
-        page={page}
-        pageSize={pageSize}
-        onViewTicket={handleViewTicket}
-        onPageChange={setPage}
-      />
+      <SupportTicketsTable {...tableProps} />
 
       <TicketFormDialog
         open={isTicketFormOpen}
@@ -322,15 +277,6 @@ export function SupportPageClient({
         loading={loading}
       />
 
-      <TicketDetailDialog
-        open={isTicketDetailOpen}
-        onOpenChange={setIsTicketDetailOpen}
-        ticket={selectedTicketDetails}
-        admins={admins}
-        onUpdate={handleUpdateTicket}
-        onAddComment={handleAddComment}
-        loading={loading}
-      />
     </div>
   )
 }

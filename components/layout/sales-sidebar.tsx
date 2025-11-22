@@ -14,7 +14,8 @@ import {
   Building2,
   Settings,
   Package,
-  TrendingUp
+  TrendingUp,
+  HelpCircle,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -121,6 +122,11 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
 
   // Función para verificar si un módulo está permitido
   const isModuleAllowed = (route: string): boolean => {
+    // El módulo de soporte siempre está disponible para todos los planes
+    if (route === 'support') {
+      return true
+    }
+
     // Si no hay módulos definidos en el plan, mostrar todos (comportamiento por defecto)
     if (allowedModules.length === 0) {
       return true
@@ -189,6 +195,15 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
       items: [
         { title: t('nav.reports'), href: `/${organizationSlug}/reportes`, icon: BarChart3 },
         { title: t('nav.analytics') || 'Analytics', href: `/${organizationSlug}/analytics`, icon: TrendingUp },
+      ].filter(item => {
+        const route = item.href.split('/').pop() || ''
+        return isModuleAllowed(route)
+      }),
+    },
+    {
+      label: t('sidebar.support'),
+      items: [
+        { title: t('nav.support') || 'Soporte', href: `/${organizationSlug}/support`, icon: HelpCircle },
       ].filter(item => {
         const route = item.href.split('/').pop() || ''
         return isModuleAllowed(route)

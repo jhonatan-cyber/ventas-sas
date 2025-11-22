@@ -82,6 +82,8 @@ export function ProductFormDialog({
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const lastSearchedName = useRef<string>("");
 
   const stopScanning = useCallback(() => {
     if (videoStream) {
@@ -150,6 +152,76 @@ export function ProductFormDialog({
       setIsFetchingProduct(false);
     }
   }, [product, open, defaultCategoryId, stopScanning]);
+
+  // Buscar imagen automáticamente cuando cambia el nombre del producto
+  useEffect(() => {
+    // No buscar si:
+    // - El diálogo está cerrado
+    // - El nombre está vacío o muy corto (menos de 3 caracteres)
+    // - Ya se está buscando una imagen
+    // - Es el mismo nombre que se buscó anteriormente
+    // - Hay un archivo de imagen cargado manualmente
+    if (!open || !name.trim() || name.trim().length < 3 || isSearchingImage || lastSearchedName.current === name.trim() || imageFile) {
+      return;
+    }
+
+    // Debounce: esperar 1 segundo después de que el usuario deje de escribir
+    const timeoutId = setTimeout(async () => {
+      try {
+        setIsSearchingImage(true);
+        lastSearchedName.current = name.trim();
+
+        // Buscar imagen usando el endpoint de generación de descripción (que también busca imágenes)
+        const response = await fetch(`/api/${customerSlug}/productos/generate-description`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            brand: brand.trim() || null,
+            model: model.trim() || null,
+            existingDescription: description.trim() || null,
+            category: categories.find(cat => cat.id === categoryId)?.name || null,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Actualizar descripción si se encontró una y el campo está vacío o es diferente
+          if (result.description && (!description.trim() || description.trim() !== result.description.trim())) {
+            setDescription(result.description);
+          }
+
+          // Actualizar marca si se encontró una (siempre, incluso si ya tiene valor)
+          if (result.brand && typeof result.brand === 'string' && result.brand.trim() !== '') {
+            setBrand(result.brand.trim());
+          }
+
+          // Actualizar modelo si se encontró una (siempre, incluso si ya tiene valor)
+          if (result.model && typeof result.model === 'string' && result.model.trim() !== '') {
+            setModel(result.model.trim());
+          }
+
+          // Actualizar imagen si se encontró una y no hay imagen cargada manualmente
+          if (result.imageUrl && !imageFile) {
+            // Solo actualizar si no hay imagen previa o si la imagen previa es diferente
+            if (!imagePreview || imagePreview !== result.imageUrl) {
+              setImagePreview(result.imageUrl);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error al buscar información del producto:", error);
+        // No mostrar error al usuario, solo registrar en consola
+      } finally {
+        setIsSearchingImage(false);
+      }
+    }, 1000); // Esperar 1 segundo después de que el usuario deje de escribir
+
+    return () => clearTimeout(timeoutId);
+  }, [name, brand, model, description, open, imageFile, product, imagePreview, categoryId, categories, customerSlug, isSearchingImage]);
 
   useEffect(() => {
     if (!open) {
@@ -487,7 +559,10 @@ export function ProductFormDialog({
   };
 
   const handleGenerateDescription = async () => {
-    if (!name.trim()) {
+    // Usar nombre o código de barras como base para buscar información
+    const searchTerm = name.trim() || barcode.trim();
+    
+    if (!searchTerm) {
       toast.error(t('products.form.nameRequired'));
       return;
     }
@@ -498,16 +573,19 @@ export function ProductFormDialog({
     try {
       const categoryName = categories.find(cat => cat.id === categoryId)?.name || null;
 
+      // Usar el nombre si está disponible, sino usar el código de barras
+      const productName = name.trim() || barcode.trim();
+
       const response = await fetch(`/api/${customerSlug}/productos/generate-description`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name.trim(),
-          brand: brand.trim() || null,
-          model: model.trim() || null,
-          existingDescription: description.trim() || null,
+          name: productName,
+          brand: null, // No pasar marca/modelo existentes para que busque desde cero
+          model: null,
+          existingDescription: null, // No pasar descripción existente para que genere una nueva
           category: categoryName,
         }),
       });
@@ -516,30 +594,50 @@ export function ProductFormDialog({
 
       toast.dismiss(loadingToastId);
 
+      // Log para depuración
+      console.log('Resultado de la API:', result);
+
       if (result.success && result.description) {
+        // Siempre reescribir la descripción
         setDescription(result.description);
         
-        // Llenar marca si se encontró y el campo está vacío
-        if (result.brand && !brand.trim()) {
-          setBrand(result.brand);
+        // Siempre reescribir marca si se encontró
+        if (result.brand && typeof result.brand === 'string' && result.brand.trim() !== '') {
+          console.log('Estableciendo marca:', result.brand);
+          setBrand(result.brand.trim());
+        } else {
+          // Si no se encontró marca, limpiar el campo
+          setBrand("");
         }
         
-        // Llenar modelo si se encontró y el campo está vacío
-        if (result.model && !model.trim()) {
-          setModel(result.model);
+        // Siempre reescribir modelo si se encontró
+        if (result.model && typeof result.model === 'string' && result.model.trim() !== '') {
+          console.log('Estableciendo modelo:', result.model);
+          setModel(result.model.trim());
+        } else {
+          // Si no se encontró modelo, limpiar el campo
+          setModel("");
         }
         
-        // Si también se encontró una imagen, cargarla
-        if (result.imageUrl && !imagePreview) {
+        // Siempre actualizar la imagen si se encontró una
+        if (result.imageUrl) {
           setImagePreview(result.imageUrl);
+          setImageFile(null); // Limpiar archivo cargado manualmente para usar la imagen encontrada
+        } else {
+          // Si no se encontró imagen, limpiar el campo
+          setImagePreview(null);
         }
         
         // Mensaje de éxito según lo que se encontró
         const foundItems = [];
         if (result.description) foundItems.push("descripción");
-        if (result.brand && !brand.trim()) foundItems.push("marca");
-        if (result.model && !model.trim()) foundItems.push("modelo");
-        if (result.imageUrl && !imagePreview) foundItems.push("imagen");
+        if (result.brand && typeof result.brand === 'string' && result.brand.trim() !== '') {
+          foundItems.push("marca");
+        }
+        if (result.model && typeof result.model === 'string' && result.model.trim() !== '') {
+          foundItems.push("modelo");
+        }
+        if (result.imageUrl) foundItems.push("imagen");
         
         if (foundItems.length > 1) {
           toast.success(t('products.form.infoGenerated') + ': ' + foundItems.join(", "));
@@ -866,7 +964,8 @@ export function ProductFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Campo de punto de reorden oculto temporalmente */}
+            <div className="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="reorderPoint">{t('products.form.reorderPoint') || 'Punto de Reorden'}</Label>
                 <Input

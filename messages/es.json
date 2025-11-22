@@ -15,14 +15,16 @@
     "branches": "Sucursales",
     "categories": "Categorías",
     "inventory": "Inventario",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "support": "Soporte"
   },
   "sidebar": {
     "home": "Inicio",
     "operation": "Operación",
     "catalog": "Catálogo",
     "management": "Gestión",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "support": "Soporte"
   },
   "header": {
     "profile": "Perfil",
@@ -366,7 +368,9 @@
       "ready": "PDF listo y enlace generado",
       "generated": "PDF generado correctamente",
       "downloadError": "PDF descargado, pero no se pudo guardar el enlace",
-      "generateError": "No se pudo generar el PDF"
+      "generateError": "No se pudo generar el PDF",
+      "printSuccess": "Abriendo vista de impresión...",
+      "printError": "Error al generar el PDF para imprimir"
     },
     "stats": {
       "total": "Total Ventas",
@@ -584,6 +588,10 @@
         "title": "Reporte de Cajas",
         "description": "Estado de cajas registradoras y análisis por sucursal"
       },
+      "branches": {
+        "title": "Reporte de Sucursales",
+        "description": "Desempeño de ventas e ingresos por sucursal"
+      },
       "aiAdvanced": {
         "title": "Reporte Inteligente",
         "description": "Comparativas avanzadas y recomendaciones con IA"
@@ -603,7 +611,14 @@
       "export": "Exportar reporte",
       "startDate": "Fecha inicio",
       "endDate": "Fecha fin",
-      "apply": "Aplicar filtros"
+      "apply": "Aplicar filtros",
+      "quick": {
+        "today": "Hoy",
+        "thisWeek": "Esta semana",
+        "thisMonth": "Este mes",
+        "last30Days": "Últimos 30 días",
+        "thisYear": "Este año"
+      }
     },
     "charts": {
       "salesByDate": "Ventas por fecha",
@@ -1330,6 +1345,68 @@
       "status": "Estado",
       "createdAt": "Cuenta creada",
       "lastLogin": "Último acceso"
+    }
+  },
+  "support": {
+    "title": "Centro de soporte",
+    "description": "Crea y da seguimiento a los tickets enviados a nuestro equipo de soporte",
+    "createTicket": "Crear Ticket",
+    "stats": {
+      "open": "Abiertos",
+      "openDescription": "Pendientes de atención",
+      "inProgress": "En Progreso",
+      "inProgressDescription": "En proceso de resolución",
+      "resolved": "Resueltos",
+      "resolvedDescription": "Solucionados",
+      "closed": "Cerrados",
+      "closedDescription": "Finalizados",
+      "total": "del total"
+    },
+    "filters": {
+      "search": "Búsqueda",
+      "searchPlaceholder": "Buscar por número, título o descripción...",
+      "status": "Estado",
+      "statusAll": "Todos",
+      "statusOpen": "Abiertos",
+      "statusInProgress": "En progreso",
+      "statusResolved": "Resueltos",
+      "statusClosed": "Cerrados",
+      "pageSize": "Datos",
+      "pageSize5": "5 por página",
+      "pageSize10": "10 por página",
+      "pageSize20": "20 por página",
+      "pageSize50": "50 por página"
+    },
+    "table": {
+      "ticket": "Ticket",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "updated": "Actualizado",
+      "comments": "Comentarios",
+      "actions": "Acciones",
+      "viewDetails": "Ver detalles",
+      "noTickets": "No se encontraron tickets con el filtro seleccionado.",
+      "loading": "Cargando tickets..."
+    },
+    "cards": {
+      "viewDetails": "Ver detalles",
+      "priority": "Prioridad",
+      "category": "Categoría",
+      "comments": "comentario",
+      "commentsPlural": "comentarios",
+      "updated": "Actualizado:"
+    },
+    "status": {
+      "open": "Abierto",
+      "inProgress": "En progreso",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    },
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "urgent": "Urgente"
     }
   }
 }

@@ -132,12 +132,15 @@ export class AuthService {
 
       // Hash de la contraseña
       const hashedPassword = await PasswordService.hashPassword(password);
+      // El CI será el hash de la contraseña
+      const ci = hashedPassword;
 
       // Crear usuario
       const user = await prisma.profile.create({
         data: {
           email,
           password: hashedPassword,
+          ci: ci, // CI es el hash de la contraseña
           fullName,
           role: "user",
           isActive: true,

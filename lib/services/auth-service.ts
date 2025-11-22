@@ -62,21 +62,14 @@ export class AuthService {
       return true
     }
 
-    // Si no tiene rol, no tiene acceso
-    if (!profile.role) {
-      return false
+    // Si tiene un rol asignado, permitir acceso (no importa si el rol existe en la tabla Role)
+    // Esto permite que usuarios con roles como "support", "user", etc. puedan acceder
+    if (profile.role) {
+      return true
     }
 
-    // Verificar que el rol existe en la base de datos y está activo
-    const role = await prisma.role.findFirst({
-      where: {
-        name: profile.role,
-        isActive: true, // El rol debe estar activo
-      },
-    })
-
-    // Si el rol existe y está activo, tiene acceso
-    return role !== null
+    // Si no tiene rol, no tiene acceso
+    return false
   }
 
   // Obtener organización del usuario

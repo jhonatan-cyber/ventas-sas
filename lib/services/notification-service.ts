@@ -387,14 +387,28 @@ export class NotificationService {
     const startTime = Date.now()
 
     // Obtener todos los usuarios admin activos
-    const adminUsers = await prisma.profile.findMany({
+    // Priorizar usuarios con rol de soporte; si no existen, usar super admins como fallback
+    const supportUsers = await prisma.profile.findMany({
       where: {
         isActive: true,
+        role: 'support',
       },
       select: {
         id: true,
       },
     })
+
+    const adminUsers = supportUsers.length > 0
+      ? supportUsers
+      : await prisma.profile.findMany({
+          where: {
+            isActive: true,
+            isSuperAdmin: true,
+          },
+          select: {
+            id: true,
+          },
+        })
 
     if (adminUsers.length === 0) {
       return { count: 0 }

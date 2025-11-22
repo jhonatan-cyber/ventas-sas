@@ -19,6 +19,10 @@ export interface CredentialsEmailData {
   subscriptionPeriod?: string
   subscriptionStatus?: string
   isFirstInvoice?: boolean
+  pdfAttachment?: {
+    content: string // Base64 string
+    filename: string
+  }
 }
 
 export interface PasswordResetEmailData {
@@ -74,6 +78,12 @@ export class EmailService {
         to: data.email,
         subject,
         html: htmlContent,
+        attachments: data.pdfAttachment ? [
+          {
+            content: data.pdfAttachment.content,
+            filename: data.pdfAttachment.filename,
+          }
+        ] : undefined,
       })
 
       if (result.error) {

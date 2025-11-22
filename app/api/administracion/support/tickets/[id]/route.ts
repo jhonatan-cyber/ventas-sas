@@ -35,7 +35,7 @@ export async function GET(
       return NextResponse.json({ error: 'Ticket no encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json(ticket)
+    return NextResponse.json({ success: true, ticket })
   } catch (error) {
     return handleApiError(error, createErrorContext(request))
   }
@@ -71,7 +71,7 @@ export async function PATCH(
 
     const ticket = await SupportService.updateTicket(id, data, user.id)
 
-    return NextResponse.json(ticket)
+    return NextResponse.json({ success: true, ticket })
   } catch (error) {
     return handleApiError(error, createErrorContext(request))
   }

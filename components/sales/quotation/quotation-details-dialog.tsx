@@ -1,13 +1,13 @@
 "use client";
 
-
-import jsPDF from "jspdf";
 import { MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types";
+
+import { generateQuotationPDF, generateQuotationPDFBase64 } from "./quotation-pdf-utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -299,27 +299,6 @@ export function QuotationDetailsDialog({
     loadOrganizationInfo();
   }, [customerSlug, open]);
 
-  const fetchImageAsDataUrl = useCallback(
-    async (url: string): Promise<string | null> => {
-      if (!url) return null;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) return null;
-        const blob = await response.blob();
-        return await new Promise<string | null>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () =>
-            reject(new Error("No se pudo cargar la imagen"));
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.error("No se pudo cargar el logo para el PDF:", error);
-        return null;
-      }
-    },
-    []
-  );
 
   const handleExportPdf = useCallback(async () => {
     if (!quotation) return;
@@ -334,317 +313,27 @@ export function QuotationDetailsDialog({
       setIsExporting(true);
       setShareUrl(null);
 
-      // Mapeo de colores del tema a RGB
-      const themeColorMap: Record<string, { r: number; g: number; b: number }> =
-        {
-          green: { r: 26, g: 120, b: 102 },
-          blue: { r: 37, g: 99, b: 235 },
-          purple: { r: 147, g: 51, b: 234 },
-          orange: { r: 249, g: 115, b: 22 },
-          red: { r: 220, g: 38, b: 38 },
-          pink: { r: 236, g: 72, b: 153 },
-          teal: { r: 20, g: 184, b: 166 },
-          cyan: { r: 6, g: 182, b: 212 },
-          indigo: { r: 99, g: 102, b: 241 },
-          yellow: { r: 234, g: 179, b: 8 },
-          emerald: { r: 16, g: 185, b: 129 },
-          rose: { r: 225, g: 29, b: 72 },
-        };
-
-      // Obtener color RGB del tema configurado desde las preferencias
-      const primaryColor = themeColorMap[themeColor] || themeColorMap.green;
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 16;
-
-      let cursorY = margin + 6;
-
-      const logoDataUrl = companyLogo
-        ? await fetchImageAsDataUrl(companyLogo)
-        : null;
-
-      const headerTitleY = margin;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.text("Detalle de Cotización", pageWidth / 2, headerTitleY, {
-        align: "center",
-      });
-
-      const maxLogoHeight = 32;
-      const logoX = pageWidth - margin - maxLogoHeight;
-      let contactBlockTop = headerTitleY + 8;
-      if (logoDataUrl) {
-        doc.addImage(
-          logoDataUrl,
-          "PNG",
-          logoX,
-          headerTitleY - 6,
-          maxLogoHeight,
-          maxLogoHeight,
-          undefined,
-          "FAST"
-        );
-        contactBlockTop = headerTitleY - 6 + maxLogoHeight + 6;
-      }
-
-      const headerLeftX = margin;
-      let headerLeftY = headerTitleY + 8;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(30, 30, 30);
-      doc.text(companyName || "Nombre de la empresa", headerLeftX, headerLeftY);
-      headerLeftY += 5;
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      if (companyNIT) {
-        doc.text(`NIT: ${companyNIT}`, headerLeftX, headerLeftY);
-        headerLeftY += 5;
-      }
-      if (companyAddress) {
-        doc.text(companyAddress, headerLeftX, headerLeftY);
-        headerLeftY += 5;
-      }
-      if (companyWebsite) {
-        // Remover https:// o http:// para mostrar solo el dominio
-        const websiteDisplay = companyWebsite.replace(/^https?:\/\//, "");
-        doc.text(`Web: ${websiteDisplay}`, headerLeftX, headerLeftY);
-        headerLeftY += 5;
-      }
-      // Email no está disponible en la organización, se omite
-      const formattedNow = formatDateTime(new Date());
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.text("Fecha y Hora :", headerLeftX, headerLeftY);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(60, 60, 60);
-      doc.text(formattedNow, headerLeftX + 30, headerLeftY);
-      headerLeftY += 8;
-
-      const contactName = ownerName || companyName || "—";
-      const contactPhone = companyPhone || companyWhatsappNumber || "—";
-      let contactY = contactBlockTop;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.text(contactName, logoX + maxLogoHeight, contactY, {
-        align: "right",
-      });
-      contactY += 6;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.text(`Contactos: ${contactPhone}`, logoX + maxLogoHeight, contactY, {
-        align: "right",
-      });
-      contactY += 6;
-
-      const headerBottom =
-        Math.max(headerLeftY, contactY, headerTitleY + maxLogoHeight) + 4;
-      doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.setLineWidth(0.6);
-      doc.line(margin, headerBottom, pageWidth - margin, headerBottom);
-      cursorY = headerBottom + 6;
-
-      const _infoLeftX = margin;
-      const _infoRightX = pageWidth / 2 + 6;
-      const _infoLabelColor = primaryColor;
-      cursorY = headerBottom + 6;
-      const rightInfoYStart = cursorY;
-      let _rightCursorY = rightInfoYStart;
-
-      const columnGap = 8;
-      const leftColumnX = margin;
-      const rightColumnX = pageWidth / 2 + columnGap / 2;
-
-      const customerDetails: Array<[string, string]> = [
-        ["Cliente", customerName],
-        ["Teléfono", customerPhone || "—"],
-        ["Correo", quotation.customer?.email || "—"],
-        ["Dirección", quotation.customer?.address || "—"],
-        ["Detalle de Cotización", (() => {
-          const currentLanguage = (() => {
-            try {
-              const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-              return prefs?.language || 'es';
-            } catch {
-              return 'es';
-            }
-          })();
-          return getTranslatableText(quotation.notes, (quotation as any).notesTranslations, currentLanguage) || "—";
-        })()],
-      ];
-
-      const quotationDetails: Array<[string, string]> = [
-        ["Código", quotation.quotationNumber],
-        ["Emitida", formatDateTime(quotation.createdAt)],
-        ["Válido hasta", formatDateTime(quotation.expiresAt)],
-      ];
-      // Si el plan tiene solo una sucursal, no mostrar la sucursal pero sí la dirección de la empresa
-      if (showBranchInfo) {
-        quotationDetails.push(["Sucursal", quotation.branch?.name || "—"]);
-      } else if (companyAddress) {
-        // Si no se muestra la sucursal, mostrar la dirección de la empresa en su lugar
-        quotationDetails.push(["Dirección", companyAddress]);
-      }
-
-      const drawDetailsColumn = (
-        x: number,
-        title: string,
-        rows: Array<[string, string]>
-      ) => {
-        let y = cursorY;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-        doc.text(title.toUpperCase(), x, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(45, 45, 45);
-
-        rows.forEach(([label, value]: [string, string]) => {
-          doc.text(`${label}:`, x, y);
-          const isDetail = label === "Detalle de Cotización";
-          const valueX = isDetail ? x + 2 : x + 32;
-          const width = pageWidth / 2 - columnGap - (isDetail ? 8 : 38);
-          let startY = isDetail ? y + 5 : y;
-          const lines = doc.splitTextToSize(value || "—", width) as string[];
-          lines.forEach((line: string, idx: number) => {
-            doc.text(line, valueX, startY + idx * 5);
-          });
-          y = Math.max(y + 6, startY + Math.max(lines.length * 5, 6));
-        });
-
-        return y;
+      // Preparar preferencias para el PDF
+      const preferences = {
+        companyName: companyName || undefined,
+        companyNIT: companyNIT || undefined,
+        companyAddress: companyAddress || undefined,
+        companyWebsite: companyWebsite || undefined,
+        companyPhone: companyPhone || companyWhatsappNumber || undefined,
+        companyLogo: companyLogo || undefined,
+        themeColor: themeColor || 'green',
+        currency: currencyCode || 'BOB',
+        ownerName: ownerName || undefined,
       };
 
-      const leftEnd = drawDetailsColumn(
-        leftColumnX,
-        "Datos del cliente",
-        customerDetails
-      );
-      const rightEnd = drawDetailsColumn(
-        rightColumnX,
-        "Datos de la cotización",
-        quotationDetails
-      );
-      cursorY = Math.max(leftEnd, rightEnd) + 6;
+      // Primero generar PDF en Base64 para subirlo al servidor
+      const pdfBase64 = await generateQuotationPDFBase64(quotation, preferences);
 
-      const tableTop = cursorY + 4;
-      const tableWidth = pageWidth - margin * 2;
-      const colProduct = margin + 2;
-      const colPrice = margin + tableWidth * 0.55;
-      const colQty = margin + tableWidth * 0.74;
-      const colSubtotal = margin + tableWidth - 2;
+      if (pdfBase64) {
+        const fileBaseName = quotation.id
+          ? `cotizacion-${quotation.id}`
+          : `cotizacion-${quotation.quotationNumber}`;
 
-      doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.rect(margin, tableTop, tableWidth, 9, "F");
-      doc.text("Nombre", colProduct, tableTop + 6);
-      doc.text(`Precio ${currencyCode}`, colPrice, tableTop + 6);
-      doc.text("Cantidad (U)", colQty, tableTop + 6);
-      doc.text("Subtotal", colSubtotal, tableTop + 6, { align: "right" });
-
-      let rowY = tableTop + 11;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(45, 45, 45);
-
-      if (items.length === 0) {
-        doc.text(
-          "No hay productos registrados en esta cotización.",
-          margin + 4,
-          rowY + 4
-        );
-        rowY += 14;
-      } else {
-        items.forEach((item, index) => {
-          const displayName =
-            item.product?.name || item.productName || "Producto sin nombre";
-          const descriptionLines = doc.splitTextToSize(
-            displayName,
-            tableWidth * 0.52
-          ) as string[];
-          const rowHeight = Math.max(descriptionLines.length * 5, 7) + 4;
-
-          if (rowY + rowHeight > pageHeight - 40) {
-            doc.addPage();
-            rowY = margin;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.setFillColor(primaryColor.r, primaryColor.g, primaryColor.b);
-            doc.setTextColor(255, 255, 255);
-            doc.rect(margin, rowY, tableWidth, 9, "F");
-            doc.text("Nombre", colProduct, rowY + 6);
-            doc.text(`Precio ${currencyCode}`, colPrice, rowY + 6);
-            doc.text("Cantidad (U)", colQty, rowY + 6);
-            doc.text("Subtotal", colSubtotal, rowY + 6, { align: "right" });
-            rowY += 11;
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.setTextColor(45, 45, 45);
-          }
-
-          if (index % 2 === 0) {
-            doc.setFillColor(248, 249, 252);
-            doc.rect(margin, rowY - 3, tableWidth, rowHeight, "F");
-          }
-
-          descriptionLines.forEach((line: string, idx: number) => {
-            doc.text(line, colProduct, rowY + idx * 5);
-          });
-          doc.text(formatCurrency(item.unitPrice), colPrice, rowY);
-          doc.text(String(item.quantity), colQty, rowY);
-          doc.text(formatCurrency(item.subtotal), colSubtotal, rowY, {
-            align: "right",
-          });
-
-          rowY += rowHeight;
-        });
-      }
-
-      doc.setDrawColor(230, 230, 230);
-      const dividerY = tableTop - 4;
-      doc.line(margin, dividerY, pageWidth - margin, dividerY);
-      cursorY = rowY + 12;
-
-      const summaryRows: Array<[string, string]> = [
-        ["SUB TOTAL", formatCurrency(subtotal)],
-        ["DESCUENTO", formatCurrency(discount)],
-        ["TOTAL", formatCurrency(total)],
-      ];
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-      doc.text("Resumen de Totales", pageWidth - margin, cursorY, {
-        align: "right",
-      });
-      cursorY += 6;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(45, 45, 45);
-
-      summaryRows.forEach(([label, value]) => {
-        doc.text(label, pageWidth - margin - 70, cursorY);
-        doc.text(value, pageWidth - margin, cursorY, { align: "right" });
-        cursorY += 6;
-      });
-
-      const fileBaseName = quotation.id
-        ? `cotizacion-${quotation.id}`
-        : `cotizacion-${quotation.quotationNumber}`;
-      doc.save(`${fileBaseName}.pdf`);
-
-      const dataUri = doc.output("datauristring");
-      const base64 = dataUri.split(",")[1];
-
-      if (base64) {
         try {
           const response = await fetch(
             `/api/${customerSlug}/cotizaciones/export`,
@@ -653,7 +342,7 @@ export function QuotationDetailsDialog({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 fileName: fileBaseName,
-                pdfBase64: base64,
+                pdfBase64: pdfBase64,
               }),
             }
           );
@@ -668,9 +357,6 @@ export function QuotationDetailsDialog({
                     typeof window !== "undefined" ? window.location.origin : ""
                   }${relativeUrl}`;
               setShareUrl(absoluteUrl);
-              toast.success(t('quotations.form.pdf.ready'));
-            } else {
-              toast.success(t('quotations.form.pdf.generated'));
             }
           } else {
             const errorData = await response.json().catch(() => ({}));
@@ -678,11 +364,23 @@ export function QuotationDetailsDialog({
               errorData?.error ||
                 t('quotations.form.pdf.downloadError')
             );
+            return; // No descargar si falla la subida
           }
         } catch (uploadError) {
           console.error("Error subiendo PDF de cotización:", uploadError);
           toast.error(t('quotations.form.pdf.downloadError'));
+          return; // No descargar si falla la subida
         }
+      }
+
+      // Solo después de que todo termine, descargar el PDF localmente
+      await generateQuotationPDF(quotation, preferences);
+
+      // Mostrar mensaje de éxito
+      if (shareUrl) {
+        toast.success(t('quotations.form.pdf.ready'));
+      } else {
+        toast.success(t('quotations.form.pdf.generated'));
       }
     } catch (error) {
       console.error("Error al exportar la cotización:", error);
@@ -694,28 +392,18 @@ export function QuotationDetailsDialog({
     quotation,
     shareUrl,
     handleOpenShareUrl,
-    companyLogo,
-    customerSlug,
-    currencyCode,
-    customerName,
-    customerPhone,
-    items,
-    subtotal,
-    discount,
-    total,
-    formatCurrency,
-    fetchImageAsDataUrl,
     companyName,
+    companyNIT,
     companyAddress,
-    formatDateTime,
-    t,
+    companyWebsite,
     companyPhone,
     companyWhatsappNumber,
-    companyWebsite,
-    companyNIT,
-    ownerName,
-    showBranchInfo,
+    companyLogo,
     themeColor,
+    customerSlug,
+    currencyCode,
+    ownerName,
+    t,
   ]);
 
   useEffect(() => {
@@ -809,7 +497,7 @@ export function QuotationDetailsDialog({
         </div>
 
         {quotation ? (
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 m-0">
             <div className="flex flex-row items-center justify-between gap-4">
               <div className="space-y-1 flex-1 min-w-0">
                 <p className="text-sm text-gray-500 dark:text-gray-400 uppercase">
@@ -1150,7 +838,7 @@ export function QuotationDetailsDialog({
                 )}
               </div>
             )}
-          </div>
+            </div>
         ) : (
           <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Selecciona una cotización para ver sus detalles.

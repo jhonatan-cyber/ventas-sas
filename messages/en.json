@@ -13,14 +13,16 @@
     "roles": "Roles",
     "permissions": "Permissions",
     "branches": "Branches",
-    "categories": "Categories"
+    "categories": "Categories",
+    "support": "Support"
   },
   "sidebar": {
     "home": "Home",
     "operation": "Operation",
     "catalog": "Catalogue",
     "management": "Management",
-    "reports": "Reports"
+    "reports": "Reports",
+    "support": "Support"
   },
   "header": {
     "profile": "Profile",
@@ -337,8 +339,18 @@
     },
     "filters": {
       "dateRange": "Date range",
-      "branch": "All the branches",
-      "export": "Export report"
+      "branch": "All branches",
+      "export": "Export report",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "apply": "Apply filters",
+      "quick": {
+        "today": "Today",
+        "thisWeek": "This week",
+        "thisMonth": "This month",
+        "last30Days": "Last 30 days",
+        "thisYear": "This year"
+      }
     },
     "charts": {
       "salesByDate": "Sales by date",
@@ -349,6 +361,12 @@
       "expensesByCategory": "Expenses by category",
       "customersByPurchases": "Customers by purchases",
       "cashRegistersByBranch": "Boxes per branch"
+    },
+    "reports": {
+      "branches": {
+        "title": "Branch Performance",
+        "description": "Sales and revenue performance by branch"
+      }
     }
   },
   "categories": {
@@ -592,5 +610,67 @@
     "lastMonth": "Last month",
     "lastYear": "Last year",
     "custom": "Customized"
+  },
+  "support": {
+    "title": "Support Center",
+    "description": "Create and track tickets sent to our support team",
+    "createTicket": "Create Ticket",
+    "stats": {
+      "open": "Open",
+      "openDescription": "Pending attention",
+      "inProgress": "In Progress",
+      "inProgressDescription": "In resolution process",
+      "resolved": "Resolved",
+      "resolvedDescription": "Solved",
+      "closed": "Closed",
+      "closedDescription": "Finalized",
+      "total": "of total"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search by number, title or description...",
+      "status": "Status",
+      "statusAll": "All",
+      "statusOpen": "Open",
+      "statusInProgress": "In Progress",
+      "statusResolved": "Resolved",
+      "statusClosed": "Closed",
+      "pageSize": "Data",
+      "pageSize5": "5 per page",
+      "pageSize10": "10 per page",
+      "pageSize20": "20 per page",
+      "pageSize50": "50 per page"
+    },
+    "table": {
+      "ticket": "Ticket",
+      "status": "Status",
+      "priority": "Priority",
+      "updated": "Updated",
+      "comments": "Comments",
+      "actions": "Actions",
+      "viewDetails": "View details",
+      "noTickets": "No tickets found with the selected filter.",
+      "loading": "Loading tickets..."
+    },
+    "cards": {
+      "viewDetails": "View details",
+      "priority": "Priority",
+      "category": "Category",
+      "comments": "comment",
+      "commentsPlural": "comments",
+      "updated": "Updated:"
+    },
+    "status": {
+      "open": "Open",
+      "inProgress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
   }
 }

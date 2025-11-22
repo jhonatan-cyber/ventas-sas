@@ -10,12 +10,15 @@ import { PaymentMethodChart } from "./charts/payment-method-chart"
 import { SalesByDateChart } from "./charts/sales-by-date-chart"
 import { TopProductsChart } from "./charts/top-products-chart"
 import { ReportAiSummary } from "./report-ai-summary"
+import { ReportDateQuickFilters } from "./report-date-quick-filters"
 
 import type { SalesReport } from "@/lib/services/sales/reports-service"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { exportSalesReportToPDF } from "@/lib/utils/pdf-reports-export"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
@@ -31,29 +34,74 @@ export function SalesReportClient({ customerSlug }: SalesReportClientProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<"all" | "cash" | "card" | "transfer" | "qr">("all")
+  const [branchId, setBranchId] = useState<string>("all")
+  const [onlyMySales, setOnlyMySales] = useState(false)
+  const [branches, setBranches] = useState<Array<{ id: string; name: string | null }>>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  const fetchReport = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (startDate) params.append("startDate", startDate)
-      if (endDate) params.append("endDate", endDate)
+  const fetchReport = useCallback(
+    async (range?: { startDate?: string; endDate?: string }) => {
+      setIsLoading(true)
+      try {
+        const params = new URLSearchParams()
+        const finalStart = range?.startDate ?? startDate
+        const finalEnd = range?.endDate ?? endDate
+        if (finalStart) params.append("startDate", finalStart)
+        if (finalEnd) params.append("endDate", finalEnd)
+        if (paymentMethod !== "all") params.append("paymentMethod", paymentMethod)
+        if (branchId !== "all") params.append("branchId", branchId)
+        if (onlyMySales && currentUserId) params.append("userId", currentUserId)
 
-      const response = await fetch(`/api/${customerSlug}/reportes/sales?${params.toString()}`)
-      const data = await response.json()
-      setReport(data)
-    } catch (error) {
-      console.error("Error fetching sales report:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [customerSlug, startDate, endDate])
+        const response = await fetch(`/api/${customerSlug}/reportes/sales?${params.toString()}`)
+        const data = await response.json()
+        setReport(data)
+      } catch (error) {
+        console.error("Error fetching sales report:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [customerSlug, startDate, endDate, paymentMethod, branchId, onlyMySales, currentUserId]
+  )
 
   useEffect(() => {
     fetchReport()
   }, [fetchReport])
 
   const t = useTranslations()
+
+  // Cargar usuario actual y sucursales para filtros avanzados
+  useEffect(() => {
+    const loadFiltersData = async () => {
+      try {
+        // Usuario actual (para "Solo mis ventas")
+        const meResponse = await fetch(`/api/${customerSlug}/auth/me`, { credentials: "include" })
+        if (meResponse.ok) {
+          const me = await meResponse.json()
+          if (me?.id) {
+            setCurrentUserId(me.id)
+          }
+        }
+
+        // Sucursales activas
+        const branchesResponse = await fetch(`/api/${customerSlug}/sucursales?status=active&page=1&pageSize=1000`)
+        if (branchesResponse.ok) {
+          const data = await branchesResponse.json()
+          const list =
+            data?.branches?.map((b: any) => ({
+              id: b.id as string,
+              name: (b.name as string) || null,
+            })) || []
+          setBranches(list)
+        }
+      } catch (error) {
+        console.error("Error cargando filtros de ventas:", error)
+      }
+    }
+
+    loadFiltersData()
+  }, [customerSlug])
   
   const handleExport = useCallback(async () => {
     if (!report) {
@@ -61,19 +109,21 @@ export function SalesReportClient({ customerSlug }: SalesReportClientProps) {
       return
     }
 
+    const toastId = toast.loading(t('reports.export.generating'))
     try {
-      toast.loading(t('reports.export.generating'))
       await exportSalesReportToPDF(report, customerSlug, startDate, endDate)
-      toast.dismiss()
-      toast.success(t('reports.export.success'))
+      toast.success(t('reports.export.success'), { id: toastId })
     } catch (error) {
-      toast.dismiss()
       console.error("Error al exportar PDF:", error)
-      toast.error(t('reports.export.error'))
+      toast.error(t('reports.export.error'), { id: toastId })
+    } finally {
+      toast.dismiss(toastId)
     }
   }, [report, customerSlug, startDate, endDate, t])
 
-  if (isLoading) {
+  const isInitialLoading = isLoading && !report
+
+  if (isInitialLoading) {
     return (
       <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
         <div className="flex items-center justify-between mb-8">
@@ -129,7 +179,95 @@ export function SalesReportClient({ customerSlug }: SalesReportClientProps) {
 
       {/* Filters */}
       <Card className="border-dashed border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#101010]/80 shadow-none">
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 w-full lg:w-auto">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Método de pago
+                </Label>
+                <Select
+                  value={paymentMethod}
+                  onValueChange={(value) => {
+                    setPaymentMethod(value as any)
+                    // Reaplicar filtros al cambiar
+                    fetchReport()
+                  }}
+                >
+                  <SelectTrigger className="rounded-full w-full">
+                    <SelectValue placeholder="Todos los métodos" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">Todos los métodos</SelectItem>
+                    <SelectItem value="cash">Efectivo</SelectItem>
+                    <SelectItem value="card">Tarjeta</SelectItem>
+                    <SelectItem value="transfer">Transferencia</SelectItem>
+                    <SelectItem value="qr">QR / Billetera</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Sucursal
+                </Label>
+                <Select
+                  value={branchId}
+                  onValueChange={(value) => {
+                    setBranchId(value)
+                    fetchReport()
+                  }}
+                >
+                  <SelectTrigger className="rounded-full w-full">
+                    <SelectValue placeholder="Todas las sucursales" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="all">Todas las sucursales</SelectItem>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name || "Sin nombre"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="only-my-sales"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    checked={onlyMySales}
+                    onChange={(e) => {
+                      setOnlyMySales(e.target.checked)
+                      fetchReport()
+                    }}
+                    disabled={!currentUserId}
+                  />
+                  <Label
+                    htmlFor="only-my-sales"
+                    className="text-xs sm:text-sm text-gray-600 dark:text-gray-400"
+                  >
+                    Solo mis ventas
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <ReportDateQuickFilters
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(start, end) => {
+                setStartDate(start)
+                setEndDate(end)
+              }}
+              onApply={(start, end) => {
+                fetchReport({ startDate: start, endDate: end })
+              }}
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -156,7 +294,7 @@ export function SalesReportClient({ customerSlug }: SalesReportClientProps) {
             <div className="flex items-end">
               <Button
                 className="rounded-full w-full"
-                onClick={fetchReport}
+                onClick={() => fetchReport()}
               >
                 Aplicar filtros
               </Button>

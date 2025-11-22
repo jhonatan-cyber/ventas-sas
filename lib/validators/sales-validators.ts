@@ -467,6 +467,45 @@ export const updateUsuarioSasSchema = createUsuarioSasSchema.partial().extend({
 
 export type UpdateUsuarioSasInput = z.infer<typeof updateUsuarioSasSchema>
 
+// Tickets de soporte (SAS)
+const ticketPriorityEnum = z.enum(['low', 'medium', 'high', 'urgent'])
+const ticketCategoryEnum = z.enum(['bug', 'feature_request', 'question', 'billing', 'technical', 'other'])
+
+export const createSupportTicketSchema = z.object({
+  title: z
+    .string()
+    .min(5, 'El título debe tener al menos 5 caracteres')
+    .max(200, 'El título es demasiado largo'),
+  description: z
+    .string()
+    .min(10, 'La descripción debe tener al menos 10 caracteres')
+    .max(2000, 'La descripción es demasiado larga'),
+  priority: ticketPriorityEnum.optional().default('medium'),
+  category: ticketCategoryEnum.optional().default('other'),
+  contactEmail: z
+    .string()
+    .email('El email no es válido')
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  contactPhone: z
+    .string()
+    .max(30, 'El teléfono es demasiado largo')
+    .regex(/^[\d\s\-\+\(\)]+$/, 'El teléfono contiene caracteres inválidos')
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+})
+
+export type CreateSupportTicketInput = z.infer<typeof createSupportTicketSchema>
+
+export const addSupportTicketCommentSchema = z.object({
+  content: z
+    .string()
+    .min(1, 'El comentario no puede estar vacío')
+    .max(2000, 'El comentario es demasiado largo'),
+})
+
+export type AddSupportTicketCommentInput = z.infer<typeof addSupportTicketCommentSchema>
+
 // Categoría
 export const createCategorySchema = z.object({
   name: z

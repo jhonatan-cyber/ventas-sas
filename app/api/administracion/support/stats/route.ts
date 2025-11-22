@@ -15,10 +15,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
+    // Verificar si el usuario es administrador o super administrador
+    const isAdmin = user.isSuperAdmin || user.role?.toLowerCase() === 'administrador' || user.role?.toLowerCase() === 'admin'
+
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('organizationId') || undefined
 
-    const stats = await SupportService.getTicketStats(organizationId)
+    // Si el usuario no es admin ni super admin, pasar su ID para filtrar estadísticas
+    const assignedToId = !isAdmin ? user.id : undefined
+
+    const stats = await SupportService.getTicketStats(organizationId, assignedToId)
 
     return NextResponse.json(stats)
   } catch (error) {

@@ -13,14 +13,16 @@
     "roles": "Papéis",
     "permissions": "Permissões",
     "branches": "Agências",
-    "categories": "Categorias"
+    "categories": "Categorias",
+    "support": "Suporte"
   },
   "sidebar": {
     "home": "Início",
     "operation": "Operação",
     "catalog": "Catálogo",
     "management": "Gestão",
-    "reports": "Relatórios"
+    "reports": "Relatórios",
+    "support": "Suporte"
   },
   "header": {
     "profile": "Perfil",
@@ -336,19 +338,35 @@
       "general": "General"
     },
     "filters": {
-      "dateRange": "Rango de fechas",
+      "dateRange": "Intervalo de datas",
       "branch": "Todas as filiais",
-      "export": "Exportar reporte"
+      "export": "Exportar relatório",
+      "startDate": "Data inicial",
+      "endDate": "Data final",
+      "apply": "Aplicar filtros",
+      "quick": {
+        "today": "Hoje",
+        "thisWeek": "Esta semana",
+        "thisMonth": "Este mês",
+        "last30Days": "Últimos 30 dias",
+        "thisYear": "Este ano"
+      }
     },
     "charts": {
-      "salesByDate": "Ventas por fecha",
-      "topProducts": "Productos más vendidos",
-      "productsByCategory": "Productos por categoría",
-      "paymentMethod": "Métodos de pago",
-      "inventoryStatus": "Estado de inventario",
-      "expensesByCategory": "Gastos por categoría",
+      "salesByDate": "Vendas por data",
+      "topProducts": "Produtos mais vendidos",
+      "productsByCategory": "Produtos por categoria",
+      "paymentMethod": "Métodos de pagamento",
+      "inventoryStatus": "Estado de inventário",
+      "expensesByCategory": "Despesas por categoria",
       "customersByPurchases": "Clientes por compras",
-      "cashRegistersByBranch": "Cajas por sucursal"
+      "cashRegistersByBranch": "Caixas por filial"
+    },
+    "reports": {
+      "branches": {
+        "title": "Relatório de Filiais",
+        "description": "Desempenho de vendas e receitas por filial"
+      }
     }
   },
   "categories": {
@@ -592,5 +610,67 @@
     "lastMonth": "Mes pasado",
     "lastYear": "Año pasado",
     "custom": "Personalizado"
+  },
+  "support": {
+    "title": "Centro de suporte",
+    "description": "Crie e acompanhe os tickets enviados à nossa equipe de suporte",
+    "createTicket": "Criar Ticket",
+    "stats": {
+      "open": "Abertos",
+      "openDescription": "Pendentes de atenção",
+      "inProgress": "Em Progresso",
+      "inProgressDescription": "Em processo de resolução",
+      "resolved": "Resolvidos",
+      "resolvedDescription": "Solucionados",
+      "closed": "Fechados",
+      "closedDescription": "Finalizados",
+      "total": "do total"
+    },
+    "filters": {
+      "search": "Pesquisa",
+      "searchPlaceholder": "Pesquisar por número, título ou descrição...",
+      "status": "Status",
+      "statusAll": "Todos",
+      "statusOpen": "Abertos",
+      "statusInProgress": "Em progresso",
+      "statusResolved": "Resolvidos",
+      "statusClosed": "Fechados",
+      "pageSize": "Dados",
+      "pageSize5": "5 por página",
+      "pageSize10": "10 por página",
+      "pageSize20": "20 por página",
+      "pageSize50": "50 por página"
+    },
+    "table": {
+      "ticket": "Ticket",
+      "status": "Status",
+      "priority": "Prioridade",
+      "updated": "Atualizado",
+      "comments": "Comentários",
+      "actions": "Ações",
+      "viewDetails": "Ver detalhes",
+      "noTickets": "Nenhum ticket encontrado com o filtro selecionado.",
+      "loading": "Carregando tickets..."
+    },
+    "cards": {
+      "viewDetails": "Ver detalhes",
+      "priority": "Prioridade",
+      "category": "Categoria",
+      "comments": "comentário",
+      "commentsPlural": "comentários",
+      "updated": "Atualizado:"
+    },
+    "status": {
+      "open": "Aberto",
+      "inProgress": "Em progresso",
+      "resolved": "Resolvido",
+      "closed": "Fechado"
+    },
+    "priority": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
   }
 }

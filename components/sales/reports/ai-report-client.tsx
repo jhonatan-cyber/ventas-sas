@@ -178,7 +178,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="rounded-full" />
             </div>
             <div className="flex items-end">
-              <Button className="rounded-full w-full" onClick={fetchReport}>
+              <Button className="rounded-full w-full" onClick={() => fetchReport()}>
                 {t("reports.filters.apply") || "Aplicar filtros"}
               </Button>
             </div>

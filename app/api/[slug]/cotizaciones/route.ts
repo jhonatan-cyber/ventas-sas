@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { captureServerEvent } from '@/lib/analytics/posthog-server'
 import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
@@ -173,6 +174,23 @@ export async function POST(
       notesTranslations,
       items: normalizedItems
     })
+
+    // Tracking de creación de cotización
+    if (currentUser) {
+      captureServerEvent(currentUser.id, 'sas_quotation_created', {
+        quotationId: quotation.id,
+        organizationId,
+        organizationSlug: slug,
+        total: Number(quotation.total),
+        subtotal: Number(quotation.subtotal),
+        discount: Number(quotation.discount || 0),
+        status: quotation.status,
+        itemsCount: normalizedItems.length,
+        hasCustomer: !!quotation.customerId,
+        hasExpiration: !!quotation.expiresAt,
+        branchId: finalBranchId || null,
+      })
+    }
 
     return NextResponse.json(serializeQuotation(quotation), { status: 201 })
   } catch (error) {

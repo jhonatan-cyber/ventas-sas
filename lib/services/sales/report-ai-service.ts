@@ -189,11 +189,30 @@ export class ReportAIService {
     try {
       const response = await chatCompleteWithOptions(prompt, { temperature: 0.25 })
       const parsed = this.safeJsonParse<ReportAISummary>(response, fallback)
+
+      const safeSummary =
+        parsed && typeof parsed.summary === "string" && parsed.summary.trim().length > 0
+          ? parsed.summary
+          : fallback.summary
+
+      const safeHighlights = Array.isArray(parsed?.highlights)
+        ? parsed.highlights.filter((item) => typeof item === "string" && item.trim().length > 0)
+        : fallback.highlights
+
+      const safeActions = Array.isArray(parsed?.actions)
+        ? parsed.actions.filter((item) => typeof item === "string" && item.trim().length > 0)
+        : fallback.actions
+
+      const safeConfidence =
+        parsed && typeof parsed.confidence === "number" && !Number.isNaN(parsed.confidence)
+          ? parsed.confidence
+          : fallback.confidence
+
       return {
-        summary: parsed.summary || fallback.summary,
-        highlights: parsed.highlights?.length ? parsed.highlights : fallback.highlights,
-        actions: parsed.actions?.length ? parsed.actions : fallback.actions,
-        confidence: typeof parsed.confidence === "number" ? parsed.confidence : fallback.confidence,
+        summary: safeSummary,
+        highlights: safeHighlights.length ? safeHighlights : fallback.highlights,
+        actions: safeActions.length ? safeActions : fallback.actions,
+        confidence: safeConfidence,
         generatedAt: new Date().toISOString(),
       }
     } catch {
@@ -242,11 +261,70 @@ export class ReportAIService {
     try {
       const response = await chatCompleteWithOptions(prompt, { temperature: 0.2 })
       const parsed = this.safeJsonParse<AdvancedReportAIResult>(response, DEFAULT_ADVANCED)
+
+      // Saneamos la respuesta de la IA para evitar objetos como hijos de React
+      const rawSummary: unknown = (parsed as any)?.summary
+      let safeSummary: string
+
+      if (typeof rawSummary === "string") {
+        safeSummary = rawSummary
+      } else if (rawSummary && typeof rawSummary === "object") {
+        // Si viene un objeto tipo { totalRevenue, totalExpenses, ... } lo convertimos a texto
+        const s: any = rawSummary
+        const parts: string[] = []
+        if (typeof s.totalRevenue === "number") {
+          parts.push(`Ingresos totales: ${s.totalRevenue.toLocaleString()}`)
+        }
+        if (typeof s.totalExpenses === "number") {
+          parts.push(`Gastos totales: ${s.totalExpenses.toLocaleString()}`)
+        }
+        if (typeof s.netProfit === "number") {
+          parts.push(`Utilidad neta: ${s.netProfit.toLocaleString()}`)
+        }
+        if (typeof s.profitMargin === "number") {
+          parts.push(`Margen: ${s.profitMargin.toFixed(1)}%`)
+        }
+        if (typeof s.salesCount === "number") {
+          parts.push(`Ventas: ${s.salesCount}`)
+        }
+        if (!parts.length) {
+          safeSummary = DEFAULT_ADVANCED.summary
+        } else {
+          safeSummary = parts.join(" · ")
+        }
+      } else {
+        safeSummary = DEFAULT_ADVANCED.summary
+      }
+
+      const normalizeStringArray = (value: unknown): string[] => {
+        if (!Array.isArray(value)) return []
+        return value
+          .map((item) => {
+            if (typeof item === "string") return item
+            if (item && typeof item === "object") {
+              const anyItem: any = item
+              if (typeof anyItem.description === "string") return anyItem.description
+              // último recurso: JSON compacto
+              try {
+                return JSON.stringify(anyItem)
+              } catch {
+                return ""
+              }
+            }
+            return ""
+          })
+          .filter((txt) => txt && txt.trim().length > 0)
+      }
+
+      const safeOpportunities = normalizeStringArray((parsed as any)?.opportunities)
+      const safeRisks = normalizeStringArray((parsed as any)?.risks)
+      const safeNextActions = normalizeStringArray((parsed as any)?.nextActions)
+
       aiResult = {
-        summary: parsed.summary || DEFAULT_ADVANCED.summary,
-        opportunities: parsed.opportunities || [],
-        risks: parsed.risks || [],
-        nextActions: parsed.nextActions || [],
+        summary: safeSummary,
+        opportunities: safeOpportunities,
+        risks: safeRisks,
+        nextActions: safeNextActions,
         confidence: typeof parsed.confidence === "number" ? parsed.confidence : DEFAULT_ADVANCED.confidence,
       }
     } catch {

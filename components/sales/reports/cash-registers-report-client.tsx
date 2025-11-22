@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
 import { CashRegistersByBranchChart } from "./charts/cash-registers-by-branch-chart"
+import { ReportDateQuickFilters } from "./report-date-quick-filters"
 
 import type { CashRegisterReport } from "@/lib/services/sales/reports-service"
 
@@ -29,12 +30,14 @@ export function CashRegistersReportClient({ customerSlug }: CashRegistersReportC
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
-  const fetchReport = useCallback(async () => {
+  const fetchReport = useCallback(async (range?: { startDate?: string; endDate?: string }) => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
-      if (startDate) params.append("startDate", startDate)
-      if (endDate) params.append("endDate", endDate)
+      const finalStart = range?.startDate ?? startDate
+      const finalEnd = range?.endDate ?? endDate
+      if (finalStart) params.append("startDate", finalStart)
+      if (finalEnd) params.append("endDate", finalEnd)
 
       const response = await fetch(`/api/${customerSlug}/reportes/cash-registers?${params.toString()}`)
       const data = await response.json()
@@ -58,19 +61,21 @@ export function CashRegistersReportClient({ customerSlug }: CashRegistersReportC
       return
     }
 
+    const toastId = toast.loading(t('reports.export.generating'))
     try {
-      toast.loading(t('reports.export.generating'))
       await exportCashRegistersReportToPDF(report, customerSlug, startDate, endDate)
-      toast.dismiss()
-      toast.success(t('reports.export.success'))
+      toast.success(t('reports.export.success'), { id: toastId })
     } catch (error) {
-      toast.dismiss()
       console.error("Error al exportar PDF:", error)
-      toast.error(t('reports.export.error'))
+      toast.error(t('reports.export.error'), { id: toastId })
+    } finally {
+      toast.dismiss(toastId)
     }
   }, [report, customerSlug, startDate, endDate, t])
 
-  if (isLoading) {
+  const isInitialLoading = isLoading && !report
+
+  if (isInitialLoading) {
     return (
       <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
         <div className="flex items-center justify-between mb-8">
@@ -153,12 +158,23 @@ export function CashRegistersReportClient({ customerSlug }: CashRegistersReportC
             <div className="flex items-end">
               <Button
                 className="rounded-full w-full"
-                onClick={fetchReport}
+                onClick={() => fetchReport()}
               >
                 Aplicar filtros
               </Button>
             </div>
           </div>
+          <ReportDateQuickFilters
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(start, end) => {
+              setStartDate(start)
+              setEndDate(end)
+            }}
+            onApply={(start, end) => {
+              fetchReport({ startDate: start, endDate: end })
+            }}
+          />
         </CardContent>
       </Card>
 

@@ -7,6 +7,37 @@ import { toast } from "sonner"
 
 import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-error"
 
+// Helper para obtener el token CSRF desde las cookies del navegador
+function getCSRFTokenFromCookie(): string | null {
+  if (typeof document === "undefined") return null
+  const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+// Helper para asegurar que tenemos un token CSRF válido
+async function ensureCSRFToken(): Promise<string | null> {
+  // Si CSRF no está habilitado en backend, no es necesario
+  if (process.env.NEXT_PUBLIC_ENABLE_CSRF !== "true") {
+    return null
+  }
+
+  let token = getCSRFTokenFromCookie()
+  if (token) return token
+
+  try {
+    const res = await fetch("/api/csrf-token", { method: "GET", credentials: "include" })
+    if (!res.ok) return null
+    const data = await res.json().catch(() => null)
+    if (data?.token) {
+      return data.token as string
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 export function useProductActions(customerSlug: string, onProductsChange?: () => void) {
   const router = useRouter()
   const [_isPending, startTransition] = useTransition()
@@ -79,9 +110,21 @@ export function useProductActions(customerSlug: string, onProductsChange?: () =>
 
       const method = selectedProduct ? "PUT" : "POST"
 
+      // Asegurar token CSRF si está habilitado
+      const csrfToken = await ensureCSRFToken()
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      }
+
+      if (csrfToken) {
+        ;(headers as any)["x-csrf-token"] = csrfToken
+      }
+
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
+        credentials: "include",
         body: JSON.stringify(data),
       })
 

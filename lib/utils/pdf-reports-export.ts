@@ -5,7 +5,7 @@ import jsPDF from "jspdf"
 import { formatDate } from "./date"
 import { formatCurrencyWithPreferences, getCurrency } from "./preferences"
 
-import type { SalesReport, GeneralReport, ProductsReport, ExpensesReport, CustomersReport, CashRegisterReport } from "@/lib/services/sales/reports-service"
+import type { SalesReport, GeneralReport, ProductsReport, ExpensesReport, CustomersReport, CashRegisterReport, BranchPerformanceReport } from "@/lib/services/sales/reports-service"
 
 interface CompanyInfo {
   companyName: string
@@ -18,10 +18,11 @@ interface CompanyInfo {
 }
 
 /**
- * Obtiene la información de la empresa desde las cookies
+ * Obtiene la información de la empresa desde la API de organización y/o cookies,
+ * similar a como se hace en los PDFs de ventas y cotizaciones.
  */
-function getCompanyInfo(customerSlug: string): CompanyInfo {
-  if (typeof document === "undefined") {
+async function getCompanyInfo(customerSlug: string): Promise<CompanyInfo> {
+  if (typeof window === "undefined" || typeof document === "undefined") {
     return {
       companyName: "",
       companyContactName: "",
@@ -29,51 +30,75 @@ function getCompanyInfo(customerSlug: string): CompanyInfo {
       companyPhone: "",
       companyAddress: "",
       companyLogo: "",
-      currencyCode: "BOB"
+      currencyCode: "BOB",
     }
   }
 
   // Usar función de utilidades para obtener moneda (tiene caché y fallback)
   const currencyCode = getCurrency(customerSlug)
 
-  try {
-    const raw = document.cookie
-      .split("; ")
-      .find((chunk) => chunk.startsWith(`sas-prefs-${customerSlug}=`))
-      ?.split("=")[1]
+  let companyName = ""
+  let companyContactName = ""
+  let companyEmail = ""
+  let companyPhone = ""
+  let companyAddress = ""
+  let companyLogo = ""
 
-    if (!raw) {
-      return {
-        companyName: "",
-        companyContactName: "",
-        companyEmail: "",
-        companyPhone: "",
-        companyAddress: "",
-        companyLogo: "",
-        currencyCode
+  // 1) Intentar leer desde la API de organización (fuente principal)
+  try {
+    const orgRes = await fetch(`/api/${customerSlug}/organizacion`, { credentials: "include" })
+    if (orgRes.ok) {
+      const data = await orgRes.json()
+      const org = data?.organization
+      if (org) {
+        companyName = org.razonSocial || org.name || companyName
+        companyAddress = org.address || companyAddress
+        companyLogo = org.logoUrl || companyLogo
+        companyPhone = org.phone || companyPhone
+        companyContactName = org.ownerName || companyContactName
+        companyEmail = org.email || companyEmail
       }
     }
+  } catch {
+    // ignorar errores de organización para no romper la generación del PDF
+  }
 
-    const parsed = JSON.parse(decodeURIComponent(raw))
-    return {
-      companyName: typeof parsed.companyName === "string" ? parsed.companyName : "",
-      companyContactName: typeof parsed.companyContactName === "string" ? parsed.companyContactName : "",
-      companyEmail: typeof parsed.companyEmail === "string" ? parsed.companyEmail : "",
-      companyPhone: typeof parsed.companyPhone === "string" ? parsed.companyPhone : "",
-      companyAddress: typeof parsed.companyAddress === "string" ? parsed.companyAddress : "",
-      companyLogo: typeof parsed.companyLogo === "string" ? parsed.companyLogo : "",
-      currencyCode
+  // 2) Fallback: leer cookie de preferencias si faltan datos clave
+  try {
+    if (!companyName || !companyLogo || !companyPhone) {
+      const rawCookie =
+        document.cookie
+          .split("; ")
+          .find((c) => c.startsWith(`sas-prefs-${customerSlug}=`))
+          ?.split("=")[1] ||
+        document.cookie
+          .split("; ")
+          .find((c) => c.startsWith(`sas_prefs=`))
+          ?.split("=")[1]
+
+    if (rawCookie) {
+        const parsed = JSON.parse(decodeURIComponent(rawCookie))
+        companyName = companyName || (typeof parsed.companyName === "string" ? parsed.companyName : "")
+        companyContactName =
+          companyContactName || (typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
+        companyEmail = companyEmail || (typeof parsed.companyEmail === "string" ? parsed.companyEmail : "")
+        companyPhone = companyPhone || (typeof parsed.companyPhone === "string" ? parsed.companyPhone : "")
+        companyAddress = companyAddress || (typeof parsed.companyAddress === "string" ? parsed.companyAddress : "")
+        companyLogo = companyLogo || (typeof parsed.companyLogo === "string" ? parsed.companyLogo : "")
+      }
     }
   } catch {
-    return {
-      companyName: "",
-      companyContactName: "",
-      companyEmail: "",
-      companyPhone: "",
-      companyAddress: "",
-      companyLogo: "",
-      currencyCode: "BOB"
-    }
+    // si falla la cookie, continuamos con lo que tengamos
+  }
+
+  return {
+    companyName: companyName || "",
+    companyContactName: companyContactName || "",
+    companyEmail: companyEmail || "",
+    companyPhone: companyPhone || "",
+    companyAddress: companyAddress || "",
+    companyLogo: companyLogo || "",
+    currencyCode,
   }
 }
 
@@ -300,7 +325,7 @@ export async function exportSalesReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -463,7 +488,7 @@ export async function exportGeneralReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
 
@@ -534,6 +559,189 @@ export async function exportGeneralReportToPDF(
 }
 
 /**
+ * Exporta el reporte de Analytics (markdown generado por IA) a PDF
+ * usando el mismo encabezado y estilo corporativo.
+ */
+export async function exportAnalyticsMarkdownReportToPDF(
+  markdown: string,
+  customerSlug: string,
+  startDate?: string,
+  endDate?: string
+): Promise<void> {
+  if (typeof window === 'undefined') return
+
+  const companyInfo = await getCompanyInfo(customerSlug)
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const margin = 16
+
+  let cursorY = await addPDFHeader(doc, 'Reporte Analytics IA', companyInfo, pageWidth, margin)
+
+  // Rango de fechas
+  if (startDate || endDate) {
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(60, 60, 60)
+    const dateRange = `Período: ${startDate ? formatDate(startDate) : 'Inicio'} - ${endDate ? formatDate(endDate) : 'Fin'}`
+    doc.text(dateRange, margin, cursorY)
+    cursorY += 8
+  }
+
+  addSeparator(doc, cursorY, pageWidth, margin)
+  cursorY += 10
+
+  // Contenido del reporte (markdown -> texto/tablas formateadas)
+  const lines = markdown.split(/\r?\n/)
+
+  // Detectar headings tipo Setext (líneas seguidas de ==== o ----)
+  const headingLevels: Array<0 | 1 | 2> = lines.map(() => 0)
+  for (let i = 0; i < lines.length - 1; i++) {
+    const current = lines[i].trim()
+    const next = lines[i + 1].trim()
+    if (!current) continue
+    if (/^=+$/.test(next)) {
+      headingLevels[i] = 1
+      headingLevels[i + 1] = 0
+    } else if (/^-+$/.test(next)) {
+      headingLevels[i] = 2
+      headingLevels[i + 1] = 0
+    }
+  }
+
+  const addTextBlock = (rawText: string, options?: { bold?: boolean; size?: number }) => {
+    // Quitar formato markdown básico (**texto**, _texto_)
+    let text = rawText
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/_(.+?)_/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+
+    // Limpiar restos de LaTeX simples y caracteres raros
+    text = text
+      .replace(/\$\s*/g, '') // quita '$' usados como decoración
+      .replace(/\\%/g, '%')
+      .replace(/\\quad/g, ' ')
+
+    if (!text.trim()) return
+
+    const fontSize = options?.size ?? 10
+    const isBold = options?.bold ?? false
+    doc.setFont('helvetica', isBold ? 'bold' : 'normal')
+    doc.setFontSize(fontSize)
+    doc.setTextColor(40, 40, 40)
+
+    const maxWidth = pageWidth - margin * 2
+    const wrapped = doc.splitTextToSize(text, maxWidth)
+
+    wrapped.forEach((line: string) => {
+      if (cursorY > pageHeight - margin) {
+        doc.addPage()
+        cursorY = margin + 10
+      }
+      doc.text(line, margin, cursorY)
+      cursorY += fontSize * 0.5 + 2
+    })
+    cursorY += 2
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i]
+    let line = rawLine.trimEnd()
+
+    if (!line.trim()) {
+      cursorY += 2
+      continue
+    }
+
+    // Saltar líneas que son solo separadores markdown
+    if (/^[-=]{3,}$/.test(line) || /^_{3,}$/.test(line)) {
+      cursorY += 2
+      continue
+    }
+
+    // Bloques de tabla markdown (comienzan con |)
+    if (line.trimStart().startsWith('|')) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].trimStart().startsWith('|')) {
+        tableLines.push(lines[i].trim())
+        i++
+      }
+      i-- // corregir incremento del for
+
+      if (tableLines.length >= 2) {
+        const headerLine = tableLines[0]
+        const headerCells = headerLine
+          .split('|')
+          .slice(1, -1)
+          .map((c) => c.trim())
+
+        // Saltar línea de separadores (---)
+        const dataLines = tableLines.slice(2)
+        const rows = dataLines
+          .map((row) =>
+            row
+              .split('|')
+              .slice(1, -1)
+              .map((c) => c.trim())
+          )
+          .filter((r) => r.some((c) => c.length > 0))
+
+        if (rows.length > 0) {
+          cursorY = addTable(doc, cursorY, headerCells, rows, pageWidth, margin)
+          cursorY += 4
+        }
+        continue
+      }
+    }
+
+    // Títulos markdown de tipo ATX (#, ##, ###)
+    if (line.startsWith('# ')) {
+      addTextBlock(line.replace(/^#\s+/, ''), { bold: true, size: 16 })
+      cursorY += 2
+      continue
+    }
+    if (line.startsWith('## ')) {
+      addTextBlock(line.replace(/^##\s+/, ''), { bold: true, size: 14 })
+      cursorY += 2
+      continue
+    }
+    if (line.startsWith('### ')) {
+      addTextBlock(line.replace(/^###\s+/, ''), { bold: true, size: 12 })
+      cursorY += 2
+      continue
+    }
+
+    // Títulos tipo Setext detectados previamente
+    if (headingLevels[i] === 1) {
+      addTextBlock(line, { bold: true, size: 16 })
+      cursorY += 2
+      continue
+    }
+    if (headingLevels[i] === 2) {
+      addTextBlock(line, { bold: true, size: 13 })
+      cursorY += 2
+      continue
+    }
+
+    // Listas numeradas y con viñetas
+    if (/^\d+\.\s+/.test(line)) {
+      addTextBlock(`• ${line.replace(/^\d+\.\s+/, '')}`, { size: 10 })
+      continue
+    }
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      addTextBlock(`• ${line.replace(/^[-*]\s+/, '')}`, { size: 10 })
+      continue
+    }
+
+    // Texto normal
+    addTextBlock(line, { size: 10 })
+  }
+
+  doc.save(`reporte-analytics-${new Date().toISOString().split('T')[0]}.pdf`)
+}
+
+/**
  * Exporta el reporte de productos a PDF
  */
 export async function exportProductsReportToPDF(
@@ -544,7 +752,7 @@ export async function exportProductsReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -667,7 +875,7 @@ export async function exportExpensesReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -754,7 +962,7 @@ export async function exportCustomersReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -876,7 +1084,7 @@ export async function exportCashRegistersReportToPDF(
 ): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const companyInfo = getCompanyInfo(customerSlug)
+  const companyInfo = await getCompanyInfo(customerSlug)
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -953,5 +1161,93 @@ export async function exportCashRegistersReportToPDF(
   }
 
   doc.save(`reporte-cajas-${new Date().toISOString().split('T')[0]}.pdf`)
+}
+
+/**
+ * Exporta el reporte de desempeño por sucursal a PDF
+ */
+export async function exportBranchesReportToPDF(
+  report: BranchPerformanceReport[],
+  customerSlug: string,
+  startDate?: string,
+  endDate?: string
+): Promise<void> {
+  if (typeof window === "undefined") return
+
+  const companyInfo = await getCompanyInfo(customerSlug)
+  const doc = new jsPDF({ unit: "mm", format: "a4" })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const margin = 16
+
+  let cursorY = await addPDFHeader(doc, "Desempeño por Sucursal", companyInfo, pageWidth, margin)
+
+  // Rango de fechas
+  if (startDate || endDate) {
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
+    doc.setTextColor(60, 60, 60)
+    const dateRange = `Período: ${startDate ? formatDate(startDate) : "Inicio"} - ${endDate ? formatDate(endDate) : "Fin"}`
+    doc.text(dateRange, margin, cursorY)
+    cursorY += 8
+  }
+
+  addSeparator(doc, cursorY, pageWidth, margin)
+  cursorY += 10
+
+  const totalBranches = report.length
+  const totalSales = report.reduce((sum, b) => sum + b.salesCount, 0)
+  const totalRevenue = report.reduce((sum, b) => sum + b.revenue, 0)
+  const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0
+
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(12)
+  doc.setTextColor(30, 30, 30)
+  doc.text("Resumen por Sucursales", margin, cursorY)
+  cursorY += 8
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(10)
+  const summary = [
+    `Total de Sucursales: ${totalBranches}`,
+    `Ventas Totales: ${totalSales}`,
+    `Ingresos Totales: ${formatCurrencyWithPreferences(totalRevenue, customerSlug, companyInfo.currencyCode)}`,
+    `Ticket Promedio Global: ${formatCurrencyWithPreferences(avgTicket, customerSlug, companyInfo.currencyCode)}`,
+  ]
+
+  summary.forEach((line) => {
+    doc.text(line, margin + 5, cursorY)
+    cursorY += 6
+  })
+
+  cursorY += 5
+  addSeparator(doc, cursorY, pageWidth, margin)
+  cursorY += 10
+
+  if (report.length > 0) {
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(12)
+    doc.text("Detalle por Sucursal", margin, cursorY)
+    cursorY += 8
+
+    const rows = report.map((branch) => [
+      branch.branchName,
+      branch.salesCount.toString(),
+      formatCurrencyWithPreferences(branch.revenue, customerSlug, companyInfo.currencyCode),
+      formatCurrencyWithPreferences(branch.averageTicket, customerSlug, companyInfo.currencyCode),
+      `${branch.contribution.toFixed(1)}%`,
+    ])
+
+    cursorY = addTable(
+      doc,
+      cursorY,
+      ["Sucursal", "Ventas", "Ingresos", "Ticket Prom.", "% Contribución"],
+      rows,
+      pageWidth,
+      margin,
+      [55, 20, 35, 35, 30]
+    )
+  }
+
+  doc.save(`reporte-sucursales-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 

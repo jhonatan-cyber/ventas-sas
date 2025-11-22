@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { captureServerEvent } from '@/lib/analytics/posthog-server'
 import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { ExpenseService, CreateExpenseData } from '@/lib/services/sales/expense-service'
@@ -150,6 +151,17 @@ export async function POST(
     }
 
     const expense = await ExpenseService.createExpense(organizationId, payload)
+
+    // Tracking de creación de gasto
+    captureServerEvent(currentUser.id, 'sas_expense_created', {
+      expenseId: expense.id,
+      organizationId,
+      organizationSlug: slug,
+      amount: Number(expense.amount),
+      category: expense.category || null,
+      hasDescription: !!expense.description,
+      branchId: expense.branchId || null,
+    })
 
     return NextResponse.json(serializeExpense(expense), { status: 201 })
   } catch (error) {

@@ -111,6 +111,12 @@ export const SAS_MODULES_CONFIG: SasModule[] = [
     route: 'reportes',
   },
   {
+    id: 'support',
+    label: 'Soporte',
+    description: 'Centro de ayuda y tickets con el equipo de soporte',
+    route: 'support',
+  },
+  {
     id: 'analytics',
     label: 'Analytics',
     description: 'Análisis avanzado e inteligencia de negocio con métricas detalladas',

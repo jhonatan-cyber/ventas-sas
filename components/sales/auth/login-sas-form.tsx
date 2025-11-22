@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { ThemeSelector } from "@/components/ui/theme-selector";
+import { PostHogClient } from "@/lib/analytics/posthog-client";
 
 interface LoginSasFormProps {
   customerSlug: string;
@@ -108,6 +109,25 @@ export function LoginSasForm({
         }
 
         toast.success(t("auth.login.success"));
+
+        // Tracking de login exitoso
+        if (data.user) {
+          PostHogClient.identify(data.user.id, {
+            email: data.user.email || undefined,
+            nombre: data.user.nombre || undefined,
+            apellido: data.user.apellido || undefined,
+            organizationSlug: customerSlug,
+            organizationName: organizationName || undefined,
+          });
+
+          PostHogClient.capture("sas_login_success", {
+            userId: data.user.id,
+            email: data.user.email || undefined,
+            organizationSlug: customerSlug,
+            organizationName: organizationName || undefined,
+            loginMethod: inputValue.includes("@") ? "email" : "ci",
+          });
+        }
 
         const redirectUrl = data.redirect || `/${customerSlug}/dashboard`;
         try {

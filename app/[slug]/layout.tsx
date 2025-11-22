@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { ThemeProvider } from "@/components/theme-provider"
+import { PostHogProvider } from "@/lib/analytics/posthog-provider"
 import { prisma } from "@/lib/prisma"
 import { I18nProvider } from "@/lib/utils/i18n-provider"
 import { getMaxBranchesBySlug, getModulesBySlug } from "@/lib/utils/organization"
@@ -52,11 +53,13 @@ export default async function SalesLayout({
   
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="sas-theme">
-      <I18nProvider>
-        <SalesLayoutClient organizationSlug={slug} maxBranches={maxBranches} allowedModules={allowedModules}>
-          {children}
-        </SalesLayoutClient>
-      </I18nProvider>
+      <PostHogProvider>
+        <I18nProvider>
+          <SalesLayoutClient organizationSlug={slug} maxBranches={maxBranches} allowedModules={allowedModules}>
+            {children}
+          </SalesLayoutClient>
+        </I18nProvider>
+      </PostHogProvider>
     </ThemeProvider>
   )
 }

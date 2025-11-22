@@ -8,7 +8,6 @@ import {
   PowerOff,
   MapPin,
   Phone,
-  User,
   CreditCard,
   Shield,
 } from "lucide-react";
@@ -126,7 +125,7 @@ export function UsersTable({
                         </Avatar>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <User className="h-3.5 w-3.5 text-black dark:text-white" />
+                           
                             <span className="font-semibold text-gray-900 dark:text-white">
                               {firstName || "-"} {lastName || ""}
                             </span>

@@ -27,6 +27,9 @@ interface TicketDetails {
   priority: TicketPriority
   category: TicketCategory | null
   assignedToId: string | null
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
   createdAt: string
   firstResponseAt: string | null
   resolvedAt: string | null
@@ -37,6 +40,12 @@ interface TicketDetails {
   createdBy: {
     fullName: string | null
     email: string
+  } | null
+  createdBySasUser?: {
+    nombre: string | null
+    apellido: string | null
+    email: string | null
+    phone?: string | null
   } | null
   comments?: Array<{
     id: string
@@ -192,23 +201,35 @@ export function TicketDetailDialog({
                   </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Creado por</Label>
+                  <Label className="text-sm font-semibold">Reportado por</Label>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {ticket.createdBy?.fullName || ticket.createdBy?.email || "-"}
+                    {ticket.createdBy?.fullName ||
+                      ticket.createdBy?.email ||
+                      `${ticket.createdBySasUser?.nombre || ''} ${ticket.createdBySasUser?.apellido || ''}`.trim() ||
+                      ticket.createdBySasUser?.email ||
+                      ticket.contactName ||
+                      "Cliente"}
                   </p>
+                  {ticket.createdBySasUser && (
+                    <Badge variant="secondary" className="mt-1 text-[10px] uppercase tracking-wide">
+                      Creado desde SAS
+                    </Badge>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-semibold">Asignado a</Label>
                   <Select
-                    value={ticket.assignedToId || ""}
-                    onValueChange={(value) => onUpdate({ assignedToId: value || null })}
+                    value={ticket.assignedToId ?? "unassigned"}
+                    onValueChange={(value) =>
+                      onUpdate({ assignedToId: value === "unassigned" ? null : value })
+                    }
                     disabled={loading}
                   >
                     <SelectTrigger className="rounded-full">
                       <SelectValue placeholder="Sin asignar" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sin asignar</SelectItem>
+                      <SelectItem value="unassigned">Sin asignar</SelectItem>
                       {admins.map((admin) => (
                         <SelectItem key={admin.id} value={admin.id}>
                           {admin.fullName || admin.email}
@@ -292,6 +313,29 @@ export function TicketDetailDialog({
                     </p>
                   </div>
                 )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-semibold">Contacto</Label>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {ticket.contactName || ticket.createdBySasUser
+                      ? `${ticket.createdBySasUser?.nombre || ''} ${ticket.createdBySasUser?.apellido || ''}`.trim()
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold">Correo</Label>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {ticket.contactEmail || ticket.createdBySasUser?.email || ticket.createdBy?.email || "-"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold">Teléfono</Label>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {ticket.contactPhone || ticket.createdBySasUser?.phone || "-"}
+                  </p>
+                </div>
               </div>
             </div>
           </TabsContent>

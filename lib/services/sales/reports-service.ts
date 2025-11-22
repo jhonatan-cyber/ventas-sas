@@ -129,7 +129,12 @@ export class ReportsService {
   static async getSalesReport(
     organizationId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    filters?: {
+      paymentMethod?: "cash" | "card" | "transfer" | "qr"
+      branchId?: string
+      userId?: string
+    }
   ): Promise<SalesReport> {
     const where: any = { organizationId }
     
@@ -137,6 +142,24 @@ export class ReportsService {
       where.createdAt = {}
       if (startDate) where.createdAt.gte = startDate
       if (endDate) where.createdAt.lte = endDate
+    }
+
+    if (filters?.userId) {
+      where.userId = filters.userId
+    }
+
+    if (filters?.paymentMethod) {
+      where.paymentMethod = filters.paymentMethod
+    }
+
+    if (filters?.branchId) {
+      where.items = {
+        some: {
+          product: {
+            branchId: filters.branchId,
+          },
+        },
+      }
     }
 
     const [sales, statusData, paymentData] = await Promise.all([
@@ -221,10 +244,26 @@ export class ReportsService {
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 10)
 
-    // Agrupar por fecha
+    // Helper para agrupar por fecha usando zona horaria de negocio (ej. Bolivia)
+    // Esto evita desfases de un día cuando el servidor está en otra zona.
+    const getLocalDateKey = (date: Date) => {
+      const formatter = new Intl.DateTimeFormat('es-BO', {
+        timeZone: 'America/La_Paz',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
+      const parts = formatter.formatToParts(date)
+      const year = parts.find(p => p.type === 'year')?.value || '0000'
+      const month = parts.find(p => p.type === 'month')?.value || '01'
+      const day = parts.find(p => p.type === 'day')?.value || '01'
+      return `${year}-${month}-${day}`
+    }
+
+    // Agrupar por fecha (usando fecha local)
     const dateMap = new Map<string, { count: number; revenue: number }>()
     sales.forEach(sale => {
-      const dateStr = sale.createdAt.toISOString().split('T')[0]
+      const dateStr = getLocalDateKey(sale.createdAt)
       const existing = dateMap.get(dateStr)
       if (existing) {
         existing.count += 1
@@ -329,9 +368,24 @@ export class ReportsService {
       amount: Number(item._sum.amount || 0)
     })).sort((a, b) => b.amount - a.amount)
 
+    // Helper para agrupar por fecha usando zona horaria de negocio (ej. Bolivia)
+    const getLocalDateKey = (date: Date) => {
+      const formatter = new Intl.DateTimeFormat('es-BO', {
+        timeZone: 'America/La_Paz',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
+      const parts = formatter.formatToParts(date)
+      const year = parts.find(p => p.type === 'year')?.value || '0000'
+      const month = parts.find(p => p.type === 'month')?.value || '01'
+      const day = parts.find(p => p.type === 'day')?.value || '01'
+      return `${year}-${month}-${day}`
+    }
+
     const dateMap = new Map<string, { count: number; amount: number }>()
     expenses.forEach(expense => {
-      const dateStr = expense.date.toISOString().split('T')[0]
+      const dateStr = getLocalDateKey(expense.date)
       const existing = dateMap.get(dateStr)
       if (existing) {
         existing.count += 1

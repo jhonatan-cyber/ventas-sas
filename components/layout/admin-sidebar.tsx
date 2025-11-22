@@ -135,7 +135,7 @@ const navSections: NavSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { isOpen, close, isCollapsed, toggleCollapse } = useSidebar()
-  const { permissions, isSuperAdmin, isLoading: _isLoading } = useUserPermissions()
+  const { permissions, isSuperAdmin, isLoading } = useUserPermissions()
 
   // Función para verificar si el usuario tiene permiso para ver un item
   const hasPermission = (requiredPermission?: string): boolean => {
@@ -144,10 +144,10 @@ export function AdminSidebar() {
       return true
     }
 
-    // Mientras los permisos están cargando (permissions vacío y no es super admin),
-    // mostrar todos los items temporalmente. Se filtrarán automáticamente cuando lleguen los permisos.
-    if (permissions.length === 0 && !isSuperAdmin) {
-      return true
+    // Mientras los permisos están cargando, no mostrar items que requieren permisos
+    // (excepto Dashboard que no requiere permiso)
+    if (isLoading) {
+      return false
     }
 
     // Super admin tiene todos los permisos
@@ -160,11 +160,19 @@ export function AdminSidebar() {
   }
 
   // Filtrar secciones e items según permisos
-  // Solo filtrar cuando ya terminó de cargar los permisos
-  const filteredSections = navSections.map(section => ({
-    ...section,
-    items: section.items.filter(item => hasPermission(item.requiredPermission))
-  })).filter(section => section.items.length > 0) // Eliminar secciones vacías
+  // Solo mostrar items cuando los permisos estén cargados
+  const filteredSections = isLoading 
+    ? navSections.filter(section => 
+        // Mientras carga, solo mostrar Dashboard (que no requiere permiso)
+        section.items.some(item => !item.requiredPermission)
+      ).map(section => ({
+        ...section,
+        items: section.items.filter(item => !item.requiredPermission)
+      }))
+    : navSections.map(section => ({
+        ...section,
+        items: section.items.filter(item => hasPermission(item.requiredPermission))
+      })).filter(section => section.items.length > 0) // Eliminar secciones vacías
 
   return (
     <>

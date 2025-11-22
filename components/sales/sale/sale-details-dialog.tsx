@@ -51,16 +51,19 @@ const DEFAULT_CURRENCY = "BOB"
 export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxBranches: _maxBranches }: SaleDetailsDialogProps) {
   const t = useTranslations()
   const [isExporting, setIsExporting] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState<string>("")
   const [companyContactName, setCompanyContactName] = useState<string>("")
-  const [companyEmail, setCompanyEmail] = useState<string>("")
   const [companyPhone, setCompanyPhone] = useState<string>("")
   const [companyAddress, setCompanyAddress] = useState<string>("")
-  const [_companyWebsite, setCompanyWebsite] = useState<string>("")
+  const [companyWebsite, setCompanyWebsite] = useState<string>("")
   const [companyLogo, setCompanyLogo] = useState<string>("")
   const [companyWhatsappNumber, setCompanyWhatsappNumber] = useState<string>("")
+  const [companyNIT, setCompanyNIT] = useState<string>("")
+  const [ownerName, setOwnerName] = useState<string>("")
   const [currencyCode, setCurrencyCode] = useState<string>(DEFAULT_CURRENCY)
+  const [themeColorKey, setThemeColorKey] = useState<string>("green")
 
   // const showBranchInfo = maxBranches === undefined || maxBranches > 1 // No disponible: SalesUser no tiene relación con Branch
 
@@ -85,15 +88,22 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     if (typeof document === "undefined") return
 
     // Cargar moneda desde la API
-    const loadCurrency = async () => {
+    const loadCurrencyAndTheme = async () => {
       try {
         const response = await fetch(`/api/${customerSlug}/config/preferencias`, {
           credentials: 'include'
         })
         if (response.ok) {
           const data = await response.json()
-          if (data?.success && data.configuration?.currency) {
-            setCurrencyCode(data.configuration.currency)
+          if (data?.success && data.configuration) {
+            if (data.configuration.currency) {
+              setCurrencyCode(data.configuration.currency)
+            } else {
+              setCurrencyCode(DEFAULT_CURRENCY)
+            }
+            if (data.configuration.themeColor) {
+              setThemeColorKey(data.configuration.themeColor)
+            }
           } else {
             setCurrencyCode(DEFAULT_CURRENCY)
           }
@@ -118,35 +128,62 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
         setCompanyWhatsappNumber(value)
         setCompanyName(typeof parsed.companyName === "string" ? parsed.companyName : "")
         setCompanyContactName(typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
-        setCompanyEmail(typeof parsed.companyEmail === "string" ? parsed.companyEmail : "")
         setCompanyPhone(typeof parsed.companyPhone === "string" ? parsed.companyPhone : "")
         setCompanyAddress(typeof parsed.companyAddress === "string" ? parsed.companyAddress : "")
         setCompanyWebsite(typeof parsed.companyWebsite === "string" ? parsed.companyWebsite : "")
         setCompanyLogo(typeof parsed.companyLogo === "string" ? parsed.companyLogo : "")
+        setCompanyNIT(typeof parsed.companyNIT === "string" ? parsed.companyNIT : "")
+        setOwnerName(typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
       } else {
         // Valores por defecto si no hay cookies
         setCompanyWhatsappNumber("")
         setCompanyName("")
         setCompanyContactName("")
-        setCompanyEmail("")
         setCompanyPhone("")
         setCompanyAddress("")
         setCompanyWebsite("")
         setCompanyLogo("")
+        setCompanyNIT("")
+        setOwnerName("")
       }
     } catch {
       setCompanyWhatsappNumber("")
       setCompanyName("")
       setCompanyContactName("")
-      setCompanyEmail("")
       setCompanyPhone("")
       setCompanyAddress("")
       setCompanyWebsite("")
       setCompanyLogo("")
+      setCompanyNIT("")
+      setOwnerName("")
     }
 
-    loadCurrency()
-  }, [customerSlug, open])
+    const loadOrganization = async () => {
+      try {
+        const orgRes = await fetch(`/api/${customerSlug}/organizacion`, { credentials: "include" })
+        if (orgRes.ok) {
+          const data = await orgRes.json()
+          const org = data?.organization
+          if (org) {
+            setCompanyName((prev) => prev || org.razonSocial || org.name || "")
+            setCompanyAddress((prev) => prev || org.address || "")
+            setCompanyWebsite((prev) => prev || org.website || "")
+            setCompanyNIT((prev) => prev || org.nit || "")
+            setCompanyLogo((prev) => prev || org.logoUrl || "")
+            setOwnerName((prev) => prev || org.ownerName || "")
+            if (!companyPhone && org.phone) {
+              setCompanyPhone(org.phone)
+            }
+          }
+        }
+      } catch {
+        // ignorar errores de organización para no romper la generación del PDF
+      }
+    }
+
+    loadCurrencyAndTheme()
+    loadOrganization()
+  }, [customerSlug, open, companyPhone])
 
   const fetchImageAsDataUrl = useCallback(async (url: string): Promise<string | null> => {
     if (!url) return null
@@ -201,34 +238,22 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
       setIsExporting(true)
       setShareUrl(null)
 
-      const getPrimaryColor = (): { r: number; g: number; b: number } => {
-        const fallback = { r: 26, g: 120, b: 102 }
-        if (typeof window === 'undefined') return fallback
-
-        try {
-          const dummy = document.createElement('span')
-          dummy.style.position = 'fixed'
-          dummy.style.opacity = '0'
-          dummy.style.pointerEvents = 'none'
-          dummy.style.color = 'var(--primary)'
-          document.body.appendChild(dummy)
-          const resolved = getComputedStyle(dummy).color
-          document.body.removeChild(dummy)
-
-          const rgbMatch = resolved.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i)
-          if (rgbMatch) {
-            return {
-              r: Number(rgbMatch[1]),
-              g: Number(rgbMatch[2]),
-              b: Number(rgbMatch[3])
-            }
-          }
-        } catch { }
-
-        return fallback
+      const themeColorMap: Record<string, { r: number; g: number; b: number }> = {
+        green: { r: 26, g: 120, b: 102 },
+        blue: { r: 96, g: 165, b: 250 },
+        purple: { r: 147, g: 51, b: 234 },
+        orange: { r: 249, g: 115, b: 22 },
+        red: { r: 220, g: 38, b: 38 },
+        pink: { r: 236, g: 72, b: 153 },
+        teal: { r: 20, g: 184, b: 166 },
+        cyan: { r: 6, g: 182, b: 212 },
+        indigo: { r: 99, g: 102, b: 241 },
+        yellow: { r: 234, g: 179, b: 8 },
+        emerald: { r: 16, g: 185, b: 129 },
+        rose: { r: 225, g: 29, b: 72 },
       }
 
-      const primaryColor = getPrimaryColor()
+      const primaryColor = themeColorMap[themeColorKey] || themeColorMap.green
       const doc = new jsPDF({ unit: 'mm', format: 'a4' })
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
@@ -263,12 +288,17 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
       doc.setTextColor(60, 60, 60)
+      if (companyNIT) {
+        doc.text(`NIT: ${companyNIT}`, headerLeftX, headerLeftY)
+        headerLeftY += 5
+      }
       if (companyAddress) {
         doc.text(companyAddress, headerLeftX, headerLeftY)
         headerLeftY += 5
       }
-      if (companyEmail) {
-        doc.text(companyEmail, headerLeftX, headerLeftY)
+      if (companyWebsite) {
+        const websiteDisplay = companyWebsite.replace(/^https?:\/\//, "")
+        doc.text(`Web: ${websiteDisplay}`, headerLeftX, headerLeftY)
         headerLeftY += 5
       }
       const formattedNow = formatDateTime(new Date())
@@ -280,7 +310,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
       doc.text(formattedNow, headerLeftX + 30, headerLeftY)
       headerLeftY += 8
 
-      const contactName = companyContactName || companyName || '—'
+      const contactName = ownerName || companyContactName || companyName || '—'
       const contactPhone = companyPhone || companyWhatsappNumber || '—'
       let contactY = contactBlockTop
       doc.setFont('helvetica', 'bold')
@@ -463,8 +493,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
       }
 
       const fileBaseName = sale.id ? `venta-${sale.id}` : `venta-${sale.saleNumber}`
-      doc.save(`${fileBaseName}.pdf`)
 
+      // Generar Base64 del PDF para enviarlo al servidor y SOLO descargar/abrir cuando termine todo el proceso
       const dataUri = doc.output('datauristring')
       const base64 = dataUri.split(',')[1]
 
@@ -486,9 +516,20 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
               const absoluteUrl = relativeUrl.startsWith('http')
                 ? relativeUrl
                 : `${typeof window !== 'undefined' ? window.location.origin : ''}${relativeUrl}`
+
+              // Guardamos la URL para reutilizarla y ABRIMOS el PDF solo cuando el servidor terminó
               setShareUrl(absoluteUrl)
+
+              // Forzamos un pequeño cache-busting para asegurarnos de que se vea la última versión
+              const cacheBustedUrl = `${absoluteUrl}${absoluteUrl.includes('?') ? '&' : '?'}v=${Date.now()}`
+              if (typeof window !== 'undefined') {
+                window.open(cacheBustedUrl, '_blank', 'noopener,noreferrer')
+              }
+
               toast.success(t('sales.pdf.ready'))
             } else {
+              // Si el backend no devuelve URL, descargamos el PDF localmente recién ahora
+              doc.save(`${fileBaseName}.pdf`)
               toast.success(t('sales.pdf.generated'))
             }
           } else {
@@ -519,21 +560,34 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     fetchImageAsDataUrl,
     companyName,
     companyAddress,
-    companyEmail,
     companyPhone,
     companyWhatsappNumber,
     companyContactName,
     customerName,
     paymentLabel,
     currencyCode,
+    companyNIT,
+    companyWebsite,
+    ownerName,
+    themeColorKey,
     items,
     t
   ])
 
   const handlePrint = useCallback(async () => {
     if (!sale || typeof window === 'undefined') return
-    await generateSalePdfAndPrint(sale, customerSlug)
-  }, [sale, customerSlug])
+    
+    try {
+      setIsPrinting(true)
+      await generateSalePdfAndPrint(sale, customerSlug)
+      toast.success(t('sales.pdf.printSuccess') || 'PDF generado correctamente')
+    } catch (error) {
+      console.error('Error al imprimir venta:', error)
+      toast.error(t('sales.pdf.printError') || 'Error al generar el PDF para imprimir')
+    } finally {
+      setIsPrinting(false)
+    }
+  }, [sale, customerSlug, t])
 
   useEffect(() => {
     if (!open || !sale || shareUrl || typeof window === "undefined") return
@@ -772,8 +826,9 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
               variant="outline"
               className="rounded-full w-auto"
               onClick={handlePrint}
+              disabled={!sale || isPrinting}
             >
-              Imprimir
+              {isPrinting ? "Generando..." : "Imprimir"}
             </Button>
             <Button variant="outline" className="rounded-full w-auto" onClick={() => onOpenChange(false)}>
               Cerrar

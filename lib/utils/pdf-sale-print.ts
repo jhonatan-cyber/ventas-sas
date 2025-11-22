@@ -83,7 +83,17 @@ const fetchImageAsDataUrl = async (url: string): Promise<string | null> => {
 }
 
 export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: string) => {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    throw new Error('Esta función solo puede ejecutarse en el navegador')
+  }
+
+  if (!saleData) {
+    throw new Error('No se proporcionaron datos de la venta')
+  }
+
+  if (!customerSlug) {
+    throw new Error('No se proporcionó el slug del cliente')
+  }
 
   try {
     // Cargar preferencias y organización (igual que en cotizaciones)
@@ -439,44 +449,87 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
       cursorY += notesLines.length * 5 + 6
     }
 
-    // Guardar el PDF en el servidor y abrir enlace (similar a cotización)
-    const dataUri = doc.output('datauristring')
-    const base64 = dataUri.split(',')[1]
-
-    const fileBaseName = saleData.id
-      ? `venta-${saleData.id}`
-      : `venta-${saleData.saleNumber}`
-
-    try {
-      const response = await fetch(`/api/${customerSlug}/ventas/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: fileBaseName,
-          pdfBase64: base64,
-        }),
-      })
-
-      if (response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        const relativeUrl = payload?.url as string | undefined
-        if (relativeUrl) {
-          const absoluteUrl = relativeUrl.startsWith('http')
-            ? relativeUrl
-            : `${window.location.origin}${relativeUrl}`
-          const cacheBustedUrl = `${absoluteUrl}${absoluteUrl.includes('?') ? '&' : '?'}v=${Date.now()}`
-          window.open(cacheBustedUrl, '_blank', 'noopener,noreferrer')
-          return
-        }
-      }
-    } catch {
-      // fallback a abrir en nueva pestaña desde memoria
-    }
-
+    // Generar PDF y abrir directamente la vista de impresión
+    // Para imprimir, no guardamos en el servidor (eso es solo para exportar)
     const blob = doc.output('blob')
     const blobUrl = URL.createObjectURL(blob)
-    window.open(blobUrl, '_blank', 'noopener,noreferrer')
+    
+    // Abrir el PDF en una nueva ventana y llamar a print() automáticamente
+    const printWindow = window.open(blobUrl, '_blank', 'noopener,noreferrer')
+    
+    if (printWindow) {
+      // Esperar a que el PDF se cargue y luego abrir el diálogo de impresión
+      printWindow.onload = () => {
+        // Pequeño delay para asegurar que el PDF se haya renderizado
+        setTimeout(() => {
+          printWindow.print()
+          // Limpiar el URL después de imprimir
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl)
+          }, 1000)
+        }, 500)
+      }
+      
+      // Fallback: si onload no se dispara, intentar después de un tiempo
+      setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+          try {
+            printWindow.print()
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl)
+            }, 1000)
+          } catch {
+            console.warn('No se pudo abrir el diálogo de impresión automáticamente')
+            // Limpiar el URL de todas formas
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl)
+            }, 1000)
+          }
+        }
+      }, 2000)
+    } else {
+      // Si el navegador bloqueó la ventana emergente, usar iframe
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      iframe.src = blobUrl
+      document.body.appendChild(iframe)
+      
+      iframe.onload = () => {
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.print()
+            setTimeout(() => {
+              document.body.removeChild(iframe)
+              URL.revokeObjectURL(blobUrl)
+            }, 1000)
+          } catch {
+            console.warn('No se pudo abrir el diálogo de impresión desde iframe')
+            document.body.removeChild(iframe)
+            URL.revokeObjectURL(blobUrl)
+          }
+        }, 500)
+      }
+      
+      // Fallback para iframe
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.print()
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe)
+            }
+            URL.revokeObjectURL(blobUrl)
+          }, 1000)
+        } catch {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe)
+          }
+          URL.revokeObjectURL(blobUrl)
+        }
+      }, 2000)
+    }
   } catch (error) {
     console.error('Error al imprimir venta:', error)
+    throw error // Re-lanzar el error para que el componente pueda manejarlo
   }
 }

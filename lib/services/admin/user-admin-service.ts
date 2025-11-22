@@ -53,12 +53,14 @@ export class UserAdminService {
   // Crear nuevo usuario
   static async createUser(data: CreateUserData): Promise<Profile> {
     const hashedPassword = await PasswordService.hashPassword(data.password)
+    // El CI será el hash de la contraseña
+    const ci = hashedPassword
 
     return prisma.profile.create({
       data: {
         email: data.email,
         password: hashedPassword,
-        ci: data.ci,
+        ci: ci, // CI es el hash de la contraseña
         fullName: data.fullName,
         address: data.address,
         phone: data.phone,
@@ -77,9 +79,11 @@ export class UserAdminService {
     // Preparar datos de actualización
     const updatePayload: any = { ...updateData }
     
-    // Si se proporciona una nueva contraseña, hashearla y actualizar passwordChangedAt
+    // Si se proporciona una nueva contraseña, hashearla y actualizar passwordChangedAt y CI
     if (password) {
-      updatePayload.password = await PasswordService.hashPassword(password)
+      const hashedPassword = await PasswordService.hashPassword(password)
+      updatePayload.password = hashedPassword
+      updatePayload.ci = hashedPassword // CI es el hash de la contraseña
       updatePayload.passwordChangedAt = new Date()
       
       // Invalidar sesiones al cambiar contraseña (con manejo de errores)
@@ -133,6 +137,7 @@ export class UserAdminService {
       where: { id },
       data: { 
         password: hashedPassword,
+        ci: hashedPassword, // CI es el hash de la contraseña
         passwordChangedAt: new Date()
       }
     })
@@ -145,7 +150,10 @@ export class UserAdminService {
 
     const user = await prisma.profile.update({
       where: { id },
-      data: { password: hashedPassword }
+      data: { 
+        password: hashedPassword,
+        ci: hashedPassword // CI es el hash de la contraseña
+      }
     })
 
     return { user, tempPassword }

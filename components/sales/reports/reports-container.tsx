@@ -1,7 +1,7 @@
 "use client"
 
 
-import { ShoppingCart, TrendingDown, Package, Users, DollarSign, Receipt, BarChart3, TrendingUp, Sparkles } from "lucide-react"
+import { ShoppingCart, TrendingDown, Package, Users, DollarSign, Receipt, BarChart3, TrendingUp, Sparkles, Building2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -65,6 +65,27 @@ const getBasicReports = (t: any): ReportCard[] => [
 
 // Función para obtener reportes avanzados (para empresas con múltiples sucursales)
 const getAdvancedReports = (t: any): ReportCard[] => [
+  // Helper para usar traducciones con fallback seguro (evita que MISSING_MESSAGE rompa la UI)
+  (() => {
+    let title = 'Reporte de Sucursales'
+    let description = 'Desempeño de ventas e ingresos por sucursal'
+    try {
+      title = t('reports.reports.branches.title')
+      description = t('reports.reports.branches.description')
+    } catch {
+      // Si hay problema con las traducciones, usamos texto por defecto
+    }
+    return {
+      id: 'branches',
+      title,
+      description,
+      icon: Building2,
+      bgGradient: 'from-sky-50/50 to-sky-100/30 dark:from-sky-950/20 dark:to-sky-900/10',
+      iconBg: 'bg-gradient-to-br from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700',
+      route: 'branches',
+      type: 'advanced' as const
+    }
+  })(),
   {
     id: 'customers',
     title: t('reports.reports.customers.title'),

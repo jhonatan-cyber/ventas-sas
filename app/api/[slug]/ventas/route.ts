@@ -1,6 +1,7 @@
 import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { captureServerEvent } from '@/lib/analytics/posthog-server'
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
@@ -176,6 +177,20 @@ export async function POST(
         subtotal: item.subtotal,
         trackingCodes: item.trackingCodes || [],
       })),
+    })
+
+    // Tracking de creación de venta
+    captureServerEvent(currentUser.id, 'sas_sale_created', {
+      saleId: sale.id,
+      organizationId,
+      organizationSlug: slug,
+      total: Number(sale.total),
+      subtotal: Number(sale.subtotal),
+      discount: Number(sale.discount || 0),
+      paymentMethod: sale.paymentMethod,
+      status: sale.status,
+      itemsCount: validatedData.items.length,
+      hasCustomer: !!sale.customerId,
     })
 
     return NextResponse.json(serializeSale(sale), { status: 201 })

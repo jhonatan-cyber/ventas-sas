@@ -12,5 +12,11 @@
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/administracion/support/tickets/close-inactive",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

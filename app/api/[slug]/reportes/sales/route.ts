@@ -19,18 +19,29 @@ export async function GET(
       )
     }
 
-    // Parsear fechas opcionales
+    // Parsear filtros opcionales
     const startDateStr = searchParams.get("startDate")
     const endDateStr = searchParams.get("endDate")
-    
+    const paymentMethodParam = searchParams.get("paymentMethod")
+    const branchIdParam = searchParams.get("branchId")
+    const userIdParam = searchParams.get("userId")
+
     const startDate = startDateStr ? new Date(startDateStr) : undefined
     const endDate = endDateStr ? new Date(endDateStr) : undefined
 
-    const report = await ReportsService.getSalesReport(
-      organizationId,
-      startDate,
-      endDate
-    )
+    const paymentMethod =
+      paymentMethodParam && ["cash", "card", "transfer", "qr"].includes(paymentMethodParam)
+        ? (paymentMethodParam as "cash" | "card" | "transfer" | "qr")
+        : undefined
+
+    const branchId = branchIdParam && branchIdParam !== "all" ? branchIdParam : undefined
+    const userId = userIdParam && userIdParam !== "all" ? userIdParam : undefined
+
+    const report = await ReportsService.getSalesReport(organizationId, startDate, endDate, {
+      paymentMethod,
+      branchId,
+      userId,
+    })
 
     return NextResponse.json(report)
   } catch (error) {

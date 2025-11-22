@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 import { NotificationService } from '@/lib/services/notification-service'
 import { logDatabase, logBusinessOperation } from '@/lib/utils/logger'
@@ -9,10 +11,16 @@ export type TicketCategory = 'bug' | 'feature_request' | 'question' | 'billing' 
 export interface CreateTicketData {
   organizationId: string
   createdById?: string
+  createdByCustomerId?: string
+  createdBySasUserId?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
   title: string
   description: string
   priority?: TicketPriority
   category?: TicketCategory
+  attachments?: AttachmentInput[]
 }
 
 export interface UpdateTicketData {
@@ -24,12 +32,23 @@ export interface UpdateTicketData {
   assignedToId?: string | null
 }
 
+export interface AttachmentInput {
+  fileName: string
+  filePath: string
+  fileSize: number
+  mimeType: string
+  commentId?: string | null
+  uploadedById?: string | null
+  uploadedBySasUserId?: string | null
+}
+
 export interface CreateCommentData {
   ticketId: string
   authorId: string
   authorType: 'admin' | 'organization' | 'system'
   content: string
   isInternal?: boolean
+  attachments?: AttachmentInput[]
 }
 
 export interface TicketFilters {
@@ -99,11 +118,17 @@ export class SupportService {
 
     const ticketNumber = await this.generateTicketNumber()
 
-    const ticket = await (prisma as any).supportTicket.create({
+    const ticket = await prisma.$transaction(async (tx) => {
+      const newTicket = await (tx as any).supportTicket.create({
       data: {
         ticketNumber,
         organizationId: data.organizationId,
         createdById: data.createdById || null,
+        createdByCustomerId: data.createdByCustomerId || null,
+        createdBySasUserId: data.createdBySasUserId || null,
+        contactName: data.contactName || null,
+        contactEmail: data.contactEmail || null,
+        contactPhone: data.contactPhone || null,
         title: data.title,
         description: data.description,
         status: 'open',
@@ -113,6 +138,8 @@ export class SupportService {
       include: {
         organization: true,
         createdBy: true,
+        createdByCustomer: true,
+        createdBySasUser: true,
         assignedTo: true,
         _count: {
           select: {
@@ -121,6 +148,17 @@ export class SupportService {
           },
         },
       },
+      })
+
+      if (data.attachments && data.attachments.length > 0) {
+        await tx.ticketAttachment.createMany({
+          data: data.attachments.map((attachment) =>
+            SupportService.mapAttachmentInput(newTicket.id, attachment),
+          ),
+        })
+      }
+
+      return newTicket
     })
 
     // Registrar en historial
@@ -164,6 +202,40 @@ export class SupportService {
     })
 
     return ticket
+  }
+
+  /**
+   * Agregar adjuntos directamente al ticket (sin comentario)
+   */
+  static async addAttachmentsToTicket(
+    ticketId: string,
+    attachments: AttachmentInput[],
+  ): Promise<void> {
+    if (!attachments || attachments.length === 0) return
+
+    await prisma.ticketAttachment.createMany({
+      data: attachments.map((attachment) =>
+        SupportService.mapAttachmentInput(ticketId, attachment),
+      ),
+    })
+  }
+
+  private static mapAttachmentInput(
+    ticketId: string,
+    attachment: AttachmentInput,
+    commentIdOverride?: string,
+  ): Prisma.TicketAttachmentCreateManyInput {
+    return {
+      ticketId,
+      uploadedById: (attachment.uploadedById || null) as any,
+      // @ts-ignore
+      uploadedBySasUserId: (attachment.uploadedBySasUserId || null) as any,
+      commentId: commentIdOverride ?? attachment.commentId ?? null,
+      fileName: attachment.fileName,
+      filePath: attachment.filePath,
+      fileSize: attachment.fileSize,
+      mimeType: attachment.mimeType,
+    } as any
   }
 
   /**
@@ -234,6 +306,16 @@ export class SupportService {
               email: true,
             },
           },
+        createdBySasUser: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            phone: true,
+            foto: true,
+          },
+        },
           assignedTo: {
             select: {
               id: true,
@@ -263,7 +345,7 @@ export class SupportService {
    * Obtener ticket por ID
    */
   static async getTicketById(id: string) {
-    const ticket = await prisma.supportTicket.findUnique({
+    const ticket = await (prisma as any).supportTicket.findUnique({
       where: { id },
       include: {
         organization: {
@@ -280,16 +362,53 @@ export class SupportService {
             email: true,
           },
         },
+        createdByCustomer: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+          },
+        },
+        createdBySasUser: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            phone: true,
+            foto: true,
+          },
+        },
         assignedTo: {
           select: {
             id: true,
             fullName: true,
             email: true,
+            photo: true,
           },
         },
         comments: {
           include: {
-            attachments: true,
+            attachments: {
+              include: {
+                uploadedBy: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                  },
+                },
+                uploadedBySas: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    apellido: true,
+                    email: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: {
             createdAt: 'asc',
@@ -301,6 +420,15 @@ export class SupportService {
               select: {
                 id: true,
                 fullName: true,
+                email: true,
+              },
+            },
+            uploadedBySas: {
+              select: {
+                id: true,
+                nombre: true,
+                apellido: true,
+                email: true,
               },
             },
           },
@@ -327,6 +455,62 @@ export class SupportService {
       },
     })
 
+    // Enriquecer comentarios con información del autor
+    if (ticket && ticket.comments && Array.isArray(ticket.comments)) {
+      const enrichedComments = await Promise.all(
+        ticket.comments.map(async (comment: any) => {
+          let authorInfo: any = null
+
+          if (comment.authorType === 'admin' && comment.authorId) {
+            const admin = await prisma.profile.findUnique({
+              where: { id: comment.authorId },
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                photo: true,
+              },
+            })
+            if (admin) {
+              authorInfo = {
+                id: admin.id,
+                fullName: admin.fullName,
+                email: admin.email,
+                photo: admin.photo,
+              }
+            }
+          } else if ((comment.authorType === 'organization' || comment.authorType === 'customer') && comment.authorId) {
+            const usuarioSas = await prisma.usuarioSas.findUnique({
+              where: { id: comment.authorId },
+              select: {
+                id: true,
+                nombre: true,
+                apellido: true,
+                email: true,
+                foto: true,
+              },
+            })
+            if (usuarioSas) {
+              authorInfo = {
+                id: usuarioSas.id,
+                nombre: usuarioSas.nombre,
+                apellido: usuarioSas.apellido,
+                email: usuarioSas.email,
+                foto: usuarioSas.foto,
+              }
+            }
+          }
+
+          return {
+            ...comment,
+            author: authorInfo,
+          }
+        })
+      )
+
+      ticket.comments = enrichedComments
+    }
+
     return ticket
   }
 
@@ -336,7 +520,7 @@ export class SupportService {
   static async updateTicket(id: string, data: UpdateTicketData, changedById?: string) {
     const startTime = Date.now()
     
-    const existingTicket = await prisma.supportTicket.findUnique({
+    const existingTicket = await (prisma as any).supportTicket.findUnique({
       where: { id },
     })
 
@@ -421,7 +605,7 @@ export class SupportService {
     }
 
     const ticket = await prisma.$transaction(async (tx) => {
-      const updatedTicket = await tx.supportTicket.update({
+      const updatedTicket = await (tx as any).supportTicket.update({
         where: { id },
         data: updateData,
         include: {
@@ -439,6 +623,22 @@ export class SupportService {
               email: true,
             },
           },
+        createdByCustomer: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+          },
+        },
+        createdBySasUser: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+          },
+        },
           assignedTo: {
             select: {
               id: true,
@@ -492,8 +692,8 @@ export class SupportService {
     }
 
     // Si es el primer comentario de un admin y el ticket no tiene firstResponseAt, actualizarlo
-    const isFirstAdminResponse = 
-      data.authorType === 'admin' && 
+    const isFirstAdminResponse =
+      data.authorType === 'admin' &&
       !ticket.firstResponseAt
 
     const comment = await prisma.$transaction(async (tx) => {
@@ -510,13 +710,27 @@ export class SupportService {
         },
       })
 
-      // Actualizar firstResponseAt si es necesario
+      // Actualizar firstResponseAt y estado si es necesario
       if (isFirstAdminResponse) {
         await tx.supportTicket.update({
           where: { id: data.ticketId },
           data: {
             firstResponseAt: new Date(),
+            // Si el ticket está abierto, al primer comentario de admin pasa a "in_progress"
+            status: ticket.status === 'open' ? 'in_progress' : ticket.status,
           },
+        })
+      }
+
+      if (data.attachments && data.attachments.length > 0) {
+        await tx.ticketAttachment.createMany({
+          data: data.attachments.map((attachment) =>
+            SupportService.mapAttachmentInput(
+              data.ticketId,
+              attachment,
+              attachment.commentId ?? newComment.id,
+            ),
+          ),
         })
       }
 
@@ -524,7 +738,7 @@ export class SupportService {
       await tx.ticketHistory.create({
         data: {
           ticketId: data.ticketId,
-          changedById: data.authorId,
+          changedById: data.authorType === 'admin' ? data.authorId : null,
           changeType: 'comment_added',
           description: `Comentario agregado por ${data.authorType}`,
         },
@@ -545,8 +759,16 @@ export class SupportService {
   /**
    * Obtener estadísticas de tickets
    */
-  static async getTicketStats(organizationId?: string): Promise<TicketStats> {
-    const where: any = organizationId ? { organizationId } : {}
+  static async getTicketStats(organizationId?: string, assignedToId?: string): Promise<TicketStats> {
+    const where: any = {}
+    
+    if (organizationId) {
+      where.organizationId = organizationId
+    }
+    
+    if (assignedToId) {
+      where.assignedToId = assignedToId
+    }
 
     const [
       total,
@@ -643,7 +865,6 @@ export class SupportService {
     return prisma.profile.findMany({
       where: {
         isActive: true,
-        isSuperAdmin: true,
       },
       select: {
         id: true,
@@ -654,5 +875,89 @@ export class SupportService {
         fullName: 'asc',
       },
     })
+  }
+
+  /**
+   * Cerrar automáticamente tickets inactivos por más de 24 horas
+   */
+  static async closeInactiveTickets() {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+    // Obtener tickets que no están cerrados y tienen más de 24 horas sin actividad
+    const tickets = await prisma.supportTicket.findMany({
+      where: {
+        status: {
+          not: 'closed',
+        },
+        closedAt: null,
+      },
+      include: {
+        comments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+    })
+
+    const ticketsToClose: string[] = []
+
+    for (const ticket of tickets) {
+      // Determinar la última fecha de actividad
+      let lastActivityDate: Date
+
+      if (ticket.comments && ticket.comments.length > 0) {
+        // Si hay comentarios, usar la fecha del último comentario
+        lastActivityDate = ticket.comments[0].createdAt
+      } else {
+        // Si no hay comentarios, usar la fecha de creación del ticket
+        lastActivityDate = ticket.createdAt
+      }
+
+      // Si la última actividad fue hace más de 24 horas, cerrar el ticket
+      if (lastActivityDate < twentyFourHoursAgo) {
+        ticketsToClose.push(ticket.id)
+      }
+    }
+
+    if (ticketsToClose.length === 0) {
+      return { closed: 0, message: 'No hay tickets inactivos para cerrar' }
+    }
+
+    // Cerrar los tickets y registrar en historial
+    const now = new Date()
+    let closedCount = 0
+
+    for (const ticketId of ticketsToClose) {
+      await prisma.$transaction(async (tx) => {
+        // Cerrar el ticket
+        await tx.supportTicket.update({
+          where: { id: ticketId },
+          data: {
+            status: 'closed',
+            closedAt: now,
+          },
+        })
+
+        // Registrar en historial
+        await tx.ticketHistory.create({
+          data: {
+            ticketId,
+            changedById: null, // Cambio automático del sistema
+            changeType: 'status_changed',
+            oldValue: 'open',
+            newValue: 'closed',
+            description: 'Ticket cerrado automáticamente por inactividad (más de 24 horas sin respuesta)',
+          },
+        })
+      })
+      closedCount++
+    }
+
+    return {
+      closed: closedCount,
+      message: `Se cerraron ${closedCount} ticket(s) inactivos`,
+    }
   }
 }

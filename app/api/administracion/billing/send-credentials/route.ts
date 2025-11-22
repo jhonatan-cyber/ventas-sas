@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { invoiceId } = body
+    const { invoiceId, pdfBase64 } = body
 
     if (!invoiceId) {
       return NextResponse.json(
@@ -212,6 +212,10 @@ export async function POST(request: NextRequest) {
       subscriptionPeriod,
       subscriptionStatus,
       isFirstInvoice,
+      pdfAttachment: pdfBase64 ? {
+        content: pdfBase64,
+        filename: `Factura-${invoice.invoiceNumber}.pdf`,
+      } : undefined,
     })
 
     logger.info('Llamando a EmailService.sendCredentials', {

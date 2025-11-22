@@ -7,7 +7,7 @@ import { BillingContainer } from "./billing-container"
 import { BillingHeader } from "./billing-header"
 import { InvoiceDetailDialog } from "./invoice-detail-dialog"
 import { InvoiceFormDialog } from "./invoice-form-dialog"
-import { generateInvoicePDF } from "./invoice-pdf-utils"
+import { generateInvoicePDF, generateInvoicePDFBase64 } from "./invoice-pdf-utils"
 import { InvoicePrintView } from "./invoice-print-view"
 import { PaymentFormDialog } from "./payment-form-dialog"
 
@@ -66,7 +66,51 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   // Función para descargar PDF
   const handleDownloadPDF = async (invoice: SerializedInvoiceWithRelations) => {
     try {
-      await generateInvoicePDF(invoice as any)
+      // Cargar preferencias de la organización si existe
+      let preferences: {
+        companyName?: string;
+        companyNIT?: string;
+        companyAddress?: string;
+        companyWebsite?: string;
+        companyPhone?: string;
+        companyLogo?: string;
+        themeColor?: string;
+        currency?: string;
+        ownerName?: string;
+      } = {};
+
+      if (invoice.organization?.id) {
+        try {
+          const orgResponse = await fetch(`/api/administracion/organizations/${invoice.organization.id}`)
+          if (orgResponse.ok) {
+            const orgData = await orgResponse.json()
+            if (orgData.success && orgData.organization) {
+              const org = orgData.organization
+              const settings = org.settings as any || {}
+              
+              preferences = {
+                companyName: org.razonSocial || org.name || undefined,
+                companyNIT: org.nit || undefined,
+                companyAddress: org.address || undefined,
+                companyPhone: org.phone || undefined,
+                companyLogo: org.logoUrl || undefined,
+                themeColor: settings.themeColor || 'green',
+                currency: settings.currency || 'BOB',
+                ownerName: org.owner?.fullName || undefined,
+              }
+            }
+          }
+        } catch (prefError) {
+          console.error("Error cargando preferencias:", prefError)
+          // Continuar sin preferencias si falla
+        }
+      }
+
+      // Primero generar PDF en Base64 para subirlo al servidor (si es necesario)
+      // Por ahora solo generamos y descargamos directamente
+      
+      // Solo después de que todo termine, descargar el PDF localmente
+      await generateInvoicePDF(invoice as any, preferences)
       toast.success("PDF descargado exitosamente")
     } catch (error) {
       console.error("Error al generar PDF:", error)
@@ -90,13 +134,61 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
   // Función para enviar credenciales por email
   const handleSendCredentials = async (invoice: SerializedInvoiceWithRelations) => {
     try {
+      const toastId = toast.loading('Generando PDF y enviando credenciales...')
+
+      // Cargar preferencias de la organización si existe
+      let preferences: {
+        companyName?: string;
+        companyNIT?: string;
+        companyAddress?: string;
+        companyWebsite?: string;
+        companyPhone?: string;
+        companyLogo?: string;
+        themeColor?: string;
+        currency?: string;
+        ownerName?: string;
+      } = {};
+
+      if (invoice.organization?.id) {
+        try {
+          const orgResponse = await fetch(`/api/administracion/organizations/${invoice.organization.id}`)
+          if (orgResponse.ok) {
+            const orgData = await orgResponse.json()
+            if (orgData.success && orgData.organization) {
+              const org = orgData.organization
+              const settings = org.settings as any || {}
+              
+              preferences = {
+                companyName: org.razonSocial || org.name || undefined,
+                companyNIT: org.nit || undefined,
+                companyAddress: org.address || undefined,
+                companyPhone: org.phone || undefined,
+                companyLogo: org.logoUrl || undefined,
+                themeColor: settings.themeColor || 'green',
+                currency: settings.currency || 'BOB',
+                ownerName: org.owner?.fullName || undefined,
+              }
+            }
+          }
+        } catch (prefError) {
+          console.error("Error cargando preferencias:", prefError)
+          // Continuar sin preferencias si falla
+        }
+      }
+
+      // Generar PDF en Base64
+      const pdfBase64 = await generateInvoicePDFBase64(invoice, preferences)
+
       const response = await fetch('/api/administracion/billing/send-credentials', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ invoiceId: invoice.id }),
+        body: JSON.stringify({ 
+          invoiceId: invoice.id,
+          pdfBase64: pdfBase64,
+        }),
       })
 
       const data = await response.json()
@@ -105,9 +197,11 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
         throw new Error(data.error || 'Error al enviar credenciales')
       }
 
+      toast.dismiss(toastId)
       toast.success('Credenciales enviadas exitosamente por email')
     } catch (error) {
       console.error('Error al enviar credenciales:', error)
+      toast.dismiss()
       toast.error(error instanceof Error ? error.message : 'Error al enviar credenciales')
     }
   }

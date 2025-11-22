@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
-        const { searchParams } = new URL(request.url)
+    // Verificar si el usuario es administrador o super administrador
+    const isAdmin = user.isSuperAdmin || user.role?.toLowerCase() === 'administrador' || user.role?.toLowerCase() === 'admin'
+
+    const { searchParams } = new URL(request.url)
     const statusParam = searchParams.get('status')
     const priorityParam = searchParams.get('priority')
     const categoryParam = searchParams.get('category')
@@ -45,6 +48,11 @@ export async function GET(request: NextRequest) {
         ? categoryParam as 'bug' | 'feature_request' | 'question' | 'billing' | 'technical' | 'other'
         : undefined,
       search: searchParams.get('search') || undefined,
+    }
+
+    // Si el usuario no es admin ni super admin, filtrar solo tickets asignados a él
+    if (!isAdmin && filters.assignedToId === undefined) {
+      filters.assignedToId = user.id
     }
 
     // Soportar tanto paginación offset como page-based

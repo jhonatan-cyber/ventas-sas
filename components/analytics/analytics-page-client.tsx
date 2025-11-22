@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-
+import { exportAnalyticsMarkdownReportToPDF } from "@/lib/utils/pdf-reports-export"
 
 interface AnalyticsPageClientProps {
   organizationId: string
@@ -208,14 +208,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
       }
 
       const markdown = data.data?.markdown || ""
-      const blob = new Blob([markdown], { type: "text/markdown" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      const filename = `reporte-analytics-${new Date().toISOString().slice(0, 10)}.md`
-      link.href = url
-      link.download = filename
-      link.click()
-      URL.revokeObjectURL(url)
+      const start = dateRange?.start ? dateRange.start.toISOString().slice(0, 10) : undefined
+      const end = dateRange?.end ? dateRange.end.toISOString().slice(0, 10) : undefined
+
+      await exportAnalyticsMarkdownReportToPDF(markdown, customerSlug, start, end)
       toast.success(t("analytics.ai.reportSuccess") || "Reporte generado correctamente.")
     } catch (error: any) {
       console.error("Error generando reporte:", error)

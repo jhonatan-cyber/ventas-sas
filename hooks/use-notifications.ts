@@ -26,8 +26,11 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
   const [unreadCount, setUnreadCount] = useState(0)
   const [isConnected, setIsConnected] = useState(false)
 
+  const shouldFetch = enabled && (system === 'admin' || (system === 'sas' && !!slug))
+
   // Obtener notificaciones iniciales
   const fetchNotifications = useCallback(async () => {
+    if (!shouldFetch) return
     try {
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
@@ -46,10 +49,11 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
     } catch (error) {
       console.error('Error fetching notifications:', error)
     }
-  }, [system, slug])
+  }, [system, slug, shouldFetch])
 
   // Marcar como leída
   const markAsRead = useCallback(async (notificationId: string) => {
+    if (!shouldFetch) return
     try {
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
@@ -72,10 +76,11 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
-  }, [system, slug])
+  }, [system, slug, shouldFetch])
 
   // Marcar todas como leídas
   const markAllAsRead = useCallback(async () => {
+    if (!shouldFetch) return
     try {
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
@@ -97,7 +102,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
 
   // Conectar al stream SSE
   useEffect(() => {
-    if (!enabled) return
+    if (!shouldFetch) return
 
     const params = new URLSearchParams({ system })
     if (slug) params.append('slug', slug)
@@ -151,7 +156,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       setIsConnected(false)
       // Reintentar conexión después de 5 segundos
       setTimeout(() => {
-        if (enabled) {
+        if (shouldFetch) {
           fetchNotifications()
         }
       }, 5000)
@@ -164,7 +169,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       eventSource.close()
       setIsConnected(false)
     }
-  }, [system, slug, enabled, fetchNotifications])
+  }, [system, slug, shouldFetch, fetchNotifications])
 
   return {
     notifications,
