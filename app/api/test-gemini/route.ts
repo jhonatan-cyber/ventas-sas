@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Importar la función para listar modelos disponibles
-    const { listAvailableModels } = await import('@/lib/services/ai/gemini-service')
+    const { listAvailableModels } = await import('@/lib/services/ai/product-ai-service')
     
     // Listar modelos disponibles
     const modelsInfo = await listAvailableModels()

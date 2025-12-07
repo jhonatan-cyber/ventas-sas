@@ -233,15 +233,19 @@ export function CustomerOrganizationsTable({
                 )
               }
 
+              const logoUrl = row.organization.whiteLabelBranding?.logoUrl
+
               return (
                 <TableRow key={`${row.customer.id}-${row.organization.id}-${index}`} className="hover:bg-gray-50 dark:hover:bg-[#1a1a1a]">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarImage 
-                          src={row.organization.whiteLabelBranding?.logoUrl || row.organization.logoUrl || undefined} 
-                          alt={row.organization.razonSocial || row.organization.name}
-                        />
+                        {logoUrl && (
+                          <AvatarImage 
+                            src={logoUrl}
+                            alt={row.organization.razonSocial || row.organization.name}
+                          />
+                        )}
                         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-semibold">
                           {(row.organization.razonSocial || row.organization.name).charAt(0).toUpperCase()}
                         </AvatarFallback>

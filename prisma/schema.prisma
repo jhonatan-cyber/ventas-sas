@@ -36,7 +36,6 @@ model Profile {
   integrationsCreated   Integration[]             @relation("IntegrationCreatedBy")
   notifications         Notification[]
   integrationsInstalled OrganizationIntegration[] @relation("IntegrationInstalledBy")
-  ownedOrganizations    Organization[]            @relation("OrganizationOwned")
   passwordChanges       PasswordChange[]
   assignedTickets       SupportTicket[]           @relation("TicketAssignedTo")
   createdTickets        SupportTicket[]           @relation("TicketCreatedBy")
@@ -94,7 +93,7 @@ model Organization {
   invoices                 Invoice[]
   notifications            Notification[]
   organizationIntegrations OrganizationIntegration[]
-  owner                    Profile                        @relation("OrganizationOwned", fields: [ownerId], references: [id])
+  owner                    UsuarioSas                     @relation("OrganizationOwned", fields: [ownerId], references: [id])
   subscriptionPlan         SubscriptionPlan?              @relation(fields: [subscriptionPlanId], references: [id])
   paymentMethods           PaymentMethod[]
   subscriptions            Subscription[]
@@ -649,8 +648,9 @@ model UsuarioSas {
   rol                  RoleSas?             @relation(fields: [rolId], references: [id])
   sucursal             Branch?              @relation(fields: [sucursalId], references: [id])
   notifications        Notification[]
-  TicketAttachment    TicketAttachment[]
-  createdTickets      SupportTicket[]      @relation("TicketCreatedBySasUser")
+  TicketAttachment     TicketAttachment[]
+  createdTickets       SupportTicket[]       @relation("TicketCreatedBySasUser")
+  ownedOrganizations   Organization[]        @relation("OrganizationOwned")
 
   @@index([organizationId, isActive])
   @@index([email, organizationId])

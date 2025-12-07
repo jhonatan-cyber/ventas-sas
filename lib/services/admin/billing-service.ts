@@ -45,10 +45,13 @@ export interface InvoiceWithRelations {
     id: string
     name: string
     slug: string
+    phone: string | null
+    razonSocial: string | null
     owner?: {
       id: string
       fullName: string | null
       email: string
+      phone: string | null
     } | null
     customerOrganizations?: Array<{
       customer: {
@@ -56,6 +59,7 @@ export interface InvoiceWithRelations {
         nombre: string | null
         apellido: string | null
         email: string | null
+        phone: string | null
       }
     }>
   } | null
@@ -122,10 +126,13 @@ export interface SerializedInvoiceWithRelations {
     id: string
     name: string
     slug: string
+    phone: string | null
+    razonSocial: string | null
     owner?: {
       id: string
       fullName: string | null
       email: string
+      phone: string | null
     } | null
     customerOrganizations?: Array<{
       customer: {
@@ -133,6 +140,7 @@ export interface SerializedInvoiceWithRelations {
         nombre: string | null
         apellido: string | null
         email: string | null
+        phone: string | null
       }
     }>
   } | null
@@ -408,11 +416,14 @@ export class BillingService {
               id: true,
               name: true,
               slug: true,
+              phone: true,
+              razonSocial: true,
               owner: {
                 select: {
                   id: true,
                   fullName: true,
-                  email: true
+                  email: true,
+                  phone: true
                 }
               },
               customerOrganizations: {
@@ -423,7 +434,8 @@ export class BillingService {
                       id: true,
                       nombre: true,
                       apellido: true,
-                      email: true
+                      email: true,
+                      phone: true
                     }
                   }
                 },
@@ -505,11 +517,14 @@ export class BillingService {
               id: true,
               name: true,
               slug: true,
+              phone: true,
+              razonSocial: true,
               owner: {
                 select: {
                   id: true,
                   fullName: true,
-                  email: true
+                  email: true,
+                  phone: true
                 }
               },
               customerOrganizations: {
@@ -520,7 +535,8 @@ export class BillingService {
                       id: true,
                       nombre: true,
                       apellido: true,
-                      email: true
+                      email: true,
+                      phone: true
                     }
                   }
                 },

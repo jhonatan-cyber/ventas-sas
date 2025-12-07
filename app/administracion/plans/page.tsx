@@ -66,7 +66,7 @@ export default async function PlansPage() {
         ...plan,
         priceMonthly: plan.priceMonthly ? Number(plan.priceMonthly) : null,
         priceYearly: plan.priceYearly ? Number(plan.priceYearly) : null,
-        modules: modules.length > 0 ? modules : null,
+        modules: modules, // Siempre enviar el array, aunque esté vacío
       }
     })
 

@@ -38,6 +38,7 @@ export function SalesLayoutClient({ children, organizationSlug, maxBranches, all
     '/configuracion',
     '/inventario',
     '/support',
+    '/perfil',
   ]
   
   // Verificar si es una ruta de página CMS o blog

@@ -96,7 +96,6 @@ export class SubscriptionManagementService {
     return { subscriptions, total }
   }
 
-  // Obtener suscripción por ID
   static async getSubscriptionById(id: string) {
     return prisma.subscription.findUnique({
       where: { id },
@@ -116,9 +115,9 @@ export class SubscriptionManagementService {
     })
   }
 
-  // Crear nueva suscripción
+
   static async createSubscription(data: CreateSubscriptionData) {
-    // Calcular la fecha de finalización basada en el período de facturación
+
     let endDate = data.endDate
     if (!endDate) {
       const start = data.startDate || new Date()
@@ -131,7 +130,7 @@ export class SubscriptionManagementService {
       endDate = end
     }
 
-    // Obtener el plan y la organización para crear la factura
+
     const plan = await prisma.subscriptionPlan.findUnique({
       where: { id: data.planId }
     })
@@ -140,39 +139,32 @@ export class SubscriptionManagementService {
       throw new Error('Plan no encontrado')
     }
 
-    let organization = null
-    let owner = null
-
-    if (data.organizationId) {
-      organization = await prisma.organization.findUnique({
-        where: { id: data.organizationId },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true
-            }
-          },
-          customerOrganizations: {
-            where: { isActive: true },
-            include: {
-              customer: true
-            },
-            take: 1
-          }
-        }
-      })
-
-      if (organization) {
-        // El owner es un Profile, no un Customer
-        owner = organization.owner
-      }
+    if (!data.organizationId) {
+      throw new Error('ID de organización requerido')
     }
 
-    if (!organization || !data.organizationId) {
+    const organization = await prisma.organization.findUnique({
+      where: { id: data.organizationId },
+      include: {
+        owner: true,
+        customerOrganizations: {
+          where: { isActive: true },
+          include: {
+            customer: true
+          },
+          take: 1
+        }
+      }
+    })
+
+    if (!organization) {
       throw new Error('Organización no encontrada')
     }
+
+    const owner = organization.owner
+
+    // Guardar los datos de facturación antes de crear la suscripción
+    const customer = organization.customerOrganizations[0]?.customer
 
     // Crear la suscripción
     const subscription = await prisma.subscription.create({
@@ -200,27 +192,25 @@ export class SubscriptionManagementService {
       }
     })
 
-    // Generar factura automáticamente
+
     try {
-      // Obtener datos de facturación: el dueño de la empresa (owner)
-      const customer = organization.customerOrganizations[0]?.customer
-      
-      // Usar nombre completo del dueño (Profile) o nombre y apellido del customer
+
       let ownerName = ''
-      if (owner?.fullName) {
-        ownerName = owner.fullName
-      } else if (customer) {
+      if (owner) {
+        ownerName = `${owner.nombre || ''} ${owner.apellido || ''}`.trim()
+      }
+      if (!ownerName && customer) {
         ownerName = `${customer.nombre || ''} ${customer.apellido || ''}`.trim()
       }
       const billingName = ownerName || organization.razonSocial || organization.name || 'Cliente'
-      
+
       // El email es requerido, usar el del dueño o un valor por defecto
       const billingEmail = owner?.email || customer?.email || `contacto@${organization.slug || 'empresa'}.com`
       const billingAddress = organization.address || customer?.address || null
       const billingTaxId = organization.nit || null
 
       // Calcular el precio según el período de facturación
-      const price = data.billingPeriod === SubscriptionBillingPeriod.yearly 
+      const price = data.billingPeriod === SubscriptionBillingPeriod.yearly
         ? (plan.priceYearly ? Number(plan.priceYearly) : 0)
         : (plan.priceMonthly ? Number(plan.priceMonthly) : 0)
 

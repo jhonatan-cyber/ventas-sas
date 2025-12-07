@@ -38,7 +38,12 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       const response = await fetch(`/api/notifications?${params.toString()}` , {
         credentials: 'include',
       })
-      if (!response.ok) return
+      if (!response.ok) {
+        // Silenciosamente retornar si hay error (usuario no autenticado, etc.)
+        setNotifications([])
+        setUnreadCount(0)
+        return
+      }
 
       const data = await response.json()
       setNotifications(data.notifications || [])
@@ -47,7 +52,9 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       const unread = data.notifications?.filter((n: Notification) => !n.isRead).length || 0
       setUnreadCount(unread)
     } catch (error) {
-      console.error('Error fetching notifications:', error)
+      // Silenciosamente manejar errores de red
+      setNotifications([])
+      setUnreadCount(0)
     }
   }, [system, slug, shouldFetch])
 

@@ -118,8 +118,6 @@ export class CustomerOrganizationService {
     adminId: string
   ) {
     try {
-      console.log("addCustomerToOrganization - Datos recibidos:", data)
-      
       // Verificar que el cliente existe
       const customer = await prisma.customer.findUnique({
         where: { id: data.customerId },

@@ -6,5 +6,5 @@ export interface SerializedSubscriptionPlanWithStats extends Omit<SubscriptionPl
   hasYearly: boolean
   priceMonthly: number | null
   priceYearly: number | null
-  modules: any
+  modules: string[] // Array de IDs de módulos
 }

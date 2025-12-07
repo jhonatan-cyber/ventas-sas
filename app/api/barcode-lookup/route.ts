@@ -129,7 +129,8 @@ async function enhanceProductInfoWithAI(
     // Buscar imagen si no existe
     let imageUrl = null
     if (!imageUrl) {
-      const productInfo = await (await import('@/lib/services/ai/gemini-service')).GeminiService.searchProductInfo(productName, brand || null, model || null)
+      const { ProductAIService } = await import('@/lib/services/ai/product-ai-service')
+      const productInfo = await ProductAIService.searchProductInfo(productName, brand || null, model || null)
       imageUrl = productInfo.imageUrl
       // Actualizar marca y modelo si se encontraron mejores valores
       if (!brand && productInfo.brand) {
@@ -273,9 +274,9 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        // Si falta información importante, intentar completarla con IA
+        // Si falta información importante, intentar completarla con IA (Ollama)
         const needsEnhancement = !result.data.description || !result.data.imageUrl || (!result.data.brand && !result.data.model)
-        if (needsEnhancement && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        if (needsEnhancement) {
           try {
             const enhanced = await enhanceProductInfoWithAI(result.data.name, result.data.brand, result.data.model, result.data.description)
             if (enhanced) {
@@ -334,9 +335,9 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        // Si falta información importante, intentar completarla con IA
+        // Si falta información importante, intentar completarla con IA (Ollama)
         const needsEnhancement = !result.data.description || !result.data.imageUrl || !result.data.brand
-        if (needsEnhancement && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        if (needsEnhancement) {
           try {
             const enhanced = await enhanceProductInfoWithAI(result.data.name, result.data.brand, result.data.model, result.data.description)
             if (enhanced) {
@@ -423,9 +424,9 @@ export async function POST(request: NextRequest) {
               }
             }
             
-            // Si falta información importante, intentar completarla con IA
+            // Si falta información importante, intentar completarla con IA (Ollama)
             const needsEnhancement = !result.data.description || !result.data.imageUrl || (!result.data.brand && !result.data.model)
-            if (needsEnhancement && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+            if (needsEnhancement) {
               try {
                 const enhanced = await enhanceProductInfoWithAI(result.data.name, result.data.brand, result.data.model, result.data.description)
                 if (enhanced) {

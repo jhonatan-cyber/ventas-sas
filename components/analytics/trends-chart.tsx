@@ -4,7 +4,6 @@ import { format } from "date-fns"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
 
 interface TrendsChartProps {
   data: Array<{ date: string; value: number; label?: string }>
@@ -12,7 +11,7 @@ interface TrendsChartProps {
   customerSlug: string
 }
 
-export function TrendsChart({ data, loading, customerSlug }: TrendsChartProps) {
+export function TrendsChart({ data, loading }: TrendsChartProps) {
   if (loading) {
     return <Skeleton className="h-[400px] w-full" />
   }
@@ -31,35 +30,43 @@ export function TrendsChart({ data, loading, customerSlug }: TrendsChartProps) {
   }))
 
   return (
-    <div className="w-full h-[400px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
+    <div className="w-full" style={{ height: 400 }}>
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart 
+          data={chartData}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis 
             dataKey="fecha" 
-            className="text-xs"
-            tick={{ fill: 'currentColor' }}
+            stroke="#6b7280"
+            style={{ fontSize: '12px' }}
           />
           <YAxis 
-            className="text-xs"
-            tick={{ fill: 'currentColor' }}
-            tickFormatter={(value) => formatCurrencyWithPreferences(value, customerSlug)}
+            stroke="#6b7280"
+            style={{ fontSize: '12px' }}
+            tickFormatter={(value) => `$${value}`}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'var(--background)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px'
+              backgroundColor: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px'
             }}
-            formatter={(value: number) => formatCurrencyWithPreferences(value, customerSlug)}
+            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ventas']}
+            labelStyle={{ color: '#111827', fontWeight: 'bold' }}
           />
-          <Legend />
+          <Legend 
+            wrapperStyle={{ paddingTop: '10px' }}
+          />
           <Line 
             type="monotone" 
             dataKey="ventas" 
-            stroke="hsl(var(--primary))" 
-            strokeWidth={2}
-            dot={{ r: 4 }}
+            stroke="#3b82f6" 
+            strokeWidth={3}
+            dot={{ fill: '#3b82f6', r: 5 }}
+            activeDot={{ r: 7 }}
             name="Ventas"
           />
         </LineChart>
@@ -67,4 +74,3 @@ export function TrendsChart({ data, loading, customerSlug }: TrendsChartProps) {
     </div>
   )
 }
-

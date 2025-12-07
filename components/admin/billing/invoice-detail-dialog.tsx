@@ -108,229 +108,209 @@ export function InvoiceDetailDialog({
           </DialogHeader>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50/60 dark:bg-[#0c0c0c]">
-          {/* Información de Facturación y Relacionada */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="border rounded-lg p-3">
-              <h3 className="font-semibold text-sm mb-2">
-                Información de Facturación
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    Nombre(s) y Apellido(s):
-                  </span>
-                  <p className="font-medium mt-0.5">
-                    {(() => {
-                      // Priorizar el nombre del dueño (owner) si está disponible
-                      if (invoice.organization?.owner?.fullName) {
-                        return invoice.organization.owner.fullName
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-white dark:bg-[#0c0c0c]">
+          {/* Información de Facturación */}
+          <div>
+            <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
+              Información de Facturación
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+              <div className="flex flex-col">
+                <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                  Nombre(s) y Apellido(s)
+                </span>
+                <span className="font-medium">
+                  {(() => {
+                    if (invoice.organization?.owner) {
+                      return invoice.organization.owner.fullName || invoice.organization.owner.email
+                    }
+                    const customer = invoice.organization?.customerOrganizations?.[0]?.customer
+                    if (customer) {
+                      const customerName = `${(customer as any).nombre || ''} ${(customer as any).apellido || ''}`.trim()
+                      if (customerName) {
+                        return customerName
                       }
-                      // Si no hay owner, usar el customer
-                      const customer = invoice.organization?.customerOrganizations?.[0]?.customer
-                      if (customer) {
-                        const customerName = `${customer.nombre || ''} ${customer.apellido || ''}`.trim()
-                        if (customerName) {
-                          return customerName
-                        }
-                      }
-                      // Fallback al billingName guardado
-                      return invoice.billingName
-                    })()}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    Email:
-                  </span>
-                  <p className="font-medium mt-0.5">{invoice.billingEmail}</p>
-                </div>
-                {invoice.billingAddress && (
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      Dirección:
-                    </span>
-                    <p className="font-medium mt-0.5">
-                      {invoice.billingAddress}
-                    </p>
-                  </div>
-                )}
-                {invoice.billingTaxId && (
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      NIT / CUIT:
-                    </span>
-                    <p className="font-medium mt-0.5">{invoice.billingTaxId}</p>
-                  </div>
-                )}
+                    }
+                    return invoice.billingName
+                  })()}
+                </span>
               </div>
+              
+              <div className="flex flex-col">
+                <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                  Email
+                </span>
+                <span className="font-medium">{invoice.billingEmail}</span>
+              </div>
+              
+              {invoice.billingAddress && (
+                <div className="flex flex-col">
+                  <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                    Dirección
+                  </span>
+                  <span className="font-medium">{invoice.billingAddress}</span>
+                </div>
+              )}
+              
+              {invoice.billingTaxId && (
+                <div className="flex flex-col">
+                  <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                    NIT / CUIT
+                  </span>
+                  <span className="font-medium">{invoice.billingTaxId}</span>
+                </div>
+              )}
             </div>
-
-            {/* Información Relacionada */}
-            {(invoice.organization ||
-              invoice.subscription ||
-              invoice.subscriptionPlan) && (
-              <div className="border rounded-lg p-3">
-                <h3 className="font-semibold text-sm mb-2">
-                  Información Relacionada
-                </h3>
-                <div className="space-y-2 text-sm">
-                  {invoice.organization && (
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400 text-xs">
-                        Organización:
-                      </span>
-                      <p className="font-medium mt-0.5">
-                        {invoice.organization.name}
-                      </p>
-                    </div>
-                  )}
-                  {invoice.subscriptionPlan && (
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400 text-xs">
-                        Plan:
-                      </span>
-                      <p className="font-medium mt-0.5">
-                        {invoice.subscriptionPlan.name}
-                      </p>
-                    </div>
-                  )}
-                  {invoice.subscription && (
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400 text-xs">
-                        Suscripción:
-                      </span>
-                      <p className="font-medium mt-0.5">
-                        {invoice.subscription.billingPeriod === "monthly"
-                          ? "Mensual | "
-                          : "Anual | "}{" "}
-                        {invoice.subscription.status === "active"
-                          ? "Activo"
-                          : invoice.subscription.status === "cancelled"
-                          ? "Cancelada"
-                          : invoice.subscription.status === "expired"
-                          ? "Expirada"
-                          : invoice.subscription.status === "trial"
-                          ? "Prueba"
-                          : invoice.subscription.status}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Montos y Fechas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="border rounded-lg p-3">
-              <h3 className="font-semibold text-sm mb-2">Montos</h3>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    Subtotal:
-                  </span>
-                  <span className="font-medium">
-                    {formatAmount(Number(invoice.subtotal))}
-                  </span>
-                </div>
-                {Number(invoice.tax) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      Impuesto:
+          {/* Información Relacionada */}
+          {(invoice.organization || invoice.subscription || invoice.subscriptionPlan) && (
+            <div>
+              <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
+                Información Relacionada
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                {invoice.organization && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                      Organización
+                    </span>
+                    <span className="font-medium">{invoice.organization.name}</span>
+                  </div>
+                )}
+                
+                {invoice.subscriptionPlan && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                      Plan
+                    </span>
+                    <span className="font-medium">{invoice.subscriptionPlan.name}</span>
+                  </div>
+                )}
+                
+                {invoice.subscription && (
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                      Suscripción
                     </span>
                     <span className="font-medium">
-                      {formatAmount(Number(invoice.tax))}
+                      {invoice.subscription.billingPeriod === "monthly" ? "Mensual" : "Anual"} | {" "}
+                      {invoice.subscription.status === "active"
+                        ? "Activo"
+                        : invoice.subscription.status === "cancelled"
+                        ? "Cancelada"
+                        : invoice.subscription.status === "expired"
+                        ? "Expirada"
+                        : invoice.subscription.status === "trial"
+                        ? "Prueba"
+                        : invoice.subscription.status}
                     </span>
                   </div>
-                )}
-                {Number(invoice.discount) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      Descuento:
-                    </span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
-                      -{formatAmount(Number(invoice.discount))}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between pt-1.5 border-t mt-1.5">
-                  <span className="font-semibold">Total:</span>
-                  <span className="font-bold text-base">
-                    {formatAmount(Number(invoice.total))}
-                  </span>
-                </div>
-                {totalPaid > 0 && (
-                  <>
-                    <div className="flex justify-between pt-1.5">
-                      <span className="text-gray-500 dark:text-gray-400 text-xs">
-                        Pagado:
-                      </span>
-                      <span className="font-medium text-green-600 dark:text-green-400">
-                        {formatAmount(totalPaid)}
-                      </span>
-                    </div>
-                    {remainingBalance > 0 && (
-                      <div className="flex justify-between pt-1.5 border-t mt-1.5">
-                        <span className="text-gray-500 dark:text-gray-400 text-xs">
-                          Saldo Pendiente:
-                        </span>
-                        <span className="font-semibold text-orange-600 dark:text-orange-400">
-                          {formatAmount(remainingBalance)}
-                        </span>
-                      </div>
-                    )}
-                  </>
                 )}
               </div>
             </div>
+          )}
 
-            <div className="border rounded-lg p-3">
-              <h3 className="font-semibold text-sm mb-2">Fechas</h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    Fecha de Emisión:
-                  </span>
-                  <p className="font-medium mt-0.5">
-                    {formatDate(invoice.issueDate)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    Fecha de Vencimiento:
-                  </span>
-                  <p className="font-medium mt-0.5">
-                    {formatDate(invoice.dueDate)}
-                  </p>
-                </div>
-                {invoice.paidAt && (
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      Fecha de Pago:
-                    </span>
-                    <p className="font-medium mt-0.5">
-                      {formatDate(invoice.paidAt)}
-                    </p>
-                  </div>
-                )}
+          {/* Fechas */}
+          <div>
+            <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
+              Fechas
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-3 text-sm">
+              <div className="flex flex-col">
+                <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                  Fecha de Emisión
+                </span>
+                <span className="font-medium">{formatDate(invoice.issueDate)}</span>
               </div>
+              
+              <div className="flex flex-col">
+                <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                  Fecha de Vencimiento
+                </span>
+                <span className="font-medium">{formatDate(invoice.dueDate)}</span>
+              </div>
+              
+              {invoice.paidAt && (
+                <div className="flex flex-col">
+                  <span className="text-gray-500 dark:text-gray-400 text-xs mb-1">
+                    Fecha de Pago
+                  </span>
+                  <span className="font-medium">{formatDate(invoice.paidAt)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Montos */}
+          <div>
+            <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
+              Montos
+            </h3>
+            <div className="space-y-2 text-sm max-w-md">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
+                <span className="font-medium">{formatAmount(Number(invoice.subtotal))}</span>
+              </div>
+              
+              {Number(invoice.tax) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 dark:text-gray-400">Impuesto</span>
+                  <span className="font-medium">{formatAmount(Number(invoice.tax))}</span>
+                </div>
+              )}
+              
+              {Number(invoice.discount) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 dark:text-gray-400">Descuento</span>
+                  <span className="font-medium text-red-600 dark:text-red-400">
+                    -{formatAmount(Number(invoice.discount))}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                <span className="font-semibold text-base">Total</span>
+                <span className="font-bold text-lg">{formatAmount(Number(invoice.total))}</span>
+              </div>
+              
+              {totalPaid > 0 && (
+                <>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-gray-500 dark:text-gray-400">Pagado</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      {formatAmount(totalPaid)}
+                    </span>
+                  </div>
+                  
+                  {remainingBalance > 0 && (
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                      <span className="font-semibold">Saldo Pendiente</span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">
+                        {formatAmount(remainingBalance)}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
           {/* Pagos */}
           {invoice.payments && invoice.payments.length > 0 && (
-            <div className="border rounded-lg p-3">
-              <h3 className="font-semibold text-sm mb-2">Pagos</h3>
-              <div className="space-y-1.5">
+            <div>
+              <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
+                Historial de Pagos
+              </h3>
+              <div className="space-y-3">
                 {invoice.payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded"
+                    className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-900 last:border-0"
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="font-semibold text-sm">
                           {formatAmount(Number(payment.amount))}
                         </span>
                         <Badge
@@ -343,12 +323,11 @@ export function InvoiceDetailDialog({
                           }
                           className="text-xs"
                         >
-                          {payment.status}
+                          {payment.status === "completed" ? "Completado" : payment.status === "failed" ? "Fallido" : payment.status}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {payment.paymentGateway} -{" "}
-                        {formatDate(payment.createdAt)}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {payment.paymentGateway} • {formatDate(payment.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -359,25 +338,25 @@ export function InvoiceDetailDialog({
 
           {/* Descripción y Notas */}
           {(invoice.description || invoice.notes) && (
-            <div className="border rounded-lg p-3">
-              <h3 className="font-semibold text-sm mb-2">
+            <div>
+              <h3 className="font-semibold text-base mb-4 pb-2 border-b border-gray-200 dark:border-gray-800">
                 Información Adicional
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3 text-sm">
                 {invoice.description && (
                   <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Descripción:
+                    <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+                      Descripción
                     </span>
-                    <p className="mt-0.5">{invoice.description}</p>
+                    <p className="text-gray-900 dark:text-gray-100">{invoice.description}</p>
                   </div>
                 )}
                 {invoice.notes && (
                   <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Notas:
+                    <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+                      Notas
                     </span>
-                    <p className="mt-0.5">{invoice.notes}</p>
+                    <p className="text-gray-900 dark:text-gray-100">{invoice.notes}</p>
                   </div>
                 )}
               </div>

@@ -65,14 +65,6 @@ export function useExpenseActions(customerSlug: string, onExpensesChange?: () =>
           errorPayload
         )
         if (errorPayload && typeof errorPayload === "object" && "details" in errorPayload) {
-          const details = (errorPayload as any).details
-          if (Array.isArray(details)) {
-            console.table(details)
-          } else if (details && typeof details === "object") {
-            console.log("Detalles de validación:", details)
-          } else {
-            console.log("Detalles de validación:", details)
-          }
         }
         throw new Error(errorMessage)
       }

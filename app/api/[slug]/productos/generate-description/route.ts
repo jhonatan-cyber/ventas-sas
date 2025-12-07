@@ -29,36 +29,9 @@ export async function POST(
       throw AppError.validation('El nombre del producto es requerido')
     }
 
-    // Construir prompt de inventario (técnico, 30–50 palabras)
-    const basePrompt = buildInventoryDescriptionPrompt({
-      name: name.trim(),
-      brand: brand?.trim() || null,
-      category: category?.trim() || null,
-      existingDescription: existingDescription?.trim() || null,
-      model: model?.trim() || null,
-    })
-
-    let description = await chatCompleteWithOptions(
-      [{ role: 'user', content: basePrompt }],
-      { preferredProvider: provider, model: modelOverride, temperature: temperature ?? 0.4 }
-    )
-
-    // Post-procesar para asegurar brevedad (máx ~60 palabras / 420 chars)
-    try {
-      const words = description.split(/\s+/)
-      if (words.length > 60) {
-        description = words.slice(0, 60).join(' ').replace(/[.,;:\-–—]*$/, '') + '…'
-      }
-      if (description.length > 420) {
-        const short = description.slice(0, 420)
-        const cut = short.lastIndexOf(' ')
-        description = (cut > 0 ? short.slice(0, cut) : short).replace(/[.,;:\-–—]*$/, '') + '…'
-      }
-    } catch {}
-
-    // Función helper para extraer marca y modelo del nombre del producto (fallback cuando Gemini no está disponible)
+    // Función helper para extraer marca y modelo del nombre del producto (fallback cuando IA no está disponible)
     const extractBrandAndModelFromName = (productName: string): { brand: string | null; model: string | null } => {
-      const name = productName.trim()
+      const nameToProcess = productName.trim()
       
       // Patrones comunes de marcas conocidas
       const brandPatterns = [
@@ -83,14 +56,14 @@ export async function POST(
       
       // Intentar encontrar una marca conocida
       for (const { pattern, brand, modelExtractor } of brandPatterns) {
-        if (pattern.test(name)) {
-          const model = modelExtractor(name)
+        if (pattern.test(nameToProcess)) {
+          const model = modelExtractor(nameToProcess)
           return { brand, model: model || null }
         }
       }
       
       // Si no se encuentra una marca conocida, intentar extraer la primera palabra como marca
-      const words = name.split(/\s+/)
+      const words = nameToProcess.split(/\s+/)
       if (words.length >= 2) {
         const firstWord = words[0]
         // Si la primera palabra parece una marca (mayúsculas o nombre propio)
@@ -105,7 +78,7 @@ export async function POST(
       return { brand: null, model: null }
     }
     
-    // Función para extraer marca y modelo usando Groq/DeepSeek
+    // Función para extraer marca y modelo usando IA
     const extractBrandAndModelWithAI = async (productName: string): Promise<{ brand: string | null; model: string | null }> => {
       try {
         const prompt = `Analiza el siguiente nombre de producto y extrae SOLO la marca y el modelo.
@@ -151,23 +124,61 @@ Responde SOLO con el JSON, sin texto adicional:`
         return { brand: null, model: null }
       }
     }
-    
-    // Buscar imagen con Google Custom Search (si está configurado)
-    // Siempre intentar extraer marca y modelo del nombre, incluso si ya se proporcionaron
-    let extracted = { brand: null as string | null, model: null as string | null }
-    
-    // Primero intentar con IA (Groq/DeepSeek)
-    try {
-      extracted = await extractBrandAndModelWithAI(name.trim())
-    } catch (error) {
-      // Si la IA falla, usar fallback básico
-      console.log('IA no disponible, usando extracción básica:', error)
-      extracted = extractBrandAndModelFromName(name.trim())
-    }
-    
-    // Si aún no se encontró nada, usar el fallback básico
+
+    // Ejecutar generación de descripción y extracción de marca/modelo en paralelo
+    const [description, extracted] = await Promise.all([
+      // 1. Generar descripción
+      (async () => {
+        try {
+          const basePrompt = buildInventoryDescriptionPrompt({
+            name: name.trim(),
+            brand: brand?.trim() || null,
+            category: category?.trim() || null,
+            existingDescription: existingDescription?.trim() || null,
+            model: model?.trim() || null,
+          })
+
+          let desc = await chatCompleteWithOptions(
+            [{ role: 'user', content: basePrompt }],
+            { preferredProvider: provider, model: modelOverride, temperature: temperature ?? 0.4 }
+          )
+
+          // Post-procesar para asegurar brevedad (máx ~60 palabras / 420 chars)
+          try {
+            const words = desc.split(/\s+/)
+            if (words.length > 60) {
+              desc = words.slice(0, 60).join(' ').replace(/[.,;:\-–—]*$/, '') + '…'
+            }
+            if (desc.length > 420) {
+              const short = desc.slice(0, 420)
+              const cut = short.lastIndexOf(' ')
+              desc = (cut > 0 ? short.slice(0, cut) : short).replace(/[.,;:\-–—]*$/, '') + '…'
+            }
+          } catch {}
+
+          return desc
+        } catch (error) {
+          console.error('Error generando descripción:', error)
+          throw error
+        }
+      })(),
+      
+      // 2. Extraer marca y modelo en paralelo
+      (async () => {
+        try {
+          return await extractBrandAndModelWithAI(name.trim())
+        } catch (error) {
+          console.log('IA no disponible para extracción, usando fallback:', error)
+          return extractBrandAndModelFromName(name.trim())
+        }
+      })()
+    ])
+
+    // Si aún no se encontró nada con IA, usar el fallback básico
     if (!extracted.brand && !extracted.model) {
-      extracted = extractBrandAndModelFromName(name.trim())
+      const fallback = extractBrandAndModelFromName(name.trim())
+      extracted.brand = fallback.brand
+      extracted.model = fallback.model
     }
     
     console.log('Marca y modelo extraídos:', { extracted, providedBrand: brand, providedModel: model })
@@ -179,8 +190,8 @@ Responde SOLO con el JSON, sin texto adicional:`
     // Buscar imagen del producto usando Google Custom Search (si está configurado)
     let imageUrl = null
     try {
-      const geminiService = (await import('@/lib/services/ai/gemini-service')).GeminiService
-      const productInfo = await geminiService.searchProductInfo(
+      const { ProductAIService } = await import('@/lib/services/ai/product-ai-service')
+      const productInfo = await ProductAIService.searchProductInfo(
         name.trim(),
         finalBrand,
         finalModel

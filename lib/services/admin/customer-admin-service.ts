@@ -107,9 +107,64 @@ export class CustomerAdminService {
       prisma.customer.count({ where })
     ])
 
-    const customers = customersRaw.map((customer) =>
-      CustomerAdminService.attachPrimaryOrganization(customer)
-    )
+    // Obtener fotos de los usuarios SAS
+    // Filtrar solo IDs válidos (UUIDs), excluir 'admin' y otros valores hardcoded
+    const userIds = customersRaw
+      .map(c => c.userId)
+      .filter(id => id && id !== 'admin' && id.length > 10) // Filtrar IDs válidos
+    
+    const users = await prisma.usuarioSas.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, foto: true }
+    })
+    
+    const userPhotos = new Map(users.map(u => [u.id, u.foto]))
+
+    // También buscar usuarios SAS por CI o email para clientes sin userId válido
+    const customersWithoutValidUserId = customersRaw.filter(c => !c.userId || c.userId === 'admin' || c.userId.length <= 10)
+    if (customersWithoutValidUserId.length > 0) {
+      const cis = customersWithoutValidUserId.map(c => c.ci).filter((ci): ci is string => ci !== null)
+      const emails = customersWithoutValidUserId.map(c => c.email).filter((email): email is string => email !== null)
+      
+      if (cis.length > 0 || emails.length > 0) {
+        const usersByCiOrEmail = await prisma.usuarioSas.findMany({
+          where: {
+            OR: [
+              ...(cis.length > 0 ? [{ ci: { in: cis } }] : []),
+              ...(emails.length > 0 ? [{ email: { in: emails } }] : [])
+            ]
+          },
+          select: { id: true, ci: true, email: true, foto: true }
+        })
+        
+        // Mapear por CI y email
+        for (const user of usersByCiOrEmail) {
+          if (user.ci) userPhotos.set(`ci:${user.ci}`, user.foto)
+          if (user.email) userPhotos.set(`email:${user.email}`, user.foto)
+        }
+      }
+    }
+
+    const customers = customersRaw.map((customer) => {
+      const customerWithOrg = CustomerAdminService.attachPrimaryOrganization(customer)
+      
+      // Intentar obtener foto por userId, CI o email
+      let photo = null
+      if (customer.userId && customer.userId !== 'admin' && customer.userId.length > 10) {
+        photo = userPhotos.get(customer.userId) || null
+      }
+      if (!photo && customer.ci) {
+        photo = userPhotos.get(`ci:${customer.ci}`) || null
+      }
+      if (!photo && customer.email) {
+        photo = userPhotos.get(`email:${customer.email}`) || null
+      }
+      
+      return {
+        ...customerWithOrg,
+        photo
+      }
+    })
 
     return { customers, total }
   }
@@ -167,7 +222,46 @@ export class CustomerAdminService {
       }
     })
 
-    return CustomerAdminService.attachPrimaryOrganization(customer)
+    if (!customer) {
+      return null
+    }
+
+    // Obtener foto del usuario SAS
+    let photo = null
+    
+    // Intentar por userId si es válido
+    if (customer.userId && customer.userId !== 'admin' && customer.userId.length > 10) {
+      const user = await prisma.usuarioSas.findUnique({
+        where: { id: customer.userId },
+        select: { foto: true }
+      })
+      photo = user?.foto || null
+    }
+    
+    // Si no se encontró por userId, intentar por CI
+    if (!photo && customer.ci) {
+      const user = await prisma.usuarioSas.findFirst({
+        where: { ci: customer.ci },
+        select: { foto: true }
+      })
+      photo = user?.foto || null
+    }
+    
+    // Si no se encontró por CI, intentar por email
+    if (!photo && customer.email) {
+      const user = await prisma.usuarioSas.findFirst({
+        where: { email: customer.email },
+        select: { foto: true }
+      })
+      photo = user?.foto || null
+    }
+
+    const customerWithOrg = CustomerAdminService.attachPrimaryOrganization(customer)
+    
+    return {
+      ...customerWithOrg,
+      photo
+    }
   }
 
   // Crear nuevo cliente

@@ -97,7 +97,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
         maxUsers: maxUsers ? parseInt(String(maxUsers)) : undefined,
         maxProducts: maxProducts ? parseInt(String(maxProducts)) : undefined,
         maxBranches: maxBranches ? parseInt(String(maxBranches)) : undefined,
-        modules: selectedModules.length > 0 ? selectedModules : undefined,
+        modules: selectedModules, // Siempre enviar el array, aunque esté vacío
         isActive: plan ? plan.isActive : true,
       }
 

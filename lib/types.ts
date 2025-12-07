@@ -16,6 +16,7 @@ export type Customer = PrismaCustomer & {
   slug?: string | null
   nit?: string | null
   organizationId?: string | null
+  photo?: string | null
 }
 
 export type {

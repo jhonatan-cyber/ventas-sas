@@ -9,6 +9,7 @@ import {
   Building2,
   DollarSign,
   Calendar,
+  MessageCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ interface InvoicesTableProps {
   onPrintInvoice?: (invoice: SerializedInvoiceWithRelations) => void;
   onDownloadPDF?: (invoice: SerializedInvoiceWithRelations) => void;
   onSendCredentials?: (invoice: SerializedInvoiceWithRelations) => void;
+  onSendWhatsApp?: (invoice: SerializedInvoiceWithRelations) => void;
 }
 
 export const getStatusBadge = (status: string) => {
@@ -90,6 +92,7 @@ export function InvoicesTable({
   onPrintInvoice,
   onDownloadPDF,
   onSendCredentials,
+  onSendWhatsApp,
 }: InvoicesTableProps) {
   if (loading) {
     return (
@@ -298,6 +301,21 @@ export function InvoicesTable({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent>Enviar credenciales por Email</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onSendWhatsApp?.(invoice)}
+                                  className="hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Enviar credenciales por WhatsApp</TooltipContent>
                           </Tooltip>
                         </>
                       )}

@@ -17,6 +17,7 @@ interface BillingContainerProps {
   onDownloadPDF?: (invoice: SerializedInvoiceWithRelations) => void
   onPrintInvoice?: (invoice: SerializedInvoiceWithRelations) => void
   onSendCredentials?: (invoice: SerializedInvoiceWithRelations) => void
+  onSendWhatsApp?: (invoice: SerializedInvoiceWithRelations) => void
 }
 
 export function BillingContainer({ 
@@ -25,7 +26,8 @@ export function BillingContainer({
   onView, 
   onDownloadPDF, 
   onPrintInvoice,
-  onSendCredentials
+  onSendCredentials,
+  onSendWhatsApp
 }: BillingContainerProps) {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
@@ -125,6 +127,7 @@ export function BillingContainer({
             onDownloadPDF={onDownloadPDF}
             onPrintInvoice={onPrintInvoice}
             onSendCredentials={onSendCredentials}
+            onSendWhatsApp={onSendWhatsApp}
           />
         </div>
       ) : (

@@ -60,7 +60,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxBranches } = body
+    const { name, description, hasMonthly, hasYearly, priceMonthly, priceYearly, maxUsers, maxProducts, maxBranches, modules } = body
 
     const updateData: any = {}
     if (name) updateData.name = name.trim()
@@ -72,10 +72,22 @@ export async function PUT(
     if (maxUsers !== undefined) updateData.maxUsers = maxUsers ? parseInt(maxUsers) : null
     if (maxProducts !== undefined) updateData.maxProducts = maxProducts ? parseInt(maxProducts) : null
     if (maxBranches !== undefined) updateData.maxBranches = maxBranches ? parseInt(maxBranches) : null
+    if (modules !== undefined) updateData.modules = Array.isArray(modules) ? modules : []
 
     const updatedPlan = await SubscriptionAdminService.updatePlan(id, updateData)
 
-    return NextResponse.json(updatedPlan)
+    // Obtener información de organizaciones afectadas para la respuesta
+    const affectedOrgsCount = await SubscriptionAdminService.getOrganizationsWithPlan(id)
+
+    return NextResponse.json({
+      ...updatedPlan,
+      _meta: {
+        affectedOrganizations: affectedOrgsCount.length,
+        message: affectedOrgsCount.length > 0 
+          ? `Los cambios se aplicaron automáticamente a ${affectedOrgsCount.length} empresa(s)`
+          : 'Plan actualizado (sin empresas asignadas actualmente)'
+      }
+    })
   } catch (error: any) {
     console.error('Error al actualizar plan:', error)
     

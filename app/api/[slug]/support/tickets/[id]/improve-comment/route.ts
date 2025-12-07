@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { groqChatComplete } from "@/lib/services/ai/groq-service"
+import { chatCompleteWithOptions } from "@/lib/services/ai/provider"
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import { SupportTicketSasService } from "@/lib/services/sales/support-ticket-sas-service"
 import { getOrganizationIdByCustomerSlug } from "@/lib/utils/organization"
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ]
     }
 
-    const improved = await groqChatComplete(prompt)
+    const improved = await chatCompleteWithOptions(prompt, { temperature: 0.3 })
 
     return NextResponse.json({ success: true, text: improved, ticketId: id, organizationId })
   } catch (error) {

@@ -36,9 +36,9 @@ export default async function CustomersPage() {
 
     // Obtener clientes
     const result = await CustomerAdminService.getAllCustomers(0, 1000) // Obtener todos los clientes
-    const customers = result.customers.filter((customer): customer is NonNullable<typeof customer> => customer !== null)
+    const customers = result.customers.filter((customer) => customer !== null && customer.id !== undefined)
 
-    return <CustomersPageClient initialCustomers={customers} />
+    return <CustomersPageClient initialCustomers={customers as any} />
   } catch  {
     redirect('/administracion/login')
   }

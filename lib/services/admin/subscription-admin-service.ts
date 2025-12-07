@@ -179,11 +179,31 @@ export class SubscriptionAdminService {
   }
 
   // Actualizar plan
+  // IMPORTANTE: Los cambios en el plan se aplican automáticamente a todas las organizaciones
+  // que tienen este plan asignado (Organization.subscriptionPlanId) porque la relación
+  // es por referencia. No se requiere actualización manual de cada organización.
   static async updatePlan(id: string, data: UpdateSubscriptionPlanData): Promise<SubscriptionPlan> {
-    return prisma.subscriptionPlan.update({
+    // Contar organizaciones afectadas antes de actualizar
+    const _affectedOrgsCount = await prisma.organization.count({
+      where: { subscriptionPlanId: id }
+    })
+
+    // Contar suscripciones activas afectadas
+    const _affectedSubscriptionsCount = await prisma.subscription.count({
+      where: {
+        planId: id,
+        status: {
+          in: [SubscriptionStatus.active, SubscriptionStatus.trial]
+        }
+      }
+    })
+
+    const updatedPlan = await prisma.subscriptionPlan.update({
       where: { id },
       data
     })
+
+    return updatedPlan
   }
 
   // Eliminar plan

@@ -86,7 +86,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
       setIsEditing(false)
 
       // Recargar información del usuario en el header
-      window.dispatchEvent(new Event("sas-user-updated"))
+      window.dispatchEvent(new CustomEvent("sas-user-updated", { detail: data }))
 
       toast.success("Perfil actualizado correctamente")
     } catch {

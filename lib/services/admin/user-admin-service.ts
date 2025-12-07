@@ -104,14 +104,25 @@ export class UserAdminService {
 
   // Eliminar usuario
   static async deleteUser(id: string): Promise<Profile> {
-    // Eliminar membresías de organizaciones
-    await prisma.organizationMember.deleteMany({
-      where: { userId: id }
-    })
+    try {
+      // Eliminar membresías de organizaciones
+      await prisma.organizationMember.deleteMany({
+        where: { userId: id }
+      })
 
-    return prisma.profile.delete({
-      where: { id }
-    })
+      return await prisma.profile.delete({
+        where: { id }
+      })
+    } catch (error: any) {
+      // Detectar error de foreign key constraint
+      if (error.code === 'P2003' || error.message?.includes('Foreign key constraint')) {
+        throw new Error(
+          'No se puede eliminar el usuario porque tiene registros asociados (tickets de soporte, notificaciones, sesiones activas, etc.). ' +
+          'Considere desactivar el usuario en lugar de eliminarlo.'
+        )
+      }
+      throw error
+    }
   }
 
   // Activar/Desactivar usuario

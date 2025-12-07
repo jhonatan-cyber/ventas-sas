@@ -29,10 +29,29 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const days = parseInt(searchParams.get('days') || '30')
+    
+    // Soportar tanto el rango de fechas como el número de días
+    const startParam = searchParams.get('start')
+    const endParam = searchParams.get('end')
+    const daysParam = searchParams.get('days')
     const groupBy = (searchParams.get('groupBy') || 'day') as 'day' | 'week' | 'month'
 
-    const trends = await AnalyticsService.getSalesTrends(organizationId, days, groupBy)
+    let dateRange: { start: Date; end: Date } | undefined
+    let days = 30
+
+    if (startParam && endParam) {
+      // Usar rango de fechas si está disponible
+      dateRange = {
+        start: new Date(startParam),
+        end: new Date(endParam)
+      }
+      // Calcular días entre las fechas
+      days = Math.ceil((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24))
+    } else if (daysParam) {
+      days = parseInt(daysParam)
+    }
+
+    const trends = await AnalyticsService.getSalesTrends(organizationId, days, groupBy, dateRange)
 
     return NextResponse.json({ success: true, data: trends })
   } catch (error) {

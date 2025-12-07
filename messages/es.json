@@ -99,6 +99,7 @@
     "name": "Nombre",
     "lastName": "Apellido",
     "email": "Correo electrónico",
+    "ci": "CI (Cédula de Identidad)",
     "phone": "Teléfono",
     "address": "Dirección",
     "quantity": "Cantidad",

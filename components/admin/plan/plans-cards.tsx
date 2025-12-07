@@ -136,7 +136,7 @@ export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDel
                       <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 shrink-0" />
                       <span className="text-[10px] text-gray-700 dark:text-gray-300 font-semibold truncate">
                         {plan.priceMonthly && plan.priceMonthly > 0
-                          ? `$${plan.priceMonthly.toLocaleString()}/mes`
+                          ? `$${plan.priceMonthly}/mes`
                           : "Gratis"}
                       </span>
                     </div>
@@ -162,7 +162,7 @@ export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDel
                       <DollarSign className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span className="text-[10px] text-gray-700 dark:text-gray-300 font-semibold truncate">
                         {plan.priceYearly && plan.priceYearly > 0
-                          ? `$${plan.priceYearly.toLocaleString()}/año`
+                          ? `$${plan.priceYearly}/año`
                           : "Gratis"}
                       </span>
                     </div>
@@ -173,19 +173,19 @@ export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDel
                 <div className="flex items-center gap-1.5">
                   <Users className="h-3 w-3 text-gray-400 shrink-0" />
                   <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                    {plan.maxUsers ? plan.maxUsers.toLocaleString() : '∞'} usuarios
+                    {plan.maxUsers ? plan.maxUsers : '∞'} usuarios
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Package className="h-3 w-3 text-gray-400 shrink-0" />
                   <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                    {plan.maxProducts ? plan.maxProducts.toLocaleString() : '∞'} productos
+                    {plan.maxProducts ? plan.maxProducts : '∞'} productos
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Building2 className="h-3 w-3 text-gray-400 shrink-0" />
                   <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate">
-                    {plan.maxBranches ? plan.maxBranches.toLocaleString() : '∞'} sucursales
+                    {plan.maxBranches ? plan.maxBranches : '∞'} sucursales
                   </span>
                 </div>
               </div>
@@ -198,4 +198,5 @@ export function PlansCards({ plans, onEdit, onViewDetails, onToggleStatus, onDel
     </div>
   )
 }
+
 

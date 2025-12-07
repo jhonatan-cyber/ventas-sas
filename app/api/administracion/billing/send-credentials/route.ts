@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     const loginUrl = `${baseUrl}/${organization.slug}/login`
 
     const organizationName = organization.razonSocial || organization.name || 'Organización'
-    const ownerName = organization.owner?.fullName || null
+    const ownerName = organization.owner ? `${organization.owner.nombre} ${organization.owner.apellido}` : null
     const ownerEmail = organization.owner?.email || null
 
     // Obtener información del plan y suscripción

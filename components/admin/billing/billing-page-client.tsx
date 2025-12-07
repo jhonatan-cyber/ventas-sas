@@ -131,6 +131,97 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
     }, 100)
   }
 
+  // Función para enviar credenciales por WhatsApp
+  const handleSendWhatsApp = async (invoice: SerializedInvoiceWithRelations) => {
+    let toastId: string | number | undefined
+    
+    try {
+      // Verificar que la factura tenga organización
+      if (!invoice.organization) {
+        toast.error('La factura no tiene una organización asociada')
+        return
+      }
+
+      toastId = toast.loading('Preparando mensaje de WhatsApp...')
+
+      const org = invoice.organization
+
+      // Buscar número de teléfono en diferentes lugares (prioridad):
+      // 1. Owner phone
+      // 2. Organization phone
+      // 3. Customer phone (primer cliente asociado)
+      let phoneNumber = org.owner?.phone || org.phone
+
+      // Si no hay teléfono en owner ni organización, buscar en clientes
+      if (!phoneNumber && org.customerOrganizations && org.customerOrganizations.length > 0) {
+        const firstCustomer = org.customerOrganizations[0]?.customer
+        phoneNumber = firstCustomer?.phone
+      }
+
+      // Si aún no hay teléfono, mostrar error
+      if (!phoneNumber) {
+        toast.dismiss(toastId)
+        toast.error('No se encontró un número de teléfono para enviar el mensaje. Verifica que la organización, el dueño o el cliente tengan un teléfono registrado.')
+        return
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
+      const loginUrl = `${baseUrl}/${org.slug}/login`
+      const credentialsUrl = `${baseUrl}/api/administracion/billing/credentials-pdf?invoiceId=${invoice.id}`
+
+      // Construir mensaje de WhatsApp
+      const message = `*Bienvenido a ${org.razonSocial || org.name}!*
+
+Tu cuenta ha sido activada exitosamente. Aqui estan tus credenciales de acceso:
+
+*Email:* ${org.owner?.email || 'No disponible'}
+*Contrasena:* Tu numero de cedula de identidad (CI)
+
+*Accede a tu sistema aqui:*
+${loginUrl}
+
+*Descarga tus credenciales en PDF:*
+${credentialsUrl}
+
+*Factura #${invoice.invoiceNumber}* - ${(() => {
+  const amount = Number(invoice.total)
+  const currency = invoice.currency || 'BOB'
+  const formatted = new Intl.NumberFormat('es-BO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+  return currency === 'BOB' ? `${formatted} Bs` : formatted
+})()}
+
+*IMPORTANTE:* Por seguridad, te recomendamos cambiar tu contrasena despues del primer inicio de sesion.
+
+Necesitas ayuda? Estamos aqui para asistirte.`
+
+      // Limpiar número de teléfono (eliminar espacios, guiones, etc.)
+      const cleanPhone = phoneNumber.replace(/[^\d+]/g, '')
+      
+      // Crear URL de WhatsApp
+      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+
+      // Abrir WhatsApp en una nueva ventana
+      window.open(whatsappUrl, '_blank')
+      
+      // Cerrar el toast de loading y mostrar éxito
+      toast.success('Mensaje de WhatsApp preparado. Se abrirá en una nueva ventana.', {
+        id: toastId
+      })
+    } catch (error) {
+      console.error('Error al preparar mensaje de WhatsApp:', error)
+      
+      // Asegurar que el toast se cierre
+      if (toastId) {
+        toast.dismiss(toastId)
+      }
+      
+      toast.error(error instanceof Error ? error.message : 'Error al preparar mensaje de WhatsApp')
+    }
+  }
+
   // Función para enviar credenciales por email
   const handleSendCredentials = async (invoice: SerializedInvoiceWithRelations) => {
     try {
@@ -255,6 +346,7 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
           onDownloadPDF={handleDownloadPDF}
           onPrintInvoice={handlePrintInvoice}
           onSendCredentials={handleSendCredentials}
+          onSendWhatsApp={handleSendWhatsApp}
         />
 
         {/* Modal de crear/editar factura */}

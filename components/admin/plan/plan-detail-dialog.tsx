@@ -223,7 +223,7 @@ export function PlanDetailDialog({
                   <Users className="h-4 w-4 text-gray-400" />
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {plan.maxUsers ? (
-                      plan.maxUsers.toLocaleString()
+                      plan.maxUsers
                     ) : (
                       <span className="flex items-center gap-1">
                         <Infinity className="h-4 w-4" />
@@ -241,7 +241,7 @@ export function PlanDetailDialog({
                   <Package className="h-4 w-4 text-gray-400" />
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {plan.maxProducts ? (
-                      plan.maxProducts.toLocaleString()
+                      plan.maxProducts
                     ) : (
                       <span className="flex items-center gap-1">
                         <Infinity className="h-4 w-4" />
@@ -259,7 +259,7 @@ export function PlanDetailDialog({
                   <Building2 className="h-4 w-4 text-gray-400" />
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {plan.maxBranches ? (
-                      plan.maxBranches.toLocaleString()
+                      plan.maxBranches
                     ) : (
                       <span className="flex items-center gap-1">
                         <Infinity className="h-4 w-4" />
@@ -420,4 +420,5 @@ export function PlanDetailDialog({
     </Dialog>
   )
 }
+
 

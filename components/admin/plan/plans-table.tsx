@@ -116,7 +116,7 @@ export function PlansTable({
                         <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {plan.priceMonthly && plan.priceMonthly > 0
-                            ? `${plan.priceMonthly.toLocaleString()} /mes`
+                            ? `${plan.priceMonthly} /mes`
                             : "Gratis"}
                         </span>
                       </div>
@@ -126,7 +126,7 @@ export function PlansTable({
                         <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {plan.priceYearly && plan.priceYearly > 0
-                            ? `${plan.priceYearly.toLocaleString()} /año`
+                            ? `${plan.priceYearly} /año`
                             : "Gratis"}
                         </span>
                       </div>
@@ -154,13 +154,13 @@ export function PlansTable({
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3 text-gray-400" />
                         <span className="text-gray-600 dark:text-gray-400">
-                          {plan.maxUsers ? plan.maxUsers.toLocaleString() : "∞"}{" "}
+                          {plan.maxUsers ? plan.maxUsers : "∞"}{" "}
                           usuarios
                         </span>
                       </div>
                       <div className="text-gray-600 dark:text-gray-400">
                         {plan.maxProducts
-                          ? plan.maxProducts.toLocaleString()
+                          ? plan.maxProducts
                           : "∞"}{" "}
                         productos
                       </div>
@@ -168,7 +168,7 @@ export function PlansTable({
                         <Building2 className="h-3 w-3 text-gray-400" />
                         <span>
                           {plan.maxBranches
-                            ? plan.maxBranches.toLocaleString()
+                            ? plan.maxBranches
                             : "∞"}{" "}
                           sucursales
                         </span>
@@ -305,3 +305,4 @@ export function PlansTable({
     </TooltipProvider>
   );
 }
+

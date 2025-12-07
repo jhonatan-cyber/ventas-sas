@@ -96,6 +96,11 @@ export default async function CustomerOrganizationsPage() {
                 subscriptionStatus: orgData.subscriptionStatus === null || orgData.subscriptionStatus === undefined
                   ? undefined
                   : String(orgData.subscriptionStatus),
+                whiteLabelBranding: orgData.whiteLabelBranding ? {
+                  logoUrl: orgData.whiteLabelBranding.logoUrl === null || orgData.whiteLabelBranding.logoUrl === undefined
+                    ? undefined
+                    : String(orgData.whiteLabelBranding.logoUrl),
+                } : undefined,
               },
             }
           } catch (orgError) {

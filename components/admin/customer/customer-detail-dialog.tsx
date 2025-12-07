@@ -103,6 +103,13 @@ export function CustomerDetailDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-[#2a2a2a]">
           <DialogTitle className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
+              {customer.photo && (
+                <img 
+                  src={customer.photo} 
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                />
+              )}
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold">
                 {getInitials()}
               </AvatarFallback>

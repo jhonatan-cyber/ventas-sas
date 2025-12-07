@@ -1,9 +1,10 @@
 import { existsSync } from 'fs'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, unlink } from 'fs/promises'
 import path from 'path'
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { prisma } from '@/lib/prisma'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
@@ -51,8 +52,14 @@ export async function POST(
       )
     }
 
-    // Crear directorio si no existe
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'users')
+    // Obtener la foto anterior del usuario para eliminarla después
+    const currentUser = await prisma.usuarioSas.findUnique({
+      where: { id: user.id },
+      select: { foto: true }
+    })
+
+    // Crear directorio específico para el slug si no existe
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'users', slug)
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
@@ -70,7 +77,22 @@ export async function POST(
     await writeFile(filePath, buffer)
 
     // Retornar la URL relativa
-    const photoUrl = `/uploads/users/${fileName}`
+    const photoUrl = `/uploads/users/${slug}/${fileName}`
+
+    // Eliminar la foto anterior si existe y es diferente
+    if (currentUser?.foto && currentUser.foto !== photoUrl) {
+      try {
+        // Extraer la ruta del archivo desde la URL
+        const oldPhotoPath = path.join(process.cwd(), 'public', currentUser.foto)
+        if (existsSync(oldPhotoPath)) {
+          await unlink(oldPhotoPath)
+          console.log('Foto anterior eliminada:', oldPhotoPath)
+        }
+      } catch (deleteError) {
+        console.warn('No se pudo eliminar la foto anterior:', deleteError)
+        // No fallar si no se puede eliminar la foto anterior
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 

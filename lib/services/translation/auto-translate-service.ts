@@ -48,14 +48,13 @@ export async function translateText(
   // Retry con backoff exponencial para manejar rate limits
   const maxRetries = 5
   let retryDelay = 1000 // 1 segundo inicial
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const translatedText = await chatCompleteWithOptions(
         [{ role: 'user', content: prompt }],
         {
-          // Preferir Groq en producción por costo/velocidad; fallback ya está activo en provider
-          model: 'llama-3.1-8b-instant',
+          // Modelo según entorno: desarrollo usa gpt-oss:20b, producción usa deepseek-r1:1.5b
           temperature: 0.1
         }
       )
@@ -67,13 +66,14 @@ export async function translateText(
 
       return translatedText
     } catch (error: any) {
-      // Si es error de cuota (429), esperar y reintentar
       const status = error?.status || error?.statusCode
+
+      // Si es error de cuota (429), esperar y reintentar
       if (status === 429) {
-        const retryAfter = error?.details?.[0]?.retryDelay 
-          ? parseInt(error.details[0].retryDelay) * 1000 
+        const retryAfter = error?.details?.[0]?.retryDelay
+          ? parseInt(error.details[0].retryDelay) * 1000
           : retryDelay
-        
+
         if (attempt < maxRetries - 1) {
           console.warn(`⚠️  Cuota excedida, esperando ${Math.ceil(retryAfter / 1000)}s antes de reintentar...`)
           await delay(retryAfter)
@@ -81,14 +81,20 @@ export async function translateText(
           continue
         }
       }
-      
-      // Si no es error de cuota o se agotaron los reintentos
-      if (attempt === maxRetries - 1) {
-        console.error('Error en traducción automática después de múltiples intentos:', error)
+
+      // Si es un error no reintentable (400-499 excepto 429), abortar inmediatamente
+      if (status && status >= 400 && status < 500 && status !== 429) {
+        console.warn(`⚠️  Error no reintentable en traducción (${status}): ${error.message || 'Desconocido'}. Usando texto original.`)
         return text
       }
-      
-      // Para otros errores, esperar un poco y reintentar
+
+      // Si no es error de cuota o se agotaron los reintentos
+      if (attempt === maxRetries - 1) {
+        console.error('Fallo en traducción automática después de múltiples intentos. Usando texto original. Detalles:', error.message || error)
+        return text
+      }
+
+      // Para otros errores (5xx o red), esperar un poco y reintentar
       await delay(retryDelay)
       retryDelay = Math.min(retryDelay * 2, 60000)
     }
@@ -138,12 +144,12 @@ export async function translateObject(
         if (currentCount > 0) {
           await delay(delayBetweenRequests)
         }
-        
+
         result[key] = await translateText(value, {
           sourceLanguage,
           targetLanguage
         })
-        
+
         currentCount++
         if (onProgress) {
           onProgress(currentCount, totalStrings)

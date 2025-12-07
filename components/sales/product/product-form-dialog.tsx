@@ -262,13 +262,17 @@ export function ProductFormDialog({
               const branchesList = branchesData.branches?.map((b: any) => ({ id: b.id, name: b.name })) || [];
               setBranches(branchesList);
               
-              // Si el plan solo permite una sucursal y solo hay una disponible, seleccionarla automáticamente
-              if (maxBranches === 1 && branchesList.length === 1 && !product) {
-                setSelectedBranchId(branchesList[0].id);
-              } else if (!product && userData.sucursalId) {
-                // Solo establecer sucursal por defecto si no hay producto (modo creación)
-                // Si hay producto, el branchId ya fue establecido en el useEffect anterior
-                setSelectedBranchId(userData.sucursalId);
+              // Seleccionar automáticamente solo si no estamos editando
+              if (!product) {
+                if (branchesList.length === 1) {
+                  // Solo hay una sucursal → Seleccionar automáticamente
+                  setSelectedBranchId(branchesList[0].id);
+                } else if (maxBranches === 1) {
+                  // Plan de 1 sucursal → Usar la del usuario o la primera disponible
+                  setSelectedBranchId(userData.sucursalId || branchesList[0]?.id || '');
+                }
+                // Si hay múltiples sucursales y el plan permite múltiples → No autoseleccionar
+                // El administrador debe elegir manualmente
               }
             }
           } else {
@@ -302,7 +306,9 @@ export function ProductFormDialog({
     }
 
     // Validar que haya sucursal (para administradores)
-    if (isAdmin && !selectedBranchId) {
+    // Solo validar si el select de sucursal está visible (múltiples sucursales disponibles)
+    const shouldShowBranchSelect = isAdmin && branches.length > 0 && !(maxBranches === 1 && branches.length === 1);
+    if (isAdmin && shouldShowBranchSelect && !selectedBranchId) {
       toast.error(t('products.form.branchRequired'));
       return;
     }

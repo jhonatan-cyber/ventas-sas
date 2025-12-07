@@ -230,10 +230,11 @@ export class AnalyticsService {
   static async getSalesTrends(
     organizationId: string,
     days: number = 30,
-    groupBy: 'day' | 'week' | 'month' = 'day'
+    groupBy: 'day' | 'week' | 'month' = 'day',
+    dateRange?: { start: Date; end: Date }
   ): Promise<TrendData[]> {
-    const startDate = subDays(new Date(), days)
-    const endDate = new Date()
+    const startDate = dateRange?.start || subDays(new Date(), days)
+    const endDate = dateRange?.end || new Date()
 
     const sales = await prisma.sale.findMany({
       where: {

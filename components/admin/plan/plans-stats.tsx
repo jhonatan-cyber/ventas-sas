@@ -121,7 +121,7 @@ export function PlansStats({ plans }: PlansStatsProps) {
         </CardHeader>
         <CardContent className="p-1.5 md:p-4 pt-0 pb-1 -mt-4 md:mt-0">
           <div className="text-base md:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-            ${totalRevenue.toLocaleString()}
+            ${totalRevenue}
           </div>
           <CardDescription className="text-[9px] md:text-xs text-gray-600 dark:text-gray-400 mt-0">
             Ingresos mensuales
@@ -131,3 +131,4 @@ export function PlansStats({ plans }: PlansStatsProps) {
     </div>
   );
 }
+

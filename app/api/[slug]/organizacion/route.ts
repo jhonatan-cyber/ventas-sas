@@ -85,7 +85,7 @@ export async function GET(
         address: organization.address,
         website: organization.website || null,
         logoUrl: organization.whiteLabelBranding?.logoUrl || null,
-        ownerName: organization.owner?.fullName || null,
+        ownerName: organization.owner ? `${organization.owner.nombre} ${organization.owner.apellido}` : null,
       },
     });
   } catch (error) {

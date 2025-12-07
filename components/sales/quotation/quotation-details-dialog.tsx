@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { SalesQuotationWithRelations } from "@/components/sales/quotation/types";
-
 import { generateQuotationPDF, generateQuotationPDFBase64 } from "./quotation-pdf-utils";
+
+import { SalesQuotationWithRelations } from "@/components/sales/quotation/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -157,9 +157,8 @@ export function QuotationDetailsDialog({
   const customerName = useMemo(() => {
     if (!quotation) return "—";
     if (quotation.customer) {
-      const fullName = `${quotation.customer.name ?? ""} ${
-        quotation.customer.lastName ?? ""
-      }`.trim();
+      const fullName = `${quotation.customer.name ?? ""} ${quotation.customer.lastName ?? ""
+        }`.trim();
       return (
         fullName ||
         quotation.customer.email ||
@@ -353,16 +352,15 @@ export function QuotationDetailsDialog({
             if (relativeUrl) {
               const absoluteUrl = relativeUrl.startsWith("http")
                 ? relativeUrl
-                : `${
-                    typeof window !== "undefined" ? window.location.origin : ""
-                  }${relativeUrl}`;
+                : `${typeof window !== "undefined" ? window.location.origin : ""
+                }${relativeUrl}`;
               setShareUrl(absoluteUrl);
             }
           } else {
             const errorData = await response.json().catch(() => ({}));
             toast.error(
               errorData?.error ||
-                t('quotations.form.pdf.downloadError')
+              t('quotations.form.pdf.downloadError')
             );
             return; // No descargar si falla la subida
           }
@@ -452,9 +450,8 @@ export function QuotationDetailsDialog({
     if (!shareUrl || !customerWhatsapp) return null;
     // Formatear el mensaje con la URL en una línea separada para que WhatsApp la reconozca como enlace
     // WhatsApp reconoce URLs automáticamente cuando están en su propia línea o con espacios
-    let message = `Hola ${customerName || ""}, te comparto la cotización ${
-      quotation?.quotationNumber ?? ""
-    }.\n\n${shareUrl}`;
+    let message = `Hola ${customerName || ""}, te comparto la cotización ${quotation?.quotationNumber ?? ""
+      }.\n\n${shareUrl}`;
     if (sanitizedCompanyWhatsapp) {
       message += `\n\nPuedes responder a este número: +${sanitizedCompanyWhatsapp}`;
     }
@@ -838,7 +835,7 @@ export function QuotationDetailsDialog({
                 )}
               </div>
             )}
-            </div>
+          </div>
         ) : (
           <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
             Selecciona una cotización para ver sus detalles.
@@ -855,8 +852,8 @@ export function QuotationDetailsDialog({
             {shareUrl
               ? "Ver PDF"
               : isExporting
-              ? "Generando..."
-              : "Exportar PDF"}
+                ? "Generando..."
+                : "Exportar PDF"}
           </Button>
           <Button
             variant="outline"

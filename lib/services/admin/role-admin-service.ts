@@ -120,7 +120,6 @@ export class RoleAdminService {
 
   // Activar o desactivar rol
   static async toggleRoleStatus(id: string, isActive: boolean): Promise<Role> {
-    console.log('toggleRoleStatus called with:', { id, isActive })
     if (!id) {
       throw new Error('Role ID is required')
     }

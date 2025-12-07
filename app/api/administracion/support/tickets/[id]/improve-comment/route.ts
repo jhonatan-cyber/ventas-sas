@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { AdminJWTService } from "@/lib/auth/admin-jwt"
 import { SupportService } from "@/lib/services/admin/support-service"
-import { groqChatComplete } from "@/lib/services/ai/groq-service"
+import { chatCompleteWithOptions } from "@/lib/services/ai/provider"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ]
     }
 
-    const improved = await groqChatComplete(prompt)
+    const improved = await chatCompleteWithOptions(prompt, { temperature: 0.3 })
 
     return NextResponse.json({ success: true, text: improved, ticketId: id })
   } catch (error) {

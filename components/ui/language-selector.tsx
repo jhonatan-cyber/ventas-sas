@@ -50,18 +50,15 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
   const handleLanguageChange = async (newLanguage: string) => {
     // Validar que el idioma no esté vacío y sea válido
     if (!newLanguage || !['es', 'en', 'pt'].includes(newLanguage)) {
-      console.warn('[LanguageSelector] Idioma inválido o vacío:', newLanguage)
       return
     }
 
     const validLanguage = newLanguage as Locale
-    console.log('[LanguageSelector] Cambiando idioma a:', validLanguage, 'slug:', slug)
     setCurrentLanguage(validLanguage)
 
     // Guardar en localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("sas-language-preference", validLanguage)
-      console.log('[LanguageSelector] Idioma guardado en localStorage')
 
       // Si hay slug, intentar actualizar también en la base de datos
       // Solo si el usuario está autenticado (verificamos con un GET primero)
@@ -75,7 +72,6 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
 
           if (checkResponse.ok) {
             // Usuario autenticado, actualizar en BD
-            console.log('[LanguageSelector] Usuario autenticado, actualizando idioma en la base de datos...')
             const response = await fetch(`/api/${slug}/config/preferencias`, {
               method: 'PUT',
               headers: {
@@ -86,20 +82,12 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
             })
 
             if (response.ok) {
-              console.log('[LanguageSelector] Idioma actualizado en la base de datos')
               // Invalidar caché de preferencias
               const { invalidateConfigCache } = await import('@/lib/utils/preferences')
               invalidateConfigCache(slug)
-            } else {
-              const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
-              console.warn('[LanguageSelector] Error al actualizar idioma en BD:', errorData.error || 'Error desconocido')
             }
-          } else {
-            // Usuario no autenticado (página de login), solo guardar en localStorage
-            console.log('[LanguageSelector] Usuario no autenticado, idioma guardado solo en localStorage')
           }
-        } catch (error) {
-          console.error('[LanguageSelector] Error al verificar autenticación o actualizar idioma:', error)
+        } catch {
           // Continuar de todas formas, el cambio en localStorage ya está hecho
         }
       }
@@ -109,7 +97,6 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
         detail: { slug: slug || null, language: validLanguage },
       })
       window.dispatchEvent(event1)
-      console.log('[LanguageSelector] Evento language-updated disparado')
 
       // También disparar un evento personalizado para cambios en localStorage
       // Esto ayuda cuando no hay slug
@@ -117,7 +104,6 @@ export function LanguageSelector({ customerSlug }: LanguageSelectorProps) {
         detail: { language: validLanguage },
       })
       window.dispatchEvent(event2)
-      console.log('[LanguageSelector] Evento localStorage-language-changed disparado')
     }
   }
 
