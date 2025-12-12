@@ -1,172 +1,117 @@
 /**
  * Sistema de Logging Estructurado
  * 
- * Usa Pino para logging estructurado en formato JSON
+ * Implementación simple de logging sin dependencias externas
  * En desarrollo, usa formato pretty para legibilidad
  * En producción, solo muestra errores y warnings
  */
 
-import pino from 'pino'
-
 // Determinar nivel de logging según ambiente
-const getLogLevel = (): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.LOG_LEVEL || 'warn' // Solo warnings y errores en producción
+const getLogLevel = (): number => {
+  const levelMap: Record<string, number> = {
+    debug: 10,
+    info: 20,
+    warn: 30,
+    error: 40,
   }
-  return process.env.LOG_LEVEL || 'debug' // Debug completo en desarrollo
+  
+  if (process.env.NODE_ENV === 'production') {
+    const level = process.env.LOG_LEVEL || 'warn'
+    return levelMap[level] || 30
+  }
+  const level = process.env.LOG_LEVEL || 'debug'
+  return levelMap[level] || 10
 }
 
-// Configuración del logger
-const loggerConfig: pino.LoggerOptions = {
-  level: getLogLevel(),
-  formatters: {
-    level: (label) => {
-      return { level: label }
-    },
-  },
-  base: {
-    env: process.env.NODE_ENV || 'development',
+const currentLogLevel = getLogLevel()
+
+// Función para redactar información sensible
+const redactSensitiveData = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj
+  
+  const sensitiveKeys = [
+    'password', 'contraseña', 'token', 'authToken', 'secret', 'secretKey',
+    'apiKey', 'apikey', 'authorization', 'cookie'
+  ]
+  
+  const redacted = { ...obj }
+  
+  for (const key in redacted) {
+    if (sensitiveKeys.some(sensitive => key.toLowerCase().includes(sensitive))) {
+      redacted[key] = '[REDACTED]'
+    } else if (typeof redacted[key] === 'object' && redacted[key] !== null) {
+      redacted[key] = redactSensitiveData(redacted[key])
+    }
+  }
+  
+  return redacted
+}
+
+// Función para formatear logs
+const formatLog = (level: string, message: string, data?: Record<string, any>) => {
+  const timestamp = new Date().toISOString()
+  const baseLog = {
+    timestamp,
+    level,
     service: 'ventas-sas',
-  },
-  timestamp: pino.stdTimeFunctions.isoTime,
-  redact: {
-    paths: [
-      'password',
-      'contraseña',
-      'token',
-      'authToken',
-      'secret',
-      'secretKey',
-      'apiKey',
-      'apikey',
-      'authorization',
-      'cookie',
-      '*.password',
-      '*.token',
-      '*.secret',
-    ],
-    remove: true,
-  },
+    env: process.env.NODE_ENV || 'development',
+    message,
+  }
+  
+  if (data && Object.keys(data).length > 0) {
+    const cleanData = redactSensitiveData(data)
+    return { ...baseLog, ...cleanData }
+  }
+  
+  return baseLog
 }
 
-// Crear logger base
-// En el navegador, Pino necesita una configuración diferente
-const pinoLogger = typeof window === 'undefined'
-  ? pino(loggerConfig, process.stdout)
-  : pino({
-      ...loggerConfig,
-      browser: {
-        asObject: true,
-        write: (o: any) => {
-          // En el navegador, formatear el log de manera legible
-          const level = o.level || 'info'
-          const msg = o.msg || ''
-          
-          // Función helper para verificar si un valor tiene contenido útil
-          const hasValue = (value: any): boolean => {
-            if (value === undefined || value === null) return false
-            if (typeof value === 'string' && value.trim() === '') return false
-            if (Array.isArray(value) && value.length === 0) return false
-            if (typeof value === 'object') {
-              // Si es un objeto, verificar si tiene propiedades con valores
-              const keys = Object.keys(value)
-              if (keys.length === 0) return false
-              // Verificar si al menos una propiedad tiene valor
-              return keys.some(key => hasValue(value[key]))
-            }
-            return true
-          }
-          
-          // Función helper para limpiar un objeto anidado
-          const cleanNestedObject = (obj: any): any => {
-            if (!obj || typeof obj !== 'object') return obj
-            const cleaned: Record<string, any> = {}
-            Object.keys(obj).forEach(key => {
-              const value = obj[key]
-              if (hasValue(value)) {
-                if (typeof value === 'object' && !Array.isArray(value)) {
-                  const nested = cleanNestedObject(value)
-                  if (Object.keys(nested).length > 0) {
-                    cleaned[key] = nested
-                  }
-                } else {
-                  cleaned[key] = value
-                }
-              }
-            })
-            return cleaned
-          }
-          
-          // Filtrar propiedades y construir objeto limpio
-          const cleanObj: Record<string, any> = {}
-          const excludeKeys = ['level', 'msg', 'time', 'v', 'pid', 'hostname', 'env', 'service']
-          
-          // Procesar cada propiedad del objeto
-          Object.keys(o).forEach(key => {
-            if (excludeKeys.includes(key)) return
-            
-            const value = o[key]
-            
-            // Si es el objeto 'error', asegurarse de preservarlo si tiene message o name
-            if (key === 'error' && typeof value === 'object' && value !== null) {
-              const errorMsg = value.message || value.msg || ''
-              const errorName = value.name || ''
-              // Si tiene mensaje o nombre, preservar el objeto error (aunque esté limpio)
-              if (errorMsg || errorName) {
-                const cleanedError: Record<string, any> = {}
-                if (errorMsg) cleanedError.message = errorMsg
-                if (errorName) cleanedError.name = errorName
-                if (value.stack) cleanedError.stack = value.stack
-                cleanObj.error = cleanedError
-              }
-              return
-            }
-            
-            // Para otras propiedades, verificar si tienen valor
-            if (hasValue(value)) {
-              const cleanedValue = typeof value === 'object' && !Array.isArray(value)
-                ? cleanNestedObject(value)
-                : value
-              
-              // Solo agregar si el valor limpio tiene contenido
-              if (hasValue(cleanedValue)) {
-                cleanObj[key] = cleanedValue
-              }
-            }
-          })
-          
-          const logMessage = msg || 'Error sin mensaje'
-          const hasData = Object.keys(cleanObj).length > 0
-          
-          // Usar el método de console apropiado según el nivel
-          if (level >= 50) { // error
-            if (hasData) {
-              console.error(`[ERROR] ${logMessage}`, cleanObj)
-            } else {
-              console.error(`[ERROR] ${logMessage}`)
-            }
-          } else if (level >= 40) { // warn
-            if (hasData) {
-              console.warn(`[WARN] ${logMessage}`, cleanObj)
-            } else {
-              console.warn(`[WARN] ${logMessage}`)
-            }
-          } else if (level >= 30) { // info
-            if (hasData) {
-              console.info(`[INFO] ${logMessage}`, cleanObj)
-            } else {
-              console.info(`[INFO] ${logMessage}`)
-            }
-          } else { // debug
-            if (hasData) {
-              console.debug(`[DEBUG] ${logMessage}`, cleanObj)
-            } else {
-              console.debug(`[DEBUG] ${logMessage}`)
-            }
-          }
-        },
-      },
-    })
+// Logger simple sin dependencias externas
+const simpleLogger = {
+  debug: (data: Record<string, any>, message: string) => {
+    if (currentLogLevel <= 10) {
+      const log = formatLog('debug', message, data)
+      if (typeof window === 'undefined') {
+        console.debug(JSON.stringify(log))
+      } else {
+        console.debug(`[DEBUG] ${message}`, Object.keys(data).length > 0 ? data : undefined)
+      }
+    }
+  },
+  
+  info: (data: Record<string, any>, message: string) => {
+    if (currentLogLevel <= 20) {
+      const log = formatLog('info', message, data)
+      if (typeof window === 'undefined') {
+        console.info(JSON.stringify(log))
+      } else {
+        console.info(`[INFO] ${message}`, Object.keys(data).length > 0 ? data : undefined)
+      }
+    }
+  },
+  
+  warn: (data: Record<string, any>, message: string) => {
+    if (currentLogLevel <= 30) {
+      const log = formatLog('warn', message, data)
+      if (typeof window === 'undefined') {
+        console.warn(JSON.stringify(log))
+      } else {
+        console.warn(`[WARN] ${message}`, Object.keys(data).length > 0 ? data : undefined)
+      }
+    }
+  },
+  
+  error: (data: Record<string, any>, message: string) => {
+    if (currentLogLevel <= 40) {
+      const log = formatLog('error', message, data)
+      if (typeof window === 'undefined') {
+        console.error(JSON.stringify(log))
+      } else {
+        console.error(`[ERROR] ${message}`, Object.keys(data).length > 0 ? data : undefined)
+      }
+    }
+  }
+}
 
 /**
  * Logger estructurado para la aplicación
@@ -177,7 +122,7 @@ export const logger = {
    */
   debug: (message: string, data?: Record<string, any>) => {
     if (process.env.NODE_ENV !== 'production') {
-      pinoLogger.debug(data || {}, message)
+      simpleLogger.debug(data || {}, message)
     }
   },
 
@@ -185,14 +130,14 @@ export const logger = {
    * Log de información
    */
   info: (message: string, data?: Record<string, any>) => {
-    pinoLogger.info(data || {}, message)
+    simpleLogger.info(data || {}, message)
   },
 
   /**
    * Log de advertencia
    */
   warn: (message: string, data?: Record<string, any>) => {
-    pinoLogger.warn(data || {}, message)
+    simpleLogger.warn(data || {}, message)
   },
 
   /**
@@ -242,7 +187,7 @@ export const logger = {
         }
       })
       
-      pinoLogger.error(logObj, message)
+      simpleLogger.error(logObj, message)
     } else {
       // Para errores que no son instancias de Error
       const logObj: Record<string, any> = {}
@@ -261,9 +206,9 @@ export const logger = {
       
       // Solo pasar objeto si tiene propiedades, de lo contrario solo el mensaje
       if (Object.keys(logObj).length > 0) {
-        pinoLogger.error(logObj, message)
+        simpleLogger.error(logObj, message)
       } else {
-        pinoLogger.error(message)
+        simpleLogger.error({}, message)
       }
     }
   },
@@ -272,7 +217,7 @@ export const logger = {
    * Log de seguridad (siempre registrado)
    */
   security: (message: string, data?: Record<string, any>) => {
-    pinoLogger.warn({ ...data, type: 'security' }, `[SECURITY] ${message}`)
+    simpleLogger.warn({ ...data, type: 'security' }, `[SECURITY] ${message}`)
   },
 
   /**
@@ -280,7 +225,7 @@ export const logger = {
    */
   performance: (message: string, duration: number, data?: Record<string, any>) => {
     if (process.env.LOG_PERFORMANCE === 'true' || process.env.NODE_ENV === 'development') {
-      pinoLogger.info({ ...data, duration, type: 'performance' }, `[PERF] ${message}`)
+      simpleLogger.info({ ...data, duration, type: 'performance' }, `[PERF] ${message}`)
     }
   },
 }

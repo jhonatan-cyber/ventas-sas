@@ -1,0 +1,212 @@
+/* Animaciones CSS para el Sistema SAS */
+
+/* ===== ANIMACIONES DE SLIDE ===== */
+
+@keyframes slideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideInElastic {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.8);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(10%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes bounceInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-10%) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== ANIMACIONES DE GLOW ===== */
+
+@keyframes textGlowRainbow {
+  0% {
+    text-shadow: 
+      0 0 5px rgba(16, 185, 129, 0.5),
+      0 0 10px rgba(16, 185, 129, 0.3),
+      0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  33% {
+    text-shadow: 
+      0 0 5px rgba(20, 184, 166, 0.5),
+      0 0 10px rgba(20, 184, 166, 0.3),
+      0 0 15px rgba(20, 184, 166, 0.2);
+  }
+  66% {
+    text-shadow: 
+      0 0 5px rgba(6, 182, 212, 0.5),
+      0 0 10px rgba(6, 182, 212, 0.3),
+      0 0 15px rgba(6, 182, 212, 0.2);
+  }
+  100% {
+    text-shadow: 
+      0 0 5px rgba(16, 185, 129, 0.5),
+      0 0 10px rgba(16, 185, 129, 0.3),
+      0 0 15px rgba(16, 185, 129, 0.2);
+  }
+}
+
+@keyframes glowRainbow {
+  0% {
+    box-shadow: 
+      0 0 5px rgba(16, 185, 129, 0.4),
+      0 0 10px rgba(16, 185, 129, 0.2),
+      0 0 15px rgba(16, 185, 129, 0.1);
+  }
+  33% {
+    box-shadow: 
+      0 0 5px rgba(20, 184, 166, 0.4),
+      0 0 10px rgba(20, 184, 166, 0.2),
+      0 0 15px rgba(20, 184, 166, 0.1);
+  }
+  66% {
+    box-shadow: 
+      0 0 5px rgba(6, 182, 212, 0.4),
+      0 0 10px rgba(6, 182, 212, 0.2),
+      0 0 15px rgba(6, 182, 212, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 5px rgba(16, 185, 129, 0.4),
+      0 0 10px rgba(16, 185, 129, 0.2),
+      0 0 15px rgba(16, 185, 129, 0.1);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 5px rgba(16, 185, 129, 0.3),
+      0 0 10px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 10px rgba(16, 185, 129, 0.5),
+      0 0 20px rgba(16, 185, 129, 0.3),
+      0 0 30px rgba(16, 185, 129, 0.1);
+  }
+}
+
+/* ===== CLASES DE ANIMACIÓN ===== */
+
+.animate-slide-out-left {
+  animation: slideOutLeft 0.8s ease-in-out forwards;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.8s ease-in-out forwards;
+}
+
+.animate-slide-in-elastic {
+  animation: slideInElastic 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-bounce-in-up {
+  animation: bounceInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-text-glow-rainbow {
+  animation: textGlowRainbow 3s ease-in-out infinite;
+}
+
+.animate-glow-rainbow {
+  animation: glowRainbow 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* ===== EFECTOS HOVER ===== */
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.hover-glow-intense:hover {
+  box-shadow: 
+    0 0 20px rgba(16, 185, 129, 0.3),
+    0 0 40px rgba(16, 185, 129, 0.2),
+    0 0 60px rgba(16, 185, 129, 0.1);
+}
+
+/* ===== DELAYS PARA ANIMACIONES ===== */
+
+.delay-700 {
+  animation-delay: 700ms;
+}
+
+.delay-900 {
+  animation-delay: 900ms;
+}
+
+/* ===== OPTIMIZACIONES DE RENDIMIENTO ===== */
+
+.animate-slide-out-left,
+.animate-slide-out-right,
+.animate-slide-in-elastic,
+.animate-bounce-in-up {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* ===== RESPONSIVE Y ACCESIBILIDAD ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-out-left,
+  .animate-slide-out-right,
+  .animate-slide-in-elastic,
+  .animate-bounce-in-up,
+  .animate-text-glow-rainbow,
+  .animate-glow-rainbow,
+  .animate-glow {
+    animation: none !important;
+  }
+  
+  .hover-lift:hover {
+    transform: none;
+  }
+}

@@ -21,7 +21,7 @@ import {
   BookOpen,
   MessageSquare,
   GitBranch,
-  FlaskConical,
+
   Building2,
   Key,
   Globe,
@@ -84,7 +84,7 @@ const navSections: NavSection[] = [
   {
     title: "CONTENIDO",
     items: [
-      { title: "CMS", href: "/administracion/cms", icon: BookOpen, requiredPermission: "cms_listar" },
+
       { title: "White Label", href: "/administracion/white-label", icon: Palette, requiredPermission: "white_label_listar" }
     ]
   },
@@ -99,7 +99,7 @@ const navSections: NavSection[] = [
     title: "COMUNICACIÓN",
     items: [
       { title: "Notificaciones Masivas", href: "/administracion/notifications", icon: Bell, requiredPermission: "notificaciones_listar" },
-      { title: "Feedback", href: "/administracion/feedback", icon: MessageSquare, requiredPermission: "feedback_listar" }
+
     ]
   },
   {
@@ -119,8 +119,8 @@ const navSections: NavSection[] = [
     title: "MONITOREO",
     items: [
       { title: "Salud del Sistema", href: "/administracion/health", icon: Activity, requiredPermission: "health_listar" },
-      { title: "Versiones", href: "/administracion/versions", icon: GitBranch, requiredPermission: "versions_listar" },
-      { title: "Pruebas A/B", href: "/administracion/ab-tests", icon: FlaskConical, requiredPermission: "ab_tests_listar" }
+
+
     ]
   },
   {

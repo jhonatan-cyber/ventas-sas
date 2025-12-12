@@ -122,7 +122,8 @@ export function InvoiceDetailDialog({
                 <span className="font-medium">
                   {(() => {
                     if (invoice.organization?.owner) {
-                      return invoice.organization.owner.fullName || invoice.organization.owner.email
+                      const owner = invoice.organization.owner as any
+                      return (owner.fullName || `${owner.nombre || ''} ${owner.apellido || ''}`.trim()) || owner.email
                     }
                     const customer = invoice.organization?.customerOrganizations?.[0]?.customer
                     if (customer) {

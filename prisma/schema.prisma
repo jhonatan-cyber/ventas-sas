@@ -28,7 +28,7 @@ model Profile {
   twoFactorBackupCodes  Json?                     @map("two_factor_backup_codes")
   twoFactorEnabledAt    DateTime?                 @map("two_factor_enabled_at")
   photo                 String?                   @map("photo")
-  abTestsCreated        AbTest[]                  @relation("AbTestCreatedBy")
+
   cmsBlogPostsCreated   CmsBlogPost[]             @relation("CmsBlogPostCreatedBy")
   cmsBlogPostsUpdated   CmsBlogPost[]             @relation("CmsBlogPostUpdatedBy")
   cmsPagesCreated       CmsPage[]                 @relation("CmsPageCreatedBy")
@@ -42,7 +42,7 @@ model Profile {
   ticketAttachments     TicketAttachment[]        @relation("TicketAttachmentUploadedBy")
   ticketHistory         TicketHistory[]           @relation("TicketHistoryChangedBy")
   sessions              UserSession[]
-  systemVersionsCreated SystemVersion[]           @relation("SystemVersionCreatedBy")
+
 
   @@map("system_users")
 }
@@ -51,7 +51,7 @@ model Organization {
   id                       String                         @id @default(uuid())
   name                     String
   slug                     String                         @unique
-  ownerId                  String                         @map("owner_id")
+  ownerId                  String?                        @map("owner_id")
   subscriptionPlanId       String?                        @map("subscription_plan_id")
   subscriptionStatus       OrganizationSubscriptionStatus @default(active) @map("subscription_status")
   subscriptionStartDate    DateTime?                      @map("subscription_start_date")
@@ -86,21 +86,22 @@ model Organization {
   sasSessions              SasSession[]
   salesUsers               SalesUser[]
   usuariosSas              UsuarioSas[]
-  abTests                  AbTest[]
+
   cmsBlogPosts             CmsBlogPost[]
   cmsPages                 CmsPage[]
   customDomains            CustomDomain[]
   invoices                 Invoice[]
   notifications            Notification[]
   organizationIntegrations OrganizationIntegration[]
-  owner                    UsuarioSas                     @relation("OrganizationOwned", fields: [ownerId], references: [id])
+  owner                    UsuarioSas?                    @relation("OrganizationOwned", fields: [ownerId], references: [id])
   subscriptionPlan         SubscriptionPlan?              @relation(fields: [subscriptionPlanId], references: [id])
   paymentMethods           PaymentMethod[]
   subscriptions            Subscription[]
   supportTickets           SupportTicket[]
-  userFeedback             UserFeedback[]
-  versionNotifications     VersionNotification[]
+
+
   whiteLabelBranding       WhiteLabelBranding?
+  enhancedSessions         EnhancedSession[]
 
   @@map("system_organizations")
 }
@@ -208,21 +209,21 @@ model OrganizationMember {
 }
 
 model Customer {
-  id            String                 @id @default(uuid())
-  userId        String                 @map("user_id")
-  ci            String?                @unique
-  nombre        String?
-  apellido      String?
-  address       String?                @map("direccion")
-  phone         String?                @map("telefono")
-  email         String?
-  password      String?
-  city          String?
-  country       String?
-  isActive      Boolean                @default(true) @map("is_active")
-  deletedAt     DateTime?              @map("deleted_at")
-  createdAt     DateTime               @default(now()) @map("created_at")
-  updatedAt     DateTime               @updatedAt @map("updated_at")
+  id             String                 @id @default(uuid())
+  userId         String                 @map("user_id")
+  ci             String?                @unique
+  nombre         String?
+  apellido       String?
+  address        String?                @map("direccion")
+  phone          String?                @map("telefono")
+  email          String?
+  password       String?
+  city           String?
+  country        String?
+  isActive       Boolean                @default(true) @map("is_active")
+  deletedAt      DateTime?              @map("deleted_at")
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
   organizations  CustomerOrganization[]
   createdTickets SupportTicket[]        @relation("TicketCreatedByCustomer")
 
@@ -649,8 +650,9 @@ model UsuarioSas {
   sucursal             Branch?              @relation(fields: [sucursalId], references: [id])
   notifications        Notification[]
   TicketAttachment     TicketAttachment[]
-  createdTickets       SupportTicket[]       @relation("TicketCreatedBySasUser")
-  ownedOrganizations   Organization[]        @relation("OrganizationOwned")
+  createdTickets       SupportTicket[]      @relation("TicketCreatedBySasUser")
+  ownedOrganizations   Organization[]       @relation("OrganizationOwned")
+  enhancedSessions     EnhancedSession[]
 
   @@index([organizationId, isActive])
   @@index([email, organizationId])
@@ -1027,34 +1029,34 @@ model PaymentMethod {
 }
 
 model SupportTicket {
-  id              String             @id @default(uuid())
-  ticketNumber    String             @unique @map("ticket_number")
-  organizationId  String             @map("organization_id")
+  id                  String             @id @default(uuid())
+  ticketNumber        String             @unique @map("ticket_number")
+  organizationId      String             @map("organization_id")
   createdById         String?            @map("created_by_id")
   createdByCustomerId String?            @map("created_by_customer_id")
   createdBySasUserId  String?            @map("created_by_sas_user_id")
   assignedToId        String?            @map("assigned_to_id")
-  title           String
-  description     String
-  status          String             @default("open")
-  priority        String             @default("medium")
-  category        String?
-  contactName     String?            @map("contact_name")
-  contactEmail    String?            @map("contact_email")
-  contactPhone    String?            @map("contact_phone")
-  resolvedAt      DateTime?          @map("resolved_at")
-  closedAt        DateTime?          @map("closed_at")
-  firstResponseAt DateTime?          @map("first_response_at")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
-  assignedTo        Profile?           @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
-  createdBy         Profile?           @relation("TicketCreatedBy", fields: [createdById], references: [id])
-  createdByCustomer Customer?          @relation("TicketCreatedByCustomer", fields: [createdByCustomerId], references: [id])
-  createdBySasUser  UsuarioSas?        @relation("TicketCreatedBySasUser", fields: [createdBySasUserId], references: [id])
-  organization    Organization       @relation(fields: [organizationId], references: [id])
-  attachments     TicketAttachment[]
-  comments        TicketComment[]
-  history         TicketHistory[]
+  title               String
+  description         String
+  status              String             @default("open")
+  priority            String             @default("medium")
+  category            String?
+  contactName         String?            @map("contact_name")
+  contactEmail        String?            @map("contact_email")
+  contactPhone        String?            @map("contact_phone")
+  resolvedAt          DateTime?          @map("resolved_at")
+  closedAt            DateTime?          @map("closed_at")
+  firstResponseAt     DateTime?          @map("first_response_at")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  assignedTo          Profile?           @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  createdBy           Profile?           @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  createdByCustomer   Customer?          @relation("TicketCreatedByCustomer", fields: [createdByCustomerId], references: [id])
+  createdBySasUser    UsuarioSas?        @relation("TicketCreatedBySasUser", fields: [createdBySasUserId], references: [id])
+  organization        Organization       @relation(fields: [organizationId], references: [id])
+  attachments         TicketAttachment[]
+  comments            TicketComment[]
+  history             TicketHistory[]
 
   @@index([organizationId, status, createdAt])
   @@index([createdByCustomerId])
@@ -1204,165 +1206,11 @@ model CmsBlogPost {
   @@map("system_cms_blog_posts")
 }
 
-model UserFeedback {
-  id             String         @id @default(uuid())
-  organizationId String?        @map("organization_id")
-  userId         String?        @map("user_id")
-  userType       String         @default("admin") @map("user_type")
-  category       String         @default("general")
-  title          String
-  description    String
-  status         String         @default("open")
-  priority       String         @default("medium")
-  votes          Int            @default(0)
-  adminNotes     String?        @map("admin_notes")
-  completedAt    DateTime?      @map("completed_at")
-  completedBy    String?        @map("completed_by")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  feedbackVotes  FeedbackVote[]
-  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([category, status])
-  @@index([status, createdAt])
-  @@index([organizationId, status])
-  @@map("system_user_feedback")
-}
 
-model FeedbackVote {
-  id         String       @id @default(uuid())
-  feedbackId String       @map("feedback_id")
-  userId     String       @map("user_id")
-  userType   String       @map("user_type")
-  createdAt  DateTime     @default(now()) @map("created_at")
-  feedback   UserFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
 
-  @@unique([feedbackId, userId, userType])
-  @@index([feedbackId])
-  @@map("system_feedback_votes")
-}
 
-model SystemVersion {
-  id                String                @id @default(uuid())
-  version           String                @unique
-  versionName       String?               @map("version_name")
-  releaseType       String                @default("patch") @map("release_type")
-  changelog         String
-  releaseNotes      String?               @map("release_notes")
-  isReleased        Boolean               @default(false) @map("is_released")
-  isCurrent         Boolean               @default(false) @map("is_current")
-  releasedAt        DateTime?             @map("released_at")
-  releaseUrl        String?               @map("release_url")
-  downloadUrl       String?               @map("download_url")
-  rollbackAvailable Boolean               @default(false) @map("rollback_available")
-  breakingChanges   Boolean               @default(false) @map("breaking_changes")
-  migrationRequired Boolean               @default(false) @map("migration_required")
-  createdById       String?               @map("created_by_id")
-  createdAt         DateTime              @default(now()) @map("created_at")
-  updatedAt         DateTime              @updatedAt @map("updated_at")
-  notifications     VersionNotification[]
-  createdBy         Profile?              @relation("SystemVersionCreatedBy", fields: [createdById], references: [id])
 
-  @@index([version])
-  @@index([isReleased, releasedAt])
-  @@index([isCurrent])
-  @@map("system_versions")
-}
-
-model VersionNotification {
-  id               String        @id @default(uuid())
-  versionId        String        @map("version_id")
-  userId           String?       @map("user_id")
-  organizationId   String?       @map("organization_id")
-  notificationType String        @default("all") @map("notification_type")
-  isRead           Boolean       @default(false) @map("is_read")
-  sentAt           DateTime?     @map("sent_at")
-  readAt           DateTime?     @map("read_at")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  version          SystemVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-
-  @@index([versionId, isRead])
-  @@index([userId, isRead])
-  @@index([organizationId, isRead])
-  @@map("system_version_notifications")
-}
-
-model AbTest {
-  id             String              @id @default(uuid())
-  name           String
-  description    String?
-  testType       String              @map("test_type")
-  status         String              @default("draft")
-  organizationId String?             @map("organization_id")
-  startDate      DateTime?           @map("start_date")
-  endDate        DateTime?           @map("end_date")
-  targetAudience Json?               @map("target_audience")
-  successMetrics Json                @map("success_metrics")
-  createdAt      DateTime            @default(now()) @map("created_at")
-  updatedAt      DateTime            @updatedAt @map("updated_at")
-  createdById    String              @map("created_by_id")
-  events         AbTestEvent[]
-  participants   AbTestParticipant[]
-  variants       AbTestVariant[]
-  createdBy      Profile             @relation("AbTestCreatedBy", fields: [createdById], references: [id])
-  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([testType, status])
-  @@index([organizationId, status])
-  @@index([status, startDate])
-  @@map("system_ab_tests")
-}
-
-model AbTestVariant {
-  id                String              @id @default(uuid())
-  abTestId          String              @map("ab_test_id")
-  name              String
-  description       String?
-  variantData       Json                @map("variant_data")
-  trafficPercentage Decimal             @default(50) @map("traffic_percentage") @db.Decimal(5, 2)
-  isControl         Boolean             @default(false) @map("is_control")
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  participants      AbTestParticipant[]
-  abTest            AbTest              @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-
-  @@index([abTestId])
-  @@map("system_ab_test_variants")
-}
-
-model AbTestParticipant {
-  id             String        @id @default(uuid())
-  abTestId       String        @map("ab_test_id")
-  variantId      String        @map("variant_id")
-  userId         String?       @map("user_id")
-  organizationId String?       @map("organization_id")
-  customerId     String?       @map("customer_id")
-  joinedAt       DateTime      @default(now()) @map("joined_at")
-  convertedAt    DateTime?     @map("converted_at")
-  converted      Boolean       @default(false)
-  abTest         AbTest        @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-  variant        AbTestVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  @@unique([abTestId, userId, organizationId, customerId])
-  @@index([abTestId, variantId])
-  @@index([abTestId, converted])
-  @@map("system_ab_test_participants")
-}
-
-model AbTestEvent {
-  id            String   @id @default(uuid())
-  abTestId      String   @map("ab_test_id")
-  participantId String?  @map("participant_id")
-  eventType     String   @map("event_type")
-  eventData     Json?    @map("event_data")
-  createdAt     DateTime @default(now()) @map("created_at")
-  abTest        AbTest   @relation(fields: [abTestId], references: [id], onDelete: Cascade)
-
-  @@index([abTestId, eventType, createdAt])
-  @@index([participantId, createdAt])
-  @@map("system_ab_test_events")
-}
 
 model CustomDomain {
   id                 String                  @id @default(uuid())
@@ -1651,3 +1499,97 @@ enum AdjustmentType {
   DECREASE
   CORRECTION
 }
+
+// ==================== SISTEMA DE AUTENTICACIÓN EMPRESARIAL ====================
+
+model EnhancedSession {
+  id                  String       @id @default(uuid())
+  userId              String       @map("user_id")
+  organizationId      String       @map("organization_id")
+  deviceFingerprint   String?      @map("device_fingerprint")
+  deviceName          String?      @map("device_name")
+  deviceInfo          Json?        @map("device_info")
+  ipAddress           String?      @map("ip_address")
+  userAgent           String?      @map("user_agent")
+  rememberMe          Boolean      @default(false) @map("remember_me")
+  isActive            Boolean      @default(true) @map("is_active")
+  isCurrent           Boolean      @default(false) @map("is_current")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+  lastActivityAt      DateTime     @default(now()) @map("last_activity_at")
+  lastRefreshAt       DateTime?    @map("last_refresh_at")
+  expiresAt           DateTime     @map("expires_at")
+  invalidatedAt       DateTime?    @map("invalidated_at")
+  invalidationReason  String?      @map("invalidation_reason")
+  refreshCount        Int          @default(0) @map("refresh_count")
+  
+  // Relaciones
+  user                UsuarioSas   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshAttempts     RefreshAttempt[]
+
+  // Índices para performance
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isActive, expiresAt])
+  @@index([deviceFingerprint])
+  @@index([lastActivityAt])
+  @@index([userId, organizationId, isActive])
+  
+  @@map("enhanced_sessions")
+}
+
+model InvalidatedToken {
+  id          String   @id @default(uuid())
+  tokenHash   String   @unique @map("token_hash")
+  invalidatedAt DateTime @default(now()) @map("invalidated_at")
+  reason      String
+  expiresAt   DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL '30 days')")) @map("expires_at")
+
+  @@index([tokenHash])
+  @@index([expiresAt])
+  
+  @@map("invalidated_tokens")
+}
+
+model PasswordChangeLog {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  systemType          String   @map("system_type") // 'admin' | 'sas'
+  changedAt           DateTime @default(now()) @map("changed_at")
+  invalidatedSessions Int      @default(0) @map("invalidated_sessions")
+  ipAddress           String?  @map("ip_address")
+  userAgent           String?  @map("user_agent")
+
+  @@index([userId, systemType])
+  @@index([changedAt])
+  
+  @@map("password_change_logs")
+}
+
+model RefreshAttempt {
+  id          String            @id @default(uuid())
+  sessionId   String?           @map("session_id")
+  ipAddress   String            @map("ip_address")
+  userAgent   String?           @map("user_agent")
+  success     Boolean           @map("success")
+  errorReason String?           @map("error_reason")
+  attemptedAt DateTime          @default(now()) @map("attempted_at")
+  
+  // Relaciones
+  session     EnhancedSession?  @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([ipAddress, attemptedAt])
+  @@index([sessionId])
+  @@index([success, attemptedAt])
+  
+  @@map("refresh_attempts")
+}
+
+// Actualizar modelo UsuarioSas para incluir relación con EnhancedSession
+// (Agregar esta línea a la definición existente de UsuarioSas)
+// enhancedSessions    EnhancedSession[]
+
+// Actualizar modelo Organization para incluir relación con EnhancedSession  
+// (Agregar esta línea a la definición existente de Organization)
+// enhancedSessions    EnhancedSession[]

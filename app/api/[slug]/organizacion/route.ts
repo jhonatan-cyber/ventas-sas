@@ -45,7 +45,8 @@ export async function GET(
           website: true,
           owner: {
             select: {
-              fullName: true,
+              nombre: true,
+              apellido: true,
             },
           },
           whiteLabelBranding: {
@@ -85,7 +86,7 @@ export async function GET(
         address: organization.address,
         website: organization.website || null,
         logoUrl: organization.whiteLabelBranding?.logoUrl || null,
-        ownerName: organization.owner ? `${organization.owner.nombre} ${organization.owner.apellido}` : null,
+        ownerName: organization.owner ? `${organization.owner.nombre} ${organization.owner.apellido}`.trim() : null,
       },
     });
   } catch (error) {

@@ -114,7 +114,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, []) // Sin dependencias para evitar recreación
 
   const refreshPermissions = async () => {
     clearPermissionsCache()
@@ -133,7 +133,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     
     // Luego hacer fetch para actualizar
     fetchPermissions()
-  }, [fetchPermissions])
+  }, []) // Remover fetchPermissions de las dependencias para evitar bucle infinito
 
   return (
     <PermissionsContext.Provider

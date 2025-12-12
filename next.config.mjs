@@ -4,15 +4,8 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Habilitar modo standalone para Docker
-  output: 'standalone',
-  
   typescript: {
     ignoreBuildErrors: false,
-  },
-  eslint: {
-    // Permitir que el build continúe con warnings de ESLint
-    ignoreDuringBuilds: false,
   },
   images: {
     // Habilitar optimización de imágenes

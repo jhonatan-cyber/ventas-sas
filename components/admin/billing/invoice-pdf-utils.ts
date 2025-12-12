@@ -317,7 +317,7 @@ export async function generateInvoiceHTML(invoice: SerializedInvoiceWithRelation
   const companyNIT = preferences?.companyNIT || '';
   const companyAddress = preferences?.companyAddress || '';
   const companyPhone = preferences?.companyPhone || '';
-  const ownerName = preferences?.ownerName || invoice.organization?.owner?.fullName || '';
+  const ownerName = preferences?.ownerName || (invoice.organization?.owner ? ((invoice.organization.owner as any).fullName || `${(invoice.organization.owner as any).nombre || ''} ${(invoice.organization.owner as any).apellido || ''}`.trim()) : '') || '';
 
   // Determinar el nombre de facturación
   const customer = invoice.organization?.customerOrganizations?.[0]?.customer;

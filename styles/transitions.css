@@ -1,0 +1,283 @@
+/* Transiciones CSS limpias - SIN referencias a slide */
+
+/* Animaciones básicas */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.6;
+  }
+}
+
+/* Clases de utilidad */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Animaciones optimizadas para modales - GPU aceleradas y suaves */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale3d(0.98, 0.98, 1) translate3d(0, -4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: scale3d(0.98, 0.98, 1) translate3d(0, -4px, 0);
+  }
+}
+
+@keyframes modalBackdropEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalBackdropExit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Clases optimizadas para modales con estados de Radix UI */
+.modal-content {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.modal-content[data-state="open"] {
+  animation: modalEnter 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.modal-content[data-state="closed"] {
+  animation: modalExit 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.modal-backdrop {
+  will-change: opacity;
+}
+
+.modal-backdrop[data-state="open"] {
+  animation: modalBackdropEnter 0.3s ease-out;
+}
+
+.modal-backdrop[data-state="closed"] {
+  animation: modalBackdropExit 0.2s ease-out;
+}
+
+/* Variantes optimizadas para diferentes tipos de modales */
+@keyframes modalEnterLarge {
+  from {
+    opacity: 0;
+    transform: scale3d(0.9, 0.9, 1) translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes modalEnterSmooth {
+  from {
+    opacity: 0;
+    transform: scale3d(0.98, 0.98, 1) translate3d(0, -5px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+/* Clases optimizadas para diferentes tipos de modales */
+.modal-content-large {
+  animation: modalEnterLarge 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.modal-content-smooth {
+  animation: modalEnterSmooth 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Transiciones para dropdowns */
+.dropdown-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Transiciones para notificaciones/toasts */
+.toast {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Transiciones para el sidebar */
+.sidebar-transition {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Estados de hover */
+.hover-scale {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Transiciones de color */
+.color-transition {
+  transition: color 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+/* Animaciones de carga */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Animación de pulse para botones */
+@keyframes pulseScale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-pulse-scale {
+  animation: pulseScale 2s ease-in-out infinite;
+}
+
+/* Animación de entrada para FAB */
+@keyframes fabEnter {
+  from {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-fab-enter {
+  animation: fabEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Efecto ripple para botones */
+.ripple-effect {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Optimizaciones de rendimiento */
+.modal-content,
+.modal-content-exit,
+.modal-content-large,
+.modal-content-smooth {
+  /* Forzar aceleración por GPU */
+  transform: translateZ(0);
+  /* Optimizar repaint */
+  contain: layout style paint;
+}
+
+.modal-backdrop,
+.modal-backdrop-exit {
+  /* Optimizar backdrop */
+  contain: strict;
+  transform: translateZ(0);
+}
+
+/* Transiciones responsivas */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .modal-content,
+  .modal-content-exit,
+  .modal-backdrop,
+  .modal-backdrop-exit {
+    animation: none !important;
+  }
+}

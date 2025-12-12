@@ -88,18 +88,11 @@ export default async function OrganizationLandingPage({
     redirect(`/${slug}/en-mantenimiento`)
   }
 
-  // Mostrar el landing de la empresa (conectado al CMS)
+  // Mostrar el landing de la empresa
   return (
     <OrganizationLandingClient 
       organizationSlug={slug}
       organization={organization}
-      landingPage={landingPage ? {
-        title: landingPage.title,
-        content: landingPage.content,
-        excerpt: landingPage.excerpt,
-        template: landingPage.template || "minimal",
-        publishedAt: landingPage.publishedAt,
-      } : null}
     />
   )
 }

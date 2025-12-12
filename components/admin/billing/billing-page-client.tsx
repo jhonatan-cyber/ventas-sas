@@ -96,7 +96,7 @@ export function BillingPageClient({ initialInvoices, initialStats }: BillingPage
                 companyLogo: org.logoUrl || undefined,
                 themeColor: settings.themeColor || 'green',
                 currency: settings.currency || 'BOB',
-                ownerName: org.owner?.fullName || undefined,
+                ownerName: org.owner ? `${org.owner.nombre} ${org.owner.apellido}`.trim() : undefined,
               }
             }
           }
@@ -257,7 +257,7 @@ Necesitas ayuda? Estamos aqui para asistirte.`
                 companyLogo: org.logoUrl || undefined,
                 themeColor: settings.themeColor || 'green',
                 currency: settings.currency || 'BOB',
-                ownerName: org.owner?.fullName || undefined,
+                ownerName: org.owner ? `${org.owner.nombre} ${org.owner.apellido}`.trim() : undefined,
               }
             }
           }

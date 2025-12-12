@@ -26,11 +26,12 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
   const [unreadCount, setUnreadCount] = useState(0)
   const [isConnected, setIsConnected] = useState(false)
 
+  // Memoizar shouldFetch para evitar recreación constante
   const shouldFetch = enabled && (system === 'admin' || (system === 'sas' && !!slug))
 
   // Obtener notificaciones iniciales
   const fetchNotifications = useCallback(async () => {
-    if (!shouldFetch) return
+    if (!enabled || (system === 'sas' && !slug)) return
     try {
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
@@ -56,11 +57,11 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       setNotifications([])
       setUnreadCount(0)
     }
-  }, [system, slug, shouldFetch])
+  }, [system, slug, enabled]) // Usar dependencias directas en lugar de shouldFetch
 
   // Marcar como leída
   const markAsRead = useCallback(async (notificationId: string) => {
-    if (!shouldFetch) return
+    if (!enabled || (system === 'sas' && !slug)) return
     try {
       const params = new URLSearchParams({ system })
       if (slug) params.append('slug', slug)
@@ -83,7 +84,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
-  }, [system, slug, shouldFetch])
+  }, [system, slug, enabled])
 
   // Marcar todas como leídas
   const markAllAsRead = useCallback(async () => {
@@ -109,7 +110,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
 
   // Conectar al stream SSE
   useEffect(() => {
-    if (!shouldFetch) return
+    if (!enabled || (system === 'sas' && !slug)) return
 
     const params = new URLSearchParams({ system })
     if (slug) params.append('slug', slug)
@@ -161,12 +162,12 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
 
     eventSource.onerror = () => {
       setIsConnected(false)
-      // Reintentar conexión después de 5 segundos
+      // Reintentar conexión después de 10 segundos (menos frecuente)
       setTimeout(() => {
-        if (shouldFetch) {
+        if (enabled && (system === 'admin' || (system === 'sas' && slug))) {
           fetchNotifications()
         }
-      }, 5000)
+      }, 10000)
     }
 
     // Cargar notificaciones iniciales
@@ -176,7 +177,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       eventSource.close()
       setIsConnected(false)
     }
-  }, [system, slug, shouldFetch, fetchNotifications])
+  }, [system, slug, enabled]) // Remover fetchNotifications de dependencias
 
   return {
     notifications,
