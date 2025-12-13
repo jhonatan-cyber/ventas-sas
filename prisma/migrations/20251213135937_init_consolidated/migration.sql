@@ -55,7 +55,7 @@ CREATE TABLE "system_organizations" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "owner_id" TEXT NOT NULL,
+    "owner_id" TEXT,
     "subscription_plan_id" TEXT,
     "subscription_status" "OrganizationSubscriptionStatus" NOT NULL DEFAULT 'active',
     "subscription_start_date" TIMESTAMP(3),
@@ -945,137 +945,6 @@ CREATE TABLE "system_cms_blog_posts" (
 );
 
 -- CreateTable
-CREATE TABLE "system_user_feedback" (
-    "id" TEXT NOT NULL,
-    "organization_id" TEXT,
-    "user_id" TEXT,
-    "user_type" TEXT NOT NULL DEFAULT 'admin',
-    "category" TEXT NOT NULL DEFAULT 'general',
-    "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'open',
-    "priority" TEXT NOT NULL DEFAULT 'medium',
-    "votes" INTEGER NOT NULL DEFAULT 0,
-    "admin_notes" TEXT,
-    "completed_at" TIMESTAMP(3),
-    "completed_by" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "system_user_feedback_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_feedback_votes" (
-    "id" TEXT NOT NULL,
-    "feedback_id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
-    "user_type" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "system_feedback_votes_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_versions" (
-    "id" TEXT NOT NULL,
-    "version" TEXT NOT NULL,
-    "version_name" TEXT,
-    "release_type" TEXT NOT NULL DEFAULT 'patch',
-    "changelog" TEXT NOT NULL,
-    "release_notes" TEXT,
-    "is_released" BOOLEAN NOT NULL DEFAULT false,
-    "is_current" BOOLEAN NOT NULL DEFAULT false,
-    "released_at" TIMESTAMP(3),
-    "release_url" TEXT,
-    "download_url" TEXT,
-    "rollback_available" BOOLEAN NOT NULL DEFAULT false,
-    "breaking_changes" BOOLEAN NOT NULL DEFAULT false,
-    "migration_required" BOOLEAN NOT NULL DEFAULT false,
-    "created_by_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "system_versions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_version_notifications" (
-    "id" TEXT NOT NULL,
-    "version_id" TEXT NOT NULL,
-    "user_id" TEXT,
-    "organization_id" TEXT,
-    "notification_type" TEXT NOT NULL DEFAULT 'all',
-    "is_read" BOOLEAN NOT NULL DEFAULT false,
-    "sent_at" TIMESTAMP(3),
-    "read_at" TIMESTAMP(3),
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "system_version_notifications_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_ab_tests" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "test_type" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'draft',
-    "organization_id" TEXT,
-    "start_date" TIMESTAMP(3),
-    "end_date" TIMESTAMP(3),
-    "target_audience" JSONB,
-    "success_metrics" JSONB NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "created_by_id" TEXT NOT NULL,
-
-    CONSTRAINT "system_ab_tests_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_ab_test_variants" (
-    "id" TEXT NOT NULL,
-    "ab_test_id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "variant_data" JSONB NOT NULL,
-    "traffic_percentage" DECIMAL(5,2) NOT NULL DEFAULT 50,
-    "is_control" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "system_ab_test_variants_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_ab_test_participants" (
-    "id" TEXT NOT NULL,
-    "ab_test_id" TEXT NOT NULL,
-    "variant_id" TEXT NOT NULL,
-    "user_id" TEXT,
-    "organization_id" TEXT,
-    "customer_id" TEXT,
-    "joined_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "converted_at" TIMESTAMP(3),
-    "converted" BOOLEAN NOT NULL DEFAULT false,
-
-    CONSTRAINT "system_ab_test_participants_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "system_ab_test_events" (
-    "id" TEXT NOT NULL,
-    "ab_test_id" TEXT NOT NULL,
-    "participant_id" TEXT,
-    "event_type" TEXT NOT NULL,
-    "event_data" JSONB,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "system_ab_test_events_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "system_custom_domains" (
     "id" TEXT NOT NULL,
     "organization_id" TEXT NOT NULL,
@@ -1251,6 +1120,68 @@ CREATE TABLE "sales_inventory_adjustments" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "sales_inventory_adjustments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "enhanced_sessions" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "organization_id" TEXT NOT NULL,
+    "device_fingerprint" TEXT,
+    "device_name" TEXT,
+    "device_info" JSONB,
+    "ip_address" TEXT,
+    "user_agent" TEXT,
+    "remember_me" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "is_current" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "last_activity_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_refresh_at" TIMESTAMP(3),
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "invalidated_at" TIMESTAMP(3),
+    "invalidation_reason" TEXT,
+    "refresh_count" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "enhanced_sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "invalidated_tokens" (
+    "id" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "invalidated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reason" TEXT NOT NULL,
+    "expires_at" TIMESTAMP(3) NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '30 days'),
+
+    CONSTRAINT "invalidated_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "password_change_logs" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "system_type" TEXT NOT NULL,
+    "changed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "invalidated_sessions" INTEGER NOT NULL DEFAULT 0,
+    "ip_address" TEXT,
+    "user_agent" TEXT,
+
+    CONSTRAINT "password_change_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "refresh_attempts" (
+    "id" TEXT NOT NULL,
+    "session_id" TEXT,
+    "ip_address" TEXT NOT NULL,
+    "user_agent" TEXT,
+    "success" BOOLEAN NOT NULL,
+    "error_reason" TEXT,
+    "attempted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "refresh_attempts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -1752,69 +1683,6 @@ CREATE INDEX "system_cms_blog_posts_organization_id_category_idx" ON "system_cms
 CREATE UNIQUE INDEX "system_cms_blog_posts_organization_id_slug_key" ON "system_cms_blog_posts"("organization_id", "slug");
 
 -- CreateIndex
-CREATE INDEX "system_user_feedback_category_status_idx" ON "system_user_feedback"("category", "status");
-
--- CreateIndex
-CREATE INDEX "system_user_feedback_status_created_at_idx" ON "system_user_feedback"("status", "created_at");
-
--- CreateIndex
-CREATE INDEX "system_user_feedback_organization_id_status_idx" ON "system_user_feedback"("organization_id", "status");
-
--- CreateIndex
-CREATE INDEX "system_feedback_votes_feedback_id_idx" ON "system_feedback_votes"("feedback_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "system_feedback_votes_feedback_id_user_id_user_type_key" ON "system_feedback_votes"("feedback_id", "user_id", "user_type");
-
--- CreateIndex
-CREATE UNIQUE INDEX "system_versions_version_key" ON "system_versions"("version");
-
--- CreateIndex
-CREATE INDEX "system_versions_version_idx" ON "system_versions"("version");
-
--- CreateIndex
-CREATE INDEX "system_versions_is_released_released_at_idx" ON "system_versions"("is_released", "released_at");
-
--- CreateIndex
-CREATE INDEX "system_versions_is_current_idx" ON "system_versions"("is_current");
-
--- CreateIndex
-CREATE INDEX "system_version_notifications_version_id_is_read_idx" ON "system_version_notifications"("version_id", "is_read");
-
--- CreateIndex
-CREATE INDEX "system_version_notifications_user_id_is_read_idx" ON "system_version_notifications"("user_id", "is_read");
-
--- CreateIndex
-CREATE INDEX "system_version_notifications_organization_id_is_read_idx" ON "system_version_notifications"("organization_id", "is_read");
-
--- CreateIndex
-CREATE INDEX "system_ab_tests_test_type_status_idx" ON "system_ab_tests"("test_type", "status");
-
--- CreateIndex
-CREATE INDEX "system_ab_tests_organization_id_status_idx" ON "system_ab_tests"("organization_id", "status");
-
--- CreateIndex
-CREATE INDEX "system_ab_tests_status_start_date_idx" ON "system_ab_tests"("status", "start_date");
-
--- CreateIndex
-CREATE INDEX "system_ab_test_variants_ab_test_id_idx" ON "system_ab_test_variants"("ab_test_id");
-
--- CreateIndex
-CREATE INDEX "system_ab_test_participants_ab_test_id_variant_id_idx" ON "system_ab_test_participants"("ab_test_id", "variant_id");
-
--- CreateIndex
-CREATE INDEX "system_ab_test_participants_ab_test_id_converted_idx" ON "system_ab_test_participants"("ab_test_id", "converted");
-
--- CreateIndex
-CREATE UNIQUE INDEX "system_ab_test_participants_ab_test_id_user_id_organization_key" ON "system_ab_test_participants"("ab_test_id", "user_id", "organization_id", "customer_id");
-
--- CreateIndex
-CREATE INDEX "system_ab_test_events_ab_test_id_event_type_created_at_idx" ON "system_ab_test_events"("ab_test_id", "event_type", "created_at");
-
--- CreateIndex
-CREATE INDEX "system_ab_test_events_participant_id_created_at_idx" ON "system_ab_test_events"("participant_id", "created_at");
-
--- CreateIndex
 CREATE UNIQUE INDEX "system_custom_domains_domain_key" ON "system_custom_domains"("domain");
 
 -- CreateIndex
@@ -1904,8 +1772,50 @@ CREATE INDEX "sales_inventory_adjustments_branch_id_created_at_idx" ON "sales_in
 -- CreateIndex
 CREATE INDEX "sales_inventory_adjustments_adjustmentType_created_at_idx" ON "sales_inventory_adjustments"("adjustmentType", "created_at");
 
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_user_id_idx" ON "enhanced_sessions"("user_id");
+
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_organization_id_idx" ON "enhanced_sessions"("organization_id");
+
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_is_active_expires_at_idx" ON "enhanced_sessions"("is_active", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_device_fingerprint_idx" ON "enhanced_sessions"("device_fingerprint");
+
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_last_activity_at_idx" ON "enhanced_sessions"("last_activity_at");
+
+-- CreateIndex
+CREATE INDEX "enhanced_sessions_user_id_organization_id_is_active_idx" ON "enhanced_sessions"("user_id", "organization_id", "is_active");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "invalidated_tokens_token_hash_key" ON "invalidated_tokens"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "invalidated_tokens_token_hash_idx" ON "invalidated_tokens"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "invalidated_tokens_expires_at_idx" ON "invalidated_tokens"("expires_at");
+
+-- CreateIndex
+CREATE INDEX "password_change_logs_user_id_system_type_idx" ON "password_change_logs"("user_id", "system_type");
+
+-- CreateIndex
+CREATE INDEX "password_change_logs_changed_at_idx" ON "password_change_logs"("changed_at");
+
+-- CreateIndex
+CREATE INDEX "refresh_attempts_ip_address_attempted_at_idx" ON "refresh_attempts"("ip_address", "attempted_at");
+
+-- CreateIndex
+CREATE INDEX "refresh_attempts_session_id_idx" ON "refresh_attempts"("session_id");
+
+-- CreateIndex
+CREATE INDEX "refresh_attempts_success_attempted_at_idx" ON "refresh_attempts"("success", "attempted_at");
+
 -- AddForeignKey
-ALTER TABLE "system_organizations" ADD CONSTRAINT "system_organizations_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "system_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "system_organizations" ADD CONSTRAINT "system_organizations_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "sales_usuarios_sas"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "system_organizations" ADD CONSTRAINT "system_organizations_subscription_plan_id_fkey" FOREIGN KEY ("subscription_plan_id") REFERENCES "system_subscription_plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -2139,39 +2049,6 @@ ALTER TABLE "system_cms_blog_posts" ADD CONSTRAINT "system_cms_blog_posts_organi
 ALTER TABLE "system_cms_blog_posts" ADD CONSTRAINT "system_cms_blog_posts_updated_by_id_fkey" FOREIGN KEY ("updated_by_id") REFERENCES "system_users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "system_user_feedback" ADD CONSTRAINT "system_user_feedback_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "system_organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_feedback_votes" ADD CONSTRAINT "system_feedback_votes_feedback_id_fkey" FOREIGN KEY ("feedback_id") REFERENCES "system_user_feedback"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_versions" ADD CONSTRAINT "system_versions_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "system_users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_version_notifications" ADD CONSTRAINT "system_version_notifications_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "system_organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_version_notifications" ADD CONSTRAINT "system_version_notifications_version_id_fkey" FOREIGN KEY ("version_id") REFERENCES "system_versions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_tests" ADD CONSTRAINT "system_ab_tests_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "system_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_tests" ADD CONSTRAINT "system_ab_tests_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "system_organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_test_variants" ADD CONSTRAINT "system_ab_test_variants_ab_test_id_fkey" FOREIGN KEY ("ab_test_id") REFERENCES "system_ab_tests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_test_participants" ADD CONSTRAINT "system_ab_test_participants_ab_test_id_fkey" FOREIGN KEY ("ab_test_id") REFERENCES "system_ab_tests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_test_participants" ADD CONSTRAINT "system_ab_test_participants_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "system_ab_test_variants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "system_ab_test_events" ADD CONSTRAINT "system_ab_test_events_ab_test_id_fkey" FOREIGN KEY ("ab_test_id") REFERENCES "system_ab_tests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "system_custom_domains" ADD CONSTRAINT "system_custom_domains_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "system_organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -2245,3 +2122,12 @@ ALTER TABLE "sales_inventory_adjustments" ADD CONSTRAINT "sales_inventory_adjust
 
 -- AddForeignKey
 ALTER TABLE "sales_inventory_adjustments" ADD CONSTRAINT "sales_inventory_adjustments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "sales_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "enhanced_sessions" ADD CONSTRAINT "enhanced_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "sales_usuarios_sas"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "enhanced_sessions" ADD CONSTRAINT "enhanced_sessions_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "system_organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "refresh_attempts" ADD CONSTRAINT "refresh_attempts_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "enhanced_sessions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
