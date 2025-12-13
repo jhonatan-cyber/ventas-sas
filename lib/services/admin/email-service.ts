@@ -6,6 +6,7 @@ export interface CredentialsEmailData {
   email: string
   password: string
   username: string // CI o email
+  ci?: string // CI del usuario (opcional)
   organizationName: string
   organizationSlug: string
   landingUrl: string
