@@ -8,10 +8,17 @@ import { z } from 'zod'
 export const adminLoginSchema = z.object({
   email: z
     .string()
-    .min(1, 'El email es requerido')
-    .email('El email no es válido')
-    .toLowerCase()
-    .trim(),
+    .min(1, 'El email o CI es requerido')
+    .trim()
+    .refine(
+      (val) => {
+        // Validar que sea un email válido O un CI (solo números)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        const ciRegex = /^\d+$/
+        return emailRegex.test(val) || ciRegex.test(val)
+      },
+      'Debe ser un email válido o un CI (solo números)'
+    ),
   password: z
     .string()
     .min(1, 'La contraseña es requerida')

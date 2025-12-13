@@ -69,7 +69,7 @@ export default function RootLayout({
           <ServiceWorkerRegistration />
           <Analytics />
           <ChatWidget />
-          <SpeedInsights />
+          {/* Speed Insights deshabilitado para VPS */}
         </ThemeProvider>
       </body>
     </html>

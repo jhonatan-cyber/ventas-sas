@@ -201,11 +201,11 @@ function AdminLoginFormContent() {
             <form onSubmit={handleLogin}>
               <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email o CI</Label>
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="admin@saleshub.com"
+                    type="text"
+                    placeholder="admin@saleshub.com o 12345678"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

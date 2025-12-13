@@ -107,21 +107,15 @@ export async function PUT(
     const ciChanged = newCi !== undefined && oldCi !== newCi
 
     // Si el CI cambió, SIEMPRE actualizar la contraseña automáticamente al nuevo CI
-    // Esto es por seguridad: si cambia el identificador único, debe cambiar la contraseña
-    // Pasamos la contraseña en texto plano, el servicio se encargará del hashing
-    if (ciChanged) {
-      if (newCi) {
-        // Si el nuevo CI tiene valor, usar el nuevo CI como contraseña
-        updateData.password = newCi
-      } else if (oldCi) {
-        // Si el CI se eliminó (cambió de un valor a null), generar una contraseña temporal aleatoria
-        // Esto previene que el usuario quede sin contraseña válida
-        const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`
-        updateData.password = tempPassword
-      }
-    } else if (validatedData.password && validatedData.password.trim() !== '') {
-      // Si el CI no cambió pero se proporciona una contraseña explícita, usarla
+    // Lógica de contraseña: 
+    // 1. Si se proporciona contraseña explícita, usarla
+    // 2. Si se asigna o cambia el CI, usar el CI como contraseña
+    if (validatedData.password && validatedData.password.trim() !== '') {
+      // Si se proporciona una contraseña explícita, usarla
       updateData.password = validatedData.password
+    } else if (ciChanged && newCi) {
+      // Si se asigna o cambia el CI, usar el CI como contraseña
+      updateData.password = newCi
     }
     // Si el CI no cambió y no se proporciona contraseña, no se actualiza la contraseña
 
@@ -145,27 +139,45 @@ export async function PUT(
       if (validatedData.isActive !== undefined && targetUser?.isActive !== validatedData.isActive) {
         changedFields.push('isActive')
       }
-      // Registrar cambio de contraseña si cambió el CI o se proporcionó explícitamente
-      if (ciChanged || (validatedData.password && validatedData.password.trim() !== '')) {
+      // Registrar cambio de contraseña
+      if ((validatedData.password && validatedData.password.trim() !== '') || (ciChanged && newCi)) {
         changedFields.push('password')
-        // Si cambió por CI, registrar en auditoría
-        if (ciChanged) {
-          await SecurityAuditLogger.logSensitiveAction(
-            {
-              userId: currentUser.id,
-              actionType: 'PASSWORD_CHANGE',
-              entityType: 'User',
-              entityId: id,
-              details: {
-                reason: 'CI actualizado',
-                oldCi,
-                newCi,
-                targetUserEmail: targetUser?.email,
-              },
+        const reason = (validatedData.password && validatedData.password.trim() !== '') 
+          ? 'Contraseña actualizada manualmente'
+          : 'Contraseña actualizada por cambio de CI'
+        
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            actionType: 'PASSWORD_CHANGE',
+            entityType: 'User',
+            entityId: id,
+            details: {
+              reason,
+              targetUserEmail: targetUser?.email,
             },
-            request
-          )
-        }
+          },
+          request
+        )
+      }
+
+      // Registrar cambio de CI específicamente
+      if (ciChanged) {
+        await SecurityAuditLogger.logSensitiveAction(
+          {
+            userId: currentUser.id,
+            actionType: 'USER_UPDATED',
+            entityType: 'User',
+            entityId: id,
+            details: {
+              field: 'ci',
+              oldValue: oldCi,
+              newValue: newCi,
+              targetUserEmail: targetUser?.email,
+            },
+          },
+          request
+        )
       }
 
       // Registrar cambio de rol específicamente

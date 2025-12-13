@@ -21,8 +21,14 @@ export class AdminAuthService {
     password: string
     request?: NextRequest
   }) {
-    const user = await prisma.profile.findUnique({
-      where: { email }
+    // Buscar usuario por email o CI
+    const user = await prisma.profile.findFirst({
+      where: {
+        OR: [
+          { email: email },
+          { ci: email } // Permitir login con CI
+        ]
+      }
     })
 
     if (!user || !user.password) {

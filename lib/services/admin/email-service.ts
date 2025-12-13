@@ -297,16 +297,16 @@ export class EmailService {
             <div class="credentials-box">
               <h3>🔐 Tus Credenciales de Acceso</h3>
               <div class="credential-item">
-                <div class="credential-label">Usuario (puedes usar tu correo o tu CI)</div>
+                <div class="credential-label">Usuario</div>
                 <div class="credential-value" style="margin-bottom: 10px;">Correo: ${data.email}</div>
-                <div class="credential-value">CI: ${data.password}</div>
+                ${data.ci ? `<div class="credential-value">CI: ${data.ci}</div>` : ''}
               </div>
               <div class="credential-item">
                 <div class="credential-label">Contraseña</div>
                 <div class="credential-value">${data.password}</div>
               </div>
               <p style="font-size: 12px; margin-top: 20px; padding: 16px; background-color: #ffffff; color: #333333; border: 1px solid #d1d5db; letter-spacing: 0.3px; line-height: 1.6;">
-                <strong>Importante:</strong> Puedes iniciar sesión usando tu <strong>correo electrónico (${data.email})</strong> o tu <strong>CI (${data.password})</strong> como usuario. La contraseña siempre es tu <strong>CI (${data.password})</strong>.
+                <strong>Importante:</strong> Puedes iniciar sesión usando tu <strong>correo electrónico (${data.email})</strong>${data.ci ? ` o tu <strong>CI (${data.ci})</strong>` : ''} como usuario.
               </p>
             </div>
 
