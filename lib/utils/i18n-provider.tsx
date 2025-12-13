@@ -852,7 +852,7 @@ const MINIMAL_MESSAGES = {
       feature3: "Multi-sucursal y multi-usuario",
       imageAlt: "Sistema de gestión de ventas",
       copyright:
-        "© {year} Sistema de Ventas SAS. Todos los derechos reservados.",
+        "© {year} SmartPOS. Todos los derechos reservados.",
     },
   },
 };

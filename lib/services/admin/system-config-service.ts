@@ -113,7 +113,7 @@ export class SystemConfigService {
 
     // Combinar con valores por defecto desde env
     return {
-      systemName: dbConfig.systemName || process.env.SYSTEM_NAME || 'Sistema de Ventas SAS',
+      systemName: dbConfig.systemName || process.env.SYSTEM_NAME || 'SmartPOS',
       systemEmail: dbConfig.systemEmail || process.env.SYSTEM_EMAIL || 'admin@sistema.com',
       systemUrl: dbConfig.systemUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       supportEmail: dbConfig.supportEmail || process.env.SUPPORT_EMAIL || 'soporte@sistema.com',
@@ -204,7 +204,7 @@ export class SystemConfigService {
   // Inicializar configuraciones por defecto (migración/seeding)
   static async initializeDefaultConfigs(): Promise<void> {
     const defaultConfigs = [
-      { key: 'systemName', value: { value: 'Sistema de Ventas SAS' }, category: 'general', description: 'Nombre del sistema' },
+      { key: 'systemName', value: { value: 'SmartPOS' }, category: 'general', description: 'Nombre del sistema' },
       { key: 'systemEmail', value: { value: 'admin@sistema.com' }, category: 'general', description: 'Email del sistema' },
       { key: 'systemUrl', value: { value: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }, category: 'general', description: 'URL del sistema' },
       { key: 'supportEmail', value: { value: 'soporte@sistema.com' }, category: 'general', description: 'Email de soporte' },

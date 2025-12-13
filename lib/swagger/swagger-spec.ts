@@ -6,9 +6,9 @@
 export const swaggerSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'Ventas SAS API',
+    title: 'SmartPOS API',
     version: '1.0.0',
-    description: 'API REST para el Sistema de Ventas SAS - Sistema multi-tenant de gestión de ventas',
+    description: 'API REST para SmartPOS - Sistema POS inteligente multi-tenant con IA',
     contact: {
       name: 'Soporte API',
       email: 'support@ventas-sas.com',

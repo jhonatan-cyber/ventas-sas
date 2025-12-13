@@ -52,23 +52,28 @@ export function HeroSectionEnhanced({ mounted, activeUsers, onContactClick, trac
             {/* Título con animación mejorada */}
             <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl mb-8 text-balance leading-[1.05]">
               <span className="block animate-in fade-in slide-in-from-bottom-8 duration-700">
-                Gestiona tu negocio
+                <span className="relative inline-block">
+                  <span className="relative z-10 bg-gradient-to-r from-blue-600 via-emerald-600 to-purple-600 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]">
+                    SmartPOS
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-r from-blue-600/30 via-emerald-600/30 to-purple-600/30 blur-xl animate-pulse" />
+                </span>
               </span>
               <span className="block animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-                completo{" "}
+                El POS más{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-600 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]">
-                    en un solo lugar
+                  <span className="relative z-10 bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-600 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]">
+                    inteligente
                   </span>
-                  <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-r from-blue-600/30 via-emerald-600/30 to-blue-600/30 blur-xl animate-pulse" />
+                  <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-r from-emerald-600/30 via-blue-600/30 to-emerald-600/30 blur-xl animate-pulse" />
                 </span>
               </span>
             </h1>
 
             <p className="text-xl leading-relaxed text-muted-foreground mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-              El sistema de <span className="font-bold text-foreground">punto de venta más completo</span> de Bolivia.
+              El <span className="font-bold text-foreground">sistema de punto de venta con IA</span> más avanzado de Bolivia.
               <br className="hidden sm:block" />
-              <span className="text-foreground/80">Aumenta tus ventas hasta un 40% con tecnología inteligente.</span>
+              <span className="text-foreground/80">Gestión completa, reportes inteligentes y crecimiento garantizado.</span>
             </p>
 
             {/* Características rápidas */}

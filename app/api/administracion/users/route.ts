@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { PasswordService } from '@/lib/auth/password'
 import { AppError } from '@/lib/errors/app-error'
 import { PermissionCheckService } from '@/lib/services/admin/permission-check-service'
 import { UserAdminService } from '@/lib/services/admin/user-admin-service'
@@ -65,11 +64,9 @@ export async function POST(request: NextRequest) {
 
     const validatedData = validation.data
 
-    const hashedPassword = await PasswordService.hashPassword(validatedData.password)
-
     const newUser = await UserAdminService.createUser({
       email: validatedData.email,
-      password: hashedPassword,
+      password: validatedData.password, // Pasar contraseña sin hashear, el servicio se encarga
       ci: validatedData.ci || undefined,
       fullName: validatedData.fullName,
       address: validatedData.address || undefined,

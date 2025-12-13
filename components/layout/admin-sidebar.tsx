@@ -205,8 +205,8 @@ export function AdminSidebar() {
               </div>
               {!isCollapsed && (
                 <div className="transition-opacity duration-300">
-                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white">SalesHub</h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Sistema Ventas SAS</p>
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white">SmartPOS</h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Sistema Administrativo</p>
                 </div>
               )}
             </div>

@@ -26,13 +26,14 @@ async function main() {
     }
 
     // Crear usuario administrador
-    const password = '10571705'
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const ci = '10571705'
+    const hashedPassword = await bcrypt.hash(ci, 12) // CI hasheado como contraseña
 
     const user = await prisma.profile.create({
       data: {
         email: 'jhonatanancasi@gmail.com',
-        password: hashedPassword,
+        password: hashedPassword, // CI hasheado para autenticación
+        ci: ci, // CI real para mostrar en la tabla
         fullName: 'Jhonatan Anasi',
         role: 'Super Administrador',
         isSuperAdmin: true,
@@ -50,8 +51,8 @@ async function main() {
     console.log(`   Super Admin: ${user.isSuperAdmin}`)
     console.log('')
     console.log('🔐 Credenciales de acceso:')
-    console.log(`   Email: jhonatanancasi@gmail.com`)
-    console.log(`   Contraseña: 10571705`)
+    console.log(`   Email: jhonatanancasi@gmail.com + Contraseña: 10571705`)
+    console.log(`   O usar CI: 10571705 + Contraseña: 10571705`)
     console.log('')
     console.log('⚠️  IMPORTANTE: Cambia la contraseña después del primer login')
     console.log('')

@@ -52,15 +52,16 @@ export class UserAdminService {
 
   // Crear nuevo usuario
   static async createUser(data: CreateUserData): Promise<Profile> {
-    // Determinar la contraseña: usar la proporcionada o el CI como fallback
-    const passwordToUse = data.password || data.ci || 'temp123'
+    // Si hay CI, usar el CI como contraseña (hasheado)
+    // Si no hay CI, usar la contraseña proporcionada
+    const passwordToUse = data.ci || data.password || 'temp123'
     const hashedPassword = await PasswordService.hashPassword(passwordToUse)
 
     return prisma.profile.create({
       data: {
         email: data.email,
-        password: hashedPassword,
-        ci: data.ci || null, // CI es el número de cédula real, no el hash
+        password: hashedPassword, // CI hasheado (si hay CI) o contraseña hasheada
+        ci: data.ci || null, // CI real para mostrar en la tabla
         fullName: data.fullName,
         address: data.address,
         phone: data.phone,

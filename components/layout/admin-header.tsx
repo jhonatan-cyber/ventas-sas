@@ -84,7 +84,7 @@ export function AdminHeader() {
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-xs font-bold">S</span>
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">SalesHub</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">SmartPOS</span>
           </div>
           
           {/* Acciones en móvil */}

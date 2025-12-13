@@ -14,25 +14,42 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Sistema de Ventas SAS - Plataforma Todo-en-Uno para tu Negocio',
-  description: 'La plataforma empresarial todo-en-uno que revoluciona la gestión de negocios: Ventas, Inventario, CMS, Cajas, Gastos y Cotizaciones. Multi-tenant SaaS con precios desde 250 BOB/mes.',
-  keywords: ['sistema de ventas', 'gestión de inventario', 'POS', 'multi-tenant', 'SaaS', 'Bolivia', 'ventas', 'inventario', 'CRM'],
-  authors: [{ name: 'Sistema de Ventas SAS' }],
-  creator: 'Sistema de Ventas SAS',
-  publisher: 'Sistema de Ventas SAS',
-  applicationName: 'Sistema Ventas SAS',
+  title: 'SmartPOS - Sistema de Punto de Venta Inteligente | Gestión Empresarial Completa',
+  description: 'SmartPOS es la plataforma empresarial todo-en-uno más avanzada de Bolivia. Gestiona ventas, inventario, cajas, gastos, cotizaciones y más. Sistema POS inteligente con IA, multi-sucursal y reportes en tiempo real. Desde 250 BOB/mes.',
+  keywords: [
+    'SmartPOS', 'sistema POS', 'punto de venta', 'gestión empresarial', 'inventario inteligente', 
+    'ventas Bolivia', 'sistema de cajas', 'control de gastos', 'cotizaciones digitales', 
+    'multi-sucursal', 'reportes empresariales', 'IA para ventas', 'SaaS Bolivia', 
+    'software de ventas', 'gestión de inventario', 'POS Bolivia', 'sistema de facturación',
+    'control de stock', 'análisis de ventas', 'dashboard empresarial'
+  ],
+  authors: [{ name: 'SmartPOS Bolivia' }],
+  creator: 'SmartPOS',
+  publisher: 'SmartPOS Bolivia',
+  applicationName: 'SmartPOS',
+  category: 'Business Software',
+  classification: 'Point of Sale System',
   openGraph: {
-    title: 'Sistema de Ventas SAS - Plataforma Todo-en-Uno',
-    description: 'Gestiona tu negocio completo en un solo lugar. Ventas, Inventario, CMS y más.',
-    url: 'https://sistemaventas.com',
-    siteName: 'Sistema de Ventas SAS',
+    title: 'SmartPOS - Sistema POS Inteligente | La Revolución en Gestión Empresarial',
+    description: 'Transforma tu negocio con SmartPOS. Sistema POS con IA, gestión multi-sucursal, inventario inteligente y reportes avanzados. La solución empresarial más completa de Bolivia.',
+    url: 'https://smartpos.bo',
+    siteName: 'SmartPOS Bolivia',
     type: 'website',
     locale: 'es_BO',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'SmartPOS - Sistema de Punto de Venta Inteligente',
+      }
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sistema de Ventas SAS',
-    description: 'Plataforma todo-en-uno para gestionar tu negocio',
+    title: 'SmartPOS - Sistema POS Inteligente para tu Negocio',
+    description: 'Gestión empresarial completa con IA. Ventas, inventario, cajas y más en una sola plataforma.',
+    images: ['/twitter-image.jpg'],
   },
   robots: {
     index: true,
@@ -45,13 +62,30 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  alternates: {
+    canonical: 'https://smartpos.bo',
+    languages: {
+      'es-BO': 'https://smartpos.bo',
+      'es': 'https://smartpos.bo/es',
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+    other: {
+      'facebook-domain-verification': 'your-facebook-verification-code',
+    },
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#2563eb',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+    { media: '(prefers-color-scheme: dark)', color: '#1e40af' }
+  ],
+  colorScheme: 'light dark',
 }
 
 export default function RootLayout({

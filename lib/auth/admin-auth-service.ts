@@ -21,15 +21,21 @@ export class AdminAuthService {
     password: string
     request?: NextRequest
   }) {
-    // Buscar usuario por email o CI
-    const user = await prisma.profile.findFirst({
-      where: {
-        OR: [
-          { email: email },
-          { ci: email } // Permitir login con CI
-        ]
-      }
-    })
+    // Determinar si es email o CI
+    const isEmail = email.includes('@')
+    let user = null
+
+    if (isEmail) {
+      // Buscar por email
+      user = await prisma.profile.findUnique({
+        where: { email: email }
+      })
+    } else {
+      // Es un CI - buscar por CI real
+      user = await prisma.profile.findFirst({
+        where: { ci: email }
+      })
+    }
 
     if (!user || !user.password) {
       return { success: false, error: 'Credenciales inválidas' }
@@ -38,7 +44,10 @@ export class AdminAuthService {
       return { success: false, error: 'Cuenta desactivada' }
     }
 
-    const ok = await PasswordService.verifyPassword(password, user.password)
+    // Si es login con CI, el password debe ser el mismo CI
+    // Si es login con email, usar el password proporcionado
+    const passwordToVerify = isEmail ? password : email
+    const ok = await PasswordService.verifyPassword(passwordToVerify, user.password)
     if (!ok) {
       return { success: false, error: 'Credenciales inválidas' }
     }

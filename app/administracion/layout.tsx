@@ -29,9 +29,24 @@ async function getMessages() {
 }
 
 export const metadata: Metadata = {
-  applicationName: "Admin SAS",
-  description: "Sistema de administración para gestionar clientes, usuarios, planes y suscripciones",
-  keywords: ["administración", "gestión", "clientes", "ventas"],
+  title: {
+    template: "%s | SmartPOS Admin",
+    default: "SmartPOS Admin - Panel de Administración"
+  },
+  applicationName: "SmartPOS Admin",
+  description: "Panel de administración SmartPOS para gestionar clientes, usuarios, organizaciones, planes, suscripciones y configuración del sistema POS.",
+  keywords: [
+    "SmartPOS admin", "panel administración", "gestión clientes", "configuración POS", 
+    "administración ventas", "gestión usuarios", "planes suscripción", "sistema administrativo",
+    "dashboard admin", "control empresarial", "gestión organizaciones"
+  ],
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+    nosnippet: true,
+    noimageindex: true,
+  },
 }
 
 export const viewport: Viewport = {
