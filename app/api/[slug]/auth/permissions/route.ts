@@ -38,14 +38,16 @@ export async function GET(
     const isAdmin = roleNameLower.includes('admin') || 
                    roleNameLower.includes('administrator') || 
                    roleNameLower.includes('administrador')
-    
-    // Debug log para producción
-    console.log('Permissions API - Role detection:', {
-      roleName,
-      roleNameLower,
-      isAdmin,
-      userId: user.id
-    })
+
+    // Debug temporal para verificar detección de admin
+    if (isAdmin) {
+      console.log('🔧 API Permissions - Admin detectado:', {
+        roleName,
+        roleNameLower,
+        isAdmin,
+        userId: user.id
+      })
+    }
 
     return NextResponse.json({
       permissions: filteredPermissions,

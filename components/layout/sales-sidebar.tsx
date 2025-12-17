@@ -55,11 +55,12 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
   const [companyName, setCompanyName] = useState<string | null>(null)
   const [planName, setPlanName] = useState<string | null>(null)
 
-  // Usar permisos del cliente (hook) para tener los permisos más actualizados
-  const { permissions: clientPermissions, isLoading: permissionsLoading } = useSasPermissions()
+  // Usar permisos del servidor como principal y del cliente como fallback
+  const { permissions: clientPermissions, isLoading: permissionsLoading, isAdmin: clientIsAdmin } = useSasPermissions()
   
-  // Fallback a permisos del servidor si el cliente aún está cargando
-  const permissions = permissionsLoading ? (userPermissions?.permissions || []) : clientPermissions
+  // Usar permisos del servidor si están disponibles, sino usar los del cliente
+  const permissions = userPermissions?.permissions || clientPermissions
+  const isAdminUser = userPermissions?.isAdmin || clientIsAdmin
 
   // Cargar información de la organización y plan
   useEffect(() => {
@@ -114,8 +115,7 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
 
     // 2. Verificar permisos del usuario
     // Si el usuario es administrador, puede ver todos los módulos del plan
-    const isAdmin = userPermissions?.isAdmin || false
-    if (isAdmin) {
+    if (isAdminUser) {
       return true // Administrador ve todos los módulos permitidos por el plan
     }
 
@@ -197,8 +197,8 @@ export function SalesSidebar({ organizationSlug, maxBranches, allowedModules = [
     },
   ].filter(section => section.items.length > 0) // Filtrar secciones vacías
 
-  // Si los permisos están cargando, mostrar un skeleton o loading
-  if (permissionsLoading) {
+  // Si los permisos están cargando y no tenemos permisos del servidor, mostrar un skeleton
+  if (permissionsLoading && !userPermissions) {
     return (
       <>
         {/* Overlay para móvil */}

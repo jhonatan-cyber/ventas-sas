@@ -6,6 +6,7 @@ import { SalesHeader } from "./sales-header"
 import { SalesSidebar } from "./sales-sidebar"
 import { SidebarProvider } from "./sidebar-context"
 
+import { SasPermissionsProvider } from "@/contexts/sas-permissions-context"
 import type { UserPermissions } from "@/lib/services/sales/user-permissions-service"
 
 interface SalesLayoutClientProps {
@@ -62,22 +63,24 @@ export function SalesLayoutClient({ children, organizationSlug, maxBranches, all
   }
   
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-gray-50 dark:bg-[#1a1a1a]">
-        <SalesSidebar 
-          organizationSlug={organizationSlug} 
-          maxBranches={maxBranches} 
-          allowedModules={allowedModules}
-          userPermissions={userPermissions}
-        />
-        <main className="flex-1 lg:ml-64 overflow-y-auto">
-          <SalesHeader />
-          <div className="mt-24 lg:mt-16">
-            {children}
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+    <SasPermissionsProvider organizationSlug={organizationSlug}>
+      <SidebarProvider>
+        <div className="flex h-screen bg-gray-50 dark:bg-[#1a1a1a]">
+          <SalesSidebar 
+            organizationSlug={organizationSlug} 
+            maxBranches={maxBranches} 
+            allowedModules={allowedModules}
+            userPermissions={userPermissions}
+          />
+          <main className="flex-1 lg:ml-64 overflow-y-auto">
+            <SalesHeader />
+            <div className="mt-24 lg:mt-16">
+              {children}
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    </SasPermissionsProvider>
   )
 }
 

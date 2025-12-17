@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from 'next/navigation'
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 
 interface SasPermissionsContextType {
   permissions: string[]
@@ -28,10 +28,6 @@ interface SasPermissionsProviderProps {
   organizationSlug: string
 }
 
-// Flag global para evitar múltiples inicializaciones
-let isInitializing = false
-let hasInitialized = false
-
 export function SasPermissionsProvider({ children, organizationSlug }: SasPermissionsProviderProps) {
   const [permissions, setPermissions] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -39,13 +35,9 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
   const [userId, setUserId] = useState<string | undefined>()
   const [roleName, setRoleName] = useState<string | undefined>()
   const pathname = usePathname()
-  const initRef = useRef(false)
+  const hasInitialized = useRef(false)
 
-  const fetchPermissions = useCallback(async () => {
-    if (isInitializing || hasInitialized) return
-    
-    isInitializing = true
-    
+  const fetchPermissions = async () => {
     try {
       const response = await fetch(`/api/${organizationSlug}/auth/permissions`, {
         credentials: 'include',
@@ -53,16 +45,19 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
       
       if (response.ok) {
         const data = await response.json()
-        console.log('SasPermissionsContext - Permissions loaded:', {
-          permissions: data.permissions || [],
-          isAdmin: data.isAdmin || false,
-          userId: data.userId,
-          roleName: data.roleName
-        })
         setPermissions(data.permissions || [])
         setIsAdmin(data.isAdmin || false)
         setUserId(data.userId)
         setRoleName(data.roleName)
+        
+        // Debug temporal para verificar detección de admin
+        if (data.isAdmin) {
+          console.log('✅ Usuario administrador detectado:', {
+            roleName: data.roleName,
+            isAdmin: data.isAdmin,
+            userId: data.userId
+          })
+        }
       } else {
         setPermissions([])
         setIsAdmin(false)
@@ -77,74 +72,53 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
       setRoleName(undefined)
     } finally {
       setIsLoading(false)
-      isInitializing = false
-      hasInitialized = true
     }
-  }, [organizationSlug])
+  }
 
   const refreshPermissions = async () => {
-    hasInitialized = false
     setIsLoading(true)
     await fetchPermissions()
   }
 
   const hasPermission = (permission: string): boolean => {
-    // Si el usuario es administrador, otorgar acceso completo
+    // ADMINISTRADOR: Control total sin restricciones
     if (isAdmin) {
-      console.log('SasPermissionsContext - Admin permission granted:', {
-        permission,
-        isAdmin,
-        roleName,
-        userId
-      })
       return true
     }
 
-    const hasSpecificPermission = permissions.includes(permission)
-    console.log('SasPermissionsContext - Permission check:', {
-      permission,
-      hasSpecificPermission,
-      isAdmin,
-      roleName,
-      userId,
-      allPermissions: permissions
-    })
-    return hasSpecificPermission
+    // Usuario regular: verificar permisos específicos
+    return permissions.includes(permission)
   }
 
   useEffect(() => {
-    // Evitar múltiples inicializaciones usando ref
-    if (initRef.current) return
-    initRef.current = true
+    // Evitar múltiples inicializaciones
+    if (hasInitialized.current) return
+    hasInitialized.current = true
 
-    // Solo cargar permisos si no estamos en páginas públicas
-    const isPublicPage = pathname.includes('/login') || 
-                        pathname.includes('/en-mantenimiento') || 
-                        pathname.includes('/suscripcion-vencida') ||
-                        pathname.includes('/forgot-password') ||
-                        pathname.includes('/reset-password')
-    
-    // Verificar si es una página CMS/pública
-    const pathSegments = pathname.split("/").filter(Boolean)
-    const salesRoutes = [
-      'dashboard', 'productos', 'categorias', 'clientes', 'cotizaciones', 'ventas',
-      'usuarios', 'roles', 'permisos', 'sucursales', 'gastos', 'cajas', 'reportes',
-      'analytics', 'configuracion', 'inventario', 'support', 'perfil'
-    ]
-    const isCmsPage = !salesRoutes.some(route => pathname.includes(`/${route}`)) && 
-                      !isPublicPage &&
-                      (pathSegments.length === 1 || // Landing page: /[slug]
-                       pathSegments.length === 2 || // Página CMS: /[slug]/[page-slug]
-                       (pathSegments.length === 3 && pathSegments[1] === 'blog')) // Post blog: /[slug]/blog/[post-slug]
-
-    if (isPublicPage || isCmsPage) {
+    // Solo cargar permisos si estamos en páginas del sistema SAS
+    if (pathname.includes('/dashboard') || 
+        pathname.includes('/productos') || 
+        pathname.includes('/categorias') ||
+        pathname.includes('/clientes') ||
+        pathname.includes('/cotizaciones') ||
+        pathname.includes('/ventas') ||
+        pathname.includes('/usuarios') ||
+        pathname.includes('/roles') ||
+        pathname.includes('/permisos') ||
+        pathname.includes('/sucursales') ||
+        pathname.includes('/gastos') ||
+        pathname.includes('/cajas') ||
+        pathname.includes('/reportes') ||
+        pathname.includes('/analytics') ||
+        pathname.includes('/configuracion') ||
+        pathname.includes('/inventario') ||
+        pathname.includes('/support') ||
+        pathname.includes('/perfil')) {
+      fetchPermissions()
+    } else {
       setIsLoading(false)
-      return
     }
-
-    // Cargar permisos solo una vez
-    fetchPermissions()
-  }, [fetchPermissions, pathname]) // Incluir dependencias requeridas
+  }, [organizationSlug])
 
   return (
     <SasPermissionsContext.Provider

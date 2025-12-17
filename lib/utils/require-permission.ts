@@ -18,11 +18,6 @@ export async function requirePermission(request: NextRequest, slug: string, perm
 
   // Si es administrador, permitir acceso completo sin verificar permisos específicos
   if (perms.isAdmin) {
-    console.log('requirePermission - Admin access granted:', {
-      userId: perms.userId,
-      roleName: perms.roleName,
-      isAdmin: perms.isAdmin
-    })
     return // admin: acceso completo
   }
 
