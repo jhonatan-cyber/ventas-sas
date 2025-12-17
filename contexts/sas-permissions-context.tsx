@@ -8,6 +8,7 @@ interface SasPermissionsContextType {
   isLoading: boolean
   refreshPermissions: () => Promise<void>
   hasPermission: (permission: string) => boolean
+  isAdmin: boolean
   userId?: string
   roleName?: string
 }
@@ -17,6 +18,7 @@ const SasPermissionsContext = createContext<SasPermissionsContextType>({
   isLoading: true,
   refreshPermissions: async () => {},
   hasPermission: () => false,
+  isAdmin: false,
   userId: undefined,
   roleName: undefined,
 })
@@ -33,6 +35,7 @@ let hasInitialized = false
 export function SasPermissionsProvider({ children, organizationSlug }: SasPermissionsProviderProps) {
   const [permissions, setPermissions] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [userId, setUserId] = useState<string | undefined>()
   const [roleName, setRoleName] = useState<string | undefined>()
   const pathname = usePathname()
@@ -51,16 +54,19 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
       if (response.ok) {
         const data = await response.json()
         setPermissions(data.permissions || [])
+        setIsAdmin(data.isAdmin || false)
         setUserId(data.userId)
         setRoleName(data.roleName)
       } else {
         setPermissions([])
+        setIsAdmin(false)
         setUserId(undefined)
         setRoleName(undefined)
       }
     } catch (error) {
       console.error('Error fetching SAS permissions:', error)
       setPermissions([])
+      setIsAdmin(false)
       setUserId(undefined)
       setRoleName(undefined)
     } finally {
@@ -77,8 +83,8 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
   }
 
   const hasPermission = (permission: string): boolean => {
-    // Si el usuario tiene rol administrador, otorgar acceso completo
-    if (roleName && /admin|administrator|administrador/i.test(roleName)) return true
+    // Si el usuario es administrador, otorgar acceso completo
+    if (isAdmin) return true
 
     return permissions.includes(permission)
   }
@@ -124,6 +130,7 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
         isLoading,
         refreshPermissions,
         hasPermission,
+        isAdmin,
         userId,
         roleName,
       }}

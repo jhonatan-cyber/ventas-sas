@@ -10,14 +10,14 @@ import { UserPermissionsService } from '@/lib/services/sales/user-permissions-se
  * - Si no tiene el permiso solicitado lanza `AppError.forbidden`
  */
 export async function requirePermission(request: NextRequest, slug: string, permissionOrList: string | string[]) {
-  const perms = await UserPermissionsService.getUserPermissions(slug)
+  const perms = await UserPermissionsService.getUserPermissions(slug, request)
 
   if (!perms || !perms.isAuthenticated) {
     throw AppError.unauthorized('No autenticado')
   }
 
-  const roleName = perms.roleName || ''
-  if (roleName && /admin|administrador|administrator/i.test(roleName)) {
+  // Si es administrador, permitir acceso completo sin verificar permisos específicos
+  if (perms.isAdmin) {
     return // admin: acceso completo
   }
 

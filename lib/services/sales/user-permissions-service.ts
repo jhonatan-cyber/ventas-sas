@@ -17,10 +17,18 @@ export class UserPermissionsService {
    * Obtiene los permisos del usuario actual desde el servidor
    * Esta función se ejecuta en el servidor y no causa bucles de peticiones
    */
-  static async getUserPermissions(organizationSlug: string): Promise<UserPermissions> {
+  static async getUserPermissions(organizationSlug: string, request?: any): Promise<UserPermissions> {
     try {
-      const cookieStore = await cookies()
-      const token = cookieStore.get("sas-auth-token")?.value
+      let token: string | undefined
+      
+      if (request && request.cookies) {
+        // Si tenemos request (API routes), usar request.cookies
+        token = request.cookies.get("sas-auth-token")?.value
+      } else {
+        // Si no tenemos request (Server Components), usar cookies()
+        const cookieStore = await cookies()
+        token = cookieStore.get("sas-auth-token")?.value
+      }
 
       if (!token) {
         return {

@@ -32,9 +32,14 @@ export async function GET(
 
     const filteredPermissions = activePermissions.map(p => p.name)
 
+    // Verificar si el usuario es administrador
+    const roleName = user.rol?.nombre || ''
+    const isAdmin = roleName.toLowerCase().includes('admin') || roleName.toLowerCase() === 'administrador'
+
     return NextResponse.json({
       permissions: filteredPermissions,
       isSuperAdmin: false, // En el sistema SAS no hay super admin, solo roles
+      isAdmin: isAdmin, // Agregar información de si es administrador
       userId: user.id,
       roleName: user.rol?.nombre || null,
     })
