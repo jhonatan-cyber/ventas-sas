@@ -8,7 +8,7 @@ import { SupportContainer } from "./support-container"
 import { SupportHeader } from "./support-header"
 import { SupportTicketFormDialog } from "./support-ticket-form-dialog"
 
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface SupportTicketSummary {
   id: string

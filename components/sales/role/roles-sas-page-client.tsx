@@ -12,7 +12,7 @@ import { RolesSasHeader } from "./roles-sas-header";
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog";
 import { useRoleSasActions } from "@/hooks/sales/role/use-role-sas-actions";
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions";
+import { useSasPermissions } from "@/contexts/sas-permissions-context";
 
 interface RolesSasPageClientProps {
   initialRoles: (RoleSas & {

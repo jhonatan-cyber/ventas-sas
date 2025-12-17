@@ -34,7 +34,18 @@ export async function GET(
 
     // Verificar si el usuario es administrador
     const roleName = user.rol?.nombre || ''
-    const isAdmin = roleName.toLowerCase().includes('admin') || roleName.toLowerCase() === 'administrador'
+    const roleNameLower = roleName.toLowerCase()
+    const isAdmin = roleNameLower.includes('admin') || 
+                   roleNameLower.includes('administrator') || 
+                   roleNameLower.includes('administrador')
+    
+    // Debug log para producción
+    console.log('Permissions API - Role detection:', {
+      roleName,
+      roleNameLower,
+      isAdmin,
+      userId: user.id
+    })
 
     return NextResponse.json({
       permissions: filteredPermissions,

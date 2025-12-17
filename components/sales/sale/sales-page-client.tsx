@@ -12,7 +12,7 @@ import { SalesHeader } from "./sales-header"
 import { SalesSaleWithRelations } from "./types"
 
 import { useSaleActions } from "@/hooks/sales/sale/use-sale-actions"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 
 interface SalesBranchSummary {

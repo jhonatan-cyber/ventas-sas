@@ -12,7 +12,7 @@ import { BranchesHeader } from "./branches-header"
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { useBranchActions } from "@/hooks/sales/branch/use-branch-actions"
-import { useSasPermissions } from '@/hooks/sales/use-sas-permissions'
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 import { PERMISSIONS } from '@/lib/config/sas-permissions'
 
 type BranchWithRelations = Branch & {

@@ -156,8 +156,9 @@ export function useSasPermissions(): SasUserPermissions {
   }, [slug])
 
   const hasPermission = (permission: string): boolean => {
-    // Para permisos granulares, siempre verificar la lista de permisos específicos
-    // La lógica de administrador se maneja a nivel de módulos en el sidebar
+    // IMPORTANTE: Este hook debe usar el contexto SasPermissionsContext
+    // que ya tiene la lógica de administrador implementada correctamente
+    // Por ahora, mantenemos la verificación básica pero esto debería ser refactorizado
     return permissions.includes(permission)
   }
 

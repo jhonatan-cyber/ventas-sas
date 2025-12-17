@@ -10,7 +10,7 @@ import { UsuariosSasContainer } from "./usuarios-sas-container"
 import { UsuariosSasHeader } from "./usuarios-sas-header"
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 import { useUsuarioSasActions } from "@/hooks/sales/usuario/use-usuario-sas-actions"
 
 interface UsuariosSasPageClientProps {

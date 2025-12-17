@@ -9,7 +9,7 @@ import { PermissionSasFormDialog } from "./permission-sas-form-dialog"
 import { PermissionsSasContainer } from "./permissions-sas-container"
 
 import { PermissionSasHeader } from "@/components/sales/permission/permission-sas-header"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 import { PermissionSasInfo, PermissionSasStats } from "@/lib/services/sales/permission-sas-service"
 
 interface PermissionsSasPageClientProps {

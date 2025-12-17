@@ -5,14 +5,14 @@ import { useState, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useSasPermissions } from '@/hooks/sales/use-sas-permissions'
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface RealtimePermissionsDemoProps {
   customerSlug: string
 }
 
 export function RealtimePermissionsDemo({ customerSlug }: RealtimePermissionsDemoProps) {
-  const { permissions, isLoading, forceRefresh } = useSasPermissions()
+  const { permissions, isLoading, refreshPermissions } = useSasPermissions()
   const [lastUpdate, setLastUpdate] = useState<string>('')
   const [eventCount, setEventCount] = useState(0)
 
@@ -79,7 +79,7 @@ export function RealtimePermissionsDemo({ customerSlug }: RealtimePermissionsDem
 
         <div className="flex gap-2">
           <Button 
-            onClick={forceRefresh} 
+            onClick={refreshPermissions} 
             variant="outline" 
             size="sm"
             disabled={isLoading}

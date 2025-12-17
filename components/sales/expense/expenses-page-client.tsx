@@ -11,7 +11,7 @@ import { ExpensesHeader } from "./expenses-header"
 import { ExpenseBranchSummary, SalesExpenseWithRelations } from "./types"
 
 import { useExpenseActions } from "@/hooks/sales/expense/use-expense-actions"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface ExpensesPageClientProps {
   initialExpenses: SalesExpenseWithRelations[]

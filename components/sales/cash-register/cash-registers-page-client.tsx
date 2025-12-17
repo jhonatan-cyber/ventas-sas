@@ -14,7 +14,7 @@ import { CashRegistersHeader } from "./cash-registers-header";
 import type { CashRegisterWithRelations } from "./types";
 
 import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions";
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions";
+import { useSasPermissions } from "@/contexts/sas-permissions-context";
 
 interface CashRegistersPageClientProps {
   initialCashRegisters: CashRegisterWithRelations[];

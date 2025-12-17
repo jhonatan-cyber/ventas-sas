@@ -53,6 +53,12 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
       
       if (response.ok) {
         const data = await response.json()
+        console.log('SasPermissionsContext - Permissions loaded:', {
+          permissions: data.permissions || [],
+          isAdmin: data.isAdmin || false,
+          userId: data.userId,
+          roleName: data.roleName
+        })
         setPermissions(data.permissions || [])
         setIsAdmin(data.isAdmin || false)
         setUserId(data.userId)
@@ -84,9 +90,26 @@ export function SasPermissionsProvider({ children, organizationSlug }: SasPermis
 
   const hasPermission = (permission: string): boolean => {
     // Si el usuario es administrador, otorgar acceso completo
-    if (isAdmin) return true
+    if (isAdmin) {
+      console.log('SasPermissionsContext - Admin permission granted:', {
+        permission,
+        isAdmin,
+        roleName,
+        userId
+      })
+      return true
+    }
 
-    return permissions.includes(permission)
+    const hasSpecificPermission = permissions.includes(permission)
+    console.log('SasPermissionsContext - Permission check:', {
+      permission,
+      hasSpecificPermission,
+      isAdmin,
+      roleName,
+      userId,
+      allPermissions: permissions
+    })
+    return hasSpecificPermission
   }
 
   useEffect(() => {

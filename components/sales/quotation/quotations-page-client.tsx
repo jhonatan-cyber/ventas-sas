@@ -12,7 +12,7 @@ import { QuotationsHeader } from "./quotations-header"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { useQuotationActions } from "@/hooks/sales/quotation/use-quotation-actions"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 
 interface BranchSummary {

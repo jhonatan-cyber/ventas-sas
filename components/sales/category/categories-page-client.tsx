@@ -10,7 +10,7 @@ import { CategoryFormDialog } from "./category-form-dialog"
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { useCategoryActions } from "@/hooks/sales/category/use-category-actions"
-import { useSasPermissions } from '@/hooks/sales/use-sas-permissions'
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface CategoriesPageClientProps {
   initialCategories: (Category & {

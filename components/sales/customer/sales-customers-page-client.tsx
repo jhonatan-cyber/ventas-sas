@@ -10,7 +10,7 @@ import { SalesCustomersContainer } from "./sales-customers-container"
 import { SalesCustomersHeader } from "./sales-customers-header"
 
 import { useSalesCustomerActions } from "@/hooks/sales/customer/use-sales-customer-actions"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 
 interface SalesCustomersPageClientProps {

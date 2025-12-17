@@ -16,7 +16,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface NonAdminDashboardProps {
   customerSlug: string

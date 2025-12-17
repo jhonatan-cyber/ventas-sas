@@ -12,7 +12,7 @@ import { ProductsExportImportDialog } from "./products-export-import-dialog"
 import { ProductsHeader } from "./products-header"
 
 import { useProductActions } from "@/hooks/sales/product/use-product-actions"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 
 interface ProductsPageClientProps {
   initialCategories: Category[]

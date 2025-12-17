@@ -28,7 +28,7 @@ import { useSidebar } from "./sidebar-context"
 import type { CSSProperties, ComponentType } from "react"
 
 import { Button } from "@/components/ui/button"
-import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
+import { useSasPermissions } from "@/contexts/sas-permissions-context"
 import { getSasRouteToModuleMap } from "@/lib/config/sas-modules"
 import { hasRoutePermission } from "@/lib/config/sas-permissions"
 import { UserPermissions } from "@/lib/services/sales/user-permissions-service"
