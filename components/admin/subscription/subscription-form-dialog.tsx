@@ -90,8 +90,8 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
       setOrganizationId(subscription.organizationId || "")
       setPlanId(subscription.planId || "")
       setBillingPeriod(subscription.billingPeriod || "monthly")
-      setStartDate(subscription.startDate ? new Date(subscription.startDate).toISOString().split('T')[0] : "")
-      setEndDate(subscription.endDate ? new Date(subscription.endDate).toISOString().split('T')[0] : "")
+      setStartDate(subscription.startDate ? new Date(subscription.startDate).toISOString().split("T")[0] : "")
+      setEndDate(subscription.endDate ? new Date(subscription.endDate).toISOString().split("T")[0] : "")
       setAutoRenew(subscription.autoRenew ?? true)
     } else {
       setOrganizationId("")
@@ -107,7 +107,7 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
   useEffect(() => {
     if (startDate && billingPeriod) {
       // Parsear la fecha de inicio (formato YYYY-MM-DD)
-      const [year, month, day] = startDate.split('-').map(Number)
+      const [year, month, day] = startDate.split("-").map(Number)
       const start = new Date(year, month - 1, day) // month - 1 porque los meses en Date son 0-indexed
       const end = new Date(start)
       
@@ -145,14 +145,14 @@ export function SubscriptionFormDialog({ open, onOpenChange, subscription, onSav
       // Convertir fechas a formato ISO datetime usando UTC medianoche del día especificado
       if (startDate) {
         // Parsear la fecha y crear en UTC medianoche para evitar problemas de zona horaria
-        const [year, month, day] = startDate.split('-').map(Number)
+        const [year, month, day] = startDate.split("-").map(Number)
         // Crear fecha en UTC medianoche del día especificado
         const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
         data.startDate = utcDate.toISOString()
       }
       if (endDate) {
         // Parsear la fecha y crear en UTC medianoche para evitar problemas de zona horaria
-        const [year, month, day] = endDate.split('-').map(Number)
+        const [year, month, day] = endDate.split("-").map(Number)
         // Crear fecha en UTC medianoche del día especificado
         const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
         data.endDate = utcDate.toISOString()

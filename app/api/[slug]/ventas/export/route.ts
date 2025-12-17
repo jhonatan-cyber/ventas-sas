@@ -4,8 +4,10 @@ import { join } from "path"
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AuthSasService } from "@/lib/services/sales/auth-sas-service"
 import { getCustomerBySlug } from "@/lib/utils/organization"
+import requirePermission from '@/lib/utils/require-permission'
 
 export async function POST(
   request: NextRequest,
@@ -52,6 +54,9 @@ export async function POST(
     if (!currentUser) {
       return NextResponse.json({ error: "No autorizado. Token inválido o expirado." }, { status: 401 })
     }
+
+    // Verificar permiso para exportar ventas
+    await requirePermission(request, slug, PERMISSIONS.VENTAS_CREAR)
 
     const safeName = fileNameRaw.replace(/[^a-zA-Z0-9-_]/g, "").slice(0, 80) || `venta-${Date.now()}`
     const buffer = Buffer.from(pdfBase64, "base64")

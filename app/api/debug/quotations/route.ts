@@ -105,7 +105,7 @@ export async function GET() {
           }
         }),
         byOrganizationAndBranch: Array.from(byOrganizationAndBranch.entries()).map(([key, count]) => {
-          const [orgId, branchId] = key.split('|')
+          const [orgId, branchId] = key.split("|")
           const org = organizations.find((o) => o.id === orgId)
           const branch = branches.find((b) => b.id === branchId)
           return {

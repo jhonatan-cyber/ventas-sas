@@ -2,7 +2,6 @@
 
 import { ArrowLeft, Download, Sparkles, TrendingUp, Activity, Target, Users, Package, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -20,7 +19,6 @@ interface AiReportPageClientProps {
 }
 
 export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
-  const t = useTranslations()
   const router = useRouter()
 
   const [startDate, setStartDate] = useState("")
@@ -45,12 +43,12 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
       setReport(data.data)
     } catch (error) {
       console.error("AI advanced report error:", error)
-      toast.error(t("reports.aiAdvanced.error"))
+      toast.error("Error al generar reporte avanzado")
       setReport(null)
     } finally {
       setIsLoading(false)
     }
-  }, [customerSlug, startDate, endDate, t])
+  }, [customerSlug, startDate, endDate])
 
   useEffect(() => {
     fetchReport()
@@ -58,85 +56,85 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
 
   const handleDownloadSummary = useCallback(() => {
     if (!report) {
-      toast.error(t("reports.aiAdvanced.noData"))
+      toast.error("No hay datos para el reporte")
       return
     }
 
     const { ai, branchPerformance, productHighlights, customerHighlights } = report
     const markdownSections = [
-      `# ${t("reports.aiAdvanced.title")}`,
+      `# ${"Reporte Avanzado con IA"}`,
       ``,
-      `## ${t("reports.aiSummary.title")}`,
+      `## ${"Resumen con IA"}`,
       ai.summary,
       ``,
-      `## ${t("reports.aiAdvanced.opportunities")}`,
+      `## ${"Oportunidades"}`,
       ...(ai.opportunities.length ? ai.opportunities.map((item) => `- ${item}`) : ["- —"]),
       ``,
-      `## ${t("reports.aiAdvanced.risks")}`,
+      `## ${"Riesgos"}`,
       ...(ai.risks.length ? ai.risks.map((item) => `- ${item}`) : ["- —"]),
       ``,
-      `## ${t("reports.aiAdvanced.nextActions")}`,
+      `## ${"Próximas Acciones"}`,
       ...(ai.nextActions.length ? ai.nextActions.map((item) => `- ${item}`) : ["- —"]),
       ``,
-      `## ${t("reports.aiAdvanced.branchHighlights")}`,
+      `## ${"Destacados por Sucursal"}`,
       ...branchPerformance.map(
         (branch) =>
           `- ${branch.branchName}: ${formatCurrencyWithPreferences(branch.revenue, customerSlug)} (${branch.salesCount} ventas)`
       ),
       ``,
-      `## ${t("reports.aiAdvanced.topProducts")}`,
+      `## ${"Productos Más Vendidos"}`,
       ...productHighlights.map((product) => `- ${product.productName}: ${product.quantitySold} unidades`),
       ``,
-      `## ${t("reports.aiAdvanced.topCustomers")}`,
+      `## ${"Mejores Clientes"}`,
       ...customerHighlights.map((customer) => `- ${customer.customerName}: ${formatCurrencyWithPreferences(customer.totalSpent, customerSlug)}`),
     ]
 
     const blob = new Blob([markdownSections.join("\n")], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
+    const link = document.createElement("a") as HTMLAnchorElement
     link.href = url
     link.download = `reporte-inteligente-${new Date().toISOString().slice(0, 10)}.md`
     link.click()
     URL.revokeObjectURL(url)
-    toast.success(t("reports.aiAdvanced.exported"))
-  }, [report, t, customerSlug])
+    toast.success("Reporte exportado")
+  }, [report, customerSlug])
 
   const summaryChips = useMemo(() => {
     if (!report) return []
     const chips = [
       {
-        label: t("reports.aiAdvanced.revenue"),
+        label: "Ingresos",
         value: formatCurrencyWithPreferences(report.kpis.totalRevenue, customerSlug),
         icon: DollarSignIcon,
       },
       {
-        label: t("reports.aiAdvanced.netProfit"),
+        label: "Ganancia Neta",
         value: formatCurrencyWithPreferences(report.kpis.netProfit, customerSlug),
         icon: TrendingIcon,
       },
       {
-        label: t("reports.aiAdvanced.margin"),
+        label: "Margen",
         value: `${report.kpis.profitMargin.toFixed(1)}%`,
         icon: TargetIcon,
       },
       {
-        label: t("reports.aiAdvanced.expenses"),
+        label: "Gastos",
         value: formatCurrencyWithPreferences(report.kpis.totalExpenses, customerSlug),
         icon: ActivityIcon,
       },
     ]
     return chips
-  }, [report, t, customerSlug])
+  }, [report, customerSlug])
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-0 md:px-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
-            {t("reports.reports.aiAdvanced.title")}
+            {"Reporte Avanzado con IA"}
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-            {t("reports.reports.aiAdvanced.description")}
+            {"Análisis inteligente de tu negocio"}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -147,7 +145,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
             onClick={() => router.push(`/${customerSlug}/reportes`)}
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-            {t("action.back")}
+            {"Volver"}
           </Button>
           <Button
             variant="outline"
@@ -157,7 +155,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
             disabled={!report}
           >
             <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-            {t("reports.aiAdvanced.download")}
+            {"Descargar"}
           </Button>
         </div>
       </div>
@@ -167,19 +165,19 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {t("reports.filters.startDate") || "Fecha inicio"}
+                Fecha inicio
               </label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="rounded-full" />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {t("reports.filters.endDate") || "Fecha fin"}
+                Fecha fin
               </label>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="rounded-full" />
             </div>
             <div className="flex items-end">
               <Button className="rounded-full w-full" onClick={() => fetchReport()}>
-                {t("reports.filters.apply") || "Aplicar filtros"}
+                Aplicar filtros
               </Button>
             </div>
           </div>
@@ -188,7 +186,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
 
       {isLoading && (
         <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-          {t("message.loading")}...
+          {"Cargando"}...
         </div>
       )}
 
@@ -203,26 +201,26 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">
-                      {t("reports.aiSummary.title")}
+                      {"Resumen con IA"}
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {t("reports.aiAdvanced.updated", { time: new Date(report.generatedAt).toLocaleString() })}
+                      {"Actualizado"}
                     </p>
                   </div>
                 </div>
                 <Badge variant="outline" className="text-[10px] sm:text-xs bg-white/70 dark:bg-white/5 border-purple-200 dark:border-purple-800">
-                  {t("reports.aiSummary.powered")}
+                  {"Powered by IA"}
                 </Badge>
               </div>
               <p className="text-sm text-gray-800 dark:text-gray-100 leading-relaxed">{report.ai.summary}</p>
               <div className="grid gap-3 md:grid-cols-3">
                 <InsightList
-                  title={t("reports.aiAdvanced.opportunities")}
+                  title={"Oportunidades"}
                   items={report.ai.opportunities}
                   tone="positive"
                 />
-                <InsightList title={t("reports.aiAdvanced.risks")} items={report.ai.risks} tone="warning" />
-                <InsightList title={t("reports.aiAdvanced.nextActions")} items={report.ai.nextActions} tone="neutral" />
+                <InsightList title={"Riesgos"} items={report.ai.risks} tone="warning" />
+                <InsightList title={"Próximas Acciones"} items={report.ai.nextActions} tone="neutral" />
               </div>
             </CardContent>
           </Card>
@@ -247,19 +245,19 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <Activity className="h-4 w-4 text-blue-500" />
-                    {t("reports.aiAdvanced.branchHighlights")}
+                    {"Destacados por Sucursal"}
                   </h3>
                   <Badge variant="outline" className="text-[10px] sm:text-xs">
-                    {t("reports.aiAdvanced.branches")}
+                    {"Sucursales"}
                   </Badge>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("reports.aiAdvanced.branch")}</TableHead>
-                      <TableHead>{t("reports.aiAdvanced.sales")}</TableHead>
-                      <TableHead>{t("reports.aiAdvanced.revenue")}</TableHead>
-                      <TableHead>{t("reports.aiAdvanced.avgTicket")}</TableHead>
+                      <TableHead>{"Sucursal"}</TableHead>
+                      <TableHead>{"Ventas"}</TableHead>
+                      <TableHead>{"Ingresos"}</TableHead>
+                      <TableHead>{"Ticket Promedio"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -281,7 +279,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
                 <CardContent className="p-4 sm:p-6 space-y-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                     <Package className="h-4 w-4 text-indigo-500" />
-                    {t("reports.aiAdvanced.topProducts")}
+                    {"Productos Más Vendidos"}
                   </div>
                   <ul className="space-y-2">
                     {report.productHighlights.map((product) => (
@@ -298,7 +296,7 @@ export function AiReportPageClient({ customerSlug }: AiReportPageClientProps) {
                 <CardContent className="p-4 sm:p-6 space-y-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                     <Users className="h-4 w-4 text-emerald-500" />
-                    {t("reports.aiAdvanced.topCustomers")}
+                    {"Mejores Clientes"}
                   </div>
                   <ul className="space-y-2">
                     {report.customerHighlights.map((customer) => (
@@ -336,8 +334,8 @@ function InsightList({
     tone === "positive"
       ? "text-emerald-600 dark:text-emerald-300"
       : tone === "warning"
-      ? "text-amber-600 dark:text-amber-300"
-      : "text-gray-600 dark:text-gray-300"
+        ? "text-amber-600 dark:text-amber-300"
+        : "text-gray-600 dark:text-gray-300"
 
   return (
     <div>

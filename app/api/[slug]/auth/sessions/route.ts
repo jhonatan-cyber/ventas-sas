@@ -26,7 +26,7 @@ export async function GET(
     }
 
     // Verificar autenticación
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const accessToken = request.cookies.get("sas-auth-token")?.value
     if (!accessToken) {
       return NextResponse.json(
         { error: 'No autenticado' },
@@ -86,7 +86,7 @@ export async function DELETE(
     }
 
     // Verificar autenticación
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const accessToken = request.cookies.get("sas-auth-token")?.value
     if (!accessToken) {
       return NextResponse.json(
         { error: 'No autenticado' },
@@ -104,7 +104,7 @@ export async function DELETE(
 
     // Obtener sessionId específica del query string o invalidar todas las demás
     const url = new URL(request.url)
-    const sessionId = url.searchParams.get('sessionId')
+    const sessionId = url.searchParams.get("Session Id")
 
     let invalidatedCount = 0
 

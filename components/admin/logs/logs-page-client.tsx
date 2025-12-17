@@ -117,7 +117,7 @@ export function LogsPageClient({
       if (format === "csv") {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
+        const a = document.createElement("a") as HTMLAnchorElement
         a.href = url
         a.download = `security-logs-${new Date().toISOString().split("T")[0]}.csv`
         document.body.appendChild(a)
@@ -130,7 +130,7 @@ export function LogsPageClient({
           type: "application/json",
         })
         const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
+        const a = document.createElement("a") as HTMLAnchorElement
         a.href = url
         a.download = `security-logs-${new Date().toISOString().split("T")[0]}.json`
         document.body.appendChild(a)

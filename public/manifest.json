@@ -1,0 +1,16 @@
+{
+  "name": "SmartPOS",
+  "short_name": "SmartPOS",
+  "description": "Sistema POS inteligente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -19,8 +19,8 @@ export async function GET(
       )
     }
 
-    const startDateStr = searchParams.get("startDate")
-    const endDateStr = searchParams.get("endDate")
+    const startDateStr = searchParams.get("Start Date")
+    const endDateStr = searchParams.get("End Date")
     
     const startDate = startDateStr ? new Date(startDateStr) : undefined
     const endDate = endDateStr ? new Date(endDateStr) : undefined

@@ -370,9 +370,9 @@ export function SystemConfigClient({
       if (data.success) {
         const blob = new Blob([JSON.stringify(data.config, null, 2)], { type: 'application/json' })
         const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
+        const a = document.createElement("a") as HTMLAnchorElement
         a.href = url
-        a.download = `system-config-${new Date().toISOString().split('T')[0]}.json`
+        a.download = `system-config-${new Date().toISOString().split("T")[0]}.json`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

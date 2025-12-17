@@ -19,7 +19,6 @@ import {
   Download,
   Loader2
 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -43,7 +42,6 @@ interface AnalyticsPageClientProps {
 }
 
 export function AnalyticsPageClient({ organizationId: _organizationId, customerSlug }: AnalyticsPageClientProps) {
-  const t = useTranslations()
   const [kpis, setKpis] = useState<any[]>([])
   const [trends, setTrends] = useState<any[]>([])
   const [profitability, setProfitability] = useState<any[]>([])
@@ -64,7 +62,6 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
     {
       role: "assistant",
       content:
-        t("analytics.ai.chatIntro") ||
         "Hola, soy tu asistente inteligente. Pregúntame sobre ventas, clientes o cualquier indicador del período.",
     },
   ])
@@ -212,10 +209,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
       const end = dateRange?.end ? dateRange.end.toISOString().slice(0, 10) : undefined
 
       await exportAnalyticsMarkdownReportToPDF(markdown, customerSlug, start, end)
-      toast.success(t("analytics.ai.reportSuccess") || "Reporte generado correctamente.")
+      toast.success("Reporte generado correctamente.")
     } catch (error: any) {
       console.error("Error generando reporte:", error)
-      toast.error(error?.message || t("analytics.ai.reportError") || "No se pudo generar el reporte.")
+      toast.error(error?.message || "No se pudo generar el reporte.")
     } finally {
       setReportGenerating(false)
     }
@@ -229,10 +226,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            {t('analytics.title') || 'Analytics y Business Intelligence'}
+            Analíticas
           </h1>
           <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
-            {t('analytics.description') || 'Análisis avanzado de datos y métricas de tu negocio'}
+            Análisis avanzado de datos y métricas de tu negocio
           </p>
         </div>
         <DateRangePicker
@@ -246,7 +243,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Target className="h-5 w-5" />
-            {t('analytics.kpis.title') || 'KPIs Principales'}
+            KPIs Principales
           </h2>
           <KPICustomizer
             kpis={kpis}
@@ -277,10 +274,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
-              {t("analytics.ai.summaryTitle") || "Resumen inteligente"}
+              Resumen inteligente
             </CardTitle>
             <CardDescription>
-              {t("analytics.ai.summaryDescription") || "Narrativa automática generada con IA."}
+              Narrativa automática generada con IA.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -297,7 +294,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
                 </p>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                    {t("analytics.ai.highlights") || "Puntos destacados"}
+                    Puntos destacados
                   </p>
                   <ul className="space-y-2">
                     {aiInsights.highlights.length > 0 ? (
@@ -308,14 +305,14 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
                       ))
                     ) : (
                       <li className="text-sm text-gray-500">
-                        {t("analytics.ai.insightsEmpty") || "Sin novedades para este período."}
+                        Sin novedades para este período.
                       </li>
                     )}
                   </ul>
                 </div>
               </>
             ) : (
-              <p className="text-sm text-gray-500">{t("analytics.ai.summaryFallback") || "Sin datos disponibles."}</p>
+              <p className="text-sm text-gray-500">Sin datos disponibles.</p>
             )}
           </CardContent>
         </Card>
@@ -324,17 +321,17 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-amber-500" />
-              {t("analytics.ai.recommendationsTitle") || "Recomendaciones e insights"}
+              Recomendaciones e insights
             </CardTitle>
             <CardDescription>
-              {t("analytics.ai.recommendationsDescription") || "Acciones sugeridas y alertas detectadas automáticamente."}
+              Acciones sugeridas y alertas detectadas automáticamente.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
               <div className="flex items-center gap-2 text-sm font-semibold text-rose-600 dark:text-rose-400 mb-2">
                 <AlertTriangle className="h-4 w-4" />
-                {t("analytics.ai.anomaliesTitle") || "Anomalías"}
+                Anomalías
               </div>
               <ul className="space-y-2">
                 {aiLoading ? (
@@ -347,7 +344,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
                   ))
                 ) : (
                   <li className="text-sm text-gray-500">
-                    {t("analytics.ai.noAnomalies") || "Sin anomalías relevantes detectadas."}
+                    Sin anomalías relevantes detectadas.
                   </li>
                 )}
               </ul>
@@ -355,7 +352,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             <div>
               <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">
                 <Lightbulb className="h-4 w-4" />
-                {t("analytics.ai.recommendations") || "Recomendaciones"}
+                Recomendaciones
               </div>
               <ul className="space-y-2">
                 {aiLoading ? (
@@ -368,7 +365,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
                   ))
                 ) : (
                   <li className="text-sm text-gray-500">
-                    {t("analytics.ai.noRecommendations") || "Sin acciones específicas por ahora."}
+                    Sin acciones específicas por ahora.
                   </li>
                 )}
               </ul>
@@ -382,10 +379,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-500" />
-              {t("analytics.ai.scenariosTitle") || "Escenarios simulados"}
+              Escenarios simulados
             </CardTitle>
             <CardDescription>
-              {t("analytics.ai.scenariosDescription") || "Explora impactos potenciales con IA."}
+              Explora impactos potenciales con IA.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -403,7 +400,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500">{t("analytics.ai.noScenarios") || "Sin escenarios disponibles."}</p>
+              <p className="text-sm text-gray-500">Sin escenarios disponibles.</p>
             )}
           </CardContent>
         </Card>
@@ -412,10 +409,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-cyan-500" />
-              {t("analytics.ai.chatTitle") || "Asistente conversacional"}
+              Asistente conversacional
             </CardTitle>
             <CardDescription>
-              {t("analytics.ai.chatDescription") || "Haz preguntas directas sobre tus métricas."}
+              Haz preguntas directas sobre tus métricas.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -423,11 +420,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
               {chatMessages.map((message, index) => (
                 <div
                   key={index}
-                  className={`rounded-xl px-3 py-2 text-sm ${
-                    message.role === "assistant"
-                      ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      : "bg-blue-600 text-white ml-auto"
-                  } max-w-full`}
+                  className={`rounded-xl px-3 py-2 text-sm ${message.role === "assistant"
+                    ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    : "bg-blue-600 text-white ml-auto"
+                    } max-w-full`}
                 >
                   {message.content}
                 </div>
@@ -435,7 +431,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             </div>
             <div className="space-y-2">
               <Textarea
-                placeholder={t("analytics.ai.chatPlaceholder") || "Ej. ¿Cuál fue el margen promedio esta semana?"}
+                placeholder="Ej. ¿Cuál fue el margen promedio esta semana?"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 disabled={chatLoading}
@@ -444,7 +440,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
               <div className="flex justify-end">
                 <Button onClick={handleAskQuestion} disabled={chatLoading || !chatInput.trim()}>
                   {chatLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {t("analytics.ai.chatButton") || "Preguntar"}
+                  Preguntar
                 </Button>
               </div>
             </div>
@@ -457,22 +453,22 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
           <div>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-indigo-500" />
-              {t("analytics.ai.reportTitle") || "Reporte ejecutivo con IA"}
+              Reporte ejecutivo con IA
             </CardTitle>
             <CardDescription>
-              {t("analytics.ai.reportDescription") || "Genera un documento listo para compartir con tu equipo."}
+              Genera un documento listo para compartir con tu equipo.
             </CardDescription>
           </div>
           <Button onClick={handleGenerateReport} disabled={reportGenerating}>
             {reportGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t("analytics.ai.reportGenerating") || "Generando..."}
+                Generando...
               </>
             ) : (
               <>
                 <Download className="h-4 w-4 mr-2" />
-                {t("analytics.ai.reportButton") || "Descargar reporte"}
+                Descargar reporte
               </>
             )}
           </Button>
@@ -484,23 +480,23 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="trends" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('analytics.tabs.trends') || 'Tendencias'}</span>
+            <span className="hidden sm:inline">Tendencias</span>
           </TabsTrigger>
           <TabsTrigger value="profitability" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('analytics.tabs.profitability') || 'Rentabilidad'}</span>
+            <span className="hidden sm:inline">Rentabilidad</span>
           </TabsTrigger>
           <TabsTrigger value="segmentation" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('analytics.tabs.segmentation') || 'Segmentación'}</span>
+            <span className="hidden sm:inline">Segmentación</span>
           </TabsTrigger>
           <TabsTrigger value="predictions" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('analytics.tabs.predictions') || 'Predicciones'}</span>
+            <span className="hidden sm:inline">Predicciones</span>
           </TabsTrigger>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('analytics.tabs.overview') || 'Resumen'}</span>
+            <span className="hidden sm:inline">Resumen</span>
           </TabsTrigger>
         </TabsList>
 
@@ -509,10 +505,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <LineChart className="h-5 w-5" />
-                {t('analytics.trends.title') || 'Análisis de Tendencias'}
+                Análisis de Tendencias
               </CardTitle>
               <CardDescription>
-                {t('analytics.trends.description') || 'Evolución de ventas e ingresos en el tiempo'}
+                Evolución de ventas e ingresos en el tiempo
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -526,10 +522,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                {t('analytics.profitability.title') || 'Rentabilidad por Producto'}
+                Rentabilidad por Producto
               </CardTitle>
               <CardDescription>
-                {t('analytics.profitability.description') || 'Análisis de ingresos, costos y márgenes de ganancia por producto'}
+                Análisis de ingresos, costos y márgenes de ganancia por producto
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -543,10 +539,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5" />
-                {t('analytics.segmentation.title') || 'Segmentación de Clientes'}
+                Segmentación de Clientes
               </CardTitle>
               <CardDescription>
-                {t('analytics.segmentation.description') || 'Análisis RFM: Recency, Frequency, Monetary'}
+                Análisis RFM: Recency, Frequency, Monetary
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -560,10 +556,10 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5" />
-                {t('analytics.predictions.title') || 'Predicciones con Machine Learning'}
+                Predicciones con Machine Learning
               </CardTitle>
               <CardDescription>
-                {t('analytics.predictions.description') || 'Pronósticos de ventas futuras basados en datos históricos'}
+Pronósticos de ventas futuras basados en datos históricos
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -578,7 +574,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  {t('analytics.overview.trends') || 'Tendencias Rápidas'}
+Tendencias Rápidas
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -589,7 +585,7 @@ export function AnalyticsPageClient({ organizationId: _organizationId, customerS
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="h-5 w-5" />
-                  {t('analytics.overview.topProducts') || 'Top Productos Rentables'}
+Top Productos Rentables
                 </CardTitle>
               </CardHeader>
               <CardContent>

@@ -9,7 +9,7 @@ import { SupportService } from '@/lib/services/admin/support-service'
 export async function POST(request: NextRequest) {
   try {
     // Verificar que la solicitud viene de un origen autorizado (opcional, para seguridad)
-    const authHeader = request.headers.get('authorization')
+    const authHeader = request.headers.get("Authorization")
     const cronSecret = process.env.CRON_SECRET
 
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {

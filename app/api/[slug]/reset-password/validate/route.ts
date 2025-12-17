@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const token = searchParams.get('token')
+    const token = searchParams.get("Token")
 
     if (!token) {
       return NextResponse.json(
@@ -75,7 +75,7 @@ export async function GET(
     }
 
     // Verificar que el usuario esté activo
-    if (!resetToken.user.isActive || resetToken.user.deletedAt) {
+    if (!resetToken.user || !resetToken.user.isActive || resetToken.user.deletedAt) {
       return NextResponse.json({
         valid: false,
         error: 'Usuario no activo',

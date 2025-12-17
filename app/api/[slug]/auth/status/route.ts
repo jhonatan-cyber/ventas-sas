@@ -26,7 +26,7 @@ export async function GET(
     }
 
     // Obtener access token de las cookies
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const accessToken = request.cookies.get("sas-auth-token")?.value
 
     if (!accessToken) {
       return NextResponse.json(

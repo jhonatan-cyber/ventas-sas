@@ -1,7 +1,6 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,9 +30,7 @@ export function CashRegistersFilters({
   onBranchChange,
   onSearchChange,
   maxBranches,
-}: CashRegistersFiltersProps) {
-  const t = useTranslations()
-  const [searchValue, setSearchValue] = useState("");
+}: CashRegistersFiltersProps) {const [searchValue, setSearchValue] = useState("");
   const showBranchFilter =
     maxBranches === undefined || maxBranches === null || maxBranches > 1;
 
@@ -55,13 +52,13 @@ export function CashRegistersFilters({
           htmlFor="cash-register-search"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          {t('common.search')}
+          {"Buscar"}
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="cash-register-search"
-            placeholder={t('common.placeholders.searchCashRegisters')}
+            placeholder={"Buscar cajas..."}
             className="pl-10 pr-10 w-full rounded-full"
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -92,10 +89,10 @@ export function CashRegistersFilters({
           </Label>
           <Select onValueChange={onBranchChange} defaultValue="all">
             <SelectTrigger id="branch-filter" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.filterByBranch')} />
+              <SelectValue placeholder={"Filtrar por sucursal"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('common.placeholders.allBranches')}</SelectItem>
+              <SelectItem value="all">{"Todas las sucursales"}</SelectItem>
               {branches.map((branch) => (
                 <SelectItem key={branch.id} value={branch.id}>
                   {branch.name}
@@ -118,7 +115,7 @@ export function CashRegistersFilters({
           </Label>
           <Select onValueChange={onStatusChange} defaultValue="all">
             <SelectTrigger id="status-filter" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.filterByStatus')} />
+              <SelectValue placeholder={"Filtrar por estado"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
@@ -141,7 +138,7 @@ export function CashRegistersFilters({
             defaultValue="10"
           >
             <SelectTrigger id="page-size" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.perPage')} />
+              <SelectValue placeholder={"Por página"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="5">5 por página</SelectItem>

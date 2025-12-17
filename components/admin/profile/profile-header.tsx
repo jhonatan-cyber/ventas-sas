@@ -13,7 +13,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const initials = (profile.fullName || profile.email || 'U')
-    .split(' ')
+    .split(" ")
     .map(n => n[0])
     .join('')
     .slice(0, 2)

@@ -2,15 +2,15 @@ import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { captureServerEvent } from '@/lib/analytics/posthog-server'
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { SaleService } from '@/lib/services/sales/sale-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrCreateOrganizationForCustomer, getCustomerBySlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeSale } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createSaleSchema } from '@/lib/validators/sales-validators'
 
@@ -46,14 +46,14 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const pageSize = parseInt(searchParams.get('pageSize') || '10', 10)
-    const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
-    const paymentMethod = searchParams.get('paymentMethod') || undefined
-    const customerId = searchParams.get('customerId') || undefined
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
+    const page = parseInt(searchParams.get("Page") || '1', 10)
+    const pageSize = parseInt(searchParams.get("Page Size") || '10', 10)
+    const search = searchParams.get("Search") || undefined
+    const status = searchParams.get("Status") || undefined
+    const paymentMethod = searchParams.get("Payment Method") || undefined
+    const customerId = searchParams.get("Customer Id") || undefined
+    const startDate = searchParams.get("Start Date") ? new Date(searchParams.get("Start Date")!) : undefined
+    const endDate = searchParams.get("End Date") ? new Date(searchParams.get("End Date")!) : undefined
 
     const customer = await getCustomerBySlug(slug)
     // Obtener o crear automáticamente la organización si no existe
@@ -118,7 +118,9 @@ export async function POST(
       throw AppError.notFound('No se pudo obtener o crear la organización para el cliente')
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    // Verificar permiso para crear ventas
+    await requirePermission(request, slug, PERMISSIONS.VENTAS_CREAR)
+    const token = request.cookies.get("sas-auth-token")?.value
     currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
@@ -146,17 +148,8 @@ export async function POST(
       throw AppError.validation('No se pudo asociar el usuario de ventas')
     }
 
-    // Traducir notas automáticamente si existen
-    let notesTranslations = undefined
-    if (validatedData.notes && validatedData.notes.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        notesTranslations = await translateText(validatedData.notes, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo notas de venta:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Notas sin traducción automática
+    const notesTranslations = undefined
 
     // Crear venta con datos validados
     const sale = await SaleService.createSale(organizationId, {

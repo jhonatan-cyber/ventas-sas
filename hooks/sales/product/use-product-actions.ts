@@ -9,9 +9,8 @@ import { useApiError, extractErrorFromResponse } from "@/hooks/common/use-api-er
 
 // Helper para obtener el token CSRF desde las cookies del navegador
 function getCSRFTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null
-  const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : null
+  const { getCSRFToken } = require('@/lib/utils/cookies')
+  return getCSRFToken()
 }
 
 // Helper para asegurar que tenemos un token CSRF válido

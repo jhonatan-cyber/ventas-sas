@@ -1,21 +1,16 @@
 "use client";
 
 import { Shield, Activity, BarChart3, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
-
 interface LoginWelcomeSectionProps {
   organizationName: string;
 }
 
 export function LoginWelcomeSection({
   organizationName: _organizationName,
-}: LoginWelcomeSectionProps) {
-  const t = useTranslations();
-
-  const features = [
+}: LoginWelcomeSectionProps) {const features = [
     {
       icon: Shield,
-      title: t("auth.login.feature1"),
+      title: "Seguridad Avanzada",
       description: "Datos protegidos con encriptación de grado empresarial",
       color: "from-cyan-500 to-teal-600",
       bgColor: "bg-cyan-500/10",
@@ -23,7 +18,7 @@ export function LoginWelcomeSection({
     },
     {
       icon: Activity,
-      title: t("auth.login.feature2"),
+      title: "Tiempo Real",
       description: "Monitoreo y actualizaciones instantáneas",
       color: "from-purple-500 to-pink-600",
       bgColor: "bg-purple-500/10",
@@ -39,7 +34,7 @@ export function LoginWelcomeSection({
     },
     {
       icon: Users,
-      title: t("auth.login.feature3"),
+      title: "Gestión de Usuarios",
       description: "Administra usuarios y permisos de forma eficiente",
       color: "from-orange-500 to-amber-600",
       bgColor: "bg-orange-500/10",
@@ -53,10 +48,10 @@ export function LoginWelcomeSection({
         {/* Mensaje de bienvenida mejorado */}
         <div className="mb-10 animate-in fade-in slide-in-from-left duration-700 delay-100">
           <h1 className="text-5xl xl:text-6xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
-            {t("auth.login.managementSystem")}
+            Sistema de Gestión
             <br />
             <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent animate-gradient">
-              {t("auth.login.intelligent")}
+              Inteligente
             </span>
           </h1>
         </div>
@@ -94,7 +89,7 @@ export function LoginWelcomeSection({
       {/* Footer izquierdo mejorado */}
       <div className="relative z-10 mt-auto pt-8 border-t border-gray-200/50 dark:border-gray-700/50">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {t("auth.login.copyright", { year: new Date().getFullYear() })}
+{`© ${new Date().getFullYear()} SAS. Todos los derechos reservados.`}
         </p>
       </div>
     </div>

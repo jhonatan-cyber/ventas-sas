@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -13,6 +12,7 @@ import { QuotationsHeader } from "./quotations-header"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { useQuotationActions } from "@/hooks/sales/quotation/use-quotation-actions"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 
 interface BranchSummary {
@@ -44,7 +44,9 @@ export function QuotationsPageClient({
   initialUserBranchId = null,
   maxBranches,
 }: QuotationsPageClientProps) {
-  const t = useTranslations()
+// Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const initialBranchList = useMemo(() => initialBranches ?? [], [initialBranches])
 
   const [quotations, setQuotations] = useState<SalesQuotationWithRelations[]>(initialQuotations)
@@ -214,15 +216,22 @@ export function QuotationsPageClient({
     openConvertDialog(quotation)
   }, [openConvertDialog])
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateQuotation = hasPermission('cotizaciones_crear')
+  const canEditQuotation = hasPermission('cotizaciones_editar')
+  const canDeleteQuotation = hasPermission('cotizaciones_eliminar')
+  const canConvertQuotation = hasPermission('cotizaciones_convertir') // Convertir cotizaciones a ventas
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <QuotationsHeader
-        title={t('quotations.title')}
-        description={t('quotations.description')}
-        newButtonText={t('quotations.create')}
-        onNewClick={handleCreateClick}
-        newButtonDisabled={isLoading}
+        title={"Cotizaciones"}
+        description={"Gestiona las cotizaciones"}
+        newButtonText={"Nueva Cotización"}
+        onNewClick={canCreateQuotation ? handleCreateClick : undefined}
+        newButtonDisabled={isLoading || !canCreateQuotation}
+        showNewButton={canCreateQuotation}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
@@ -231,14 +240,14 @@ export function QuotationsPageClient({
         quotations={quotations as any}
         isLoading={isLoading}
         organizationId={organizationId}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={canEditQuotation ? handleEdit : undefined}
+        onDelete={canDeleteQuotation ? handleDelete : undefined}
         onViewDetails={handleViewDetails}
         showBranchColumn={showBranchColumn || isAdmin}
         branches={availableBranches}
         allowBranchFilter={canFilterByBranch}
         maxBranches={maxBranches}
-        onConvert={handleConvert}
+        onConvert={canConvertQuotation ? handleConvert : undefined}
       />
 
       {/* Modal de crear/editar cotización */}

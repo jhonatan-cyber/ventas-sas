@@ -34,6 +34,8 @@ export function BillingContainer({
   const [statusFilter, setStatusFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
 
+
+
   // Filtrar facturas por búsqueda y estado
   const filteredInvoices = invoices.filter(invoice => {
     // Filtrar por búsqueda

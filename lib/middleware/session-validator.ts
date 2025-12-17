@@ -23,7 +23,7 @@ export interface SessionValidationResult {
 export async function validateAdminSession(
   request: NextRequest
 ): Promise<SessionValidationResult> {
-  const token = request.cookies.get('admin-auth-token')?.value
+  const token = request.cookies.get("admin-auth-token")?.value
 
   if (!token) {
     return { valid: false }
@@ -72,7 +72,7 @@ export async function validateSasSession(
   request: NextRequest,
   customerSlug: string
 ): Promise<SessionValidationResult> {
-  const token = request.cookies.get('sas-auth-token')?.value
+  const token = request.cookies.get("sas-auth-token")?.value
 
   if (!token) {
     return { valid: false }
@@ -86,7 +86,7 @@ export async function validateSasSession(
   }
 
   // Obtener customerId desde slug
-  const { getOrganizationIdByCustomerSlug, getCustomerBySlug } = await import('@/lib/utils/organization')
+  const { getOrganizationIdByCustomerSlug, getCustomerBySlug } = await import("@/lib/utils/organization")
   const organizationId = await getOrganizationIdByCustomerSlug(customerSlug)
   
   if (!organizationId) {

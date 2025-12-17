@@ -29,7 +29,7 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const days = parseInt(searchParams.get('days') || '30')
+    const days = parseInt(searchParams.get("Days") || '30')
 
     const predictions = await AnalyticsService.getSalesPredictions(organizationId, days)
 

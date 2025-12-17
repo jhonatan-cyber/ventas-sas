@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +14,7 @@ import { CashRegistersHeader } from "./cash-registers-header";
 import type { CashRegisterWithRelations } from "./types";
 
 import { useCashRegisterActions } from "@/hooks/sales/cash-register/use-cash-register-actions";
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions";
 
 interface CashRegistersPageClientProps {
   initialCashRegisters: CashRegisterWithRelations[];
@@ -27,7 +27,9 @@ export function CashRegistersPageClient({
   customerSlug,
   maxBranches,
 }: CashRegistersPageClientProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions();
+  
   const [cashRegisters, setCashRegisters] =
     useState<CashRegisterWithRelations[]>(initialCashRegisters);
   const [isLoading, setIsLoading] = useState(false);
@@ -197,29 +199,36 @@ export function CashRegistersPageClient({
     openCloseDialog(cashRegister);
   };
 
-  const handleDeleteDialog = (cashRegister: CashRegisterWithRelations) => {
+  const _handleDeleteDialog = (cashRegister: CashRegisterWithRelations) => {
     openDeleteDialog(cashRegister);
   };
+
+  // Verificar permisos para mostrar botones de acciones
+  // Según la configuración de módulo cajas: crear, listar, ver_detalles, cerrar
+  const canCreateCashRegister = hasPermission('cajas_crear');
+  const canViewDetailsCashRegister = hasPermission('cajas_ver_detalles');
+  const canCloseCashRegister = hasPermission('cajas_cerrar');
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <CashRegistersHeader
-        title={t('cashRegisters.title')}
-        description={t('cashRegisters.description')}
-        newButtonText={t('cashRegisters.create')}
-        onNewClick={handleCreateClick}
-        newButtonDisabled={shouldBlockCreateButton}
+        title="Cajas"
+        description="Gestiona las cajas registradoras"
+        newButtonText="Nueva Caja"
+        onNewClick={canCreateCashRegister ? handleCreateClick : undefined}
+        newButtonDisabled={shouldBlockCreateButton || !canCreateCashRegister}
+        showNewButton={canCreateCashRegister}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <CashRegistersContainer
         cashRegisters={cashRegisters}
         isLoading={isLoading}
-        onViewDetails={openDetailsDialog}
-        onOpen={handleOpenDialog}
-        onClose={handleCloseDialog}
-        onDelete={handleDeleteDialog}
+        onViewDetails={canViewDetailsCashRegister ? openDetailsDialog : undefined}
+        onOpen={canCreateCashRegister ? handleOpenDialog : undefined} // Usar crear para abrir
+        onClose={canCloseCashRegister ? handleCloseDialog : undefined}
+        onDelete={undefined} // Cajas no se pueden eliminar según nueva configuración
         maxBranches={maxBranches}
       />
 

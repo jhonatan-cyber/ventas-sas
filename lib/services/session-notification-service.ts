@@ -5,8 +5,8 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/utils/logger'
 import { geolocationService } from '@/lib/utils/ip-geolocation'
+import { logger } from '@/lib/utils/logger'
 
 interface SessionNotificationData {
   userId: string

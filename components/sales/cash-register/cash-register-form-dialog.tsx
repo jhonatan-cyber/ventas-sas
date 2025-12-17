@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useState, useEffect, useCallback } from "react";
 
 import type { CashRegisterWithRelations } from "./types"
@@ -62,8 +61,8 @@ export function CashRegisterFormDialog({
   maxBranches: _maxBranches,
   openCashRegisters = [],
 }: CashRegisterFormDialogProps) {
-  const t = useTranslations()
-  const [name, setName] = useState("");
+
+const [name, setName] = useState("");
   const [branchId, setBranchId] = useState("");
   const [openingBalance, setOpeningBalance] = useState("0");
   const [branches, setBranches] = useState<any[]>([]);
@@ -165,12 +164,12 @@ export function CashRegisterFormDialog({
       const now = new Date();
       const weekday = now.toLocaleDateString("es-BO", { weekday: "long" }).toLowerCase();
       const formattedDate = formatDateForName(now);
-      setName(`${t('cashRegisters.title').split(' ')[0]} ${weekday.charAt(0).toUpperCase() + weekday.slice(1)
+      setName(`${"Caja Registradora".split(" ")[0]} ${weekday.charAt(0).toUpperCase() + weekday.slice(1)
         } ${formattedDate}`);
       setBranchId("");
       setOpeningBalance("0");
     }
-  }, [cashRegister, open, t]);
+  }, [cashRegister, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,12 +263,12 @@ export function CashRegisterFormDialog({
         <div className="px-6 sm:px-8 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-              {cashRegister ? t('cashRegisters.edit') : t('cashRegisters.new')}
+              {cashRegister ? "Editar Caja" : "Nueva Caja"}
             </DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
               {cashRegister
-                ? t('cashRegisters.editDescription')
-                : t('cashRegisters.newDescription')}
+                ? "Modifica la información de la caja existente"
+                : "Completa la información para crear una nueva caja"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -277,7 +276,7 @@ export function CashRegisterFormDialog({
           <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6 bg-gray-50/60 dark:bg-[#0c0c0c]">
             {/* Nombre generado */}
             <div className="space-y-2">
-              <Label>{t('cashRegisters.form.name')}</Label>
+              <Label>{"Nombre"}</Label>
               <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                 {name}
               </div>
@@ -286,27 +285,27 @@ export function CashRegisterFormDialog({
             {/* Sucursal */}
             {currentUser !== null && !currentUser.isAdmin && currentUser.branchId ? (
               <div className="space-y-2">
-                <Label>{t('form.branch')}</Label>
+                <Label>{"Sucursal"}</Label>
                 <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                   {branches.find(b => b.id === currentUser.branchId)?.name ||
                     (allBranches?.find((b: any) => b.id === currentUser.branchId)?.name) ||
-                    t('cashRegisters.form.assignedBranch')}
+                    "Sucursal asignada"}
                   <p className="text-xs mt-1 text-gray-500 dark:text-gray-500">
-                    {t('cashRegisters.form.willUseBranch')}
+                    {"Se usará tu sucursal asignada"}
                   </p>
                 </div>
               </div>
             ) : currentUser !== null && currentUser.isAdmin ? (
               branches.length > 0 ? (
                 <div className="space-y-2">
-                  <Label htmlFor="branchId">{t('form.branch')}</Label>
+                  <Label htmlFor="branchId">{"Sucursal"}</Label>
                   <Select
                     value={branchId || undefined}
                     onValueChange={setBranchId}
                     disabled={isLoading || isLoadingData}
                   >
                     <SelectTrigger className="rounded-full w-full">
-                      <SelectValue placeholder={t('cashRegisters.form.selectBranch')} />
+                      <SelectValue placeholder={"Seleccionar sucursal"} />
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((branch) => (
@@ -319,17 +318,17 @@ export function CashRegisterFormDialog({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label>{t('form.branch')}</Label>
+                  <Label>{"Sucursal"}</Label>
                   <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                    {t('cashRegisters.form.noBranchesAvailable')}
+                    {"No Branches Available"}
                   </div>
                 </div>
               )
             ) : currentUser === null ? (
               <div className="space-y-2">
-                <Label>{t('form.branch')}</Label>
+                <Label>{"Sucursal"}</Label>
                 <div className="rounded-full bg-gray-100 dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#2a2a2a] px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                  {t('cashRegisters.form.loadingInfo')}
+                  {"Loading Info"}
                 </div>
               </div>
             ) : null}
@@ -337,7 +336,7 @@ export function CashRegisterFormDialog({
             {/* Balance inicial (solo si es nueva caja) */}
             {!cashRegister && (
               <div className="space-y-2">
-                <Label htmlFor="openingBalance">{t('cashRegisters.form.initialBalance')}</Label>
+                <Label htmlFor="openingBalance">{"Initial Balance"}</Label>
                 <Input
                   id="openingBalance"
                   type="number"
@@ -345,7 +344,7 @@ export function CashRegisterFormDialog({
                   min="0"
                   value={openingBalance}
                   onChange={(e) => setOpeningBalance(e.target.value)}
-                  placeholder={t('common.placeholders.amount')}
+                  placeholder={"Monto"}
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -357,7 +356,7 @@ export function CashRegisterFormDialog({
             )}
             {/* Fecha y hora actual */}
             <div className="space-y-2">
-              <Label htmlFor="currentDateTime">{t('cashRegisters.form.dateTime')}</Label>
+              <Label htmlFor="currentDateTime">{"Date Time"}</Label>
               <Input
                 id="currentDateTime"
                 value={currentDateTime}
@@ -375,7 +374,7 @@ export function CashRegisterFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t('action.cancel')}
+              {"Cancelar"}
             </Button>
             <Button
               type="submit"
@@ -384,10 +383,10 @@ export function CashRegisterFormDialog({
               disabled={isLoading || !name.trim()}
             >
               {isLoading
-                ? t('message.saving')
+                ? "Guardando..."
                 : cashRegister
-                  ? t('action.update')
-                  : t('action.add')}
+                  ? "Actualizar"
+                  : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

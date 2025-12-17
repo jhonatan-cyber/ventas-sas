@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+;
 import { useState, useEffect } from "react";
 
 import { PhotoUpload } from "./photo-upload";
@@ -53,9 +53,7 @@ export function UserFormDialog({
   onOpenChange,
   user,
   onSave,
-}: UserFormDialogProps) {
-  const t = useTranslations()
-  const [email, setEmail] = useState(user?.email || "");
+}: UserFormDialogProps) {const [email, setEmail] = useState(user?.email || "");
   const [ci, setCi] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -215,12 +213,12 @@ export function UserFormDialog({
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {user ? t('users.edit') : t('users.new')}
+              {user ? "Edit" : "New"}
             </DialogTitle>
             <DialogDescription>
               {user
-                ? t('users.editDescription')
-                : t('users.newDescription')}
+                ? "Edit Description"
+                : "New Description"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -243,13 +241,13 @@ export function UserFormDialog({
                   htmlFor="ci"
                   className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                 >
-                  {t('users.form.ci')}{" "}
+                  {"Ci"}{" "}
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="ci"
                   type="text"
-                  placeholder={t('users.form.ciPlaceholder')}
+                  placeholder={"Ci Placeholder"}
                   value={ci}
                   onChange={(e) => setCi(e.target.value)}
                   required
@@ -262,12 +260,12 @@ export function UserFormDialog({
                   htmlFor="email"
                   className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                 >
-                  {t('form.email')} <span className="text-red-500">*</span>
+                  {"Email"} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder={t('users.form.emailPlaceholder')}
+                  placeholder={"Email Placeholder"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -281,11 +279,11 @@ export function UserFormDialog({
                     htmlFor="firstName"
                     className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                   >
-                    {t('form.name')} <span className="text-red-500">*</span>
+                    {"Name"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="firstName"
-                    placeholder={t('users.form.namePlaceholder')}
+                    placeholder={"Name Placeholder"}
                     value={firstName}
                     onChange={(e) =>
                       setFirstName(capitalizeText(e.target.value))
@@ -299,11 +297,11 @@ export function UserFormDialog({
                     htmlFor="lastName"
                     className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                   >
-                    {t('form.lastName')} <span className="text-red-500">*</span>
+                    {"Last Name"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="lastName"
-                    placeholder={t('users.form.lastNamePlaceholder')}
+                    placeholder={"Last Name Placeholder"}
                     value={lastName}
                     onChange={(e) =>
                       setLastName(capitalizeText(e.target.value))
@@ -319,11 +317,11 @@ export function UserFormDialog({
                   htmlFor="address"
                   className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                 >
-                  {t('form.address')}
+                  {"Address"}
                 </Label>
                 <Input
                   id="address"
-                  placeholder={t('users.form.addressPlaceholder')}
+                  placeholder={"Address Placeholder"}
                   value={address}
                   onChange={(e) => setAddress(capitalizeText(e.target.value))}
                   className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
@@ -340,12 +338,12 @@ export function UserFormDialog({
                     htmlFor="phone"
                     className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                   >
-                    {t('form.phone')} <span className="text-red-500">*</span>
+                    {"Phone"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder={t('users.form.phonePlaceholder')}
+                    placeholder={"Phone Placeholder"}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -359,7 +357,7 @@ export function UserFormDialog({
                       htmlFor="role"
                       className="text-sm font-semibold text-gray-700 dark:text-gray-200"
                     >
-                      {t('users.form.role')}
+                      {"Role"}
                     </Label>
                     <Select
                       value={roleId}
@@ -370,8 +368,8 @@ export function UserFormDialog({
                         <SelectValue
                           placeholder={
                             rolesLoading
-                              ? t('users.form.loadingRoles')
-                              : t('users.form.selectRole')
+                              ? "Loading Roles"
+                              : "Select Role"
                           }
                         />
                       </SelectTrigger>
@@ -392,17 +390,17 @@ export function UserFormDialog({
               </div>
               {roles.length === 0 && !rolesLoading && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t('users.form.noRolesAvailable')}
+                  {"No Roles Available"}
                 </p>
               )}
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('users.form.superAdmin')}
+                    {"Super Admin"}
                   </Label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('users.form.superAdminDescription')}
+                    {"Super Admin Description"}
                   </p>
                 </div>
                 <Switch
@@ -427,14 +425,14 @@ export function UserFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t('action.cancel')}
+              {"Cancel"}
             </Button>
             <Button
               type="submit"
               className="w-full sm:w-auto rounded-full px-6"
               disabled={isLoading || !isFormValid}
             >
-              {isLoading ? t('message.saving') : user ? t('action.update') : t('action.add')}
+              {isLoading ? "Saving" : user ? "Update" : "Add"}
             </Button>
           </DialogFooter>
         </form>

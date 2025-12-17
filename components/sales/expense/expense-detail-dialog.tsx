@@ -1,7 +1,6 @@
 "use client"
 
 import { Calendar, Building2, User, DollarSign, FileText, Tag } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations } from "./types"
 
@@ -11,8 +10,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Separator } from "@/components/ui/separator"
 import { formatDateTime } from "@/lib/utils/date"
 import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { getTranslatableText } from "@/lib/utils/translatable-text"
-
 interface ExpenseDetailDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -30,27 +27,11 @@ export function ExpenseDetailDialog({
   maxBranches,
   onEdit,
 }: ExpenseDetailDialogProps) {
-  const t = useTranslations()
-
   if (!expense) {
     return <Dialog open={open} onOpenChange={onOpenChange} />
   }
 
-  // Obtener el idioma actual para las traducciones
-  const currentLanguage = (() => {
-    try {
-      const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}')
-      return prefs?.language || 'es'
-    } catch {
-      return 'es'
-    }
-  })()
-
-  const description = getTranslatableText(
-    expense.description,
-    (expense as any).descriptionTranslations,
-    currentLanguage
-  ) || expense.description
+  const description = expense.description
 
   const showBranchInfo = maxBranches == null || (maxBranches != null && maxBranches > 1)
 
@@ -99,7 +80,7 @@ export function ExpenseDetailDialog({
                     Sucursal
                   </div>
                   <p className="text-base font-medium text-gray-900 dark:text-white">
-                    {expense.branch.name || t('common.noBranch')}
+                    {expense.branch.name || 'Sin sucursal'}
                   </p>
                   {expense.branch.address && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -118,7 +99,7 @@ export function ExpenseDetailDialog({
               </div>
               <div className="space-y-1">
                 <p className="text-base font-medium text-gray-900 dark:text-white">
-                  {expense.user?.fullName || t('users.sas.unassignedUser')}
+                  {expense.user?.fullName || 'Usuario no asignado'}
                 </p>
                 {expense.user?.email && (
                   <p className="text-sm text-gray-500 dark:text-gray-400">

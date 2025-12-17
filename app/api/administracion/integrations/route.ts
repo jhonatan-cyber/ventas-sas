@@ -24,7 +24,7 @@ const createIntegrationSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category') || undefined
-    const isActive = searchParams.get('isActive') === 'true'
-    const isPublic = searchParams.get('isPublic') === 'true' ? true : undefined
+    const category = searchParams.get("Category") || undefined
+    const isActive = searchParams.get("Is Active") === 'true'
+    const isPublic = searchParams.get("Is Public") === 'true' ? true : undefined
 
     const { integrations, total } = await IntegrationService.getIntegrations({
       category,
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

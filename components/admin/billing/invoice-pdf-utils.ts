@@ -22,15 +22,15 @@ export async function generateInvoicePDF(invoice: SerializedInvoiceWithRelations
 }) {
   // Importar dependencias dinámicamente para evitar problemas con SSR
   const [jsPDFModule, html2canvasModule] = await Promise.all([
-    import('jspdf'),
-    import('html2canvas')
+    import("jspdf"),
+    import("html2canvas")
   ]);
   
   const jsPDF = jsPDFModule.default;
   const html2canvas = html2canvasModule.default;
 
   // Crear un iframe completamente aislado para evitar herencia de estilos oklch
-  const iframe = document.createElement('iframe');
+  const iframe = document.createElement("iframe") as HTMLIFrameElement;
   iframe.style.position = 'fixed';
   iframe.style.left = '-9999px';
   iframe.style.top = '0';
@@ -157,15 +157,15 @@ export async function generateInvoicePDFBase64(invoice: SerializedInvoiceWithRel
 }): Promise<string> {
   // Importar dependencias dinámicamente para evitar problemas con SSR
   const [jsPDFModule, html2canvasModule] = await Promise.all([
-    import('jspdf'),
-    import('html2canvas')
+    import("jspdf"),
+    import("html2canvas")
   ]);
   
   const jsPDF = jsPDFModule.default;
   const html2canvas = html2canvasModule.default;
 
   // Crear un iframe completamente aislado para evitar herencia de estilos oklch
-  const iframe = document.createElement('iframe');
+  const iframe = document.createElement("iframe") as HTMLIFrameElement;
   iframe.style.position = 'fixed';
   iframe.style.left = '-9999px';
   iframe.style.top = '0';
@@ -263,8 +263,8 @@ export async function generateInvoicePDFBase64(invoice: SerializedInvoiceWithRel
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
     // Retornar Base64 (sin prefijo data:application/pdf;base64,)
-    const pdfOutput = pdf.output('datauristring');
-    return pdfOutput.split(',')[1]; // Eliminar el prefijo
+    const pdfOutput = pdf.output("datauristring");
+    return pdfOutput.split(",")[1]; // Eliminar el prefijo
   } catch (error) {
     console.error('Error al generar PDF Base64:', error);
     throw error;

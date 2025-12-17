@@ -1,7 +1,6 @@
 "use client"
 
 import { Category } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { CategoriesContainer } from "./categories-container"
@@ -11,6 +10,7 @@ import { CategoryFormDialog } from "./category-form-dialog"
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
 import { useCategoryActions } from "@/hooks/sales/category/use-category-actions"
+import { useSasPermissions } from '@/hooks/sales/use-sas-permissions'
 
 interface CategoriesPageClientProps {
   initialCategories: (Category & {
@@ -20,7 +20,6 @@ interface CategoriesPageClientProps {
 }
 
 export function CategoriesPageClient({ initialCategories, customerSlug }: CategoriesPageClientProps) {
-  const t = useTranslations()
   const [categories, setCategories] = useState(initialCategories)
   
   const {
@@ -42,6 +41,13 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
     handleToggleStatus
   } = useCategoryActions(customerSlug, setCategories)
 
+  // Permisos SAS: controlar visibilidad de acciones
+  const { hasPermission } = useSasPermissions()
+  const canCreate = hasPermission('categorias_crear')
+  const canEdit = hasPermission('categorias_editar')
+  const canDelete = hasPermission('categorias_eliminar')
+  const canToggle = hasPermission('categorias_activar') || hasPermission('categorias_desactivar')
+
   // Actualizar categorías cuando cambien los initialCategories (después de router.refresh)
   useEffect(() => {
     setCategories(initialCategories)
@@ -51,18 +57,19 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <CategoriesHeader
-        title={t('categories.title')}
-        description={t('categories.description')}
-        newButtonText={t('categories.create')}
-        onNewClick={openCreateDialog}
+        title="Gestión de Categorías"
+        description="Administra las categorías de productos"
+        newButtonText="Agregar Categoría"
+        onNewClick={canCreate ? openCreateDialog : undefined}
+        showNew={canCreate}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <CategoriesContainer 
         categories={categories} 
-        onEdit={openEditDialog}
-        onToggleStatus={handleToggleStatus}
-        onDelete={openDeleteDialog}
+        onEdit={canEdit ? openEditDialog : undefined}
+        onToggleStatus={canToggle ? handleToggleStatus : undefined}
+        onDelete={canDelete ? openDeleteDialog : undefined}
       />
 
       {/* Modal de crear/editar categoría */}
@@ -87,7 +94,7 @@ export function CategoriesPageClient({ initialCategories, customerSlug }: Catego
         onOpenChange={setConfirmOpen}
         title={confirmTitle}
         description={confirmDesc}
-        confirmText={t('common.confirm')}
+        confirmText="Confirmar"
         confirmColor={confirmColor}
         onConfirm={confirmPerform}
       />

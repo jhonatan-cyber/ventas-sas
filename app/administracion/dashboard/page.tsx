@@ -12,28 +12,28 @@ import { AuthService } from "@/lib/services/auth-service"
 export default async function AdminPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
-  const token = cookieStore.get('admin-auth-token')?.value
+  const token = cookieStore.get("admin-auth-token")?.value
   
   if (!token) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
   
   try {
     const payload = await AdminJWTService.verifyToken(token!)
     if (!payload) {
       // Si el token es inválido, redirigir (el logout se encargará de eliminar la cookie)
-      redirect('/administracion/login')
+      redirect("/administracion/login")
     }
     
     // Validar acceso de administrador (super admin o rol Administrador)
     const hasAccess = await AuthService.hasAdminAccess(payload.userId)
     if (!hasAccess) {
       // Si el usuario no tiene acceso de administrador, redirigir con mensaje de error
-      redirect('/administracion/login?error=no_access')
+      redirect("/administracion/login?error=no_access")
     }
   } catch {
     // Si hay error al verificar token, redirigir
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
 
   // Get comprehensive admin statistics with error handling

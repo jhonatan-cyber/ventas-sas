@@ -1,7 +1,6 @@
 "use client"
 
 import { Search, XCircle } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -61,7 +60,6 @@ export function SalesFilters({
   branches = [],
   maxBranches,
 }: SalesFiltersProps) {
-  const t = useTranslations()
   const showBranchFilter = maxBranches === undefined || maxBranches > 1
   const [searchValue, setSearchValue] = useState("")
 
@@ -84,7 +82,7 @@ export function SalesFilters({
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               id="sales-search"
-              placeholder={t('common.placeholders.searchSales')}
+              placeholder="Buscar por número de venta, cliente..."
               className="pl-12 pr-12 rounded-full"
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
@@ -110,13 +108,13 @@ export function SalesFilters({
               <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 text-left w-full block">Sucursal</Label>
               <Select value={selectedBranch} onValueChange={onBranchChange}>
                 <SelectTrigger className="rounded-full w-full">
-                  <SelectValue placeholder={t('common.placeholders.allBranches')} />
+                  <SelectValue placeholder="Todas las sucursales" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
-                  <SelectItem value="all">{t('common.placeholders.allBranches')}</SelectItem>
+                  <SelectItem value="all">Todas las sucursales</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
-                      {branch.name || t('branches.details.noName')}
+                      {branch.name || "Sin nombre"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -130,7 +128,7 @@ export function SalesFilters({
               <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 text-left w-full block">Estado</Label>
               <Select value={selectedStatus} onValueChange={onStatusChange}>
                 <SelectTrigger className="rounded-full w-full">
-                  <SelectValue placeholder={t('common.all')} />
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
                   {statusOptions.map((option) => (
@@ -147,7 +145,7 @@ export function SalesFilters({
               <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 text-left w-full block">Método de pago</Label>
               <Select value={selectedPaymentMethod} onValueChange={onPaymentMethodChange}>
                 <SelectTrigger className="rounded-full w-full">
-                  <SelectValue placeholder={t('common.all')} />
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
                   {paymentOptions.map((option) => (
@@ -171,11 +169,11 @@ export function SalesFilters({
                   value={startDate}
                   onChange={(e) => onStartDateChange(e.target.value)}
                   className="rounded-full w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&:invalid:not(:focus)]:text-transparent"
-                  data-placeholder={t('common.placeholders.dateFormat')}
+                  data-placeholder="dd/mm/aaaa"
                 />
                 {!startDate && (
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-sm select-none sm:hidden">
-                    {t('common.placeholders.dateFormat')}
+                    dd/mm/aaaa
                   </span>
                 )}
               </div>
@@ -189,11 +187,11 @@ export function SalesFilters({
                   value={endDate}
                   onChange={(e) => onEndDateChange(e.target.value)}
                   className="rounded-full w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&:invalid:not(:focus)]:text-transparent"
-                  data-placeholder={t('common.placeholders.dateFormat')}
+                  data-placeholder="dd/mm/aaaa"
                 />
                 {!endDate && (
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-sm select-none sm:hidden">
-                    {t('common.placeholders.dateFormat')}
+                    dd/mm/aaaa
                   </span>
                 )}
               </div>
@@ -204,7 +202,7 @@ export function SalesFilters({
             <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 text-left w-full block">Datos</Label>
             <Select onValueChange={(value) => onPageSizeChange(Number(value))} defaultValue="10">
               <SelectTrigger className="rounded-full w-full">
-                <SelectValue placeholder={t('common.placeholders.perPage')} />
+                <SelectValue placeholder="10 por página" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl">
                 <SelectItem value="5">5 por página</SelectItem>

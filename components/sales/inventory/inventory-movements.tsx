@@ -6,7 +6,6 @@
 
 import { format } from "date-fns";
 import { ArrowUp, ArrowDown, RefreshCw, Package } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +69,6 @@ export function InventoryMovements({
   productId,
   branchId,
 }: InventoryMovementsProps) {
-  const t = useTranslations();
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -187,13 +185,11 @@ export function InventoryMovements({
 
   const getMovementTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      IN: t("inventory.movements.types.in") || "Entrada",
-      OUT: t("inventory.movements.types.out") || "Salida",
-      ADJUSTMENT: t("inventory.movements.types.adjustment") || "Ajuste",
-      TRANSFER_IN:
-        t("inventory.movements.types.transferIn") || "Transferencia Entrada",
-      TRANSFER_OUT:
-        t("inventory.movements.types.transferOut") || "Transferencia Salida",
+      IN: "Entrada",
+      OUT: "Salida",
+      ADJUSTMENT: "Ajuste",
+      TRANSFER_IN: "Transferencia Entrada",
+      TRANSFER_OUT: "Transferencia Salida",
     };
     return labels[type] || type;
   };
@@ -221,17 +217,16 @@ export function InventoryMovements({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>
-              {t("inventory.movements.title") || "Historial de Movimientos"}
+              Historial de Movimientos
             </CardTitle>
             <CardDescription>
-              {t("inventory.movements.description") ||
-                "Registro de todos los movimientos de inventario"}
+              Registro de todos los movimientos de inventario
             </CardDescription>
           </div>
           <div className="flex items-end gap-3">
             <div className="space-y-1">
               <Label className="text-xs text-gray-600 dark:text-gray-300">
-                {t("inventory.movements.type") || "Tipo"}
+                Tipo
               </Label>
               <Select value={movementType} onValueChange={setMovementType}>
                 <SelectTrigger className="w-[180px] rounded-full">
@@ -239,24 +234,22 @@ export function InventoryMovements({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {t("common.all") || "Todos"}
+                    Todos
                   </SelectItem>
                   <SelectItem value="IN">
-                    {t("inventory.movements.types.in") || "Entradas"}
+                    Entradas
                   </SelectItem>
                   <SelectItem value="OUT">
-                    {t("inventory.movements.types.out") || "Salidas"}
+                    Salidas
                   </SelectItem>
                   <SelectItem value="ADJUSTMENT">
-                    {t("inventory.movements.types.adjustment") || "Ajustes"}
+                    Ajustes
                   </SelectItem>
                   <SelectItem value="TRANSFER_IN">
-                    {t("inventory.movements.types.transferIn") ||
-                      "Transferencias Entrada"}
+                    Transferencias Entrada
                   </SelectItem>
                   <SelectItem value="TRANSFER_OUT">
-                    {t("inventory.movements.types.transferOut") ||
-                      "Transferencias Salida"}
+                    Transferencias Salida
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -265,7 +258,7 @@ export function InventoryMovements({
             {/* Select de elementos por página (junto al select de tipo) */}
             <div className="space-y-1">
               <Label className="text-xs text-gray-600 dark:text-gray-300">
-                {t("common.data") || "Datos"}
+                Datos
               </Label>
               <Select
                 value={String(pageSize)}
@@ -280,7 +273,7 @@ export function InventoryMovements({
                 <SelectContent>
                   {[5, 10, 20, 50, 100].map((n) => (
                     <SelectItem key={n} value={String(n)}>
-                      {n} {t("common.perPage") || "por página"}
+                      {n} por página
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -292,7 +285,7 @@ export function InventoryMovements({
               onClick={() => loadMovements(page, pageSize)}
               className="rounded-full"
             >
-              {t("action.refresh") || "Actualizar"}
+              Actualizar
             </Button>
           </div>
         </div>
@@ -303,22 +296,22 @@ export function InventoryMovements({
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  {t("inventory.movements.product") || "Producto"}
+                  Producto
                 </TableHead>
                 <TableHead>
-                  {t("inventory.movements.type") || "Tipo"}
+                  Tipo
                 </TableHead>
                 <TableHead>
-                  {t("inventory.movements.quantity") || "Cantidad"}
+                  Cantidad
                 </TableHead>
                 <TableHead>
-                  {t("inventory.movements.stock") || "Stock"}
+                  Stock
                 </TableHead>
                 <TableHead>
-                  {t("inventory.movements.user") || "Usuario"}
+                  Usuario
                 </TableHead>
                 <TableHead>
-                  {t("inventory.movements.date") || "Fecha"}
+                  Fecha
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -336,8 +329,7 @@ export function InventoryMovements({
                   <TableRow>
                     <TableCell colSpan={6}>
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        {t("inventory.movements.noMovements") ||
-                          "No hay movimientos registrados"}
+                        No hay movimientos registrados
                       </div>
                     </TableCell>
                   </TableRow>
@@ -411,11 +403,10 @@ export function InventoryMovements({
               disabled={page === 1}
               className="rounded-full"
             >
-              {t("action.previous") || "Anterior"}
+              Anterior
             </Button>
             <div className="text-sm text-gray-500 dark:text-gray-400 px-2">
-              {t("pagination.page") || t("common.page") || "Página"} {page}{" "}
-              {t("pagination.of") || t("common.of") || "de"} {totalPages}
+              Página {page} de {totalPages}
             </div>
             <Button
               variant="outline"
@@ -424,7 +415,7 @@ export function InventoryMovements({
               disabled={page === totalPages}
               className="rounded-full"
             >
-              {t("action.next") || "Siguiente"}
+              Siguiente
             </Button>
           </div>
         )}

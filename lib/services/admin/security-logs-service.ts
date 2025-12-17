@@ -326,7 +326,7 @@ export class SecurityLogsService {
     // Estadísticas por fecha (agrupar por día)
     const byDateMap = new Map<string, number>()
     logs.forEach(log => {
-      const dateKey = log.createdAt.toISOString().split('T')[0]
+      const dateKey = log.createdAt.toISOString().split("T")[0]
       byDateMap.set(dateKey, (byDateMap.get(dateKey) || 0) + 1)
     })
     const byDate = Array.from(byDateMap.entries())

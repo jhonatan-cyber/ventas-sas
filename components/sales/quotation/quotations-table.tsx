@@ -1,7 +1,6 @@
 "use client"
 
 import { Edit, Trash2, FileText, Eye, ShoppingCart } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { memo } from "react"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
@@ -51,9 +50,7 @@ const statusTokens: Record<string, { label: string; className: string }> = {
   },
 }
 
-const QuotationsTableComponent = memo(({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, onConvertClick, showBranchColumn = false, branches = [], maxBranches }: QuotationsTableProps) => {
-  const t = useTranslations()
-  // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
+const QuotationsTableComponent = memo(({ quotations, isLoading, onEditClick, onDeleteClick, onViewDetails, onConvertClick, showBranchColumn = false, branches = [], maxBranches }: QuotationsTableProps) => {// Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
   const actualShowBranchColumn = showBranchColumn && !shouldHideBranchColumn
   const columnCount = actualShowBranchColumn ? 6 : 5
@@ -98,7 +95,7 @@ const QuotationsTableComponent = memo(({ quotations, isLoading, onEditClick, onD
                 const token = statusTokens[quotation.status] || statusTokens.pending
                 const rawFullName = `${quotation.customer?.name ?? ""} ${quotation.customer?.lastName ?? ""}`.trim()
                 const customerDisplayName = rawFullName || quotation.customerName || "Cliente sin registrar"
-                const branchName = quotation.branch?.name || t('common.noBranch')
+                const branchName = quotation.branch?.name || "Sin sucursal"
                 const customerEmail = quotation.customer?.email || null
                 const hasMissingProductIds = quotation.items?.some((item) => !item.productId)
                 const isConverted = quotation.status === "converted"

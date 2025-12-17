@@ -4,7 +4,7 @@ import { ForgotPasswordForm } from "@/components/sales/auth/forgot-password-form
 import { LoginWelcomeSection } from "@/components/sales/auth/login-welcome-section";
 import { ThemeProvider } from "@/components/theme-provider";
 import { prisma } from "@/lib/prisma";
-import { I18nProvider } from "@/lib/utils/i18n-provider";
+;
 import { getCustomerBySlug } from "@/lib/utils/organization";
 
 export default async function ForgotPasswordPage({
@@ -65,8 +65,7 @@ export default async function ForgotPasswordPage({
   const _customer = await getCustomerBySlug(slug);
 
   return (
-    <I18nProvider>
-      <ThemeProvider>
+    <ThemeProvider>
         <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
           {/* Sección izquierda - Welcome (solo desktop) */}
           <div className="hidden md:flex md:w-1/2 lg:w-2/5 xl:w-2/5 items-center justify-center p-8 lg:p-12 xl:p-16 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 dark:from-emerald-600 dark:via-teal-600 dark:to-cyan-600 relative overflow-hidden">
@@ -87,7 +86,6 @@ export default async function ForgotPasswordPage({
           </div>
         </div>
       </ThemeProvider>
-    </I18nProvider>
   );
 }
 

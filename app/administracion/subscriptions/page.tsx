@@ -14,27 +14,27 @@ export default async function SubscriptionsPage() {
   try {
     // Validación de sesión Admin en el servidor
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
     
     if (!token) {
-      redirect('/administracion/login')
+      redirect("/administracion/login")
     }
     
     const payload = await AdminJWTService.verifyToken(token!)
     if (!payload) {
-      redirect('/administracion/login')
+      redirect("/administracion/login")
     }
     
     // Validar acceso de administrador
     const hasAccess = await AuthService.hasAdminAccess(payload.userId)
     if (!hasAccess) {
-      redirect('/administracion/login?error=no_access')
+      redirect("/administracion/login?error=no_access")
     }
 
     // Verificar permiso específico para listar suscripciones
     const canList = await PermissionCheckService.hasActivePermission(payload.userId, 'suscripciones_listar')
     if (!canList) {
-      redirect('/administracion/dashboard?error=no_permission')
+      redirect("/administracion/dashboard?error=no_permission")
     }
 
     // Verificar conexión a la base de datos
@@ -57,7 +57,7 @@ export default async function SubscriptionsPage() {
     console.error("Error loading subscriptions:", error)
     // Si es error de autenticación, redirigir
     if (error instanceof Error && error.message.includes('token')) {
-      redirect('/administracion/login')
+      redirect("/administracion/login")
     }
     return (
       <div className="p-4">

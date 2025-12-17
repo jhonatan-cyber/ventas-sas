@@ -31,7 +31,7 @@ export class AdminJWTService {
     ensureSecret()
     
     // Intentar usar secret rotado, si no usar fallback
-    const rotatedSecret = await JwtSecretRotation.getActiveSecret('admin')
+    const rotatedSecret = await JwtSecretRotation.getActiveSecret("admin")
       .catch(() => null)
     const secret: string = (rotatedSecret || ADMIN_JWT_SECRET || 'dev-admin-secret') as string
 

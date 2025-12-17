@@ -9,13 +9,13 @@ import { OrganizationAdminService } from "@/lib/services/admin/organization-admi
 export default async function NotificationsPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
-  const token = cookieStore.get('admin-auth-token')?.value
+  const token = cookieStore.get("admin-auth-token")?.value
   if (!token) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
   const payload = await AdminJWTService.verifyToken(token!)
   if (!payload) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
 
   // Obtener organizaciones para el selector

@@ -1,4 +1,4 @@
-import { SpeedInsights } from '@vercel/speed-insights/next'
+
 import { Inter } from 'next/font/google'
 
 import type { Metadata, Viewport } from 'next'
@@ -16,6 +16,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'SmartPOS - Sistema de Punto de Venta Inteligente | Gestión Empresarial Completa',
   description: 'SmartPOS es la plataforma empresarial todo-en-uno más avanzada de Bolivia. Gestiona ventas, inventario, cajas, gastos, cotizaciones y más. Sistema POS inteligente con IA, multi-sucursal y reportes en tiempo real. Desde 250 BOB/mes.',
+  manifest: '/manifest.json',
   keywords: [
     'SmartPOS', 'sistema POS', 'punto de venta', 'gestión empresarial', 'inventario inteligente', 
     'ventas Bolivia', 'sistema de cajas', 'control de gastos', 'cotizaciones digitales', 

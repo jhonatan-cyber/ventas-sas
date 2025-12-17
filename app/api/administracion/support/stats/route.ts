@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const isAdmin = user.isSuperAdmin || user.role?.toLowerCase() === 'administrador' || user.role?.toLowerCase() === 'admin'
 
     const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId') || undefined
+    const organizationId = searchParams.get("Organization Id") || undefined
 
     // Si el usuario no es admin ni super admin, pasar su ID para filtrar estadísticas
     const assignedToId = !isAdmin ? user.id : undefined

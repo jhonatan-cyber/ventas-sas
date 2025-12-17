@@ -2,7 +2,6 @@
 
 import { Download, Upload, FileSpreadsheet, FileText, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -32,10 +31,8 @@ export function ProductsExportImportDialog({
   onOpenChange,
   onSuccess,
   defaultCategoryId,
-}: ProductsExportImportDialogProps) {
-  const t = useTranslations()
-  const pathname = usePathname()
-  const customerSlug = pathname.split('/')[1] || ''
+}: ProductsExportImportDialogProps) {const pathname = usePathname()
+  const customerSlug = pathname.split("/")[1] || ''
 
   // Estado para exportación
   const [exportFormat, setExportFormat] = useState<'excel' | 'csv'>('excel')
@@ -108,9 +105,9 @@ export function ProductsExportImportDialog({
       // Descargar archivo
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a") as HTMLAnchorElement
       a.href = url
-      a.download = `productos_${new Date().toISOString().split('T')[0]}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`
+      a.download = `productos_${new Date().toISOString().split("T")[0]}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -118,7 +115,7 @@ export function ProductsExportImportDialog({
 
       setExportProgress(100)
       setExportStatus('success')
-      toast.success(t('products.export.success') || 'Productos exportados correctamente')
+      toast.success('Productos exportados correctamente')
       
       setTimeout(() => {
         setExportStatus('idle')
@@ -134,7 +131,7 @@ export function ProductsExportImportDialog({
 
   const handleImport = async () => {
     if (!importFile) {
-      toast.error(t('products.import.fileRequired') || 'Selecciona un archivo')
+      toast.error('Selecciona un archivo')
       return
     }
     if (isAdmin && !selectedBranchId) {
@@ -205,7 +202,7 @@ export function ProductsExportImportDialog({
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a") as HTMLAnchorElement
       a.href = url
       a.download = `plantilla_importacion_productos.${format === 'excel' ? 'xlsx' : 'csv'}`
       document.body.appendChild(a)
@@ -213,7 +210,7 @@ export function ProductsExportImportDialog({
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      toast.success(t('products.import.templateDownloaded') || 'Plantilla descargada correctamente')
+      toast.success('Plantilla descargada correctamente')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al descargar plantilla')
     }
@@ -223,9 +220,9 @@ export function ProductsExportImportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t('products.exportImport.title') || 'Exportar / Importar Productos'}</DialogTitle>
+          <DialogTitle>Exportar / Importar Productos</DialogTitle>
           <DialogDescription>
-            {t('products.exportImport.description') || 'Exporta tus productos a Excel/CSV o impórtalos desde un archivo'}
+            {'Exporta tus productos a Excel/CSV o impórtalos desde un archivo'}
           </DialogDescription>
         </DialogHeader>
 
@@ -233,18 +230,18 @@ export function ProductsExportImportDialog({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="export">
               <Download className="mr-2 h-4 w-4" />
-              {t('products.exportImport.export') || 'Exportar'}
+              {'Exportar'}
             </TabsTrigger>
             <TabsTrigger value="import">
               <Upload className="mr-2 h-4 w-4" />
-              {t('products.exportImport.import') || 'Importar'}
+              {'Importar'}
             </TabsTrigger>
           </TabsList>
 
           {/* Tab de Exportación */}
           <TabsContent value="export" className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('products.exportImport.format') || 'Formato'}</Label>
+              <Label>{'Formato'}</Label>
               <Select value={exportFormat} onValueChange={(value: 'excel' | 'csv') => setExportFormat(value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -269,7 +266,7 @@ export function ProductsExportImportDialog({
             {exportStatus === 'exporting' && (
               <div className="space-y-2">
                 <Progress value={exportProgress} />
-                <p className="text-sm text-gray-500">{t('products.exportImport.exporting') || 'Exportando...'}</p>
+                <p className="text-sm text-gray-500">{'Exportando...'}</p>
               </div>
             )}
 
@@ -277,7 +274,7 @@ export function ProductsExportImportDialog({
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
-                  {t('products.exportImport.exportSuccess') || 'Exportación completada correctamente'}
+                  {'Exportación completada correctamente'}
                 </AlertDescription>
               </Alert>
             )}
@@ -286,7 +283,7 @@ export function ProductsExportImportDialog({
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {t('products.exportImport.exportError') || 'Error al exportar productos'}
+                  {'Error al exportar productos'}
                 </AlertDescription>
               </Alert>
             )}
@@ -299,12 +296,12 @@ export function ProductsExportImportDialog({
               {exportStatus === 'exporting' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('products.exportImport.exporting') || 'Exportando...'}
+                  {'Exportando...'}
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  {t('products.exportImport.exportButton') || 'Exportar Productos'}
+                  {'Exportar Productos'}
                 </>
               )}
             </Button>
@@ -315,7 +312,7 @@ export function ProductsExportImportDialog({
             <div className="space-y-4">
               <div className={isAdmin ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : "grid grid-cols-1 gap-3"}>
                 <div className="space-y-2">
-                  <Label>{t('products.exportImport.selectFile') || 'Seleccionar archivo'}</Label>
+                  <Label>{'Seleccionar archivo'}</Label>
                   <input
                     type="file"
                     accept=".xlsx,.xls,.csv"
@@ -339,7 +336,7 @@ export function ProductsExportImportDialog({
                   />
                   {importFile && (
                     <p className="text-sm text-gray-500">
-                      {t('products.exportImport.selectedFile') || 'Archivo seleccionado'}: {importFile.name}
+                      {'Archivo seleccionado'}: {importFile.name}
                     </p>
                   )}
                   {!importFile && (
@@ -383,7 +380,7 @@ export function ProductsExportImportDialog({
                   className="flex-1"
                 >
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  {t('products.exportImport.downloadTemplate') || 'Descargar Plantilla Excel'}
+                  {'Descargar Plantilla Excel'}
                 </Button>
                 <Button
                   variant="outline"
@@ -391,7 +388,7 @@ export function ProductsExportImportDialog({
                   className="flex-1"
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  {t('products.exportImport.downloadTemplateCSV') || 'Descargar Plantilla CSV'}
+                  {'Descargar Plantilla CSV'}
                 </Button>
               </div>
             </div>
@@ -399,7 +396,7 @@ export function ProductsExportImportDialog({
             {importStatus === 'importing' && (
               <div className="space-y-2">
                 <Progress value={50} />
-                <p className="text-sm text-gray-500">{t('products.exportImport.importing') || 'Importando...'}</p>
+                <p className="text-sm text-gray-500">{'Importando...'}</p>
               </div>
             )}
 
@@ -408,11 +405,11 @@ export function ProductsExportImportDialog({
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-1">
-                    <p>{t('products.exportImport.importSuccess') || 'Importación completada'}</p>
+                    <p>{'Importación completada'}</p>
                     <p className="text-sm">
-                      {t('products.exportImport.imported') || 'Creados'}: {importResult.imported} |{' '}
-                      {t('products.exportImport.updated') || 'Actualizados'}: {importResult.updated} |{' '}
-                      {t('products.exportImport.skipped') || 'Omitidos'}: {importResult.skipped}
+                      {'Creados'}: {importResult.imported} |{' '}
+                      {'Actualizados'}: {importResult.updated} |{' '}
+                      {'Omitidos'}: {importResult.skipped}
                     </p>
                   </div>
                 </AlertDescription>
@@ -424,11 +421,11 @@ export function ProductsExportImportDialog({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2">
-                    <p>{t('products.exportImport.importErrors') || 'Errores encontrados'}: {importResult.errors.length}</p>
+                    <p>{'Errores encontrados'}: {importResult.errors.length}</p>
                     <div className="max-h-32 overflow-y-auto text-xs">
                       {importResult.errors.slice(0, 5).map((error, idx) => (
                         <p key={idx}>
-                          {t('products.exportImport.row') || 'Fila'} {error.row}: {error.message}
+                          {'Fila'} {error.row}: {error.message}
                         </p>
                       ))}
                       {importResult.errors.length > 5 && (
@@ -448,12 +445,12 @@ export function ProductsExportImportDialog({
               {importStatus === 'importing' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('products.exportImport.importing') || 'Importando...'}
+                  {'Importando...'}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  {t('products.exportImport.importButton') || 'Importar Productos'}
+                  {'Importar Productos'}
                 </>
               )}
             </Button>

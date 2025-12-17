@@ -52,7 +52,7 @@ export function useNotifications({ system, slug, enabled = true }: UseNotificati
       // Contar no leídas
       const unread = data.notifications?.filter((n: Notification) => !n.isRead).length || 0
       setUnreadCount(unread)
-    } catch (error) {
+    } catch {
       // Silenciosamente manejar errores de red
       setNotifications([])
       setUnreadCount(0)

@@ -144,7 +144,7 @@ export class BackupService {
     backupPath: string
   ): Promise<{ success: boolean; error?: string; restored: number }> {
     try {
-      const backupContent = await import('fs/promises').then(fs => fs.readFile(backupPath, 'utf-8'))
+      const backupContent = await import("fs/promises").then(fs => fs.readFile(backupPath, 'utf-8'))
       const backupData = JSON.parse(backupContent)
 
       if (backupData.organizationId !== organizationId) {
@@ -191,7 +191,7 @@ export class BackupService {
       for (const file of files) {
         if (file.endsWith('.json')) {
           const filePath = join(backupDir, file)
-          const stats = await import('fs/promises').then(fs => fs.stat(filePath))
+          const stats = await import("fs/promises").then(fs => fs.stat(filePath))
           backups.push({
             fileName: file,
             size: stats.size,
@@ -228,7 +228,7 @@ export class BackupService {
       const stats = await Promise.all(
         backupFiles.map(async f => ({
           ...f,
-          stats: await import('fs/promises').then(fs => fs.stat(f.path)),
+          stats: await import("fs/promises").then(fs => fs.stat(f.path)),
         }))
       )
 

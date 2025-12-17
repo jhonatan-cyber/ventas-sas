@@ -75,7 +75,7 @@ export function ExportWizard() {
       // Descargar archivo
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a") as HTMLAnchorElement
       a.href = url
       a.download = `export_${type}_${Date.now()}.${format === 'excel' ? 'xls' : format}`
       document.body.appendChild(a)

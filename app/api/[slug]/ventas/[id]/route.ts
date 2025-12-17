@@ -1,13 +1,14 @@
 import { SalePaymentMethod, SaleStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { prisma } from '@/lib/prisma'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { SaleService, UpdateSaleData } from '@/lib/services/sales/sale-service'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrCreateOrganizationForCustomer } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeSale } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
+// import { translateText } from '@/lib/utils/translatable-text' - removed
 
 async function ensureSalesUser(organizationId: string, sasUser: any) {
   if (!sasUser) return null
@@ -65,6 +66,8 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
+    // Verificar permiso de editar ventas
+    await requirePermission(request, slug, PERMISSIONS.VENTAS_EDITAR)
     const body = await request.json()
 
     // Obtener o crear automáticamente la organización si no existe
@@ -78,7 +81,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Venta no encontrada' }, { status: 404 })
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
@@ -105,17 +108,8 @@ export async function PUT(
       return (Object.values(SalePaymentMethod) as string[]).includes(trimmed) ? (trimmed as SalePaymentMethod) : undefined
     }
 
-    // Traducir notas automáticamente si se están actualizando
-    let notesTranslations = undefined
-    if (body.notes !== undefined && body.notes !== null && body.notes.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        notesTranslations = await translateText(body.notes, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo notas de venta:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Notas sin traducción automática
+    const notesTranslations = undefined
 
     const updatePayload: UpdateSaleData = {
       customerId: body.customerId?.trim() || null,
@@ -157,6 +151,8 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+    // Verificar permiso de eliminar ventas
+    await requirePermission(request, slug, PERMISSIONS.VENTAS_ELIMINAR)
 
     // Obtener o crear automáticamente la organización si no existe
     const organizationId = await getOrCreateOrganizationForCustomer(slug)

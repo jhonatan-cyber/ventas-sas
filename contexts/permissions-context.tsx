@@ -133,7 +133,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     
     // Luego hacer fetch para actualizar
     fetchPermissions()
-  }, []) // Remover fetchPermissions de las dependencias para evitar bucle infinito
+  }, [fetchPermissions]) // Incluir fetchPermissions como dependencia
 
   return (
     <PermissionsContext.Provider

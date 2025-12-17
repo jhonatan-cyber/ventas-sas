@@ -2,7 +2,6 @@
 
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LanguageSelector } from "@/components/ui/language-selector";
 import { ThemeSelector } from "@/components/ui/theme-selector";
 import { PostHogClient } from "@/lib/analytics/posthog-client";
 
@@ -38,9 +36,7 @@ export function LoginSasForm({
   customerSlug,
   organizationName,
   logoUrl,
-}: LoginSasFormProps) {
-  const t = useTranslations();
-  const router = useRouter();
+}: LoginSasFormProps) {const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -68,7 +64,7 @@ export function LoginSasForm({
       // El campo puede contener email o CI
       const inputValue = email.trim();
       if (!inputValue) {
-        setError(t("auth.login.emailOrCiRequired"));
+        setError("Correo electrónico o CI requerido");
         setIsLoading(false);
         return;
       }
@@ -92,7 +88,7 @@ export function LoginSasForm({
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMessage = data.error || t("auth.login.error");
+        const errorMessage = data.error || "Error de autenticación";
         setError(errorMessage);
         toast.error(errorMessage);
         setIsLoading(false);
@@ -108,7 +104,7 @@ export function LoginSasForm({
           return;
         }
 
-        toast.success(t("auth.login.success"));
+        toast.success("Inicio de sesión exitoso");
 
         // Tracking de login exitoso
         if (data.user) {
@@ -152,13 +148,13 @@ export function LoginSasForm({
       }
 
       // Si llegamos aquí, algo salió mal
-      const errorMessage = t("auth.login.error");
+      const errorMessage = "Error inesperado";
       setError(errorMessage);
       toast.error(errorMessage);
       setIsLoading(false);
     } catch {
-      setError(t("auth.login.errorConnection"));
-      toast.error(t("auth.login.errorConnectionShort"));
+      setError("Error de conexión");
+      toast.error("Error de conexión con el servidor");
       setIsLoading(false);
     }
   };
@@ -220,7 +216,7 @@ export function LoginSasForm({
               {organizationName || "Login SAS"}
             </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400 text-sm font-medium">
-              {t("auth.login.subtitle")}
+              Ingresa tus credenciales para acceder
             </CardDescription>
           </div>
 
@@ -231,7 +227,7 @@ export function LoginSasForm({
                 htmlFor="correo"
                 className="text-sm font-semibold text-gray-700 dark:text-gray-300"
               >
-                {t("auth.login.email")}
+                Correo electrónico o CI
               </Label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5 transition-all duration-300 group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 group-focus-within:scale-110 z-10" />
@@ -240,7 +236,7 @@ export function LoginSasForm({
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("auth.login.emailPlaceholder")}
+                  placeholder="correo@ejemplo.com o 12345678"
                   className="pl-12 h-12 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/20 transition-all hover:border-gray-400 dark:hover:border-gray-600"
                   required
                   disabled={isLoading}
@@ -254,7 +250,7 @@ export function LoginSasForm({
                 htmlFor="contraseña"
                 className="text-sm font-semibold text-gray-700 dark:text-gray-300"
               >
-                {t("auth.login.password")}
+                Contraseña
               </Label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5 transition-all duration-300 group-focus-within:text-emerald-500 dark:group-focus-within:text-emerald-400 group-focus-within:scale-110 z-10" />
@@ -263,7 +259,7 @@ export function LoginSasForm({
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("auth.login.passwordPlaceholder")}
+                  placeholder="Ingresa tu contraseña"
                   className="pl-12 pr-12 h-12 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/20 transition-all hover:border-gray-400 dark:hover:border-gray-600"
                   required
                   disabled={isLoading}
@@ -309,11 +305,11 @@ export function LoginSasForm({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {t("auth.login.loading")}
+                    Iniciando sesión...
                   </>
                 ) : (
                   <>
-                    {t("auth.login.submit")}
+                    Iniciar sesión
                     <svg
                       className="ml-2 h-5 w-5 group-hover/btn:translate-x-1 transition-transform duration-300"
                       fill="none"
@@ -343,10 +339,8 @@ export function LoginSasForm({
               </button>
             </div>
 
-            {/* Selectores de tema e idioma mejorados */}
-            <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-              <LanguageSelector customerSlug={customerSlug} />
-              <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
+            {/* Selector de tema */}
+            <div className="flex items-center justify-center pt-4 border-t border-gray-200 dark:border-gray-800">
               <ThemeSelector />
             </div>
           </form>

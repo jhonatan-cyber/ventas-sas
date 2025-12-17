@@ -24,7 +24,7 @@ export async function DELETE(
     }
 
     // Verificar autenticación
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const accessToken = request.cookies.get("sas-auth-token")?.value
     if (!accessToken) {
       return NextResponse.json(
         { error: 'No autenticado' },

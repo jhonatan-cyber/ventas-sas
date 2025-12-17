@@ -1,7 +1,6 @@
 "use client"
 
 import { SalesCustomer } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -11,6 +10,7 @@ import { SalesCustomersContainer } from "./sales-customers-container"
 import { SalesCustomersHeader } from "./sales-customers-header"
 
 import { useSalesCustomerActions } from "@/hooks/sales/customer/use-sales-customer-actions"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 
 interface SalesCustomersPageClientProps {
@@ -19,7 +19,9 @@ interface SalesCustomersPageClientProps {
 }
 
 export function SalesCustomersPageClient({ initialCustomers, customerSlug }: SalesCustomersPageClientProps) {
-  const t = useTranslations()
+// Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [customers, setCustomers] = useState<SalesCustomer[]>(initialCustomers)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -60,23 +62,30 @@ export function SalesCustomersPageClient({ initialCustomers, customerSlug }: Sal
     handleToggleStatus
   } = useSalesCustomerActions(customerSlug, loadCustomers, setCustomers)
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateCustomer = hasPermission('clientes_crear')
+  const canEditCustomer = hasPermission('clientes_editar')
+  const canDeleteCustomer = hasPermission('clientes_eliminar')
+  const canToggleCustomerStatus = hasPermission('clientes_activar') || hasPermission('clientes_desactivar')
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <SalesCustomersHeader
-        title={t('customers.title')}
-        description={t('customers.description')}
-        newButtonText={t('customers.create')}
-        onNewClick={openCreateDialog}
+        title="Clientes"
+        description="Gestiona los clientes del negocio"
+        newButtonText="Nuevo Cliente"
+        onNewClick={canCreateCustomer ? openCreateDialog : undefined}
+        showNewButton={canCreateCustomer}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <SalesCustomersContainer 
         customers={customers} 
         isLoading={isLoading}
-        onEdit={openEditDialog}
-        onToggleStatus={handleToggleStatus}
-        onDelete={openDeleteDialog}
+        onEdit={canEditCustomer ? openEditDialog : undefined}
+        onToggleStatus={canToggleCustomerStatus ? handleToggleStatus : undefined}
+        onDelete={canDeleteCustomer ? openDeleteDialog : undefined}
       />
 
       {/* Modal de crear/editar cliente */}

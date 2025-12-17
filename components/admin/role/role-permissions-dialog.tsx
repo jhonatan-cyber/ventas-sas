@@ -60,16 +60,23 @@ export function RolePermissionsDialog({
   const loadPermissions = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/administracion/permisos")
+      const response = await fetch("/api/administracion/permisos", { credentials: 'include' })
       if (!response.ok) {
-        throw new Error("Error al cargar permisos")
+        let body: any = null
+        try {
+          body = await response.json()
+        } catch {
+          // ignore
+        }
+        const msg = body?.error || body?.message || 'Error al cargar permisos'
+        throw new Error(msg)
       }
       const permissions = await response.json()
       setAllPermissions(permissions)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al cargar permisos:", error)
       toast.error("Error al cargar permisos", {
-        description: "No se pudieron cargar los permisos disponibles",
+        description: error?.message || "No se pudieron cargar los permisos disponibles",
       })
     } finally {
       setIsLoading(false)
@@ -94,7 +101,7 @@ export function RolePermissionsDialog({
 
   // Extraer módulo del nombre del permiso (formato: modulo_accion)
   const getModuleFromPermission = (permissionName: string): string => {
-    const parts = permissionName.split('_')
+    const parts = permissionName.split("_")
     return parts[0] || 'unknown'
   }
 

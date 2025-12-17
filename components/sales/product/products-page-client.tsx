@@ -1,7 +1,6 @@
 "use client"
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 
 import { CategoryCards } from "./category-cards"
@@ -13,6 +12,7 @@ import { ProductsExportImportDialog } from "./products-export-import-dialog"
 import { ProductsHeader } from "./products-header"
 
 import { useProductActions } from "@/hooks/sales/product/use-product-actions"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 interface ProductsPageClientProps {
   initialCategories: Category[]
@@ -23,7 +23,9 @@ interface ProductsPageClientProps {
 }
 
 export function ProductsPageClient({ initialCategories, customerSlug, maxProducts, maxBranches, totalProducts = 0 }: ProductsPageClientProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [products, setProducts] = useState<(SalesProduct & { category: Category | null; branch: Branch | null })[]>([])
   const [categories] = useState<Category[]>(initialCategories)
@@ -141,15 +143,21 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
                           maxProducts > 0 && 
                           currentTotalProducts >= maxProducts
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateProduct = hasPermission('productos_crear')
+  const canEditProduct = hasPermission('productos_editar')
+  const canDeleteProduct = hasPermission('productos_eliminar')
+  const canToggleProductStatus = hasPermission('productos_activar') || hasPermission('productos_desactivar')
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <ProductsHeader
-        title={t('products.title')}
-        description={t('products.description')}
-        newButtonText={t('products.create')}
-        onNewClick={openCreateDialog}
-        showButton={selectedCategory !== null && !hasReachedLimit}
+        title="Productos"
+        description="Gestiona el catálogo de productos"
+        newButtonText="Nuevo Producto"
+        onNewClick={canCreateProduct ? openCreateDialog : undefined}
+        showButton={selectedCategory !== null && canCreateProduct && !hasReachedLimit}
         showBackButton={selectedCategory !== null}
         onBackClick={() => setSelectedCategory(null)}
         onExportImportClick={selectedCategory !== null ? () => setIsExportImportDialogOpen(true) : undefined}
@@ -166,9 +174,9 @@ export function ProductsPageClient({ initialCategories, customerSlug, maxProduct
           selectedBranchId={selectedBranchId}
           onBranchChange={setSelectedBranchId}
           userBranchId={userBranchId}
-          onEdit={openEditDialog}
-          onToggleStatus={handleToggleStatus}
-          onDelete={openDeleteDialog}
+          onEdit={canEditProduct ? openEditDialog : undefined}
+          onToggleStatus={canToggleProductStatus ? handleToggleStatus : undefined}
+          onDelete={canDeleteProduct ? openDeleteDialog : undefined}
           onView={openViewDialog}
         />
       ) : (

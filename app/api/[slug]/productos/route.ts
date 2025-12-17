@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
 import { requireCSRF } from '@/lib/utils/csrf-protection'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { logBusinessOperation } from '@/lib/utils/logger'
 import { getOrganizationIdByCustomerSlug, getMaxProductsByOrganizationId } from '@/lib/utils/organization'
-import { translateProductDescription } from '@/lib/utils/product-description'
+// import { translateProductDescription } from '@/lib/utils/product-description' - removed
 import { getRequestContext } from '@/lib/utils/request-context'
+import requirePermission from '@/lib/utils/require-permission'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createProductSchema } from '@/lib/validators/sales-validators'
 
@@ -25,17 +26,20 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
-    const categoryId = searchParams.get('categoryId') || undefined
-    const queryBranchId = searchParams.get('branchId') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const status = searchParams.get("Status") || undefined
+    const categoryId = searchParams.get("Category Id") || undefined
+    const queryBranchId = searchParams.get("Branch Id") || undefined
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar permiso para listar productos
+    await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_LISTAR)
 
     // Obtener usuario logueado para filtrar por sucursal
     const currentUser = await getCurrentSasUser(request, slug)
@@ -95,6 +99,9 @@ export async function POST(
     }
 
     const { slug } = await params
+
+    // Verificar permiso de crear productos
+    await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_CREAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -178,20 +185,8 @@ export async function POST(
       throw AppError.validation('La categoría es requerida')
     }
 
-    // Traducir descripción automáticamente si existe
-    let descriptionTranslations = undefined
-    if (validatedData.description && validatedData.description.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        descriptionTranslations = await translateProductDescription(
-          validatedData.description,
-          sourceLanguage
-        )
-      } catch (error) {
-        console.error('Error traduciendo descripción del producto:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Descripción sin traducción automática
+    const descriptionTranslations = undefined
 
     const newProduct = await SalesProductService.createProduct(organizationId, {
       branchId, // Asignar sucursal del usuario logueado o seleccionada por admin

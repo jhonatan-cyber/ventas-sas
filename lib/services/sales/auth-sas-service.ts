@@ -195,7 +195,7 @@ export class AuthSasService {
       // Verificar si tiene 2FA habilitado
       if (usuario.twoFactorEnabled && usuario.twoFactorSecret) {
         // Generar token temporal (válido por 5 minutos) para verificación 2FA
-        const { default: jwt } = await import('jsonwebtoken')
+        const { default: jwt } = await import("jsonwebtoken")
         const SAS_JWT_SECRET = process.env.SAS_JWT_SECRET || 'dev-sas-secret'
         
         const tempToken = jwt.sign(
@@ -229,12 +229,12 @@ export class AuthSasService {
       // Crear sesión en BD
       let sessionToken: string | null = null
       try {
-        const { SessionManagement } = await import('@/lib/auth/session-management')
+        const { SessionManagement } = await import("@/lib/auth/session-management")
         
         // Obtener info del request
-        const forwardedFor = request?.headers.get('x-forwarded-for')
-        const ipAddress = forwardedFor?.split(',')[0]?.trim() || request?.headers.get('x-real-ip') || undefined
-        const userAgent = request?.headers.get('user-agent') || undefined
+        const forwardedFor = request?.headers.get("X-forwarded-for")
+        const ipAddress = forwardedFor?.split(",")[0]?.trim() || request?.headers.get("X-real-ip") || undefined
+        const userAgent = request?.headers.get("User-agent") || undefined
         const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
         
         sessionToken = await SessionManagement.createSession({

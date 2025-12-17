@@ -4,10 +4,9 @@ import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { ExpenseService, UpdateExpenseData } from '@/lib/services/sales/expense-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
 import { serializeExpense } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
+// import { translateText } from '@/lib/utils/translatable-text' - removed
 
 // GET - Obtener gasto por ID
 export async function GET(
@@ -68,7 +67,7 @@ export async function PUT(
       throw AppError.notFound('Gasto no encontrado')
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
@@ -105,17 +104,8 @@ export async function PUT(
         : null
       : undefined
 
-    // Traducir descripción automáticamente si se está actualizando
-    let descriptionTranslations = undefined
-    if (description !== undefined && description !== null && description.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        descriptionTranslations = await translateText(description, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo descripción de gasto:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Descripción sin traducción automática
+    const descriptionTranslations = undefined
 
     const updatePayload: UpdateExpenseData = {
       name,

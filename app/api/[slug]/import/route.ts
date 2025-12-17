@@ -8,11 +8,13 @@ import { join } from 'path'
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { ImportService, ImportFormat, ImportEntity } from '@/lib/services/sales/import-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 export async function POST(
   request: NextRequest,
@@ -24,12 +26,12 @@ export async function POST(
     const { slug } = await params
     const formData = await request.formData()
 
-    const file = formData.get('file') as File
-    const entity = formData.get('entity') as ImportEntity
-    const updateExisting = formData.get('updateExisting') === 'true'
-    const skipErrors = formData.get('skipErrors') === 'true'
-    const selectedBranchId = (formData.get('selectedBranchId') as string | null) || null
-    const selectedCategoryId = (formData.get('selectedCategoryId') as string | null) || null
+    const file = formData.get("File") as File
+    const entity = formData.get("Entity") as ImportEntity
+    const updateExisting = formData.get("Update Existing") === 'true'
+    const skipErrors = formData.get("Skip Errors") === 'true'
+    const selectedBranchId = (formData.get("Selected Branch Id") as string | null) || null
+    const selectedCategoryId = (formData.get("Selected Category Id") as string | null) || null
 
     if (!file) {
       throw AppError.validation('Archivo es requerido')
@@ -48,6 +50,10 @@ export async function POST(
     const currentUser = await getCurrentSasUser(request, slug)
     if (!currentUser) {
       throw AppError.unauthorized('Usuario no autenticado')
+    }
+    // Verificar permisos según la entidad a importar
+    if (entity === 'products') {
+      await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_CREAR)
     }
     const isAdmin =
       (currentUser.rol?.nombre || '').toLowerCase().includes('admin') ||

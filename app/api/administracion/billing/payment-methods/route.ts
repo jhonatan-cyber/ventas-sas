@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId') || undefined
+    const organizationId = searchParams.get("Organization Id") || undefined
 
     let paymentMethods = []
 

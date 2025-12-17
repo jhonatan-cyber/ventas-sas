@@ -8,7 +8,7 @@ import { logger } from '@/lib/utils/logger'
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticación
-    const token = request.cookies.get('admin-auth-token')?.value
+    const token = request.cookies.get("admin-auth-token")?.value
     if (!token) {
       return NextResponse.json(
         { error: 'No autorizado' },

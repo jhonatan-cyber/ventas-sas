@@ -212,7 +212,7 @@ export class TwoFactorService {
       ).slice(0, 32)
       
       const data = Buffer.from(encryptedSecret, 'base64').toString('utf8')
-      const [ivHex, encrypted] = data.split(':')
+      const [ivHex, encrypted] = data.split(":")
       
       if (!ivHex || !encrypted) {
         throw new Error('Formato de secret encriptado inválido')

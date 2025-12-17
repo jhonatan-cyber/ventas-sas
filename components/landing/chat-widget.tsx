@@ -18,7 +18,7 @@ export function ChatWidget() {
             window.CRISP_WEBSITE_ID="${crispWebsiteId}";
             (function(){
               var d=document;
-              var s=d.createElement("script");
+              var s=d.createElemen"Script";
               s.src="https://client.crisp.chat/l.js";
               s.async=1;
               d.getElementsByTagName("head")[0].appendChild(s);
@@ -43,7 +43,7 @@ export function ChatWidget() {
                 i.q=[];i.c=function(args){i.q.push(args);};
                 w.Intercom=i;
                 var l=function(){
-                  var s=d.createElement('script');
+                  var s=d.createElemen"Script";
                   s.type='text/javascript';
                   s.async=true;
                   s.src='https://widget.intercom.io/widget/${intercomAppId}';

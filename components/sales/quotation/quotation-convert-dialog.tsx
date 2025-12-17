@@ -2,7 +2,6 @@
 
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Plus, Trash2, QrCode } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -105,9 +104,7 @@ export function QuotationConvertDialog({
   selectedBranchId,
   userBranchId,
   maxBranches,
-}: QuotationConvertDialogProps) {
-  const t = useTranslations();
-  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+}: QuotationConvertDialogProps) {const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [notes, setNotes] = useState<string>("");
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -397,11 +394,11 @@ export function QuotationConvertDialog({
       prev.map((item) => {
         if (item.id !== itemId) return item;
         if (item.codes.includes(code)) {
-          toast.info(t('sales.form.codeAlreadyAdded'));
+          toast.info("Código ya agregado");
           return item;
         }
         if (item.codes.length >= item.quantity) {
-          toast.error(t('sales.form.codesExceedQuantity'));
+          toast.error("No se pueden agregar más códigos que la cantidad");
           return item;
         }
         return {
@@ -411,7 +408,7 @@ export function QuotationConvertDialog({
       })
     );
     setCodeInputs((prev) => ({ ...prev, [itemId]: "" }));
-  }, [t]);
+  }, []);
 
   const removeCodeFromItem = useCallback((itemId: string, code: string) => {
     setItems((prev) =>
@@ -473,7 +470,7 @@ export function QuotationConvertDialog({
               if (lastScannedCodeRef.current === code) return;
               lastScannedCodeRef.current = code;
               addCodeToItem(itemId, code);
-              toast.success(t('sales.form.codeScannedAndAdded'));
+              toast.success("Código escaneado y agregado");
               stopScanning();
             }
             if (err && !(err as any).closed) {
@@ -483,7 +480,7 @@ export function QuotationConvertDialog({
         );
       } catch (error) {
         console.error("Error al acceder a la cámara", error);
-        toast.error(t('common.cameraError'));
+        toast.error("Error al acceder a la cámara");
         stopScanning();
       }
     },
@@ -494,7 +491,6 @@ export function QuotationConvertDialog({
       lastScannedCodeRef,
       readerRef,
       stopScanning,
-      t,
     ]
   );
 
@@ -605,7 +601,7 @@ export function QuotationConvertDialog({
                           Sucursal
                         </p>
                         <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
-                          {quotation?.branch?.name ?? t('common.noBranch')}
+                          {quotation?.branch?.name ?? "Sin sucursal"}
                         </p>
                         {quotation?.branch?.address && (
                           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -622,7 +618,7 @@ export function QuotationConvertDialog({
                         Sucursal
                       </p>
                       <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
-                        {quotation?.branch?.name ?? t('common.noBranch')}
+                        {quotation?.branch?.name ?? "Sin sucursal"}
                       </p>
                       {quotation?.branch?.address && (
                         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
@@ -703,7 +699,7 @@ export function QuotationConvertDialog({
                                     const product = products.find((prod) => prod.id === item.productId)
                                     return product && item.quantity > product.stock ? 'border border-red-500 text-red-600' : ''
                                   })()}`}
-                                  placeholder={t('common.placeholders.quantity')}
+                                  placeholder={"Cantidad"}
                                 />
                                 <Input
                                   type="number"
@@ -717,7 +713,7 @@ export function QuotationConvertDialog({
                                     )
                                   }
                                   className="flex-1 rounded-2xl"
-                                  placeholder={t('common.placeholders.price')}
+                                  placeholder={"Precio"}
                                 />
                               </div>
                             </div>
@@ -790,7 +786,7 @@ export function QuotationConvertDialog({
                                 Códigos únicos
                               </Label>
                               <Input
-                                placeholder={t('common.placeholders.barcodeOrSerial')}
+                                placeholder={"Código de barras o serie"}
                                 value={codeInputs[item.id] ?? ""}
                                 onChange={(event) =>
                                   setCodeInputs((prev) => ({
@@ -927,7 +923,7 @@ export function QuotationConvertDialog({
                         readOnly
                         value={formatCurrency(subtotal)}
                         className="flex-1 rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] text-left font-semibold"
-                        placeholder={t('common.placeholders.subtotal')}
+                        placeholder={"Subtotal"}
                       />
                       <Input
                         type="number"
@@ -938,7 +934,7 @@ export function QuotationConvertDialog({
                           handleDiscountChange(Number(event.target.value))
                         }
                         className="flex-1 rounded-2xl"
-                        placeholder={t('common.placeholders.discount')}
+                        placeholder={"Descuento"}
                       />
                     </div>
                   </div>
@@ -984,7 +980,7 @@ export function QuotationConvertDialog({
                         id="quotation-payment-method"
                         className="w-full rounded-2xl"
                       >
-                        <SelectValue placeholder={t('common.placeholders.selectPaymentMethod')} />
+                        <SelectValue placeholder={"Seleccionar método de pago"} />
                       </SelectTrigger>
                       <SelectContent>
                         {paymentOptions.map((option) => (
@@ -1011,7 +1007,7 @@ export function QuotationConvertDialog({
               </Label>
               <Textarea
                 id="quotation-convert-notes"
-                placeholder={t('common.placeholders.additionalNotes')}
+                placeholder={"Notas adicionales"}
                 className="h-28 w-full rounded-2xl"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}

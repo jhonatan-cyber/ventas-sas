@@ -1,7 +1,6 @@
 "use client"
 
 import { UsuarioSas, RoleSas } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { UsuarioSasDeleteDialog } from "./usuario-sas-delete-dialog"
@@ -11,6 +10,7 @@ import { UsuariosSasContainer } from "./usuarios-sas-container"
 import { UsuariosSasHeader } from "./usuarios-sas-header"
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 import { useUsuarioSasActions } from "@/hooks/sales/usuario/use-usuario-sas-actions"
 
 interface UsuariosSasPageClientProps {
@@ -32,8 +32,10 @@ export function UsuariosSasPageClient({
   customerSlug,
   maxUsers
 }: UsuariosSasPageClientProps) {
-  const t = useTranslations()
   const [usuarios, setUsuarios] = useState(initialUsuarios)
+  
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
   
   const {
     isFormDialogOpen,
@@ -95,24 +97,30 @@ export function UsuariosSasPageClient({
                           maxUsers > 0 && 
                           activeUsersCount >= maxUsers
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateUser = hasPermission('usuarios_crear')
+  const canEditUser = hasPermission('usuarios_editar')
+  const canDeleteUser = hasPermission('usuarios_eliminar')
+  const canToggleUserStatus = hasPermission('usuarios_activar') || hasPermission('usuarios_desactivar')
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <UsuariosSasHeader
-        title={t('users.title')}
-        description={t('users.description')}
-        newButtonText={t('users.create')}
+        title="Gestión de Usuarios"
+        description="Administra todos los usuarios del sistema"
+        newButtonText="Agregar Usuario"
         onNewClick={openCreateDialog}
-        showNewButton={!hasReachedLimit}
+        showNewButton={canCreateUser && !hasReachedLimit}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <UsuariosSasContainer 
         usuarios={usuarios}
         sucursalesCount={sucursales.length}
-        onEdit={openEditDialog}
-        onToggleStatus={handleToggleStatus}
-        onDelete={openDeleteDialog}
+        onEdit={canEditUser ? openEditDialog : undefined}
+        onToggleStatus={canToggleUserStatus ? handleToggleStatus : undefined}
+        onDelete={canDeleteUser ? openDeleteDialog : undefined}
         onView={openViewDialog}
       />
 

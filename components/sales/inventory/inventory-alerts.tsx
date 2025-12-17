@@ -5,7 +5,6 @@
 "use client"
 
 import { AlertTriangle, Package } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useState, useCallback } from "react"
 
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +28,6 @@ interface InventoryAlertsProps {
 }
 
 export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
-  const t = useTranslations()
   const [alerts, setAlerts] = useState<LowStockAlert[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -59,10 +57,10 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            {t('inventory.alerts.title') || 'Alertas de Stock Bajo'}
+            Alertas de Stock Bajo
           </CardTitle>
           <CardDescription>
-            {t('inventory.alerts.description') || 'Productos con stock bajo o en punto de reorden'}
+            Productos con stock bajo o en punto de reorden
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -82,15 +80,15 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-green-500" />
-            {t('inventory.alerts.title') || 'Alertas de Stock Bajo'}
+            Alertas de Stock Bajo
           </CardTitle>
           <CardDescription>
-            {t('inventory.alerts.description') || 'Productos con stock bajo o en punto de reorden'}
+            Productos con stock bajo o en punto de reorden
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            {t('inventory.alerts.noAlerts') || 'No hay alertas de stock bajo'}
+            No hay alertas de stock bajo
           </div>
         </CardContent>
       </Card>
@@ -104,10 +102,10 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              {t('inventory.alerts.title') || 'Alertas de Stock Bajo'}
+              Alertas de Stock Bajo
             </CardTitle>
             <CardDescription>
-              {t('inventory.alerts.description') || 'Productos con stock bajo o en punto de reorden'}
+              Productos con stock bajo o en punto de reorden
             </CardDescription>
           </div>
           <Badge variant="destructive" className="text-sm">
@@ -131,11 +129,11 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
                     <span className="mr-2">{alert.branchName}</span>
                   )}
                   <span>
-                    {t('inventory.alerts.currentStock') || 'Stock actual'}: <strong>{alert.currentStock}</strong>
+                    Stock actual: <strong>{alert.currentStock}</strong>
                   </span>
                   {alert.reorderPoint !== null && (
                     <span className="ml-2">
-                      {t('inventory.alerts.reorderPoint') || 'Punto de reorden'}: <strong>{alert.reorderPoint}</strong>
+                      Punto de reorden: <strong>{alert.reorderPoint}</strong>
                     </span>
                   )}
                 </div>
@@ -146,8 +144,8 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
                   className="text-xs"
                 >
                   {alert.currentStock <= alert.minStock
-                    ? t('inventory.alerts.belowMin') || 'Bajo mínimo'
-                    : t('inventory.alerts.atReorder') || 'En reorden'}
+                    ? 'Bajo mínimo'
+                    : 'En reorden'}
                 </Badge>
               </div>
             </div>
@@ -160,7 +158,7 @@ export function InventoryAlerts({ customerSlug }: InventoryAlertsProps) {
             onClick={loadAlerts}
             className="w-full rounded-full"
           >
-            {t('action.refresh') || 'Actualizar'}
+            Actualizar
           </Button>
         </div>
       </CardContent>

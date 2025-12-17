@@ -51,7 +51,7 @@ export default async function ExpensesPage({
   const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
   const cookieStore = await cookies()
-  const token = cookieStore.get('sas-auth-token')?.value
+  const token = cookieStore.get("sas-auth-token")?.value
   const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
   const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
   const roleName = currentUser?.rol?.nombre?.toLowerCase() || ""

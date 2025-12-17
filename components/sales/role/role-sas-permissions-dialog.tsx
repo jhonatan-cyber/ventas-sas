@@ -1,7 +1,6 @@
 "use client"
 
 import { Loader2, Shield } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -47,7 +46,6 @@ export function RoleSasPermissionsDialog({
   customerSlug,
   onSave,
 }: RoleSasPermissionsDialogProps) {
-  const t = useTranslations()
   const [allPermissions, setAllPermissions] = useState<PermissionSasInfo[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -56,21 +54,28 @@ export function RoleSasPermissionsDialog({
   const loadPermissions = useCallback(async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/${customerSlug}/permisos`)
+      const response = await fetch(`/api/${customerSlug}/permisos`, { credentials: 'include' })
       if (!response.ok) {
-        throw new Error("Error al cargar permisos")
+        let body: any = null
+        try {
+          body = await response.json()
+        } catch {
+          // ignore
+        }
+        const msg = body?.error || body?.message || 'Error al cargar permisos'
+        throw new Error(msg)
       }
       const permissions = await response.json()
       setAllPermissions(permissions)
     } catch (error) {
       console.error("Error al cargar permisos:", error)
-      toast.error(t('roles.sas.permissions.loadError'), {
-        description: t('roles.sas.permissions.loadErrorDescription'),
+      toast.error('Error al cargar permisos', {
+        description: 'No se pudieron cargar los permisos disponibles',
       })
     } finally {
       setIsLoading(false)
     }
-  }, [customerSlug, t])
+  }, [customerSlug])
 
   // Cargar permisos disponibles cuando se abre el dialog
   useEffect(() => {
@@ -104,7 +109,7 @@ export function RoleSasPermissionsDialog({
 
   // Extraer módulo del nombre del permiso (formato: modulo_accion)
   const getModuleFromPermission = (permissionName: string): string => {
-    const parts = permissionName.split('_')
+    const parts = permissionName.split("_")
     return parts[0] || 'unknown'
   }
 
@@ -136,14 +141,12 @@ export function RoleSasPermissionsDialog({
     setIsSaving(true)
     try {
       await onSave(selectedPermissions)
-      toast.success(t('roles.sas.permissions.updateSuccess'), {
-        description: t('roles.sas.permissions.updateSuccessDescription', { role: role?.nombre || '' }),
-      })
+      // El toast de éxito se maneja en el hook useRoleSasActions
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error al guardar permisos:", error)
-      toast.error(t('roles.sas.permissions.updateError'), {
-        description: error.message || t('roles.sas.permissions.updateErrorDescription'),
+      toast.error('Error al guardar permisos', {
+        description: error.message || 'No se pudieron actualizar los permisos',
       })
     } finally {
       setIsSaving(false)

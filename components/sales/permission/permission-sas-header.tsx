@@ -1,7 +1,6 @@
 "use client"
 
 import { Plus, CheckCircle, Loader2 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -25,10 +24,10 @@ interface PermissionSasHeaderProps {
   onNewClick?: () => void
   customerSlug: string
   onAssignAll?: () => void
+  showNewButton?: boolean
 }
 
-export function PermissionSasHeader({ title, description, stats, onNewClick, customerSlug, onAssignAll }: PermissionSasHeaderProps) {
-  const t = useTranslations()
+export function PermissionSasHeader({ title, description, stats, onNewClick, customerSlug, onAssignAll, showNewButton = true }: PermissionSasHeaderProps) {
   const [assignDialog, setAssignDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -48,7 +47,7 @@ export function PermissionSasHeader({ title, description, stats, onNewClick, cus
       }
 
       const data = await response.json()
-      toast.success(t('permissions.assignSuccess'), {
+      toast.success('Permisos asignados correctamente', {
         description: data.message,
       })
 
@@ -56,7 +55,7 @@ export function PermissionSasHeader({ title, description, stats, onNewClick, cus
       onAssignAll?.()
     } catch (error: any) {
       console.error("Error al asignar permisos:", error)
-      toast.error(t('permissions.assignError'), {
+      toast.error('Error al asignar permisos', {
         description: error.message || "No se pudieron asignar los permisos",
       })
     } finally {
@@ -76,7 +75,7 @@ export function PermissionSasHeader({ title, description, stats, onNewClick, cus
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {onNewClick && (
+          {showNewButton && onNewClick && (
             <Button
               onClick={onNewClick}
               variant="new"

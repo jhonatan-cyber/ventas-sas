@@ -1,7 +1,6 @@
 "use client"
 
 import { Search, X } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,6 @@ export function SalesCustomersFilters({
   onSearchChange,
   statusValue = "all"
 }: SalesCustomersFiltersProps) {
-  const t = useTranslations()
   const [searchValue, setSearchValue] = useState("")
   const isMobile = useIsMobile()
 
@@ -45,13 +43,13 @@ export function SalesCustomersFilters({
           htmlFor="search-customers"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          {t('common.search')}
+          Buscar
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="search-customers"
-            placeholder={t('common.placeholders.searchCustomers')}
+            placeholder="Buscar clientes..."
             className="pl-10 pr-10 w-full rounded-full"
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -86,7 +84,7 @@ export function SalesCustomersFilters({
             defaultValue="all"
           >
             <SelectTrigger id="status-filter" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.filterByStatus')} />
+              <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{isMobile ? "Todos" : "Todos los estados"}</SelectItem>
@@ -109,7 +107,7 @@ export function SalesCustomersFilters({
             defaultValue="10"
           >
             <SelectTrigger id="page-size" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.perPage')} />
+              <SelectValue placeholder="Por página" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="5">5 por página</SelectItem>

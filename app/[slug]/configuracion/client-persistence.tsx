@@ -82,7 +82,7 @@ export default function ClientPersistence({ slug }: { slug: string }) {
       if (!colorClickHandler) {
         colorClickHandler = (e: Event) => {
           const target = e.target as HTMLElement
-          const swatch = target.closest('.color-swatch') as HTMLElement | null
+          const swatch = target.closest(".color-swatch") as HTMLElement | null
 
           if (swatch) {
             e.preventDefault()

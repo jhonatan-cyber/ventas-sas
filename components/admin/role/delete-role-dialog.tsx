@@ -1,7 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface DeleteRoleDialogProps {
@@ -11,10 +9,7 @@ interface DeleteRoleDialogProps {
   roleName?: string
 }
 
-export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: DeleteRoleDialogProps) {
-  const t = useTranslations()
-  
-  const handleConfirm = () => {
+export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: DeleteRoleDialogProps) {const handleConfirm = () => {
     onConfirm()
     onOpenChange(false)
   }
@@ -24,12 +19,12 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
       <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-gray-900 dark:text-white">
-            {t('roles.deleteTitle')}
+            {"Delete Title"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
             {roleName 
-              ? `${t('roles.deleteWarning')} "${roleName}". ${t('roles.deleteWarningEnd')}`
-              : t('roles.deleteWarningNoName')
+              ? `${"Delete Warning"} "${roleName}". ${"Delete Warning End"}`
+              : "Delete Warning No Name"
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -38,13 +33,13 @@ export function DeleteRoleDialog({ open, onOpenChange, onConfirm, roleName }: De
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto rounded-full"
           >
-            {t('action.cancel')}
+            {"Cancel"}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-full"
           >
-            {t('action.delete')}
+            {"Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

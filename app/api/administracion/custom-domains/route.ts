@@ -16,7 +16,7 @@ const createDomainSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId') || undefined
+    const organizationId = searchParams.get("Organization Id") || undefined
 
     const { domains, total } = await CustomDomainService.getDomains(organizationId)
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

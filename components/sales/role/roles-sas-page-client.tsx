@@ -1,7 +1,6 @@
 "use client";
 
 import { RoleSas } from "@prisma/client";
-import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 
 import { RoleSasDeleteDialog } from "./role-sas-delete-dialog";
@@ -13,6 +12,7 @@ import { RolesSasHeader } from "./roles-sas-header";
 
 import ConfirmActionDialog from "@/components/sales/common/confirm-action-dialog";
 import { useRoleSasActions } from "@/hooks/sales/role/use-role-sas-actions";
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions";
 
 interface RolesSasPageClientProps {
   initialRoles: (RoleSas & {
@@ -31,8 +31,10 @@ export function RolesSasPageClient({
   initialRoles,
   customerSlug,
 }: RolesSasPageClientProps) {
-  const t = useTranslations()
   const [roles, setRoles] = useState(initialRoles);
+  
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions();
   
   const {
     isFormDialogOpen,
@@ -63,24 +65,32 @@ export function RolesSasPageClient({
     setRoles(initialRoles);
   }, [initialRoles]);
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateRole = hasPermission('roles_crear');
+  const canEditRole = hasPermission('roles_editar');
+  const canDeleteRole = hasPermission('roles_eliminar');
+  const canToggleRoleStatus = hasPermission('roles_activar') || hasPermission('roles_desactivar');
+  const canManagePermissions = hasPermission('roles_asignar_permisos');
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <RolesSasHeader
-        title={t('roles.title')}
-        description={t('roles.description')}
-        newButtonText={t('roles.create')}
-        onNewClick={openCreateDialog}
+        title="Gestión de Roles"
+        description="Administra los roles y permisos del sistema"
+        newButtonText="Agregar Rol"
+        onNewClick={canCreateRole ? openCreateDialog : undefined}
+        showNewButton={canCreateRole}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <RolesSasContainer
         roles={roles}
-        onEdit={openEditDialog}
-        onToggleStatus={handleToggleStatus}
-        onDelete={openDeleteDialog}
+        onEdit={canEditRole ? openEditDialog : undefined}
+        onToggleStatus={canToggleRoleStatus ? handleToggleStatus : undefined}
+        onDelete={canDeleteRole ? openDeleteDialog : undefined}
         onView={openViewDialog}
-        onManagePermissions={openManagePermissionsDialog}
+        onManagePermissions={canManagePermissions ? openManagePermissionsDialog : undefined}
       />
 
       {/* Modal de crear/editar rol */}

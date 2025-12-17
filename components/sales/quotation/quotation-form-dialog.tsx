@@ -2,7 +2,6 @@
 
 import { SalesCustomer, SalesProduct } from "@prisma/client"
 import { Check, ChevronDown, Package2, Plus, Trash2, X } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -104,7 +103,6 @@ export function QuotationFormDialog({
   currentUserBranchId = null,
   maxBranches,
 }: QuotationFormDialogProps) {
-  const t = useTranslations()
   const isMobile = useIsMobile()
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [customerInputValue, setCustomerInputValue] = useState("")
@@ -125,6 +123,7 @@ export function QuotationFormDialog({
   const productInputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
   const productContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const quantityInputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
+  const dropdownTimeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map())
   const [discount, setDiscount] = useState(0)
   const [expiresAt, setExpiresAt] = useState("")
   const [notes, setNotes] = useState("")
@@ -137,9 +136,9 @@ export function QuotationFormDialog({
   const branchOptions = useMemo<BranchOption[]>(() => {
     return (branches ?? []).map((branch) => ({
       id: branch.id,
-      name: branch.name ?? t('common.noBranch'),
+      name: branch.name ?? 'Sin sucursal',
     }))
-  }, [branches, t])
+  }, [branches])
 
   // Ocultar select de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchSelect = maxBranches === 1 && branchOptions.length === 1
@@ -148,7 +147,7 @@ export function QuotationFormDialog({
   const renderCustomerInput = (wrapperClassName: string) => (
     <div className={cn("w-full", wrapperClassName)}>
       <Label htmlFor="customer" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-        {t('quotations.form.customer')} <span className="text-red-500">*</span>
+        Cliente <span className="text-red-500">*</span>
       </Label>
       <div className="relative mt-2">
         <input
@@ -169,13 +168,13 @@ export function QuotationFormDialog({
             // No cerrar inmediatamente para permitir clics en el dropdown
             setTimeout(() => setIsCustomerDropdownOpen(false), 200)
           }}
-          placeholder={t('quotations.form.customerPlaceholder')}
+          placeholder="Buscar cliente..."
           disabled={isFormLocked}
           className={`w-full px-5 py-3 ${isManualCustomerUsed ? 'pr-28' : 'pr-20'} border border-gray-200 dark:border-[#2a2a2a] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#161616] text-gray-900 dark:text-white shadow-sm`}
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
           {isManualCustomerUsed && (
-              <div className="p-1.5 flex items-center justify-center" title={t('quotations.form.customerNotRegistered')}>
+            <div className="p-1.5 flex items-center justify-center" title={"Cliente no registrado"}>
               <Check size={16} className="text-green-600 dark:text-green-400" />
             </div>
           )}
@@ -229,10 +228,10 @@ export function QuotationFormDialog({
                   {customerInputValue.trim() ? (
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('quotations.form.useCustomer')}: <span className="font-semibold">"{capitalizeWords(customerInputValue.trim())}"</span>
+                        {"Usar cliente"}: <span className="font-semibold">"{capitalizeWords(customerInputValue.trim())}"</span>
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('quotations.form.pressEnterOrClick')}
+                        {"Presiona Enter o haz clic para usar este cliente"}
                       </p>
                       <Button
                         type="button"
@@ -241,14 +240,14 @@ export function QuotationFormDialog({
                         className="mt-2 rounded-full"
                         onClick={() => handleManualCustomer(customerInputValue.trim())}
                       >
-                        {t('quotations.form.useThisCustomer')}
+                        {"Usar este cliente"}
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('quotations.form.noCustomersFound')}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{"No se encontraron clientes"}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">
-                        {t('quotations.form.customerNameHint')}
+                        {"Escribe el nombre del cliente para agregarlo"}
                       </p>
                     </div>
                   )}
@@ -294,7 +293,7 @@ export function QuotationFormDialog({
 
     return (
       <div className={cn("w-full", wrapperClassName)}>
-        <Label htmlFor="customerPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">{t('quotations.form.phone')}</Label>
+        <Label htmlFor="customerPhone" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">{"Teléfono"}</Label>
         <div className="mt-2 relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium z-10 pointer-events-none">
             {countryCode}
@@ -305,7 +304,7 @@ export function QuotationFormDialog({
             value={getPhoneNumberWithoutCode(customerPhoneInput)}
             onChange={handlePhoneChange}
             onBlur={handlePhoneBlur}
-            placeholder={t('quotations.form.phonePlaceholder')}
+            placeholder={"Número de teléfono"}
             disabled={isFormLocked}
             className="rounded-full pl-20"
           />
@@ -355,7 +354,16 @@ export function QuotationFormDialog({
       })
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    
+    // Capture the current ref value at effect setup time
+    const timeoutsToCleanup = dropdownTimeoutRefs.current
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      // Limpiar todos los timeouts pendientes usando la captured ref
+      timeoutsToCleanup.forEach(timeoutId => clearTimeout(timeoutId))
+      timeoutsToCleanup.clear()
+    }
   }, [])
 
   const loadCustomers = useCallback(async () => {
@@ -406,6 +414,11 @@ export function QuotationFormDialog({
 
   const loadCountryCode = useCallback(async () => {
     try {
+      // Temporalmente deshabilitado para evitar bucles de peticiones
+      // Usar valor por defecto
+      setCountryCode('BO')
+      return
+
       const response = await fetch(`/api/${customerSlug}/config/preferencias`, {
         credentials: 'include'
       })
@@ -743,6 +756,13 @@ export function QuotationFormDialog({
 
 
   const handleProductSelect = (itemId: string, product: SalesProduct) => {
+    // Cancelar timeout si existe
+    const timeoutId = dropdownTimeoutRefs.current.get(itemId)
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      dropdownTimeoutRefs.current.delete(itemId)
+    }
+
     const formattedName = capitalizeWords(product.name || "")
     setItems((prev) =>
       prev.map((item) =>
@@ -763,6 +783,13 @@ export function QuotationFormDialog({
   }
 
   const handleProductManualSelection = (itemId: string, value: string) => {
+    // Cancelar timeout si existe
+    const timeoutId = dropdownTimeoutRefs.current.get(itemId)
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      dropdownTimeoutRefs.current.delete(itemId)
+    }
+
     const trimmed = value.trim()
     if (trimmed.length === 0) {
       setOpenProductDropdownId(null)
@@ -806,13 +833,13 @@ export function QuotationFormDialog({
 
     // Validación 1: Cliente (ID o nombre manual)
     if (!selectedCustomerId && trimmedCustomerName.length === 0) {
-      toast.error(t('quotations.form.customerRequired'))
+      toast.error("El cliente es requerido")
       return
     }
 
     // Validación 2: Fecha de expiración (obligatoria)
     if (!expiresAt || expiresAt.trim().length === 0) {
-      toast.error(t('quotations.form.expirationDateRequired'))
+      toast.error("La fecha de expiración es requerida")
       return
     }
 
@@ -830,15 +857,15 @@ export function QuotationFormDialog({
     const validItems = items.filter((item) => {
       const hasProduct = (item.productId !== "none") || item.productName.trim().length > 0
       if (!hasProduct) return false
-      
+
       const qty = Number(item.quantity) || 0
       const price = Number(item.unitPrice) || 0
-      
+
       return qty >= 1 && price > 1
     })
 
     if (validItems.length === 0) {
-      toast.error(t('quotations.form.itemsRequired'))
+      toast.error("Debe agregar al menos un producto válido")
       return
     }
 
@@ -886,25 +913,25 @@ export function QuotationFormDialog({
   const hasValidItems = items.some((item) => {
     const hasProduct = (item.productId !== "none") || item.productName.trim().length > 0
     if (!hasProduct) return false
-    
+
     const qty = Number(item.quantity) || 0
     const price = Number(item.unitPrice) || 0
-    
+
     return qty >= 1 && price > 1
   })
-  
+
   // Si el select está oculto, no validar branchId (ya se establece automáticamente)
   const isBranchInvalid =
     !shouldHideBranchSelect &&
     isAdmin &&
     (!normalizedSelectedBranchId || normalizedSelectedBranchId.trim().length === 0)
-  
+
   // Validar que haya cliente (ID o nombre)
   const hasValidCustomer = selectedCustomerId || customerInputValue.trim().length > 0
-  
+
   // Validar fecha de expiración
   const hasValidExpirationDate = expiresAt && expiresAt.trim().length > 0
-  
+
   const isSubmitDisabled =
     !hasValidCustomer ||
     !hasValidItems ||
@@ -918,7 +945,7 @@ export function QuotationFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-[900px] lg:max-w-2xl max-h-[92vh] flex flex-col overflow-hidden p-0 rounded-lg"
+        className="sm:max-w-[1000px] lg:max-w-5xl max-h-[92vh] flex flex-col overflow-hidden p-0 rounded-lg"
         onOpenAutoFocus={(e) => {
           e.preventDefault()
         }}
@@ -926,12 +953,12 @@ export function QuotationFormDialog({
         <div className="px-6 sm:px-8 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">
-              {quotation ? t('quotations.edit') : t('quotations.new')}
+              {quotation ? "Editar Cotización" : "Nueva Cotización"}
             </DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
               {quotation
-                ? t('quotations.editDescription')
-                : t('quotations.newDescription')}
+                ? "Modifica los datos de la cotización"
+                : "Crea una nueva cotización para el cliente"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -947,7 +974,7 @@ export function QuotationFormDialog({
                       {!shouldHideBranchSelect && (
                         <div className="md:flex-1">
                           <Label htmlFor="quotation-branch" className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-                            {t('form.branch')}
+                            {"Sucursal"}
                           </Label>
                           <Select
                             value={selectedBranchId}
@@ -957,39 +984,39 @@ export function QuotationFormDialog({
                             disabled={isFormLocked}
                           >
                             <SelectTrigger id="quotation-branch" className="mt-2 w-full rounded-full">
-                              <SelectValue placeholder={t('quotations.form.selectBranch')} />
+                              <SelectValue placeholder={"Seleccionar sucursal"} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={PLACEHOLDER_BRANCH_VALUE}>{t('quotations.form.selectBranch')}</SelectItem>
+                              <SelectItem value={PLACEHOLDER_BRANCH_VALUE}>{"Seleccionar sucursal"}</SelectItem>
                               {branchOptions.map((branch) => (
                                 <SelectItem key={branch.id} value={branch.id}>
-                                  {branch.name ?? t('common.noBranch')}
+                                  {branch.name ?? "Sin sucursal"}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                       )}
-                      {renderPhoneInput("md:flex-1")}
+                      {renderPhoneInput("Md:flex-1")}
                     </div>
                   </>
                 ) : (
                   <div className="flex flex-col md:flex-row md:items-end md:gap-4 gap-4">
-                    {renderCustomerInput("md:flex-1")}
-                    {renderPhoneInput("md:w-[320px]")}
+                    {renderCustomerInput("Md:flex-1")}
+                    {renderPhoneInput("Md:w-[320px]")}
                   </div>
                 )}
               </div>
               {/* Items */}
               <div className="space-y-4">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
-                  {t('quotations.form.items')} <span className="text-red-500">*</span>
+                  {"Productos"} <span className="text-red-500">*</span>
                 </Label>
 
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-[#2a2a2a] rounded-full">
                     <Package2 className="h-10 w-10" />
-                    <p className="text-sm">{t('quotations.form.noProducts')}</p>
+                    <p className="text-sm">{"Debe agregar al menos un producto"}</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -998,7 +1025,7 @@ export function QuotationFormDialog({
                       onClick={addItem}
                       disabled={isFormLocked}
                     >
-                      <Plus className="h-4 w-4 mr-1" /> {t('quotations.form.addProduct')}
+                      <Plus className="h-4 w-4 mr-1" /> {"Agregar producto"}
                     </Button>
                   </div>
                 ) : (
@@ -1015,7 +1042,7 @@ export function QuotationFormDialog({
                           {/* Desktop: Producto y Cantidad en una fila (3/4 y 1/4) */}
                           <div className="hidden lg:grid lg:grid-cols-[3fr_1fr] lg:gap-3 lg:space-y-0">
                             <div className="space-y-1">
-                              <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{t('quotations.form.product')}</Label>
+                              <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{"Producto"}</Label>
                               <div
                                 ref={(el) => {
                                   if (el) productContainerRefs.current.set(item.id, el)
@@ -1034,9 +1061,10 @@ export function QuotationFormDialog({
                                   onFocus={() => setOpenProductDropdownId(item.id)}
                                   onKeyDown={(e) => handleProductKeyDown(item.id, e)}
                                   onBlur={() => {
-                                    setTimeout(() => setOpenProductDropdownId(null), 200)
+                                    const timeoutId = setTimeout(() => setOpenProductDropdownId(null), 300)
+                                    dropdownTimeoutRefs.current.set(item.id, timeoutId)
                                   }}
-                                  placeholder={t('quotations.form.customerPlaceholder').replace('cliente', 'producto')}
+                                  placeholder={"Buscar cliente...".replace('cliente', 'producto')}
                                   disabled={isLoading || isBusy}
                                   className="w-full px-4 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-white shadow-sm h-[44px]"
                                 />
@@ -1082,14 +1110,26 @@ export function QuotationFormDialog({
                                 </div>
 
                                 {openProductDropdownId === item.id && (
-                                  <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
+                                  <div
+                                    className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden"
+                                    onMouseEnter={() => {
+                                      const timeoutId = dropdownTimeoutRefs.current.get(item.id)
+                                      if (timeoutId) {
+                                        clearTimeout(timeoutId)
+                                        dropdownTimeoutRefs.current.delete(item.id)
+                                      }
+                                    }}
+                                  >
                                     <div className="max-h-64 overflow-y-auto">
                                       {getFilteredProducts(item.id).length > 0 ? (
                                         getFilteredProducts(item.id).map((product, index) => (
                                           <button
                                             key={product.id}
                                             type="button"
-                                            onClick={() => handleProductSelect(item.id, product)}
+                                            onMouseDown={(e) => {
+                                              e.preventDefault()
+                                              handleProductSelect(item.id, product)
+                                            }}
                                             onMouseEnter={() => setHighlightedProductIndex(prev => ({ ...prev, [item.id]: index }))}
                                             className={`w-full text-left px-5 py-3 transition-colors ${(highlightedProductIndex[item.id] ?? 0) === index
                                               ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:bg-white/10 dark:text-white'
@@ -1107,26 +1147,29 @@ export function QuotationFormDialog({
                                           {item.productInput.trim() ? (
                                             <div className="space-y-2">
                                               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {t('quotations.form.useProduct')}: <span className="font-semibold">"{capitalizeWords(item.productInput.trim())}"</span>
+                                                Usar producto: <span className="font-semibold">"{capitalizeWords(item.productInput.trim())}"</span>
                                               </p>
                                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                {t('quotations.form.pressEnterOrClickProduct')}
+                                                Presiona Enter o haz clic para usar este producto
                                               </p>
                                               <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 className="mt-2 rounded-full"
-                                                onClick={() => handleProductManualSelection(item.id, item.productInput.trim())}
+                                                onMouseDown={(e) => {
+                                                  e.preventDefault()
+                                                  handleProductManualSelection(item.id, item.productInput.trim())
+                                                }}
                                               >
-                                                {t('quotations.form.useThisProduct')}
+                                                Usar este producto
                                               </Button>
                                             </div>
                                           ) : (
                                             <div className="space-y-2">
-                                              <p className="text-sm text-gray-500 dark:text-gray-400">{t('quotations.form.noProductsFound')}</p>
+                                              <p className="text-sm text-gray-500 dark:text-gray-400">No se encontraron productos</p>
                                               <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                {t('quotations.form.productNameHint')}
+                                                Escribe el nombre del producto para agregarlo
                                               </p>
                                             </div>
                                           )}
@@ -1140,12 +1183,12 @@ export function QuotationFormDialog({
 
                             <div className="space-y-1">
                               <Label htmlFor={quantityInputId} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                {t('form.quantity')}
+                                {"Cantidad"}
                               </Label>
                               <Input
                                 id={quantityInputId}
                                 type="number"
-                                placeholder={t('quotations.form.quantityShort')}
+                                placeholder={"Cant."}
                                 value={item.quantity}
                                 onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
                                 onBlur={() => normalizeItemField(item.id, "quantity")}
@@ -1185,9 +1228,10 @@ export function QuotationFormDialog({
                                 onFocus={() => setOpenProductDropdownId(item.id)}
                                 onKeyDown={(e) => handleProductKeyDown(item.id, e)}
                                 onBlur={() => {
-                                  setTimeout(() => setOpenProductDropdownId(null), 200)
+                                  const timeoutId = setTimeout(() => setOpenProductDropdownId(null), 300)
+                                  dropdownTimeoutRefs.current.set(item.id, timeoutId)
                                 }}
-                                placeholder={t('common.placeholders.productName')}
+                                placeholder="Nombre del producto"
                                 disabled={isLoading || isBusy}
                                 className="w-full px-4 py-3 pr-20 border border-gray-200 dark:border-[#2a2a2a] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklch,var(--primary)_50%,white)] bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-white shadow-sm h-[44px]"
                               />
@@ -1233,14 +1277,26 @@ export function QuotationFormDialog({
                               </div>
 
                               {openProductDropdownId === item.id && (
-                                <div className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden">
+                                <div
+                                  className="absolute left-0 right-0 mt-2 z-20 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-xl overflow-hidden"
+                                  onMouseEnter={() => {
+                                    const timeoutId = dropdownTimeoutRefs.current.get(item.id)
+                                    if (timeoutId) {
+                                      clearTimeout(timeoutId)
+                                      dropdownTimeoutRefs.current.delete(item.id)
+                                    }
+                                  }}
+                                >
                                   <div className="max-h-64 overflow-y-auto">
                                     {getFilteredProducts(item.id).length > 0 ? (
                                       getFilteredProducts(item.id).map((product, index) => (
                                         <button
                                           key={product.id}
                                           type="button"
-                                          onClick={() => handleProductSelect(item.id, product)}
+                                          onMouseDown={(e) => {
+                                            e.preventDefault()
+                                            handleProductSelect(item.id, product)
+                                          }}
                                           onMouseEnter={() => setHighlightedProductIndex(prev => ({ ...prev, [item.id]: index }))}
                                           className={`w-full text-left px-5 py-3 transition-colors ${(highlightedProductIndex[item.id] ?? 0) === index
                                             ? 'bg-[color-mix(in_oklch,var(--primary)_18%,white)] text-gray-900 dark:bg-white/10 dark:text-white'
@@ -1268,7 +1324,10 @@ export function QuotationFormDialog({
                                               variant="outline"
                                               size="sm"
                                               className="mt-2 rounded-full"
-                                              onClick={() => handleProductManualSelection(item.id, item.productInput.trim())}
+                                              onMouseDown={(e) => {
+                                                e.preventDefault()
+                                                handleProductManualSelection(item.id, item.productInput.trim())
+                                              }}
                                             >
                                               Usar este producto
                                             </Button>
@@ -1291,12 +1350,12 @@ export function QuotationFormDialog({
 
                           <div className="space-y-1 hidden lg:block">
                             <Label htmlFor={priceInputId} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                              {t('quotations.form.price')}
+                              {"Precio"}
                             </Label>
                             <Input
                               id={priceInputId}
                               type="number"
-                              placeholder={t('quotations.form.price')}
+                              placeholder={"Precio"}
                               value={item.unitPrice}
                               onChange={(e) => updateItem(item.id, "unitPrice", e.target.value)}
                               onBlur={() => normalizeItemField(item.id, "unitPrice")}
@@ -1311,12 +1370,12 @@ export function QuotationFormDialog({
                           <div className="grid grid-cols-2 gap-2 lg:hidden">
                             <div className="space-y-1">
                               <Label htmlFor={`${quantityInputId}-mobile`} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                {t('form.quantity')}
+                                {"Cantidad"}
                               </Label>
                               <Input
                                 id={`${quantityInputId}-mobile`}
                                 type="number"
-                                placeholder={t('quotations.form.quantityShort')}
+                                placeholder={"Cant."}
                                 value={item.quantity}
                                 onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
                                 onBlur={() => normalizeItemField(item.id, "quantity")}
@@ -1328,12 +1387,12 @@ export function QuotationFormDialog({
 
                             <div className="space-y-1">
                               <Label htmlFor={`${priceInputId}-mobile`} className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                {t('quotations.form.price')}
+                                {"Precio"}
                               </Label>
                               <Input
                                 id={`${priceInputId}-mobile`}
                                 type="number"
-                                placeholder={t('quotations.form.price')}
+                                placeholder={"Precio"}
                                 value={item.unitPrice}
                                 onChange={(e) => updateItem(item.id, "unitPrice", e.target.value)}
                                 onBlur={() => normalizeItemField(item.id, "unitPrice")}
@@ -1347,7 +1406,7 @@ export function QuotationFormDialog({
 
                           <div className="space-y-1 hidden lg:block">
                             <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                              {t('quotations.form.subtotal')}
+                              {"Subtotal"}
                             </Label>
                             <div className="flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#242424] px-2 py-2 h-11">
                               <span className="font-semibold text-sm text-gray-900 dark:text-white">{item.subtotal.toFixed(2)}</span>
@@ -1372,7 +1431,7 @@ export function QuotationFormDialog({
                           <div className="grid grid-cols-[3fr_1fr] gap-2 lg:hidden">
                             <div className="space-y-1">
                               <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                {t('quotations.form.subtotal')}
+                                {"Subtotal"}
                               </Label>
                               <div className="flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#242424] px-4 py-2 h-11">
                                 <span className="font-semibold text-gray-900 dark:text-white">{item.subtotal.toFixed(2)}</span>
@@ -1415,7 +1474,7 @@ export function QuotationFormDialog({
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{t('quotations.form.subtotal')}</Label>
+                    <Label className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{"Subtotal"}</Label>
                     <Input
                       type="text"
                       value={totals.subtotal.toFixed(2)}
@@ -1424,7 +1483,7 @@ export function QuotationFormDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="discount" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{t('quotations.form.discount')}</Label>
+                    <Label htmlFor="discount" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{"Descuento"}</Label>
                     <Input
                       id="discount"
                       type="number"
@@ -1449,7 +1508,7 @@ export function QuotationFormDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="expiresAt" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                      {t('quotations.form.validUntil')} <span className="text-red-500">*</span>
+                      {"Válido hasta"} <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                       <Input
@@ -1485,7 +1544,7 @@ export function QuotationFormDialog({
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:hidden">
                           <span className="text-sm text-gray-900 dark:text-white">
                             {(() => {
-                              const [year, month, day] = expiresAt.split('-').map(Number)
+                              const [year, month, day] = expiresAt.split("-").map(Number)
                               const localDate = new Date(year, month - 1, day)
                               return formatDateWithPreferences(localDate, customerSlug)
                             })()}
@@ -1495,7 +1554,7 @@ export function QuotationFormDialog({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="total" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{t('quotations.form.total')}</Label>
+                    <Label htmlFor="total" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{"Total"}</Label>
                     <Input
                       id="total"
                       type="text"
@@ -1507,12 +1566,12 @@ export function QuotationFormDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{t('quotations.form.notes')}</Label>
+                  <Label htmlFor="notes" className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{"Notas"}</Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder={t('quotations.form.notes') + '...'}
+                    placeholder={"Notas" + '...'}
                     disabled={isFormLocked}
                     rows={4}
                     className="rounded-lg"
@@ -1529,7 +1588,7 @@ export function QuotationFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={isFormLocked}
             >
-              {t('action.cancel')}
+              {"Cancelar"}
             </Button>
             <Button
               type="submit"
@@ -1537,7 +1596,7 @@ export function QuotationFormDialog({
               className="rounded-full px-6 w-full sm:w-auto"
               disabled={isSubmitDisabled}
             >
-              {isLoading ? t('message.saving') : quotation ? t('action.update') : t('action.add')}
+              {isLoading ? "Guardando..." : quotation ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

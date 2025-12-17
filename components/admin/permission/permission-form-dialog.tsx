@@ -1,7 +1,6 @@
 "use client"
 
 import { Loader2, CheckSquare2 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { toast } from "sonner"
 
@@ -25,7 +24,6 @@ interface PermissionFormDialogProps {
 }
 
 export function PermissionFormDialog({ open, onOpenChange, onSuccess }: PermissionFormDialogProps) {
-  const t = useTranslations()
   const [selectedModule, setSelectedModule] = useState<string>("")
   const [selectedActions, setSelectedActions] = useState<string[]>([])
   const [existingPermissionNames, setExistingPermissionNames] = useState<string[]>([])
@@ -53,16 +51,16 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
       }
 
       const allPermissions: Array<{ name: string }> = await response.json()
-      
+
       // Filtrar permisos del módulo seleccionado
-      const modulePermissions = allPermissions.filter(perm => 
+      const modulePermissions = allPermissions.filter(perm =>
         perm.name.startsWith(`${module}_`)
       )
 
       // Extraer las acciones de los permisos existentes
       const existingActions: string[] = []
       const existingNames: string[] = []
-      
+
       actions.forEach(action => {
         const permissionName = PermissionAdminService.generatePermissionName(module, action.id)
         if (modulePermissions.some(p => p.name === permissionName)) {
@@ -109,12 +107,12 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
 
   const handleSubmit = async () => {
     if (!selectedModule) {
-      toast.error(t('permissions.form.moduleRequired'))
+      toast.error("Module Required")
       return
     }
 
     if (selectedActions.length === 0) {
-      toast.error(t('permissions.form.actionsRequired'))
+      toast.error("Actions Required")
       return
     }
 
@@ -123,7 +121,7 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
     try {
       // Obtener permisos existentes para filtrar solo los nuevos
       const existingPermissionsResponse = await fetch("/api/administracion/permisos")
-      const existingPermissions: Array<{ name: string }> = existingPermissionsResponse.ok 
+      const existingPermissions: Array<{ name: string }> = existingPermissionsResponse.ok
         ? await existingPermissionsResponse.json()
         : []
 
@@ -140,8 +138,8 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
       // Si no hay permisos nuevos, solo informar
       if (newPermissions.length === 0) {
         const moduleLabel = modules.find(m => m.id === selectedModule)?.label || ""
-        toast.info(t('permissions.form.allRegistered'), {
-          description: t('permissions.form.allRegisteredDescription', { module: moduleLabel }),
+        toast.info("All Registered", {
+          description: "Todos los permisos del módulo " + moduleLabel + " han sido registrados",
         })
         onSuccess()
         onOpenChange(false)
@@ -175,10 +173,10 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
       const existingCount = allPermissions.length - newPermissions.length
       const moduleLabel = modules.find(m => m.id === selectedModule)?.label || ""
       const message = existingCount > 0
-        ? t('permissions.form.registeredDescription', { newCount: newPermissions.length, existingCount })
-        : t('permissions.form.registeredDescriptionSimple', { count: newPermissions.length, module: moduleLabel })
+        ? `${newPermissions.length} permisos nuevos registrados, ${existingCount} ya existían`
+        : `${newPermissions.length} permisos registrados para el módulo ${moduleLabel}`
 
-      toast.success(t('permissions.form.registeredSuccess'), {
+      toast.success("Registered Success", {
         description: message,
       })
 
@@ -186,8 +184,8 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error al crear permisos:", error)
-      toast.error(t('permissions.form.errorRegistering'), {
-        description: error.message || t('permissions.form.errorRegisteringDescription'),
+      toast.error("Error Registering", {
+        description: error.message || "Error Registering Description",
       })
     } finally {
       setIsLoading(false)
@@ -201,9 +199,9 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0 rounded-lg">
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
-            <DialogTitle>{t('permissions.form.title')}</DialogTitle>
+            <DialogTitle>{"Title"}</DialogTitle>
             <DialogDescription>
-              {t('permissions.form.description')}
+              {"Description"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -212,11 +210,11 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
           {/* Selector de Módulo */}
           <div className="space-y-2">
             <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              {t('permissions.form.module')}
+              {"Module"}
             </Label>
             <Select value={selectedModule} onValueChange={setSelectedModule}>
               <SelectTrigger id="module" className="rounded-full">
-                <SelectValue placeholder={t('permissions.form.modulePlaceholder')} />
+                <SelectValue placeholder={"Module Placeholder"} />
               </SelectTrigger>
               <SelectContent>
                 {modules.map((module) => (
@@ -233,10 +231,10 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('permissions.form.actionsFor')} {selectedModuleLabel}
+                  {"Actions For"} {selectedModuleLabel}
                   {loadingExistingPermissions && (
                     <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                      ({t('permissions.form.loadingExisting')})
+                      ({"Loading Existing"})
                     </span>
                   )}
                 </Label>
@@ -249,7 +247,7 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
                   className="rounded-full text-xs"
                 >
                   <CheckSquare2 className="h-3 w-3 mr-1" />
-                  {t('permissions.form.selectAll')}
+                  {"Select All"}
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border border-gray-200 dark:border-[#2a2a2a] rounded-lg p-4">
@@ -283,7 +281,7 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
                           </Label>
                           {isChecked && (
                             <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                              {t('permissions.form.existing')}
+                              {"Existing"}
                             </span>
                           )}
                         </div>
@@ -306,16 +304,16 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
             const newPermissions = selectedActions
               .map(action => PermissionAdminService.generatePermissionName(selectedModule, action))
               .filter(name => !existingPermissionNames.includes(name))
-            
+
             const existingCount = selectedActions.length - newPermissions.length
 
             return (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                  {t('permissions.form.selectedPermissions')} ({selectedActions.length}):
+                  {"Selected Permissions"} ({selectedActions.length}):
                   {existingCount > 0 && (
                     <span className="ml-2 text-xs font-normal text-green-700 dark:text-green-300">
-                      {t('permissions.form.selectedCount', { existingCount, newCount: newPermissions.length })}
+                      {`${existingCount} existentes, ${newPermissions.length} nuevos`}
                     </span>
                   )}
                 </p>
@@ -331,12 +329,12 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
                         <span>• {permissionName}</span>
                         {isExisting && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                            {t('permissions.form.alreadyExists')}
+                            {"Already Exists"}
                           </span>
                         )}
                         {!isExisting && (
                           <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-                            {t('permissions.form.new')}
+                            {"New"}
                           </span>
                         )}
                       </li>
@@ -355,7 +353,7 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
             disabled={isLoading}
             className="w-full sm:w-auto rounded-full"
           >
-            {t('action.cancel')}
+            {"Cancel"}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -365,10 +363,10 @@ export function PermissionFormDialog({ open, onOpenChange, onSuccess }: Permissi
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t('permissions.form.adding')}
+                {"Adding"}
               </>
             ) : (
-              t('action.add')
+              "Add"
             )}
           </Button>
         </DialogFooter>

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url)
-    const typeParam = (searchParams.get("type") || "").toLowerCase() as BasicReportType
+    const typeParam = (searchParams.get("Type") || "").toLowerCase() as BasicReportType
 
     if (!ALLOWED_TYPES.includes(typeParam)) {
       return NextResponse.json(
@@ -24,8 +24,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
-    const startDateStr = searchParams.get("startDate")
-    const endDateStr = searchParams.get("endDate")
+    const startDateStr = searchParams.get("Start Date")
+    const endDateStr = searchParams.get("End Date")
 
     const dateRange =
       startDateStr || endDateStr

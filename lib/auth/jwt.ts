@@ -31,14 +31,14 @@ export class JWTService {
 
   // Obtener token desde las cookies
   static getTokenFromCookies(cookies: string): string | null {
-    const cookieArray = cookies.split(';')
+    const cookieArray = cookies.split(";")
     const authCookie = cookieArray.find(cookie => 
       cookie.trim().startsWith('auth-token=')
     )
     
     if (!authCookie) return null
     
-    return authCookie.split('=')[1]
+    return authCookie.split("=")[1]
   }
 
   // Crear cookie de autenticación

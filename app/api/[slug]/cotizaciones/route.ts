@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { captureServerEvent } from '@/lib/analytics/posthog-server'
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrCreateOrganizationForCustomer, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeQuotation } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
+// import { translateText } from '@/lib/utils/translatable-text' - removed
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createQuotationSchema } from '@/lib/validators/sales-validators'
 
@@ -38,11 +39,11 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
-    const customerId = searchParams.get('customerId') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const status = searchParams.get("Status") || undefined
+    const customerId = searchParams.get("Customer Id") || undefined
 
     let organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -82,6 +83,9 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
+
+    // Verificar permiso de crear cotizaciones
+    await requirePermission(request, slug, PERMISSIONS.COTIZACIONES_CREAR)
 
     let organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -128,7 +132,7 @@ export async function POST(
     })
 
     // Obtener branchId del usuario o cookie
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
     let branchId: string | null = currentUser?.sucursalId ?? currentUser?.sucursal?.id ?? null
     if (!branchId) {
@@ -149,17 +153,8 @@ export async function POST(
 
     const customerPhone = normalizePhone(validatedData.customerPhone || undefined)
 
-    // Traducir notas automáticamente si existen
-    let notesTranslations = undefined
-    if (validatedData.notes && validatedData.notes.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        notesTranslations = await translateText(validatedData.notes, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo notas de cotización:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Notas sin traducción automática
+    const notesTranslations = undefined
 
     const quotation = await QuotationService.createQuotation(organizationId, {
       customerId: validatedData.customerId || undefined,

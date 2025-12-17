@@ -1,8 +1,6 @@
 "use client"
 
 import { Building2, Eye, Lock, Trash2, Unlock } from "lucide-react"
-import { useTranslations } from "next-intl"
-
 
 import type { CashRegisterWithRelations } from "./types"
 
@@ -46,9 +44,7 @@ export function CashRegistersTable({
   onCloseClick,
   onDeleteClick,
   showBranchInfo = true,
-}: CashRegistersTableProps) {
-  const t = useTranslations()
-  if (isLoading) {
+}: CashRegistersTableProps) {if (isLoading) {
     return <CardsGridSkeleton count={6} columns={3} />
   }
 
@@ -107,7 +103,7 @@ export function CashRegistersTable({
                       <span className="text-gray-500 dark:text-gray-400">Sucursal</span>
                       <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
                         <Building2 className="h-4 w-4 text-[color-mix(in_oklch,var(--primary)_70%,white)]" />
-                        {cashRegister.branch?.name || t('common.noBranch')}
+                        {cashRegister.branch?.name || "Sin sucursal"}
                       </span>
                     </div>
                   )}

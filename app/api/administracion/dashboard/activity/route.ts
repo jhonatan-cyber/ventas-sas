@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const periodParam = searchParams.get('period')
-    const limitParam = searchParams.get('limit')
+    const periodParam = searchParams.get("Period")
+    const limitParam = searchParams.get("Limit")
 
     const period = (['7d', '30d', '90d', '1y', 'all'].includes(periodParam || '')
       ? periodParam

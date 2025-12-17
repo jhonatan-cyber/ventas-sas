@@ -1,8 +1,43 @@
-import {
-  Organization,
-  OrganizationSubscriptionStatus,
-  SubscriptionPlan,
-} from "@prisma/client";
+// Define proper types based on the Prisma schema
+interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId?: string | null;
+  subscriptionPlanId?: string | null;
+  subscriptionStatus: OrganizationSubscriptionStatus;
+  subscriptionStartDate?: Date | null;
+  subscriptionEndDate?: Date | null;
+  settings?: any;
+  createdAt: Date;
+  updatedAt: Date;
+  nit?: string | null;
+  razonSocial?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  website?: string | null;
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description?: string | null;
+  priceMonthly?: any | null; // Using any to match Prisma Decimal type
+  priceYearly?: any | null; // Using any to match Prisma Decimal type
+  hasMonthly: boolean;
+  hasYearly: boolean;
+  features?: any;
+  modules?: any;
+  maxUsers?: number | null;
+  maxProducts?: number | null;
+  maxBranches?: number | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Organization subscription status enum values
+type OrganizationSubscriptionStatus = 'active' | 'suspended' | 'trial' | 'cancelled';
 
 import { PasswordService } from "@/lib/auth/password";
 import { prisma } from "@/lib/prisma";
@@ -102,7 +137,32 @@ export class OrganizationAdminService {
       );
     }
 
-    return prisma.$transaction(async (tx) => {
+    // Verificar que el cliente existe ANTES de la transacción
+    const customerExists = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: {
+        id: true,
+        ci: true,
+        nombre: true,
+        apellido: true,
+        isActive: true,
+        deletedAt: true
+      }
+    });
+
+    if (!customerExists) {
+      throw new Error(`Cliente con ID ${customerId} no encontrado en la base de datos.`);
+    }
+
+    if (customerExists.deletedAt) {
+      throw new Error(`El cliente con ID ${customerId} ha sido eliminado y no puede ser usado para crear organizaciones.`);
+    }
+
+    if (!customerExists.isActive) {
+      throw new Error(`El cliente con ID ${customerId} está inactivo y no puede ser usado para crear organizaciones.`);
+    }
+
+    return prisma.$transaction(async (tx: any) => {
       try {
         // Obtener los datos del cliente para crear el usuario SAS
         const customer = await tx.customer.findUnique({
@@ -119,39 +179,17 @@ export class OrganizationAdminService {
         });
 
         if (!customer) {
-          throw new Error("Cliente no encontrado");
+          throw new Error(`Cliente con ID ${customerId} no encontrado. Verifique que el cliente existe antes de crear la organización.`);
         }
 
-        // Crear o buscar un Profile para el usuario administrador de la organización
-        // El Profile será el dueño (ownerId) de la organización según el schema
-        // Se crea basado en los datos del cliente (que ya fue creado en el módulo de clientes)
-        // NOTA: El dueño real es el UsuarioSas que se crea después, pero el schema requiere un Profile.id como ownerId
+        // Preparar datos para crear ProfileSas (perfil de empresa)
         const customerEmail =
           customer.email || `${customer.ci || customer.id}@organizacion.local`;
         const customerFullName =
           `${customer.nombre || ""} ${customer.apellido || ""}`.trim() ||
           customerEmail;
 
-        // Buscar si ya existe un Profile con ese email
-        let ownerProfile = await tx.profile.findUnique({
-          where: { email: customerEmail },
-        });
-
-        // Si no existe, crear uno nuevo basado en los datos del cliente
-        if (!ownerProfile) {
-          ownerProfile = await tx.profile.create({
-            data: {
-              email: customerEmail,
-              fullName: customerFullName,
-              role: "user",
-              isSuperAdmin: false,
-              isActive: true,
-              address: customer.address || undefined,
-              phone: customer.phone || undefined,
-            },
-          });
-        }
-
+        // Crear organización
         const organization = await tx.organization.create({
           data: {
             name: organizationData.razonSocial || "Empresa",
@@ -166,10 +204,10 @@ export class OrganizationAdminService {
                 ? organizationData.phone
                 : null,
             slug: organizationData.slug,
-            ownerId: ownerProfile.id,
+            ownerId: null, // Se actualizará después de crear el UsuarioSas
             subscriptionStatus:
               organizationData.subscriptionStatus ||
-              OrganizationSubscriptionStatus.active,
+              'active',
             subscriptionStartDate:
               organizationData.subscriptionStartDate || new Date(),
             subscriptionEndDate:
@@ -186,6 +224,7 @@ export class OrganizationAdminService {
           },
         });
 
+        // Crear relación cliente-organización
         await tx.customerOrganization.create({
           data: {
             customerId,
@@ -194,6 +233,21 @@ export class OrganizationAdminService {
           },
         });
 
+        // Crear ProfileSas para el dueño de la organización
+        await tx.profileSas.create({
+          data: {
+            email: customerEmail,
+            fullName: customerFullName,
+            role: "admin", // Rol de administrador de la empresa
+            isActive: true,
+            address: customer.address || undefined,
+            phone: customer.phone || undefined,
+            ci: customer.ci || undefined,
+            organizationId: organization.id,
+          },
+        });
+
+        // Crear sucursal principal
         const branch = await tx.branch.create({
           data: {
             name: "Principal",
@@ -203,6 +257,7 @@ export class OrganizationAdminService {
           },
         });
 
+        // Crear rol administrador
         const role = await tx.roleSas.create({
           data: {
             nombre: "Administrador",
@@ -222,7 +277,7 @@ export class OrganizationAdminService {
         // Crear el UsuarioSas (usuario administrador/dueño de la organización)
         // Se crea con los MISMOS datos del cliente que ya fue creado en el módulo de clientes
         // Este UsuarioSas es el dueño real de la organización
-        await tx.usuarioSas.create({
+        const usuarioSas = await tx.usuarioSas.create({
           data: {
             ci: customer.ci || undefined,
             nombre: customer.nombre || "",
@@ -238,21 +293,61 @@ export class OrganizationAdminService {
           },
         });
 
-        return organization;
-      } catch (error: any) {
-        // Log detallado del error para debugging
-        console.error('Error al crear organización:', {
-          error: error.message,
-          code: error.code,
-          meta: error.meta,
-          customerId,
-          organizationData: {
-            razonSocial: organizationData.razonSocial,
-            slug: organizationData.slug,
-            hasAddress: !!organizationData.address,
-            hasPhone: !!organizationData.phone,
+        // Crear registro de suscripción para que la organización sea accesible
+        if (organizationData.subscriptionPlanId) {
+          await tx.subscription.create({
+            data: {
+              organizationId: organization.id,
+              planId: organizationData.subscriptionPlanId,
+              status: 'active',
+              billingPeriod: 'monthly', // Por defecto mensual
+              startDate: organizationData.subscriptionStartDate || new Date(),
+              endDate: organizationData.subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              autoRenew: true,
+            },
+          });
+        } else {
+          // Si no se especifica un plan, buscar un plan por defecto o crear una suscripción básica
+          const defaultPlan = await tx.subscriptionPlan.findFirst({
+            where: {
+              isActive: true,
+              name: { contains: 'básico', mode: 'insensitive' }
+            }
+          });
+
+          if (defaultPlan) {
+            await tx.subscription.create({
+              data: {
+                organizationId: organization.id,
+                planId: defaultPlan.id,
+                status: 'trial', // Comenzar como trial si no se especifica plan
+                billingPeriod: 'monthly',
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días de trial
+                autoRenew: false,
+              },
+            });
           }
+        }
+
+        // Actualizar la organización con el ownerId correcto
+        const updatedOrganization = await tx.organization.update({
+          where: { id: organization.id },
+          data: { ownerId: usuarioSas.id }
         });
+
+        return updatedOrganization;
+      } catch (error: any) {
+        // Proporcionar errores más específicos
+        if (error.code === 'P2003') {
+          throw new Error(`Error de referencia: El cliente con ID ${customerId} no existe o hay un problema con las relaciones de la base de datos. Verifique que el cliente existe antes de crear la organización.`);
+        }
+
+        if (error.code === 'P2002') {
+          throw new Error(`Ya existe una organización con el slug "${organizationData.slug}". Por favor, use un slug diferente.`);
+        }
+
+        // Re-lanzar el error original si no es un error conocido
         throw error;
       }
     });
@@ -292,9 +387,8 @@ export class OrganizationAdminService {
 
   // Eliminar organización
   static async deleteOrganization(id: string): Promise<Organization> {
-    return prisma.$transaction(async (tx) => {
-      // Eliminar datos relacionados del sistema SAS en el orden correcto
-      // Primero eliminar items (dependientes) antes de las entidades principales
+    return prisma.$transaction(async (tx: any) => {
+
 
       // 1. Eliminar items de cotizaciones
       await tx.quotationItem.deleteMany({
@@ -434,7 +528,7 @@ export class OrganizationAdminService {
   static async suspendOrganization(id: string): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
-      data: { subscriptionStatus: OrganizationSubscriptionStatus.suspended },
+      data: { subscriptionStatus: 'suspended' },
     });
   }
 
@@ -442,7 +536,7 @@ export class OrganizationAdminService {
   static async reactivateOrganization(id: string): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
-      data: { subscriptionStatus: OrganizationSubscriptionStatus.active },
+      data: { subscriptionStatus: 'active' },
     });
   }
 
@@ -463,7 +557,7 @@ export class OrganizationAdminService {
       where: { id },
       data: {
         subscriptionPlanId: planId,
-        subscriptionStatus: OrganizationSubscriptionStatus.active,
+        subscriptionStatus: 'active',
         subscriptionStartDate: new Date(),
         subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
       },
@@ -474,13 +568,13 @@ export class OrganizationAdminService {
   static async getOrganizationStats() {
     const total = await prisma.organization.count();
     const active = await prisma.organization.count({
-      where: { subscriptionStatus: OrganizationSubscriptionStatus.active },
+      where: { subscriptionStatus: 'active' },
     });
     const suspended = await prisma.organization.count({
-      where: { subscriptionStatus: OrganizationSubscriptionStatus.suspended },
+      where: { subscriptionStatus: 'suspended' },
     });
     const trial = await prisma.organization.count({
-      where: { subscriptionStatus: OrganizationSubscriptionStatus.trial },
+      where: { subscriptionStatus: 'trial' },
     });
 
     return { total, active, suspended, trial };

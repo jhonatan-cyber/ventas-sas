@@ -4,13 +4,14 @@ import { join } from 'path'
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { QuotationService } from '@/lib/services/sales/quotation-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeQuotation } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
+// import { translateText } from '@/lib/utils/translatable-text' - removed
 
 const capitalizeWords = (value: string) =>
   value
@@ -97,6 +98,9 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de editar cotizaciones
+    await requirePermission(request, slug, PERMISSIONS.COTIZACIONES_EDITAR)
     
     let body: any
     try {
@@ -151,17 +155,8 @@ export async function PUT(
         })
       : undefined
 
-    // Traducir notas automáticamente si se están actualizando
-    let notesTranslations = undefined
-    if (body.notes !== undefined && body.notes !== null && body.notes.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        notesTranslations = await translateText(body.notes, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo notas de cotización:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Notas sin traducción automática
+    const notesTranslations = undefined
 
     const quotation = await QuotationService.updateQuotation(id, {
       customerId: body.customerId ?? undefined,
@@ -191,6 +186,9 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de eliminar cotizaciones
+    await requirePermission(request, slug, PERMISSIONS.COTIZACIONES_ELIMINAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {

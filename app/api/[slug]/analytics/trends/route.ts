@@ -31,10 +31,10 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     
     // Soportar tanto el rango de fechas como el número de días
-    const startParam = searchParams.get('start')
-    const endParam = searchParams.get('end')
-    const daysParam = searchParams.get('days')
-    const groupBy = (searchParams.get('groupBy') || 'day') as 'day' | 'week' | 'month'
+    const startParam = searchParams.get("Start")
+    const endParam = searchParams.get("End")
+    const daysParam = searchParams.get("Days")
+    const groupBy = (searchParams.get("Group By") || 'day') as 'day' | 'week' | 'month'
 
     let dateRange: { start: Date; end: Date } | undefined
     let days = 30

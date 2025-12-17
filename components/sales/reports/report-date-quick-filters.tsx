@@ -1,7 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { Button } from "@/components/ui/button"
 
 interface ReportDateQuickFiltersProps {
@@ -24,8 +22,6 @@ export function ReportDateQuickFilters({
   onChange,
   onApply,
 }: ReportDateQuickFiltersProps) {
-  const t = useTranslations()
-
   const setToday = () => {
     const now = new Date()
     const d = formatYmd(now)
@@ -82,19 +78,10 @@ export function ReportDateQuickFilters({
     return startDate === start && endDate === end
   }
 
-  // Helper para obtener traducciones con fallback seguro (evita errores MISSING_MESSAGE)
-  const safeLabel = (key: string, fallback: string) => {
-    try {
-      return t(key)
-    } catch {
-      return fallback
-    }
-  }
-
   return (
     <div className="flex flex-wrap gap-1.5 mt-2 text-xs">
       <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mr-1">
-        {t("reports.filters.dateRange")}
+        Rango de fechas:
       </span>
       <Button
         type="button"
@@ -107,7 +94,7 @@ export function ReportDateQuickFilters({
         className="rounded-full h-6 px-3"
         onClick={setToday}
       >
-        {safeLabel("reports.filters.quick.today", "Hoy")}
+        Hoy
       </Button>
       <Button
         type="button"
@@ -125,7 +112,7 @@ export function ReportDateQuickFilters({
         className="rounded-full h-6 px-3"
         onClick={setThisWeek}
       >
-        {safeLabel("reports.filters.quick.thisWeek", "Esta semana")}
+        Esta semana
       </Button>
       <Button
         type="button"
@@ -139,7 +126,7 @@ export function ReportDateQuickFilters({
         className="rounded-full h-6 px-3"
         onClick={setThisMonth}
       >
-        {safeLabel("reports.filters.quick.thisMonth", "Este mes")}
+        Este mes
       </Button>
       <Button
         type="button"
@@ -153,7 +140,7 @@ export function ReportDateQuickFilters({
         className="rounded-full h-6 px-3"
         onClick={setLast30Days}
       >
-        {safeLabel("reports.filters.quick.last30Days", "Últimos 30 días")}
+        Últimos 30 días
       </Button>
       <Button
         type="button"
@@ -167,7 +154,7 @@ export function ReportDateQuickFilters({
         className="rounded-full h-6 px-3"
         onClick={setThisYear}
       >
-        {safeLabel("reports.filters.quick.thisYear", "Este año")}
+        Este año
       </Button>
     </div>
   )

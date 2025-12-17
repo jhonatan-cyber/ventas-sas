@@ -42,7 +42,6 @@ type SasPrefs = {
   currency: string
   dateFormat: string
   themeColor: string
-  language?: string
   whatsappNumber: string
   companyName?: string
   companyNIT?: string
@@ -66,7 +65,6 @@ export async function readPreferencesAsync(slug: string): Promise<Partial<SasPre
       currency: 'BOB',
       dateFormat: 'dd/MM/yyyy',
       themeColor: 'green',
-      language: 'es',
     }
   }
 
@@ -88,22 +86,9 @@ export async function readPreferencesAsync(slug: string): Promise<Partial<SasPre
           currency: data.configuration.currency || 'BOB',
           dateFormat: data.configuration.dateFormat || 'dd/MM/yyyy',
           themeColor: data.configuration.themeColor || 'green',
-          language: data.configuration.language || 'es',
         }
         // Actualizar caché
         configCache.set(slug, { config, timestamp: Date.now() })
-        // Actualizar caché de idioma también
-        if (typeof window !== 'undefined' && config.language) {
-          try {
-            const { updateLanguageCache } = require('./i18n')
-            updateLanguageCache(slug, config.language)
-          } catch (error) {
-            // Ignorar errores de importación (puede fallar en SSR)
-            if (typeof window !== 'undefined') {
-              console.warn('No se pudo actualizar caché de idioma:', error)
-            }
-          }
-        }
         return config
       }
     }
@@ -113,9 +98,9 @@ export async function readPreferencesAsync(slug: string): Promise<Partial<SasPre
 
   // Fallback a cookies
   try {
-    const raw = document.cookie.split('; ').find(c => c.startsWith(`sas-prefs-${slug}=`))?.split('=')[1]
-    if (raw) {
-      const prefs = JSON.parse(decodeURIComponent(raw))
+    const { getSasPreferences } = require('./cookies')
+    const prefs = getSasPreferences(slug)
+    if (prefs) {
       // Actualizar caché con datos de cookies
       configCache.set(slug, { config: prefs, timestamp: Date.now() })
       return prefs
@@ -128,7 +113,6 @@ export async function readPreferencesAsync(slug: string): Promise<Partial<SasPre
     currency: 'BOB',
     dateFormat: 'dd/MM/yyyy',
     themeColor: 'green',
-    language: 'es',
   }
   configCache.set(slug, { config: defaults, timestamp: Date.now() })
   return defaults
@@ -149,7 +133,6 @@ export function readPreferences(slug: string): Partial<SasPrefs> {
       currency: 'BOB',
       dateFormat: 'dd/MM/yyyy',
       themeColor: 'green',
-      language: 'es',
     }
   }
 
@@ -162,9 +145,9 @@ export function readPreferences(slug: string): Partial<SasPrefs> {
   // Fallback temporal: leer de cookies (solo durante transición)
   // TODO: Eliminar este fallback una vez confirmado que todo funciona
   try {
-    const raw = document.cookie.split('; ').find(c => c.startsWith(`sas-prefs-${slug}=`))?.split('=')[1]
-    if (raw) {
-      const prefs = JSON.parse(decodeURIComponent(raw))
+    const { getSasPreferences } = require('./cookies')
+    const prefs = getSasPreferences(slug)
+    if (prefs) {
       // Actualizar caché
       configCache.set(slug, { config: prefs, timestamp: Date.now() })
       return prefs
@@ -177,7 +160,6 @@ export function readPreferences(slug: string): Partial<SasPrefs> {
     currency: 'BOB',
     dateFormat: 'dd/MM/yyyy',
     themeColor: 'green',
-    language: 'es',
   }
   configCache.set(slug, { config: defaults, timestamp: Date.now() })
   return defaults
@@ -263,7 +245,6 @@ export function readPreferencesFromServer(
     currency: 'BOB',
     dateFormat: 'dd/MM/yyyy',
     themeColor: 'green',
-    language: 'es',
   }
 }
 
@@ -365,4 +346,3 @@ export function formatCurrencyWithPreferencesFromServer(
     maximumFractionDigits: 2,
   }).format(numAmount)
 }
-

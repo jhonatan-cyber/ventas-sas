@@ -253,7 +253,7 @@ class GeolocationService {
     }
 
     // Países de alto riesgo (configurable)
-    const highRiskCountries = process.env.HIGH_RISK_COUNTRIES?.split(',') || []
+    const highRiskCountries = process.env.HIGH_RISK_COUNTRIES?.split(",") || []
     if (geo.countryCode && highRiskCountries.includes(geo.countryCode)) {
       reasons.push(`Conexión desde país de alto riesgo: ${geo.country}`)
       riskLevel = riskLevel === 'low' ? 'medium' : riskLevel

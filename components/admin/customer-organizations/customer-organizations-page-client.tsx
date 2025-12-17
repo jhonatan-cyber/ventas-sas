@@ -193,7 +193,7 @@ export function CustomerOrganizationsPageClient({
         setSelectedCustomer(null)
         setSelectedOrganization("")
         // Disparar evento para recargar datos
-        window.dispatchEvent(new Event('organization-updated'))
+        window.dispatchEvent(new Event("Organization-updated"))
       } else {
         throw new Error(data.error || "Error al agregar cliente")
       }
@@ -232,7 +232,7 @@ export function CustomerOrganizationsPageClient({
           description: "Cliente removido de la organización exitosamente",
         })
         // Disparar evento para recargar datos
-        window.dispatchEvent(new Event('organization-updated'))
+        window.dispatchEvent(new Event("Organization-updated"))
       } else {
         throw new Error(data.error || "Error al remover cliente")
       }

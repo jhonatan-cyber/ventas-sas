@@ -43,7 +43,7 @@ const getPrimaryColor = (): { r: number; g: number; b: number } => {
   if (typeof window === 'undefined') return fallback
 
   try {
-    const dummy = document.createElement('span')
+    const dummy = document.createElement("span") as HTMLSpanElement
     dummy.style.position = 'fixed'
     dummy.style.opacity = '0'
     dummy.style.pointerEvents = 'none'
@@ -148,18 +148,11 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
     // Fallback: leer cookie de preferencias si faltan datos clave
     try {
       if (!companyName || (!companyPhone && !companyWhatsappNumber) || !companyLogo) {
-        const rawCookie =
-          document.cookie
-            .split("; ")
-            .find((c) => c.startsWith(`sas-prefs-${customerSlug}=`))
-            ?.split("=")[1] ||
-          document.cookie
-            .split("; ")
-            .find((c) => c.startsWith(`sas_prefs=`))
-            ?.split("=")[1]
+        const { getSasPreferences, getCookie } = require('./cookies')
+        const parsed = getSasPreferences(customerSlug) || 
+                      (getCookie('sas_prefs') ? JSON.parse(getCookie('sas_prefs')!) : null)
 
-        if (rawCookie) {
-          const parsed = JSON.parse(decodeURIComponent(rawCookie))
+        if (parsed) {
           companyName = companyName || (parsed.companyName || "")
           ownerName = ownerName || (parsed.companyContactName || "")
           companyAddress = companyAddress || (parsed.companyAddress || "")
@@ -451,7 +444,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
 
     // Generar PDF y abrir directamente la vista de impresión
     // Para imprimir, no guardamos en el servidor (eso es solo para exportar)
-    const blob = doc.output('blob')
+    const blob = doc.output("blob")
     const blobUrl = URL.createObjectURL(blob)
     
     // Abrir el PDF en una nueva ventana y llamar a print() automáticamente
@@ -489,7 +482,7 @@ export const generateSalePdfAndPrint = async (saleData: SaleData, customerSlug: 
       }, 2000)
     } else {
       // Si el navegador bloqueó la ventana emergente, usar iframe
-      const iframe = document.createElement('iframe')
+      const iframe = document.createElement("iframe") as HTMLIFrameElement
       iframe.style.display = 'none'
       iframe.src = blobUrl
       document.body.appendChild(iframe)

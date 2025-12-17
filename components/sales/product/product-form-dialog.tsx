@@ -4,7 +4,6 @@ import { SalesProduct, Category } from "@prisma/client";
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { Camera, X, Upload, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -54,10 +53,8 @@ export function ProductFormDialog({
   defaultCategoryId,
   maxBranches,
   onSave,
-}: ProductFormDialogProps) {
-  const t = useTranslations()
-  const pathname = usePathname();
-  const customerSlug = pathname.split('/')[1] || '';
+}: ProductFormDialogProps) {const pathname = usePathname();
+  const customerSlug = pathname.split("/")[1] || '';
   
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
@@ -295,13 +292,13 @@ export function ProductFormDialog({
     e.preventDefault();
 
     if (!name.trim() || !price || !cost) {
-      toast.error(t('form.required'));
+      toast.error("Requerido");
       return;
     }
 
     // Validar que haya categoría seleccionada
     if (!categoryId) {
-      toast.error(t('products.form.categoryRequired'));
+      toast.error("Debe seleccionar una categoría");
       return;
     }
 
@@ -309,7 +306,7 @@ export function ProductFormDialog({
     // Solo validar si el select de sucursal está visible (múltiples sucursales disponibles)
     const shouldShowBranchSelect = isAdmin && branches.length > 0 && !(maxBranches === 1 && branches.length === 1);
     if (isAdmin && shouldShowBranchSelect && !selectedBranchId) {
-      toast.error(t('products.form.branchRequired'));
+      toast.error("Debe seleccionar una sucursal");
       return;
     }
 
@@ -333,12 +330,12 @@ export function ProductFormDialog({
             finalImageUrl = uploadData.imageUrl;
           } else {
             const error = await uploadResponse.json();
-            toast.error(error.error || t('products.form.errorUploadingImage'));
+            toast.error(error.error || "Error al subir la imagen");
             return;
           }
         } catch (error) {
           console.error('Error al subir imagen:', error);
-          toast.error(t('products.form.errorUploadingImage'));
+          toast.error("Error al subir la imagen");
           return;
         }
       }
@@ -404,8 +401,6 @@ export function ProductFormDialog({
       if (isAdmin && selectedBranchId) {
         dataToSave.branchId = selectedBranchId;
       }
-
-      console.log('Datos a enviar:', dataToSave);
       
       // Detener la cámara antes de guardar
       stopScanning();
@@ -445,7 +440,7 @@ export function ProductFormDialog({
       setIsScanning(true);
       
       // Crear video element temporal para el scanning
-      const video = document.createElement("video");
+      const video = document.createElement("video") as HTMLVideoElement;
       video.id = "scanner-video";
       video.srcObject = stream;
       video.setAttribute("muted", "");
@@ -496,7 +491,7 @@ export function ProductFormDialog({
       });
     } catch (error) {
       console.error("Error al acceder a la cámara:", error);
-      toast.error(t('products.form.cameraAccessError'));
+      toast.error("Error al acceder a la cámara");
     }
   };
 
@@ -513,7 +508,7 @@ export function ProductFormDialog({
       setIsLoading(true);
       
       // Mostrar toast de carga
-      loadingToastId = toast.loading(t('products.form.searchingProductInfo'));
+      loadingToastId = toast.loading("Buscando información del producto...");
       
       // Usar la ruta API de Next.js como proxy para evitar CORS
       const response = await fetch('/api/barcode-lookup', {
@@ -547,9 +542,9 @@ export function ProductFormDialog({
           setImagePreview(data.imageUrl);
         }
         
-        toast.success(t('products.form.productInfoLoaded'));
+        toast.success("Información del producto cargada");
       } else {
-        toast.info(t('products.form.productInfoNotFound'));
+        toast.info("No se encontró información del producto");
       }
     } catch (error) {
       console.error("Error al buscar información del producto:", error);
@@ -557,7 +552,7 @@ export function ProductFormDialog({
       if (loadingToastId) {
         toast.dismiss(loadingToastId);
       }
-      toast.error(t('products.form.errorSearchingProductInfo'));
+      toast.error("Error al buscar información del producto");
     } finally {
       setIsLoading(false);
       setIsFetchingProduct(false);
@@ -569,12 +564,12 @@ export function ProductFormDialog({
     const searchTerm = name.trim() || barcode.trim();
     
     if (!searchTerm) {
-      toast.error(t('products.form.nameRequired'));
+      toast.error("El nombre es requerido");
       return;
     }
 
     setIsGeneratingDescription(true);
-    const loadingToastId = toast.loading(t('products.form.generatingDescriptionAI'));
+    const loadingToastId = toast.loading("Generando descripción con IA...");
 
     try {
       const categoryName = categories.find(cat => cat.id === categoryId)?.name || null;
@@ -600,16 +595,12 @@ export function ProductFormDialog({
 
       toast.dismiss(loadingToastId);
 
-      // Log para depuración
-      console.log('Resultado de la API:', result);
-
       if (result.success && result.description) {
         // Siempre reescribir la descripción
         setDescription(result.description);
         
         // Siempre reescribir marca si se encontró
         if (result.brand && typeof result.brand === 'string' && result.brand.trim() !== '') {
-          console.log('Estableciendo marca:', result.brand);
           setBrand(result.brand.trim());
         } else {
           // Si no se encontró marca, limpiar el campo
@@ -618,7 +609,6 @@ export function ProductFormDialog({
         
         // Siempre reescribir modelo si se encontró
         if (result.model && typeof result.model === 'string' && result.model.trim() !== '') {
-          console.log('Estableciendo modelo:', result.model);
           setModel(result.model.trim());
         } else {
           // Si no se encontró modelo, limpiar el campo
@@ -646,19 +636,19 @@ export function ProductFormDialog({
         if (result.imageUrl) foundItems.push("imagen");
         
         if (foundItems.length > 1) {
-          toast.success(t('products.form.infoGenerated') + ': ' + foundItems.join(", "));
+          toast.success("Información generada" + ': ' + foundItems.join(", "));
         } else if (foundItems.length === 1) {
-          toast.success(foundItems[0].charAt(0).toUpperCase() + foundItems[0].slice(1) + ' ' + t('products.form.generatedSuccessfully'));
+          toast.success(foundItems[0].charAt(0).toUpperCase() + foundItems[0].slice(1) + ' ' + "generado exitosamente");
         } else {
-          toast.success(t('products.form.descriptionGeneratedSuccessfully'));
+          toast.success("Descripción generada exitosamente");
         }
       } else {
-        toast.error(result.error || t('products.form.couldNotGenerateDescription'));
+        toast.error(result.error || "No se pudo generar la descripción");
       }
     } catch (error) {
       console.error("Error al generar descripción:", error);
       toast.dismiss(loadingToastId);
-      toast.error(t('products.form.errorGeneratingDescription'));
+      toast.error("Error al generar descripción");
     } finally {
       setIsGeneratingDescription(false);
     }
@@ -671,12 +661,12 @@ export function ProductFormDialog({
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {product ? t('products.edit') : t('products.new')}
+              {product ? "Editar Producto" : "Nuevo Producto"}
             </DialogTitle>
             <DialogDescription>
               {product
-                ? t('products.editDescription')
-                : t('products.newDescription')}
+                ? "Modifica la información del producto existente"
+                : "Completa la información para crear un nuevo producto"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -688,13 +678,13 @@ export function ProductFormDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="barcode">{t('products.form.barcode')}</Label>
+                  <Label htmlFor="barcode">{"Código de barras"}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="barcode"
                       value={barcode}
                       onChange={(e) => setBarcode(e.target.value)}
-                      placeholder={t('products.form.barcode')}
+                      placeholder={"Código de barras"}
                       disabled={isLoading}
                       className="rounded-full flex-1"
                     />
@@ -705,7 +695,7 @@ export function ProductFormDialog({
                         onClick={startScanning}
                         disabled={isLoading}
                         className="rounded-full px-3"
-                        title={t('products.form.scanBarcode')}
+                        title={"Escanear código de barras"}
                       >
                         <Camera className="h-4 w-4" />
                       </Button>
@@ -715,7 +705,7 @@ export function ProductFormDialog({
                         variant="destructive"
                         onClick={stopScanning}
                         className="rounded-full px-3"
-                        title={t('products.form.stopScan')}
+                        title={"Detener escaneo"}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -724,13 +714,13 @@ export function ProductFormDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    {t('form.name')} <span className="text-red-500">*</span>
+                    {"Nombre"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(capitalizeWords(e.target.value))}
-                    placeholder={t('products.form.name')}
+                    placeholder={"Nombre del producto"}
                     required
                     disabled={isLoading}
                     className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
@@ -738,7 +728,7 @@ export function ProductFormDialog({
                 </div>
               </div>
               <div className="space-y-2 flex flex-col items-center md:items-start">
-                <Label className="block w-full">{t('products.form.image')}</Label>
+                <Label className="block w-full">{"Imagen"}</Label>
                 <div className="relative group">
                   <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
                     {imagePreview ? (
@@ -750,7 +740,7 @@ export function ProductFormDialog({
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">{t('products.form.noImage')}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{"Sin imagen"}</span>
                       </div>
                     )}
                     {/* Overlay para el botón cuando hay imagen */}
@@ -781,7 +771,7 @@ export function ProductFormDialog({
                             document.getElementById("product-image-input")?.click();
                           }}
                           disabled={isLoading}
-                          title={t('products.form.changePhoto')}
+                          title={"Cambiar foto"}
                         >
                           <Upload className="h-4 w-4" />
                         </Button>
@@ -815,7 +805,7 @@ export function ProductFormDialog({
                           document.getElementById("product-image-input")?.click()
                         }
                         disabled={isLoading}
-                        title={t('products.form.selectPhoto')}
+                        title={"Seleccionar foto"}
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
@@ -828,23 +818,23 @@ export function ProductFormDialog({
             {/* Marca y Modelo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="brand">{t('products.form.brand')}</Label>
+                <Label htmlFor="brand">{"Marca"}</Label>
                 <Input
                   id="brand"
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  placeholder={t('products.form.brand')}
+                  placeholder={"Marca"}
                   disabled={isLoading}
                   className="rounded-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="model">{t('products.form.model')}</Label>
+                <Label htmlFor="model">{"Modelo"}</Label>
                 <Input
                   id="model"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  placeholder={t('products.form.model')}
+                  placeholder={"Modelo"}
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -853,7 +843,7 @@ export function ProductFormDialog({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="description">{t('products.form.description')}</Label>
+                <Label htmlFor="description">{"Descripción"}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -861,17 +851,17 @@ export function ProductFormDialog({
                   onClick={handleGenerateDescription}
                   disabled={isLoading || isGeneratingDescription || !name.trim()}
                   className="rounded-full text-xs h-7 px-3 gap-1.5"
-                  title={t('products.form.improveDescriptionAI')}
+                  title={"Mejorar descripción con IA"}
                 >
                   <Sparkles className={`h-3 w-3 ${isGeneratingDescription ? 'animate-spin' : ''}`} />
-                  {isGeneratingDescription ? t('products.form.generating') : t('products.form.improveWithAI')}
+                  {isGeneratingDescription ? "Generando..." : "Mejorar con IA"}
                 </Button>
               </div>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('products.form.description') + '...'}
+                placeholder={"Descripción" + '...'}
                 rows={3}
                 disabled={isLoading || isGeneratingDescription}
                 className="rounded-lg"
@@ -882,7 +872,7 @@ export function ProductFormDialog({
             {isAdmin && branches.length > 0 && !(maxBranches === 1 && branches.length === 1) && (
               <div className="space-y-2 w-full">
                 <Label htmlFor="branch">
-                  {t('form.branch')} <span className="text-red-500">*</span>
+                  {"Sucursal"} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={selectedBranchId}
@@ -891,7 +881,7 @@ export function ProductFormDialog({
                   disabled={isLoading}
                 >
                   <SelectTrigger id="branch" className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-                    <SelectValue placeholder={t('products.form.selectBranch')} />
+                    <SelectValue placeholder={"Seleccionar sucursal"} />
                   </SelectTrigger>
                   <SelectContent>
                     {branches.map((branch) => (
@@ -907,7 +897,7 @@ export function ProductFormDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cost">
-                  {t('products.form.cost')} <span className="text-red-500">*</span>
+                  {"Costo"} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="cost"
@@ -916,7 +906,7 @@ export function ProductFormDialog({
                   min="0"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  placeholder={t('common.placeholders.amount')}
+                  placeholder={"Monto"}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -924,7 +914,7 @@ export function ProductFormDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">
-                  {t('products.form.priceSale')} <span className="text-red-500">*</span>
+                  {"Precio de venta"} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="price"
@@ -933,7 +923,7 @@ export function ProductFormDialog({
                   min="0"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder={t('common.placeholders.amount')}
+                  placeholder={"Monto"}
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -943,7 +933,7 @@ export function ProductFormDialog({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stock">{t('products.form.initialStock')}</Label>
+                <Label htmlFor="stock">{"Stock inicial"}</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -956,7 +946,7 @@ export function ProductFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minStock">{t('products.form.minStock')}</Label>
+                <Label htmlFor="minStock">{"Stock mínimo"}</Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -973,14 +963,14 @@ export function ProductFormDialog({
             {/* Campo de punto de reorden oculto temporalmente */}
             <div className="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="reorderPoint">{t('products.form.reorderPoint') || 'Punto de Reorden'}</Label>
+                <Label htmlFor="reorderPoint">{'Punto de Reorden'}</Label>
                 <Input
                   id="reorderPoint"
                   type="number"
                   min="0"
                   value={reorderPoint}
                   onChange={(e) => setReorderPoint(e.target.value)}
-                  placeholder={t('products.form.reorderPointPlaceholder') || 'Opcional: stock para reordenar'}
+                  placeholder={'Opcional: stock para reordenar'}
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -998,7 +988,7 @@ export function ProductFormDialog({
               disabled={isLoading}
               className="w-full sm:w-auto rounded-full"
             >
-              {t('action.cancel')}
+              {"Cancelar"}
             </Button>
             <Button
               type="submit"
@@ -1006,7 +996,7 @@ export function ProductFormDialog({
               disabled={isLoading || !name.trim() || !price || !cost}
               className="w-full sm:w-auto rounded-full"
             >
-              {isLoading ? t('message.saving') : product ? t('action.update') : t('action.add')}
+              {isLoading ? "Guardando..." : product ? "Actualizar" : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

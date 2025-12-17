@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticación
     const cookieStore = await cookies()
-    const token = cookieStore.get('admin-auth-token')?.value
+    const token = cookieStore.get("admin-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'growth'
-    const days = parseInt(searchParams.get('days') || '90', 10)
+    const type = searchParams.get("Type") || 'growth'
+    const days = parseInt(searchParams.get("Days") || '90', 10)
 
     let data
 

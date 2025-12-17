@@ -25,7 +25,7 @@ export default async function OrganizationLandingPage({
   
   // Si la organización NO existe, redirigir a la raíz
   if (!organization) {
-    redirect('/')
+    redirect("/")
   }
 
   // Validar que tenga al menos una relación activa con un cliente activo
@@ -34,7 +34,7 @@ export default async function OrganizationLandingPage({
   )
 
   if (activeCustomerOrgs.length === 0) {
-    redirect('/')
+    redirect("/")
   }
 
   // Verificar si existe al menos una suscripción activa en la tabla Subscription
@@ -60,7 +60,7 @@ export default async function OrganizationLandingPage({
 
   // Si no tiene suscripción activa ni registrada, redirigir a la raíz
   if (!activeSubscription && !hasAnySubscription) {
-    redirect('/')
+    redirect("/")
   }
 
   // Si tuvo suscripciones pero ninguna está activa, mostrar página de mantenimiento

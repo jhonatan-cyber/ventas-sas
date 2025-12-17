@@ -1,6 +1,7 @@
 "use client"
 
 import { memo, ReactNode } from 'react'
+
 import { TableRow } from '@/components/ui/table'
 
 interface OptimizedTableRowProps {
@@ -16,7 +17,7 @@ interface OptimizedTableRowProps {
 export const OptimizedTableRow = memo(function OptimizedTableRow({
   children,
   className,
-  id
+  id: _id
 }: OptimizedTableRowProps) {
   return (
     <TableRow className={className}>

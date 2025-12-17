@@ -31,7 +31,7 @@ export class SasJWTService {
     ensureSecret()
     
     // Intentar usar secret rotado, si no usar fallback
-    const rotatedSecret = await JwtSecretRotation.getActiveSecret('sas')
+    const rotatedSecret = await JwtSecretRotation.getActiveSecret("sas")
       .catch(() => null)
     const secret: string = rotatedSecret || SAS_JWT_SECRET || 'dev-sas-secret'
 

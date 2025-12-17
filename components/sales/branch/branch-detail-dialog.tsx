@@ -11,7 +11,6 @@ import {
   XCircle,
   User,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState, useEffect, useCallback } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -66,8 +65,8 @@ export function BranchDetailDialog({
   branch,
   customerSlug,
 }: BranchDetailDialogProps) {
-  const t = useTranslations()
-  const [usuarios, setUsuarios] = useState<UsuarioAsociado[]>([]);
+
+const [usuarios, setUsuarios] = useState<UsuarioAsociado[]>([]);
   const [isLoadingUsuarios, setIsLoadingUsuarios] = useState(false);
 
   const loadUsuarios = useCallback(async () => {
@@ -118,10 +117,10 @@ export function BranchDetailDialog({
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2 text-center sm:text-left">
             <DialogTitle className="text-base sm:text-lg">
-              {t('branches.details.title')}
+              {"Title"}
             </DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
-              {t('branches.details.description')}
+              {"Description"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -131,7 +130,7 @@ export function BranchDetailDialog({
           {/* Información de la Sucursal */}
           <div className="space-y-3">
             <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              {t('branches.details.generalInfo')}
+              {"General Info"}
             </h3>
             <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-[#2a2a2a]">
               <div className="space-y-3">
@@ -152,12 +151,12 @@ export function BranchDetailDialog({
                     {branch.isActive ? (
                       <>
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        {t('branches.stats.active')}
+                        {"Active"}
                       </>
                     ) : (
                       <>
                         <XCircle className="h-3 w-3 mr-1" />
-                        {t('branches.stats.inactive')}
+                        {"Inactive"}
                       </>
                     )}
                   </Badge>
@@ -198,14 +197,14 @@ export function BranchDetailDialog({
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {branch._count?.usuariosSas || 0}
                       </span>{" "}
-                      {t('branches.details.users')}
+                      {"Users"}
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3 w-3" />
                       <span>
-                        {t('branches.details.created')}:{" "}
+                        {"Created"}:{" "}
                         {formatDateWithPreferences(
                           branch.createdAt,
                           customerSlug
@@ -216,7 +215,7 @@ export function BranchDetailDialog({
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3 w-3" />
                         <span>
-                          {t('branches.details.updated')}:{" "}
+                          {"Updated"}:{" "}
                           {formatDateWithPreferences(
                             branch.updatedAt,
                             customerSlug
@@ -236,19 +235,19 @@ export function BranchDetailDialog({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                {t('branches.details.associatedUsers')}
+                {"Associated Users"}
               </h3>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
-                  {t('branches.details.total')}:{" "}
+                  {"Total"}:{" "}
                   <span className="font-semibold">{usuarios.length}</span>
                 </span>
                 <span className="text-green-600 dark:text-green-400">
-                  {t('branches.details.active')}:{" "}
+                  {"Active"}:{" "}
                   <span className="font-semibold">{usuariosActivos}</span>
                 </span>
                 <span className="text-gray-500 dark:text-gray-500">
-                  {t('branches.details.inactive')}:{" "}
+                  {"Inactive"}:{" "}
                   <span className="font-semibold">{usuariosInactivos}</span>
                 </span>
               </div>
@@ -259,7 +258,7 @@ export function BranchDetailDialog({
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t('message.loading')}
+                    {"Cargando..."}
                   </p>
                 </div>
               </div>
@@ -270,7 +269,7 @@ export function BranchDetailDialog({
                     <User className="h-8 w-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 font-medium">
-                    {t('branches.details.noUsers')}
+                    {"No Users"}
                   </p>
                 </div>
               </div>
@@ -308,7 +307,7 @@ export function BranchDetailDialog({
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                               <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
-                                {fullName || t('branches.details.noName')}
+                                {fullName || "Sin nombre"}
                               </p>
                               <Badge
                                 className={
@@ -317,7 +316,7 @@ export function BranchDetailDialog({
                                     : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 w-fit text-xs"
                                 }
                               >
-                                {usuario.isActive ? t('branches.details.active') : t('branches.details.inactive')}
+                                {usuario.isActive ? "Active" : "Inactive"}
                               </Badge>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
@@ -367,7 +366,7 @@ export function BranchDetailDialog({
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto rounded-full"
           >
-            {t('action.close')}
+            {"Cerrar"}
           </Button>
         </DialogFooter>
       </DialogContent>

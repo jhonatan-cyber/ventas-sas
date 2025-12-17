@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { SalesCustomerService } from '@/lib/services/sales/sales-customer-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { updateSalesCustomerSchema } from '@/lib/validators/sales-validators'
 
@@ -20,6 +22,9 @@ export async function GET(
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar permiso para ver cliente
+    await requirePermission(request, slug, PERMISSIONS.CLIENTES_VER)
 
     const customer = await SalesCustomerService.getCustomerById(id)
     
@@ -41,6 +46,9 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de editar clientes
+    await requirePermission(request, slug, PERMISSIONS.CLIENTES_EDITAR)
     // Obtener organizationId
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
 
@@ -102,6 +110,9 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de eliminar clientes
+    await requirePermission(request, slug, PERMISSIONS.CLIENTES_ELIMINAR)
     // Obtener organizationId
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
 

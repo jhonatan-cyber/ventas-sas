@@ -1,6 +1,5 @@
 "use client"
 import { Category } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -37,7 +36,6 @@ interface CategoryFormDialogProps {
 }
 
 export function CategoryFormDialog({ open, onOpenChange, category, onSave }: CategoryFormDialogProps) {
-    const t = useTranslations()
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [isLoading, setIsLoading] = useState(false)
@@ -77,12 +75,12 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                 <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
                     <DialogHeader className="px-0 py-0 space-y-2">
                         <DialogTitle>
-                            {category ? t('categories.edit') : t('categories.new')}
+                            {category ? 'Editar Categoría' : 'Nueva Categoría'}
                         </DialogTitle>
                         <DialogDescription>
                             {category
-                                ? t('categories.editDescription')
-                                : t('categories.newDescription')}
+                                ? 'Modifica los datos de la categoría'
+                                : 'Completa los datos para crear una nueva categoría'}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -92,13 +90,13 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                {t('categories.form.name')} <span className="text-red-500">*</span>
+                                Nombre <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(capitalizeWords(e.target.value))}
-                                placeholder={t('categories.form.namePlaceholder')}
+                                placeholder="Ej: Electrónicos, Ropa, Alimentos..."
                                 required
                                 disabled={isLoading}
                                 className="rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white"
@@ -106,13 +104,13 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                {t('categories.form.description')}
+                                Descripción
                             </Label>
                             <Textarea
                                 id="description"
                                 value={description}
                                 onChange={(e) => setDescription(capitalizeFirst(e.target.value))}
-                                placeholder={t('categories.form.descriptionPlaceholder')}
+                                placeholder="Descripción opcional de la categoría..."
                                 rows={3}
                                 disabled={isLoading}
                                 className="rounded-xl bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-white resize-none"
@@ -129,7 +127,7 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                             disabled={isLoading}
                             className="w-full sm:w-auto rounded-full"
                         >
-                            {t('action.cancel')}
+                            Cancelar
                         </Button>
                         <Button
                             type="submit"
@@ -137,7 +135,7 @@ export function CategoryFormDialog({ open, onOpenChange, category, onSave }: Cat
                             disabled={isLoading || !name.trim()}
                             className="w-full sm:w-auto rounded-full"
                         >
-                            {isLoading ? t('message.saving') : category ? t('action.update') : t('action.add')}
+                            {isLoading ? 'Guardando...' : category ? 'Actualizar' : 'Agregar'}
                         </Button>
                     </DialogFooter>
                 </form>

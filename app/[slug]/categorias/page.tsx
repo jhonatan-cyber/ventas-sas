@@ -41,17 +41,18 @@ export default async function CategoriesPage({
     }
   }
 
-  const currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
+  const _currentUserBranchId = currentUser?.sucursalId || currentUser?.sucursal?.id || null
   const roleName = currentUser?.rol?.nombre?.toLowerCase() || ""
-  const isAdmin = roleName.includes("administrador") || roleName === "admin"
+  const _isAdmin = roleName.includes("administrador") || roleName === "admin"
 
   // Obtener categorías
-  // Si es administrador, mostrar todas las categorías
-  // Si no es administrador, mostrar solo categorías que tienen productos en su sucursal
-  const branchId = isAdmin ? null : currentUserBranchId
-  const result = await CategoryService.getAllCategories(organizationId, 0, 1000, undefined, undefined, branchId)
+  // Todos los usuarios (admin y no-admin) pueden ver todas las categorías
+  // Las categorías son necesarias para crear productos, no solo para ver productos existentes
+  const result = await CategoryService.getAllCategories(organizationId, 0, 1000, undefined, undefined, null)
   const categories = result.categories
 
-  return <CategoriesPageClient initialCategories={categories} customerSlug={slug} />
+  return (
+    <CategoriesPageClient initialCategories={categories} customerSlug={slug} />
+  )
 }
 

@@ -5,7 +5,6 @@
 "use client"
 
 import { Package, AlertTriangle, RefreshCw, ArrowRightLeft } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { InventoryAdjustments } from "./inventory-adjustments"
@@ -20,17 +19,16 @@ interface InventoryPageClientProps {
 }
 
 export function InventoryPageClient({ customerSlug }: InventoryPageClientProps) {
-  const t = useTranslations()
-  const [activeTab, setActiveTab] = useState("alerts")
+const [activeTab, setActiveTab] = useState("alerts")
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       <div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-          {t('inventory.title') || 'Inventario Avanzado'}
+          Inventario Avanzado
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          {t('inventory.description') || 'Gestiona alertas, movimientos, transferencias y ajustes de inventario'}
+          Gestiona alertas, movimientos, transferencias y ajustes de inventario
         </p>
       </div>
 
@@ -38,19 +36,19 @@ export function InventoryPageClient({ customerSlug }: InventoryPageClientProps) 
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 rounded-full">
           <TabsTrigger value="alerts" className="rounded-full">
             <AlertTriangle className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('inventory.tabs.alerts') || 'Alertas'}</span>
+            <span className="hidden sm:inline">Alertas</span>
           </TabsTrigger>
           <TabsTrigger value="movements" className="rounded-full">
             <RefreshCw className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('inventory.tabs.movements') || 'Movimientos'}</span>
+            <span className="hidden sm:inline">Movimientos</span>
           </TabsTrigger>
           <TabsTrigger value="transfers" className="rounded-full">
             <ArrowRightLeft className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('inventory.tabs.transfers') || 'Transferencias'}</span>
+            <span className="hidden sm:inline">Transferencias</span>
           </TabsTrigger>
           <TabsTrigger value="adjustments" className="rounded-full">
             <Package className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('inventory.tabs.adjustments') || 'Ajustes'}</span>
+            <span className="hidden sm:inline">Ajustes</span>
           </TabsTrigger>
         </TabsList>
 

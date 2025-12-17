@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
 import { PermissionSasService } from '@/lib/services/sales/permission-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 // POST - Asignar todos los permisos a los roles Administrador
 export async function POST(
@@ -18,6 +20,9 @@ export async function POST(
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Requiere permiso para gestionar permisos
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.PERMISOS_MANAGE)
 
     // Obtener todos los permisos registrados del sistema SAS
     const allPermissions = await PermissionSasService.getAllPermissions(organizationId)

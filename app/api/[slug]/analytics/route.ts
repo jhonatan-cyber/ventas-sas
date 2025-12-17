@@ -20,10 +20,10 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'sales'
-    const period = (searchParams.get('period') as 'daily' | 'weekly' | 'monthly') || 'daily'
-    const days = parseInt(searchParams.get('days') || '30', 10)
-    const limit = parseInt(searchParams.get('limit') || '10', 10)
+    const type = searchParams.get("type") || 'sales'
+    const period = (searchParams.get("period") as 'daily' | 'weekly' | 'monthly') || 'daily'
+    const days = parseInt(searchParams.get("days") || '30', 10)
+    const limit = parseInt(searchParams.get("limit") || '10', 10)
 
     let data
 

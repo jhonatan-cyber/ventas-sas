@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SessionMonitoringService } from '@/lib/services/admin/session-monitoring-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {

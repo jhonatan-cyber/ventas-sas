@@ -69,7 +69,7 @@ export class SaleService {
 
     let sequence = 1
     if (lastSale) {
-      const lastSequence = parseInt(lastSale.saleNumber.split('-').pop() || '0', 10)
+      const lastSequence = parseInt(lastSale.saleNumber.split("-").pop() || '0', 10)
       sequence = lastSequence + 1
     }
 

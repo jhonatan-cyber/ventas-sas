@@ -8,7 +8,7 @@ interface BranchesHeaderProps {
   title: string
   description: string
   newButtonText?: string
-  onNewClick: () => void
+  onNewClick?: () => void
   showNewButton?: boolean
 }
 

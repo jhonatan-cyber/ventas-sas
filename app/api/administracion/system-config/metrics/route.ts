@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const days = parseInt(searchParams.get('days') || '30')
+    const days = parseInt(searchParams.get("Days") || '30')
 
     const [metrics, usageStats] = await Promise.all([
       SystemConfigService.getSystemMetrics(),

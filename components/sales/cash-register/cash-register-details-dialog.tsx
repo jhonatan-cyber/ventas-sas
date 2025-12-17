@@ -1,7 +1,6 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { CashRegisterWithRelations } from "./types"
@@ -35,9 +34,7 @@ const getUserFullName = (user?: { nombre: string; apellido: string } | null) => 
   return parts.length > 0 ? parts.join(" ") : "-"
 }
 
-export function CashRegisterDetailsDialog({ open, onOpenChange, cashRegister, showBranchInfo = true }: CashRegisterDetailsDialogProps) {
-  const t = useTranslations()
-  const isOpen = cashRegister?.isOpen ?? false
+export function CashRegisterDetailsDialog({ open, onOpenChange, cashRegister, showBranchInfo = true }: CashRegisterDetailsDialogProps) {const isOpen = cashRegister?.isOpen ?? false
   const openedAt = cashRegister?.lastOpenAt || cashRegister?.createdAt
   const closedAt = cashRegister?.lastCloseAt
 
@@ -191,7 +188,7 @@ export function CashRegisterDetailsDialog({ open, onOpenChange, cashRegister, sh
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-gray-500 dark:text-gray-400">Sucursal</span>
                   <span className="font-medium text-gray-900 dark:text-white text-right">
-                    {cashRegister.branch?.name || t('common.noBranch')}
+                    {cashRegister.branch?.name || "Sin sucursal"}
                   </span>
                 </div>
               )}

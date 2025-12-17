@@ -21,7 +21,7 @@ export function UsersCards({ users, onEdit, onView, onToggleStatus, onDelete }: 
   // Función para dividir el nombre completo en nombre y apellido
   const getFullNameParts = (fullName: string | null) => {
     if (!fullName) return { firstName: '', lastName: '' }
-    const parts = fullName.split(' ')
+    const parts = fullName.split(" ")
     return {
       firstName: parts[0] || '',
       lastName: parts.slice(1).join(' ') || ''

@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
+
 import { getCachedOrganization, getCachedPreferences } from '@/lib/cache/api-cache'
 
 interface OrganizationData {
@@ -24,13 +25,13 @@ export function OrganizationProvider({ children, slug }: OrganizationProviderPro
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!slug) return
 
     try {
       setLoading(true)
       setError(null)
-      
+
       // Cargar ambos en paralelo usando caché
       const [orgData, prefData] = await Promise.all([
         getCachedOrganization(slug).catch(() => null),
@@ -45,11 +46,11 @@ export function OrganizationProvider({ children, slug }: OrganizationProviderPro
     } finally {
       setLoading(false)
     }
-  }
+  }, [slug])
 
   useEffect(() => {
     loadData()
-  }, [slug])
+  }, [slug, loadData])
 
   const value: OrganizationData = {
     organization,

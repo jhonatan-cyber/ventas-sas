@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { CategoryService } from '@/lib/services/sales/category-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 // GET - Obtener categoría por ID
 export async function GET(
@@ -17,6 +19,9 @@ export async function GET(
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar permiso para ver categoría
+    await requirePermission(request, slug, PERMISSIONS.CATEGORIAS_LISTAR)
 
     const category = await CategoryService.getCategoryById(id)
     
@@ -43,6 +48,8 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
+    // Verificar permiso de editar categorías
+    await requirePermission(request, slug, PERMISSIONS.CATEGORIAS_EDITAR)
     
     let body: any
     try {
@@ -84,6 +91,8 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+    // Verificar permiso de eliminar categorías
+    await requirePermission(request, slug, PERMISSIONS.CATEGORIAS_ELIMINAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {

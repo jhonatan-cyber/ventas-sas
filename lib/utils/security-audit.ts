@@ -78,9 +78,9 @@ export class SecurityAuditLogger {
     }
 
     return {
-      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      referer: request.headers.get('referer') || undefined,
+      ip: request.headers.get("X-forwarded-for")?.split(",")[0] || request.headers.get("X-real-ip") || 'unknown',
+      userAgent: request.headers.get("User-agent") || 'unknown',
+      referer: request.headers.get("Referer") || undefined,
     }
   }
 

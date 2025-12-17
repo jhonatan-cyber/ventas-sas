@@ -1,7 +1,6 @@
 "use client";
 
 import { Search, XCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { ExpenseBranchSummary } from "./types";
@@ -49,7 +48,6 @@ export function ExpensesFilters({
   showBranchFilter = true,
   customerSlug,
 }: ExpensesFiltersProps) {
-  const t = useTranslations()
   const [searchValue, setSearchValue] = useState("");
   const isMobile = useIsMobile();
 
@@ -77,7 +75,7 @@ export function ExpensesFilters({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="expense-search"
-            placeholder={t('common.placeholders.searchExpenses')}
+            placeholder="Buscar gastos..."
             className="pl-10 pr-10 w-full rounded-full"
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -104,18 +102,18 @@ export function ExpensesFilters({
           </Label>
           <Select value={selectedBranch} onValueChange={onBranchChange}>
             <SelectTrigger className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.allBranches')}>
+              <SelectValue placeholder="Todas las sucursales">
                 {branchLabel || "Todas las sucursales"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('common.placeholders.allBranches')}</SelectItem>
+              <SelectItem value="all">Todas las sucursales</SelectItem>
               {branches.map((branch) => (
                 <SelectItem
                   key={branch.id || "default"}
                   value={branch.id || "none"}
                 >
-                  {branch.name || t('branches.details.noName')}
+                  {branch.name || 'Sin nombre'}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -152,7 +150,7 @@ export function ExpensesFilters({
               <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:hidden">
                 <span className="text-sm text-gray-900 dark:text-white">
                   {(() => {
-                    const [year, month, day] = startDate.split('-').map(Number)
+                    const [year, month, day] = startDate.split("-").map(Number)
                     const localDate = new Date(year, month - 1, day)
                     return formatDateWithPreferences(localDate, customerSlug)
                   })()}
@@ -189,7 +187,7 @@ export function ExpensesFilters({
               <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:hidden">
                 <span className="text-sm text-gray-900 dark:text-white">
                   {(() => {
-                    const [year, month, day] = endDate.split('-').map(Number)
+                    const [year, month, day] = endDate.split("-").map(Number)
                     const localDate = new Date(year, month - 1, day)
                     return formatDateWithPreferences(localDate, customerSlug)
                   })()}
@@ -210,7 +208,7 @@ export function ExpensesFilters({
           defaultValue="10"
         >
           <SelectTrigger className="w-full rounded-full">
-            <SelectValue placeholder={t('common.placeholders.perPage')} />
+            <SelectValue placeholder="Por página" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="5">5 por página</SelectItem>

@@ -192,7 +192,7 @@ export class UsuarioSasService {
       updateData.password = await PasswordService.hashPassword(data.password)
       
       // Invalidar sesiones al cambiar contraseña
-      const { SessionManagement } = await import('@/lib/auth/session-management')
+      const { SessionManagement } = await import("@/lib/auth/session-management")
       const usuario = await prisma.usuarioSas.findUnique({
         where: { id },
         select: { organizationId: true }

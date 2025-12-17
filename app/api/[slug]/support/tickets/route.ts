@@ -13,19 +13,19 @@ function isFile(entry: FormDataEntryValue): entry is File {
 }
 
 async function parseTicketPayload(request: NextRequest) {
-  const contentType = request.headers.get('content-type') || ''
+  const contentType = request.headers.get("Content-type") || ''
 
   if (contentType.includes('multipart/form-data')) {
     const formData = await request.formData()
     const attachmentFiles = formData.getAll('attachments').filter(isFile)
 
     const rawData = {
-      title: formData.get('title')?.toString() ?? '',
-      description: formData.get('description')?.toString() ?? '',
-      priority: formData.get('priority')?.toString() ?? undefined,
-      category: formData.get('category')?.toString() ?? undefined,
-      contactEmail: formData.get('contactEmail')?.toString() ?? undefined,
-      contactPhone: formData.get('contactPhone')?.toString() ?? undefined,
+      title: formData.get("Title")?.toString() ?? '',
+      description: formData.get("Description")?.toString() ?? '',
+      priority: formData.get("Priority")?.toString() ?? undefined,
+      category: formData.get("Category")?.toString() ?? undefined,
+      contactEmail: formData.get("Contact Email")?.toString() ?? undefined,
+      contactPhone: formData.get("Contact Phone")?.toString() ?? undefined,
     }
 
     const validation = createSupportTicketSchema.safeParse(rawData)
@@ -56,7 +56,7 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
@@ -75,10 +75,10 @@ export async function GET(
     }
 
     const searchParams = request.nextUrl.searchParams
-    const page = Number(searchParams.get('page') || '1')
-    const pageSize = Number(searchParams.get('pageSize') || '10')
-    const statusParam = searchParams.get('status') || undefined
-    const search = searchParams.get('search') || undefined
+    const page = Number(searchParams.get("Page") || '1')
+    const pageSize = Number(searchParams.get("Page Size") || '10')
+    const statusParam = searchParams.get("Status") || undefined
+    const search = searchParams.get("Search") || undefined
 
     const { tickets, total } = await SupportTicketSasService.listTickets(organizationId, {
       status: (statusParam as any) || 'all',
@@ -112,7 +112,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
 
     if (!token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })

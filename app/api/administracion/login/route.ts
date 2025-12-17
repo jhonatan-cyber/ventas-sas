@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!rateLimitResult.allowed) {
       logger.security('Login admin bloqueado por rate limit', {
         email,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        ip: request.headers.get("X-forwarded-for") || request.headers.get("X-real-ip") || 'unknown',
       })
       
       // Registrar rate limit excedido en auditoría

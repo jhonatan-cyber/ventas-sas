@@ -1,8 +1,13 @@
 import { RoleSas } from "@prisma/client"
 
 import { 
+  getModuleActions, 
+  getConfiguredModules, 
+  generatePermissionName, 
+  STANDARD_ACTIONS 
+} from "@/lib/config/sas-module-actions"
+import { 
   getSasModuleIds, 
-  getSasModules, 
   getSasModuleLabelsMap 
 } from "@/lib/config/sas-modules"
 import { prisma } from "@/lib/prisma"
@@ -30,33 +35,45 @@ export interface PermissionSasStats {
 const SAS_MODULES = getSasModuleIds()
 
 export class PermissionSasService {
-  // Módulos disponibles del sistema SAS
+  // Módulos disponibles del sistema SAS (solo los que tienen configuración de acciones)
   static getAvailableModules(): Array<{ id: string; label: string }> {
-    return getSasModules()
+    const moduleLabels = getSasModuleLabelsMap()
+    const configuredModules = getConfiguredModules()
+    
+    return configuredModules.map(moduleId => ({
+      id: moduleId,
+      label: moduleLabels[moduleId] || moduleId
+    }))
   }
 
-  // Acciones disponibles
-  static getAvailableActions(): Array<{ id: string; label: string }> {
-    return [
-      { id: 'listar', label: 'Listar' },
-      { id: 'ver_detalles', label: 'Ver Detalles' },
-      { id: 'crear', label: 'Crear' },
-      { id: 'editar', label: 'Editar' },
-      { id: 'activar', label: 'Activar' },
-      { id: 'desactivar', label: 'Desactivar' },
-      { id: 'eliminar', label: 'Eliminar' },
-    ]
+  // Acciones disponibles para un módulo específico
+  static getAvailableActions(moduleId?: string): Array<{ id: string; label: string; description: string }> {
+    if (moduleId) {
+      return getModuleActions(moduleId)
+    }
+    
+    // Si no se especifica módulo, devolver todas las acciones estándar
+    return STANDARD_ACTIONS
   }
 
   // Generar nombre de permiso a partir de módulo y acción
   static generatePermissionName(module: string, action: string): string {
-    return `${module}_${action}`
+    return generatePermissionName(module, action)
   }
 
   // Generar descripción de permiso
   static generatePermissionDescription(module: string, action: string): string {
     const moduleLabels = getSasModuleLabelsMap()
+    const moduleActions = getModuleActions(module)
+    
+    const actionInfo = moduleActions.find(a => a.id === action)
+    const moduleLabel = moduleLabels[module] || module
 
+    if (actionInfo) {
+      return `${actionInfo.description} - ${moduleLabel}`
+    }
+
+    // Fallback para acciones no configuradas
     const actionLabels: Record<string, string> = {
       'listar': 'Ver lista de',
       'ver_detalles': 'Ver detalles de',
@@ -67,9 +84,7 @@ export class PermissionSasService {
       'eliminar': 'Eliminar',
     }
 
-    const moduleLabel = moduleLabels[module] || module
     const actionLabel = actionLabels[action] || action
-
     return `${actionLabel} ${moduleLabel.toLowerCase()}`
   }
 

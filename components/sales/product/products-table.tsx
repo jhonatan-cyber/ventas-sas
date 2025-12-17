@@ -28,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences";
-import { getProductDescription } from "@/lib/utils/product-description";
+;
 
 // Función para truncar nombre manteniendo el nombre más corto disponible
 function truncateProductName(name: string, maxLength: number = 40): string {
@@ -175,20 +175,7 @@ export function ProductsTable({
                 const truncatedName = truncateProductName(product.name);
                 const brand = product.brand?.trim() ?? "";
                 const model = product.model?.trim() ?? "";
-                // Obtener descripción según el idioma actual
-                const currentLanguage = (() => {
-                  try {
-                    const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-                    return prefs?.language || 'es';
-                  } catch {
-                    return 'es';
-                  }
-                })();
-                const description = getProductDescription(
-                  product.description,
-                  product.descriptionTranslations,
-                  currentLanguage
-                )?.trim() ?? "";
+                const description = (product.description || "").trim();
                 const hasDescription = description.length > 0;
                 const truncatedDescription = hasDescription
                   ? truncateByWords(description, 6)

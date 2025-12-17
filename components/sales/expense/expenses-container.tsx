@@ -1,7 +1,6 @@
 "use client";
 
 import { DollarSign } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { ExpensesCards } from "./expenses-cards";
@@ -12,7 +11,7 @@ import { ExpensesTable } from "./expenses-table";
 import { ExpenseBranchSummary, SalesExpenseWithRelations } from "./types";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { getTranslatableText } from "@/lib/utils/translatable-text";
+;
 
 interface ExpensesContainerProps {
   expenses: SalesExpenseWithRelations[];
@@ -39,7 +38,6 @@ export function ExpensesContainer({
   onView,
   customerSlug,
 }: ExpensesContainerProps) {
-  const t = useTranslations()
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [branchFilter, setBranchFilter] = useState<string>("all");
@@ -90,7 +88,7 @@ export function ExpensesContainer({
     }
 
     if (branchFilter === "none") {
-      setBranchFilterLabel(t('common.noBranch'));
+      setBranchFilterLabel('Sin sucursal');
       return;
     }
 
@@ -98,26 +96,13 @@ export function ExpensesContainer({
       branchOptions.find((branch) => branch.id === branchFilter)?.name ||
       "Sucursal seleccionada";
     setBranchFilterLabel(branchName);
-  }, [branchFilter, branchOptions, t]);
+  }, [branchFilter, branchOptions]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((expense) => {
       if (searchTerm.trim() !== "") {
         const searchLower = searchTerm.toLowerCase();
-        // Obtener descripción traducida para búsqueda
-        const currentLanguage = (() => {
-          try {
-            const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-            return prefs?.language || 'es';
-          } catch {
-            return 'es';
-          }
-        })();
-        const description = getTranslatableText(
-          expense.description,
-          (expense as any).descriptionTranslations,
-          currentLanguage
-        ) || expense.description;
+        const description = expense.description || '';
         const matchesSearch =
           expense.name.toLowerCase().includes(searchLower) ||
           description.toLowerCase().includes(searchLower) ||

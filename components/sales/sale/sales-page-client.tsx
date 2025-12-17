@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -13,6 +12,7 @@ import { SalesHeader } from "./sales-header"
 import { SalesSaleWithRelations } from "./types"
 
 import { useSaleActions } from "@/hooks/sales/sale/use-sale-actions"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 
 interface SalesBranchSummary {
@@ -91,7 +91,9 @@ const normalizeSale = (sale: any): SalesSaleWithRelations => ({
 })
 
 export function SalesPageClient({ initialSales, customerSlug, currentUser = null, branches = [], maxBranches, hasOpenCashRegister = false }: SalesPageClientProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [sales, setSales] = useState<SalesSaleWithRelations[]>(() => initialSales.map(normalizeSale))
   const [isLoading, setIsLoading] = useState(false)
   const [detailSale, setDetailSale] = useState<SalesSaleWithRelations | null>(null)
@@ -119,19 +121,18 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
     }
   }, [customerSlug])
 
-  // Verificar cajas abiertas al montar el componente
+  // Verificar cajas abiertas al montar el componente y configurar intervalo
   useEffect(() => {
+    // Verificar inmediatamente
     checkOpenCashRegisters()
-  }, [checkOpenCashRegisters])
-
-  // Verificar periódicamente cada 5 segundos
-  useEffect(() => {
+    
+    // Configurar intervalo para verificar cada 30 segundos (reducido de 5 segundos)
     const interval = setInterval(() => {
       checkOpenCashRegisters()
-    }, 5000) // Verificar cada 5 segundos
+    }, 30000) // Verificar cada 30 segundos para reducir carga
 
     return () => clearInterval(interval)
-  }, [checkOpenCashRegisters])
+  }, [customerSlug, checkOpenCashRegisters]) // Incluir checkOpenCashRegisters como dependencia
 
   const loadSales = useCallback(async () => {
     try {
@@ -214,7 +215,7 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
         throw new Error(error.error || "Error al anular la venta")
       }
 
-      toast.success(t('sales.cancelSuccess'))
+      toast.success("Venta anulada correctamente")
       closeCancelDialog()
 
       // Recargar ventas
@@ -232,23 +233,30 @@ export function SalesPageClient({ initialSales, customerSlug, currentUser = null
     })
   }, [sales])
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateSale = hasPermission('ventas_crear')
+  const canEditSale = hasPermission('ventas_editar')
+  const canDeleteSale = hasPermission('ventas_eliminar')
+  const canCancelSale = hasPermission('ventas_anular')
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       <SalesHeader
-        title={t('sales.title')}
-        description={t('sales.description')}
-        newButtonText={t('sales.create')}
-        onNewClick={handleCreateClick}
-        disabled={!hasOpenCashRegisterState}
+        title="Ventas"
+        description="Gestiona las ventas de tu negocio"
+        newButtonText="Nueva venta"
+        onNewClick={canCreateSale ? handleCreateClick : undefined}
+        disabled={!hasOpenCashRegisterState || !canCreateSale}
+        showNewButton={canCreateSale}
       />
 
       <SalesContainer
         sales={sortedSales}
         isLoading={isLoading}
-        onEdit={openEditDialog}
-        onDelete={openDeleteDialog}
+        onEdit={canEditSale ? openEditDialog : undefined}
+        onDelete={canDeleteSale ? openDeleteDialog : undefined}
         onViewDetails={openDetailsDialog}
-        onCancel={openCancelDialog}
+        onCancel={canCancelSale ? openCancelDialog : undefined}
         branches={branches}
         maxBranches={maxBranches}
       />

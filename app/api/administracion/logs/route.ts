@@ -19,58 +19,58 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     // Paginación
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '50')
     const skip = (page - 1) * pageSize
 
     // Filtros
     const filters: SecurityLogFilters = {}
 
-    const typeParam = searchParams.get('type')
+    const typeParam = searchParams.get("Type")
     if (typeParam) {
       if (typeParam.includes(',')) {
-        filters.type = typeParam.split(',') as SecurityLogType[]
+        filters.type = typeParam.split(",") as SecurityLogType[]
       } else {
         filters.type = typeParam as SecurityLogType
       }
     }
 
-    const userId = searchParams.get('userId')
+    const userId = searchParams.get("User Id")
     if (userId) {
       filters.userId = userId
     }
 
-    const organizationId = searchParams.get('organizationId')
+    const organizationId = searchParams.get("Organization Id")
     if (organizationId) {
       filters.organizationId = organizationId
     }
 
-    const customerId = searchParams.get('customerId')
+    const customerId = searchParams.get("Customer Id")
     if (customerId) {
       filters.customerId = customerId
     }
 
-    const ipAddress = searchParams.get('ipAddress')
+    const ipAddress = searchParams.get("Ip Address")
     if (ipAddress) {
       filters.ipAddress = ipAddress
     }
 
-    const successParam = searchParams.get('success')
+    const successParam = searchParams.get("Success")
     if (successParam !== null && successParam !== '') {
       filters.success = successParam === 'true'
     }
 
-    const startDate = searchParams.get('startDate')
+    const startDate = searchParams.get("Start Date")
     if (startDate) {
       filters.startDate = new Date(startDate)
     }
 
-    const endDate = searchParams.get('endDate')
+    const endDate = searchParams.get("End Date")
     if (endDate) {
       filters.endDate = new Date(endDate)
     }
 
-    const search = searchParams.get('search')
+    const search = searchParams.get("Search")
     if (search) {
       filters.search = search
     }
@@ -79,10 +79,10 @@ export async function GET(request: NextRequest) {
     const { logs, total } = await SecurityLogsService.getSecurityLogs(filters, skip, pageSize)
 
     // Obtener estadísticas si se solicita
-    const includeStats = searchParams.get('includeStats') === 'true'
+    const includeStats = searchParams.get("Include Stats") === 'true'
     let stats = null
     if (includeStats) {
-      const days = parseInt(searchParams.get('statsDays') || '30')
+      const days = parseInt(searchParams.get("Stats Days") || '30')
       stats = await SecurityLogsService.getSecurityLogStats(filters, days)
     }
 

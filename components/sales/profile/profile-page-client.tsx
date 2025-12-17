@@ -8,7 +8,6 @@ import {
   Lock,
   Edit2,
 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -42,7 +41,6 @@ interface ProfilePageClientProps {
 }
 
 export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClientProps) {
-  const t = useTranslations()
   const [user, setUser] = useState(initialUser)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -128,10 +126,10 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
       {/* Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-          {t('profile.title') || 'Mi Perfil'}
+          Mi Perfil
         </h1>
         <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
-          {t('profile.description') || 'Gestiona tu información personal y configuración de cuenta'}
+          Gestiona tu información personal y configuración de cuenta
         </p>
       </div>
 
@@ -142,9 +140,9 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>{t('profile.personalInfo.title') || 'Información Personal'}</CardTitle>
+                  <CardTitle>Información Personal</CardTitle>
                   <CardDescription>
-                    {t('profile.personalInfo.description') || 'Actualiza tu información personal y de contacto'}
+                    Actualiza tu información personal y de contacto
                   </CardDescription>
                 </div>
                 {!isEditing && (
@@ -155,7 +153,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                     onClick={() => setIsEditing(true)}
                   >
                     <Edit2 className="h-4 w-4 mr-2" />
-                    {t('action.edit') || 'Editar'}
+                    Editar
                   </Button>
                 )}
               </div>
@@ -163,7 +161,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('form.email') || 'Email'}</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -174,7 +172,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ci">{t('form.ci') || 'CI (Cédula de Identidad)'}</Label>
+                  <Label htmlFor="ci">CI (Cédula de Identidad)</Label>
                   <Input
                     id="ci"
                     className="rounded-full"
@@ -184,7 +182,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nombre">{t('form.name') || 'Nombre'}</Label>
+                  <Label htmlFor="nombre">Nombre</Label>
                   <Input
                     id="nombre"
                     className="rounded-full"
@@ -194,7 +192,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="apellido">{t('form.lastName') || 'Apellido'}</Label>
+                  <Label htmlFor="apellido">Apellido</Label>
                   <Input
                     id="apellido"
                     className="rounded-full"
@@ -204,7 +202,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{t('form.phone') || 'Teléfono'}</Label>
+                  <Label htmlFor="phone">Teléfono</Label>
                   <Input
                     id="phone"
                     className="rounded-full"
@@ -215,7 +213,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address">{t('form.address') || 'Dirección'}</Label>
+                <Label htmlFor="address">Dirección</Label>
                 <Input
                   id="address"
                   className="rounded-full"
@@ -232,7 +230,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                     disabled={isLoading}
                     className="rounded-full"
                   >
-                    {isLoading ? (t('message.saving') || 'Guardando...') : (t('action.update') || 'Actualizar')}
+                    {isLoading ? "Guardando..." : "Actualizar"}
                   </Button>
                   <Button
                     variant="outline"
@@ -240,7 +238,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                     disabled={isLoading}
                     className="rounded-full"
                   >
-                    {t('action.cancel') || 'Cancelar'}
+                    Cancelar
                   </Button>
                 </div>
               )}
@@ -250,9 +248,9 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
           {/* Seguridad */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.security.title') || 'Seguridad'}</CardTitle>
+              <CardTitle>Seguridad</CardTitle>
               <CardDescription>
-                {t('profile.security.description') || 'Gestiona tu contraseña y configuración de seguridad'}
+                Gestiona tu contraseña y configuración de seguridad
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -260,14 +258,14 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                 <div className="flex items-center gap-3">
                   <Lock className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   <div>
-                    <p className="font-medium">{t('profile.security.password') || 'Contraseña'}</p>
+                    <p className="font-medium">Contraseña</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {t('profile.security.lastUpdate') || 'Última actualización:'}{" "}
+                      Última actualización:{" "}
                       {user.passwordChangedAt
                         ? new Date(
-                            user.passwordChangedAt
-                          ).toLocaleDateString("es-BO")
-                        : t('profile.security.never') || 'Nunca'}
+                          user.passwordChangedAt
+                        ).toLocaleDateString("es-BO")
+                        : "Nunca"}
                     </p>
                   </div>
                 </div>
@@ -276,7 +274,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   className="rounded-full"
                   onClick={() => setIsPasswordDialogOpen(true)}
                 >
-                  {t('profile.security.changePassword') || 'Cambiar Contraseña'}
+                  Cambiar Contraseña
                 </Button>
               </div>
             </CardContent>
@@ -287,7 +285,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.accountInfo.title') || 'Información de la Cuenta'}</CardTitle>
+              <CardTitle>Información de la Cuenta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-center">
@@ -324,9 +322,9 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                 <div className="flex items-center gap-3">
                   <User className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium">{t('profile.accountInfo.role') || 'Rol'}</p>
+                    <p className="text-sm font-medium">Rol</p>
                     <p className="text-xs text-gray-500">
-                      {user.rol?.nombre || t('profile.accountInfo.noRole') || 'Sin rol'}
+                      {user.rol?.nombre || "Sin rol"}
                     </p>
                   </div>
                 </div>
@@ -335,7 +333,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   <div className="flex items-center gap-3">
                     <Shield className="h-4 w-4 text-gray-500" />
                     <div>
-                      <p className="text-sm font-medium">{t('profile.accountInfo.branch') || 'Sucursal'}</p>
+                      <p className="text-sm font-medium">Sucursal</p>
                       <p className="text-xs text-gray-500">
                         {user.sucursal.name}
                       </p>
@@ -346,9 +344,9 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                 <div className="flex items-center gap-3">
                   <Shield className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium">{t('profile.accountInfo.status') || 'Estado'}</p>
+                    <p className="text-sm font-medium">Estado</p>
                     <p className="text-xs text-gray-500">
-                      {user.isActive ? (t('status.active') || 'Activo') : (t('status.inactive') || 'Inactivo')}
+                      {user.isActive ? "Activo" : "Inactivo"}
                     </p>
                   </div>
                 </div>
@@ -356,7 +354,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium">{t('profile.accountInfo.createdAt') || 'Cuenta creada'}</p>
+                    <p className="text-sm font-medium">Cuenta creada</p>
                     <p className="text-xs text-gray-500">
                       {new Date(user.createdAt).toLocaleDateString("es-BO")}
                     </p>
@@ -367,7 +365,7 @@ export function ProfilePageClient({ initialUser, customerSlug }: ProfilePageClie
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-gray-500" />
                     <div>
-                      <p className="text-sm font-medium">{t('profile.accountInfo.lastLogin') || 'Último acceso'}</p>
+                      <p className="text-sm font-medium">Último acceso</p>
                       <p className="text-xs text-gray-500">
                         {new Date(user.lastLoginAt).toLocaleDateString(
                           "es-BO"

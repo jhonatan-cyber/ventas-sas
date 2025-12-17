@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear sesión en BD
-    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || undefined
-    const userAgent = request.headers.get('user-agent') || undefined
+    const ipAddress = request.headers.get("X-forwarded-for")?.split(",")[0] || request.headers.get("X-real-ip") || undefined
+    const userAgent = request.headers.get("User-agent") || undefined
     const deviceInfo = SessionManagement.getDeviceInfo(request)
 
     const sessionToken = await SessionManagement.createSession({

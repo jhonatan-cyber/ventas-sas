@@ -24,7 +24,7 @@ export async function DELETE(
     }
 
     // Verificar autenticación de administrador
-    const adminToken = request.cookies.get('admin-auth-token')?.value
+    const adminToken = request.cookies.get("admin-auth-token")?.value
     if (!adminToken) {
       return NextResponse.json(
         { error: 'No autorizado' },

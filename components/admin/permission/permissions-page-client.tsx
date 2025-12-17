@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -17,9 +16,7 @@ interface PermissionsPageClientProps {
   initialStats: PermissionStats
 }
 
-export function PermissionsPageClient({ initialPermissions, initialStats }: PermissionsPageClientProps) {
-  const t = useTranslations()
-  const [openDialog, setOpenDialog] = useState(false)
+export function PermissionsPageClient({ initialPermissions, initialStats }: PermissionsPageClientProps) {const [openDialog, setOpenDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [selectedPermission, setSelectedPermission] = useState<PermissionInfo | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -76,7 +73,7 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       }
 
       const data = await response.json()
-      toast.success(t('permissions.deleteSuccess'), {
+      toast.success("Delete Success", {
         description: data.message,
       })
 
@@ -85,8 +82,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       await reloadData()
     } catch (error: any) {
       console.error("Error al eliminar permiso:", error)
-      toast.error(t('permissions.deleteError'), {
-        description: error.message || t('permissions.deleteErrorDescription'),
+      toast.error("Delete Error", {
+        description: error.message || "Delete Error Description",
       })
     } finally {
       setIsDeleting(false)
@@ -126,7 +123,7 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       }
 
       const data = await response.json()
-      toast.success(t('permissions.toggleStatusSuccess'), {
+      toast.success("Toggle Status Success", {
         description: data.message,
       })
 
@@ -134,8 +131,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       await reloadData()
     } catch (error: any) {
       console.error("Error al cambiar estado del permiso:", error)
-      toast.error(t('permissions.toggleStatusError'), {
-        description: error.message || t('permissions.toggleStatusErrorDescription'),
+      toast.error("Toggle Status Error", {
+        description: error.message || "Toggle Status Error Description",
       })
     }
   }
@@ -145,8 +142,8 @@ export function PermissionsPageClient({ initialPermissions, initialStats }: Perm
       <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título */}
         <PermissionHeader
-          title={t('permissions.title')}
-          description={t('permissions.description')}
+          title={"Permisos"}
+          description={"Description"}
           stats={stats}
           onNewClick={handleNewClick}
           onAssignAll={reloadData}

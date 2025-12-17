@@ -9,7 +9,7 @@
 
 import dynamic from 'next/dynamic'
 
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
+const SwaggerUI = dynamic(() => import("swagger-ui-react"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center min-h-screen">

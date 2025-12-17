@@ -2,7 +2,6 @@
 
 import { ArrowLeft, Download, Building2, TrendingUp, DollarSign, Percent } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -23,8 +22,6 @@ interface BranchesReportClientProps {
 
 export function BranchesReportClient({ customerSlug }: BranchesReportClientProps) {
   const router = useRouter()
-  const t = useTranslations()
-
   const [report, setReport] = useState<BranchPerformanceReport[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [startDate, setStartDate] = useState("")
@@ -53,21 +50,21 @@ export function BranchesReportClient({ customerSlug }: BranchesReportClientProps
 
   const handleExport = useCallback(async () => {
     if (!report) {
-      toast.error(t("reports.export.noData"))
+      toast.error("No hay datos para exportar")
       return
     }
 
     try {
-      toast.loading(t("reports.export.generating"))
+      toast.loading("Generando reporte...")
       await exportBranchesReportToPDF(report, customerSlug, startDate, endDate)
       toast.dismiss()
-      toast.success(t("reports.export.success"))
+      toast.success("Reporte exportado exitosamente")
     } catch (error) {
       toast.dismiss()
       console.error("Error al exportar PDF:", error)
-      toast.error(t("reports.export.error"))
+      toast.error("Error al exportar reporte")
     }
-  }, [report, customerSlug, startDate, endDate, t])
+  }, [report, customerSlug, startDate, endDate])
 
   if (isLoading) {
     return (

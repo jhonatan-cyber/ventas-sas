@@ -1,7 +1,7 @@
 "use client";
 
 import { Settings, Building2, CreditCard, ExternalLink } from "lucide-react";
-import { useTranslations } from "next-intl";
+;
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
@@ -140,9 +140,7 @@ export function ConfiguracionClient({
   customer,
   activeSubscription,
   planPrice,
-}: ConfiguracionClientProps) {
-  const t = useTranslations()
-  const [activeTab, setActiveTab] = useState("empresa");
+}: ConfiguracionClientProps) {const [activeTab, setActiveTab] = useState("empresa");
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [currentWebsite, setCurrentWebsite] = useState<string | null>(
@@ -168,7 +166,7 @@ export function ConfiguracionClient({
     autoLoad: true,
     onError: (error) => {
       console.error("Error en configuración:", error);
-      toast.error(t('config.error'));
+      toast.error("Error");
     },
   });
 
@@ -239,7 +237,7 @@ export function ConfiguracionClient({
           cleanUpdates as Partial<typeof configuration>
         );
         if (!success) {
-          toast.error(t('config.error'));
+          toast.error("Error");
           setTimeout(() => {
             reload();
           }, 1000);
@@ -247,7 +245,7 @@ export function ConfiguracionClient({
         saveTimeoutRef.current = null;
       }, DEBOUNCE_DELAY);
     },
-    [configuration, updateConfig, reload, t]
+    [configuration, updateConfig, reload]
   );
 
   // Cleanup del timeout al desmontar
@@ -345,7 +343,7 @@ export function ConfiguracionClient({
 
       // Actualizar estado y UI
       if (website) setCurrentWebsite(website);
-      window.dispatchEvent(new CustomEvent("organization-updated"));
+      window.dispatchEvent(new CustomEvent("Organization-updated"));
       toast.success("Información de la empresa guardada correctamente");
 
       // Actualizar preview del logo
@@ -430,10 +428,10 @@ export function ConfiguracionClient({
     <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          {t('config.title')}
+          {"Title"}
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-          {t('config.sections.preferences')}
+          {"Preferences"}
         </p>
       </div>
 
@@ -444,21 +442,21 @@ export function ConfiguracionClient({
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-[#0d0d0d] rounded-md px-4 py-2"
           >
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('nav.configuration')}</span>
+            <span className="hidden sm:inline">{"Configuration"}</span>
           </TabsTrigger>
           <TabsTrigger
             value="preferencias"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-[#0d0d0d] rounded-md px-4 py-2"
           >
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('config.sections.preferences')}</span>
+            <span className="hidden sm:inline">{"Preferences"}</span>
           </TabsTrigger>
           <TabsTrigger
             value="empresa"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-[#0d0d0d] rounded-md px-4 py-2"
           >
             <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('config.sections.company')}</span>
+            <span className="hidden sm:inline">{"Company"}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -468,44 +466,44 @@ export function ConfiguracionClient({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                {t('config.plan.title')}
+                {"Title"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {activeSubscription ? (
                 <div className="text-sm text-gray-800 dark:text-gray-200 space-y-2">
                   <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="font-semibold">{t('config.plan.plan')}:</span>
+                    <span className="font-semibold">{"Plan"}:</span>
                     <span>{activeSubscription.plan?.name ?? "—"}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="font-semibold">{t('config.plan.status')}:</span>
+                    <span className="font-semibold">{"Status"}:</span>
                     <span className="capitalize">
                       {activeSubscription.status}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span className="font-semibold">{t('config.plan.expires')}:</span>
+                    <span className="font-semibold">{"Expires"}:</span>
                     <span>
                       {activeSubscription.endDate
                         ? new Date(
                           activeSubscription.endDate
                         ).toLocaleDateString()
-                        : t('config.plan.noDate')}
+                        : "No Date"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="font-semibold">{t('config.plan.period')}:</span>
+                    <span className="font-semibold">{"Period"}:</span>
                     <span>
                       {activeSubscription.billingPeriod === "yearly"
-                        ? t('config.plan.yearly')
-                        : t('config.plan.monthly')}
+                        ? "Yearly"
+                        : "Monthly"}
                     </span>
                   </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('config.plan.noActivePlan')}
+                  {"No Active Plan"}
                 </p>
               )}
               <div className="pt-4">
@@ -524,7 +522,7 @@ export function ConfiguracionClient({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                {t('config.sections.preferences')}
+                {"Preferences"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -532,7 +530,7 @@ export function ConfiguracionClient({
                 {/* Fila de 3 selects en modo PC */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="currency">{t('config.preferences.currency')}</Label>
+                    <Label htmlFor="currency">{"Currency"}</Label>
                     <select
                       id="currency"
                       name="currency"
@@ -559,12 +557,12 @@ export function ConfiguracionClient({
                       <option value="PEN">PEN - Sol peruano</option>
                     </select>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.preferences.currencyNote')}
+                      {"Currency Note"}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dateFormat">{t('config.preferences.dateFormat')}</Label>
+                    <Label htmlFor="dateFormat">{"Date Format"}</Label>
                     <select
                       id="dateFormat"
                       name="dateFormat"
@@ -597,13 +595,13 @@ export function ConfiguracionClient({
                       <option value="dd/MM/yy">dd/MM/yy (Ej: 25/12/24)</option>
                     </select>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.preferences.dateFormatNote')}
+                      {"Date Format Note"}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="whatsappCountryCode">
-                      {t('config.preferences.phoneCountryCode')}
+                      {"Phone Country Code"}
                     </Label>
                     <select
                       id="whatsappCountryCode"
@@ -646,12 +644,12 @@ export function ConfiguracionClient({
                       <option value="+91">+91 IN - India</option>
                     </select>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.preferences.phoneCodeNote')}
+                      {"Phone Code Note"}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="language">{t('config.preferences.language')}</Label>
+                    <Label htmlFor="language">{"Language"}</Label>
                     <select
                       id="language"
                       name="language"
@@ -675,18 +673,18 @@ export function ConfiguracionClient({
                       disabled={isLoadingConfig}
                       className="w-full border rounded-full px-3 py-2 bg-gray-50 dark:bg-[#2a2a2a] text-gray-900 dark:text-gray-100"
                     >
-                      <option value="es">{t('language.es')}</option>
-                      <option value="en">{t('language.en')}</option>
-                      <option value="pt">{t('language.pt')}</option>
+                      <option value="es">{"Es"}</option>
+                      <option value="en">{"En"}</option>
+                      <option value="pt">{"Pt"}</option>
                     </select>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.preferences.languageNote')}
+                      {"Language Note"}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t('config.preferences.themeColor')}</Label>
+                  <Label>{"Theme Color"}</Label>
                   <select
                     name="themeColor"
                     value={getValue("themeColor") || "green"}
@@ -720,7 +718,7 @@ export function ConfiguracionClient({
                     ))}
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('config.preferences.themeColorNote')}
+                    {"Theme Color Note"}
                   </p>
                   <div className="mt-2 space-y-1">
                     <Label>Vista previa</Label>
@@ -740,7 +738,7 @@ export function ConfiguracionClient({
 
                 <div className="pt-4 border-t border-gray-200 dark:border-[#2a2a2a]">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                    {t('config.preferences.autoSave')}
+                    {"Auto Save"}
                   </p>
                 </div>
               </form>
@@ -756,13 +754,13 @@ export function ConfiguracionClient({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  {t('config.sections.company')}
+                  {"Company"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>{t('config.company.name')}</Label>
+                    <Label>{"Name"}</Label>
                     <Input
                       name="companyName"
                       className="rounded-full bg-gray-50 dark:bg-[#2a2a2a] cursor-not-allowed"
@@ -775,11 +773,11 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('config.company.taxId')}</Label>
+                    <Label>{"Tax Id"}</Label>
                     <Input
                       name="companyNIT"
                       className="rounded-full"
@@ -808,7 +806,7 @@ export function ConfiguracionClient({
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('config.company.phone')}</Label>
+                    <Label>{"Phone"}</Label>
                     <Input
                       name="companyPhone"
                       className="rounded-full"
@@ -816,14 +814,14 @@ export function ConfiguracionClient({
                       defaultValue={phoneData.number}
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.phoneNote')}
+                      {"Phone Note"}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>{t('config.company.address')}</Label>
+                    <Label>{"Address"}</Label>
                     <Input
                       name="companyAddress"
                       className="rounded-full"
@@ -832,7 +830,7 @@ export function ConfiguracionClient({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('config.company.website')}</Label>
+                    <Label>{"Website"}</Label>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center flex-1 border rounded-full overflow-hidden bg-gray-50 dark:bg-[#2a2a2a]">
                         <span className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-[#2a2a2a]">
@@ -865,7 +863,7 @@ export function ConfiguracionClient({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t('config.company.logo')}</Label>
+                  <Label>{"Logo"}</Label>
                   <div className="flex items-center gap-4 p-4 border border-gray-200 dark:border-[#2a2a2a] rounded-lg bg-gray-50 dark:bg-[#151515]">
                     <div
                       id="companyLogoPreview"
@@ -888,7 +886,7 @@ export function ConfiguracionClient({
                 </div>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {t('config.company.saveInBrowser')}
+                  {"Save In Browser"}
                 </p>
 
                 <div className="flex justify-center pt-4 border-t border-gray-200 dark:border-[#2a2a2a]">
@@ -897,7 +895,7 @@ export function ConfiguracionClient({
                     disabled={isSaving}
                     className="rounded-full px-6"
                   >
-                    {isSaving ? t('config.company.updating') : t('config.company.updateInfo')}
+                    {isSaving ? "Updating" : "Update Info"}
                   </Button>
                 </div>
               </CardContent>
@@ -908,13 +906,13 @@ export function ConfiguracionClient({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  {t('config.company.owner')}
+                  {"Owner"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>{t('config.company.ownerName')}</Label>
+                    <Label>{"Owner Name"}</Label>
                     <Input
                       name="ownerName"
                       className="rounded-full bg-gray-50 dark:bg-[#2a2a2a] cursor-not-allowed"
@@ -923,11 +921,11 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('form.lastName')}</Label>
+                    <Label>{"Last Name"}</Label>
                     <Input
                       name="ownerLastName"
                       className="rounded-full bg-gray-50 dark:bg-[#2a2a2a] cursor-not-allowed"
@@ -936,7 +934,7 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -949,11 +947,11 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t('config.company.ownerEmail')}</Label>
+                    <Label>{"Owner Email"}</Label>
                     <Input
                       name="ownerEmail"
                       className="rounded-full bg-gray-50 dark:bg-[#2a2a2a] cursor-not-allowed"
@@ -962,7 +960,7 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -975,7 +973,7 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -988,7 +986,7 @@ export function ConfiguracionClient({
                       disabled
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('config.company.notEditable')}
+                      {"Not Editable"}
                     </p>
                   </div>
                 </div>

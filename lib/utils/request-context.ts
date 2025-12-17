@@ -14,9 +14,9 @@ import { generateCorrelationId } from './logger'
 export function getCorrelationId(request: NextRequest): string {
   // Buscar en headers (X-Request-ID, X-Correlation-ID, X-Trace-ID)
   const correlationId = 
-    request.headers.get('x-request-id') ||
-    request.headers.get('x-correlation-id') ||
-    request.headers.get('x-trace-id') ||
+    request.headers.get("X-request-id") ||
+    request.headers.get("X-correlation-id") ||
+    request.headers.get("X-trace-id") ||
     generateCorrelationId()
   
   return correlationId
@@ -27,10 +27,10 @@ export function getCorrelationId(request: NextRequest): string {
  */
 export function getRequestContext(request: NextRequest) {
   const correlationId = getCorrelationId(request)
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-             request.headers.get('x-real-ip') || 
+  const ip = request.headers.get("X-forwarded-for")?.split(",")[0]?.trim() || 
+             request.headers.get("X-real-ip") || 
              'unknown'
-  const userAgent = request.headers.get('user-agent') || 'unknown'
+  const userAgent = request.headers.get("User-agent") || 'unknown'
   const method = request.method
   const url = request.url
   const pathname = new URL(url).pathname

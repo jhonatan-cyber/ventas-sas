@@ -12,7 +12,7 @@ import { logger } from '@/lib/utils/logger'
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticación de administrador
-    const adminToken = request.cookies.get('admin-auth-token')?.value
+    const adminToken = request.cookies.get("admin-auth-token")?.value
     if (!adminToken) {
       return NextResponse.json(
         { error: 'No autorizado' },

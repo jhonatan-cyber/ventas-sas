@@ -118,8 +118,8 @@ export async function checkRateLimit(
  * Genera un identificador único para rate limiting basado en IP y otros factores
  */
 export function getRateLimitKey(request: NextRequest, additionalIdentifier?: string): string {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? request.headers.get('x-real-ip') ?? 'unknown'
-  const userAgent = request.headers.get('user-agent') ?? 'unknown'
+  const ip = request.headers.get("X-forwarded-for")?.split(",")[0] ?? request.headers.get("X-real-ip") ?? 'unknown'
+  const userAgent = request.headers.get("User-agent") ?? 'unknown'
   
   if (additionalIdentifier) {
     return `rate_limit:${additionalIdentifier}:${ip}`

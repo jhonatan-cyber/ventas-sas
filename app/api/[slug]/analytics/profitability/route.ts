@@ -29,8 +29,8 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const start = searchParams.get('start')
-    const end = searchParams.get('end')
+    const start = searchParams.get("Start")
+    const end = searchParams.get("End")
 
     const dateRange = start && end
       ? { start: new Date(start), end: new Date(end) }

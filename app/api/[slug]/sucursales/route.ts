@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { BranchService } from '@/lib/services/sales/branch-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug, getMaxBranchesByOrganizationId } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createBranchSchema } from '@/lib/validators/sales-validators'
 
@@ -15,15 +17,18 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const status = searchParams.get("Status") || undefined
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar permiso para listar/consultar sucursales
+    await requirePermission(request, slug, PERMISSIONS.SUCURSALES_LISTAR)
 
     const skip = (page - 1) * pageSize
 
@@ -75,6 +80,9 @@ export async function POST(
     }
 
     const validatedData = validation.data
+
+    // Verificar permiso para crear sucursal
+    await requirePermission(request, slug, PERMISSIONS.SUCURSALES_CREAR)
 
     // Verificar límite de sucursales del plan
     const maxBranches = await getMaxBranchesByOrganizationId(organizationId)

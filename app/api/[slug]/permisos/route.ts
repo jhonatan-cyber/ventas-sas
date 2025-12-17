@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { PermissionSasService } from '@/lib/services/sales/permission-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 // GET - Obtener todos los permisos
 export async function GET(
@@ -17,6 +19,9 @@ export async function GET(
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar que el usuario tenga permiso para gestionar permisos
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.PERMISOS_MANAGE)
 
     const permissions = await PermissionSasService.getAllPermissions(organizationId)
     return NextResponse.json(permissions)
@@ -32,6 +37,9 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
+
+    // Verificar permiso para gestionar permisos
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.PERMISOS_MANAGE)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -73,7 +81,7 @@ export async function POST(
 
     // Preparar permisos para crear
     const permissionsToCreate = permissions.map((permName: string) => {
-      const parts = permName.split('_')
+      const parts = permName.split("_")
       const permModule = parts[0] || module
       const permAction = parts.slice(1).join('_') || 'unknown'
       

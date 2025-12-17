@@ -28,11 +28,11 @@ function decodeSasSession(raw?: string | null) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const system = searchParams.get('system') // 'admin' | 'sas'
-    const slug = searchParams.get('slug') // Para SAS
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '20')
-    const isRead = searchParams.get('isRead') === 'true' ? true : searchParams.get('isRead') === 'false' ? false : undefined
+    const system = searchParams.get("System") // 'admin' | 'sas'
+    const slug = searchParams.get("Slug") // Para SAS
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '20')
+    const isRead = searchParams.get("Is Read") === 'true' ? true : searchParams.get("Is Read") === 'false' ? false : undefined
 
     const cookieStore = await cookies()
     const filters: any = {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (system === 'admin') {
-      const token = cookieStore.get('admin-auth-token')?.value
+      const token = cookieStore.get("admin-auth-token")?.value
       if (!token) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
       filters.userId = payload.userId
     } else if (system === 'sas' && slug) {
-      const session = decodeSasSession(cookieStore.get('sas-session')?.value)
+      const session = decodeSasSession(cookieStore.get("sas-session")?.value)
       if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
@@ -104,14 +104,14 @@ export async function PATCH(
 
     if (markAll) {
       const { searchParams } = new URL(request.url)
-      const system = searchParams.get('system')
-      const slug = searchParams.get('slug')
+      const system = searchParams.get("System")
+      const slug = searchParams.get("Slug")
 
       const cookieStore = await cookies()
       const filters: any = {}
 
       if (system === 'admin') {
-        const token = cookieStore.get('admin-auth-token')?.value
+        const token = cookieStore.get("admin-auth-token")?.value
         if (!token) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -123,7 +123,7 @@ export async function PATCH(
 
         filters.userId = payload.userId
       } else if (system === 'sas' && slug) {
-        const session = decodeSasSession(cookieStore.get('sas-session')?.value)
+        const session = decodeSasSession(cookieStore.get("sas-session")?.value)
         if (!session) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

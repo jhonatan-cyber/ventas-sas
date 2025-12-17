@@ -1,14 +1,15 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
+
 
 import { DeletePermissionSasDialog } from "./delete-permission-sas-dialog"
 import { PermissionSasFormDialog } from "./permission-sas-form-dialog"
 import { PermissionsSasContainer } from "./permissions-sas-container"
 
 import { PermissionSasHeader } from "@/components/sales/permission/permission-sas-header"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 import { PermissionSasInfo, PermissionSasStats } from "@/lib/services/sales/permission-sas-service"
 
 interface PermissionsSasPageClientProps {
@@ -19,7 +20,9 @@ interface PermissionsSasPageClientProps {
 }
 
 export function PermissionsSasPageClient({ initialPermissions, initialStats, customerSlug, maxBranches }: PermissionsSasPageClientProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [openDialog, setOpenDialog] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [selectedPermission, setSelectedPermission] = useState<PermissionSasInfo | null>(null)
@@ -77,7 +80,7 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       }
 
       const data = await response.json()
-      toast.success(t('permissions.sas.deleteSuccess'), {
+      toast.success('Permiso eliminado correctamente', {
         description: data.message,
       })
 
@@ -86,8 +89,8 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       await reloadData()
     } catch (error: any) {
       console.error("Error al eliminar permiso:", error)
-      toast.error(t('permissions.sas.deleteError'), {
-        description: error.message || t('permissions.sas.deleteErrorDescription'),
+      toast.error('Error al eliminar permiso', {
+        description: error.message || 'No se pudo eliminar el permiso',
       })
     } finally {
       setIsDeleting(false)
@@ -127,7 +130,7 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       }
 
       const data = await response.json()
-      toast.success(t('permissions.sas.toggleStatusSuccess'), {
+      toast.success('Estado del permiso actualizado', {
         description: data.message,
       })
 
@@ -135,29 +138,36 @@ export function PermissionsSasPageClient({ initialPermissions, initialStats, cus
       await reloadData()
     } catch (error: any) {
       console.error("Error al cambiar estado del permiso:", error)
-      toast.error(t('permissions.sas.toggleStatusError'), {
-        description: error.message || t('permissions.sas.toggleStatusErrorDescription'),
+      toast.error('Error al cambiar estado', {
+        description: error.message || 'No se pudo cambiar el estado del permiso',
       })
     }
   }
+
+  // Verificar permisos para mostrar botones de acciones
+  const canCreatePermission = hasPermission('permisos_crear')
+  const _canEditPermission = false
+  const canDeletePermission = hasPermission('permisos_eliminar')
+  const canTogglePermissionStatus = hasPermission('permisos_activar') || hasPermission('permisos_desactivar')
 
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6 overflow-x-hidden max-w-full">
       {/* Header con título */}
       <PermissionSasHeader
-        title={t('permissions.title')}
-        description={t('permissions.description')}
+        title="Gestión de Permisos"
+        description="Administra los permisos del sistema y su asignación a roles"
         stats={stats}
-        onNewClick={handleNewClick}
+        onNewClick={canCreatePermission ? handleNewClick : undefined}
         customerSlug={customerSlug}
         onAssignAll={reloadData}
+        showNewButton={canCreatePermission}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
       <PermissionsSasContainer
         permissions={permissions}
-        onDelete={handleDeleteClick}
-        onToggleStatus={handleToggleStatus}
+        onDelete={canDeletePermission ? handleDeleteClick : undefined}
+        onToggleStatus={canTogglePermissionStatus ? handleToggleStatus : undefined}
       />
 
       {/* Modal de registro de permisos */}

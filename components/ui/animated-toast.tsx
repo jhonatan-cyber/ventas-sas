@@ -2,7 +2,8 @@
 
 import { m, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
-import { ReactNode, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+
 import { cn } from '@/lib/utils'
 
 interface ToastProps {

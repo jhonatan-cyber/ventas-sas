@@ -82,7 +82,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSave }: PlanFormDia
     try {
       // Validar que al menos un período esté activo
       if (!hasMonthly && !hasYearly) {
-        alert("Debes activar al menos un período (Mensual o Anual)")
+        alert("Debes activar al menos un período ( Mensual o  Anual)")
         setIsLoading(false)
         return
       }

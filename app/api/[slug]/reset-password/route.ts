@@ -92,7 +92,7 @@ export async function POST(
     }
 
     // Verificar que el usuario esté activo
-    if (!resetToken.user.isActive || resetToken.user.deletedAt) {
+    if (!resetToken.user || !resetToken.user.isActive || resetToken.user.deletedAt) {
       return NextResponse.json(
         { error: 'Usuario no activo' },
         { status: 400 }
@@ -103,6 +103,13 @@ export async function POST(
     const hashedPassword = await PasswordService.hashPassword(password)
 
     // Actualizar la contraseña del usuario
+    if (!resetToken.userId) {
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 400 }
+      )
+    }
+
     await prisma.usuarioSas.update({
       where: { id: resetToken.userId },
       data: {

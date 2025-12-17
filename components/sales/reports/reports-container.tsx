@@ -3,7 +3,6 @@
 
 import { ShoppingCart, TrendingDown, Package, Users, DollarSign, Receipt, BarChart3, TrendingUp, Sparkles, Building2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -20,11 +19,11 @@ interface ReportCard {
 }
 
 // Función para obtener reportes básicos (para empresas con una sola sucursal)
-const getBasicReports = (t: any): ReportCard[] => [
+const getBasicReports = (): ReportCard[] => [
   {
     id: 'general',
-    title: t('reports.reports.general.title'),
-    description: t('reports.reports.general.description'),
+    title: "Reporte General",
+    description: "Resumen completo del negocio",
     icon: DollarSign,
     bgGradient: 'from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10',
     iconBg: 'bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700',
@@ -33,8 +32,8 @@ const getBasicReports = (t: any): ReportCard[] => [
   },
   {
     id: 'sales',
-    title: t('reports.reports.sales.title'),
-    description: t('reports.reports.sales.description'),
+    title: "Reporte de Ventas",
+    description: "Análisis detallado de ventas",
     icon: ShoppingCart,
     bgGradient: 'from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10',
     iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700',
@@ -43,8 +42,8 @@ const getBasicReports = (t: any): ReportCard[] => [
   },
   {
     id: 'products',
-    title: t('reports.reports.products.title'),
-    description: t('reports.reports.products.description'),
+    title: "Reporte de Productos",
+    description: "Rendimiento de productos",
     icon: Package,
     bgGradient: 'from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10',
     iconBg: 'bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700',
@@ -53,8 +52,8 @@ const getBasicReports = (t: any): ReportCard[] => [
   },
   {
     id: 'expenses',
-    title: t('reports.reports.expenses.title'),
-    description: t('reports.reports.expenses.description'),
+    title: "Reporte de Gastos",
+    description: "Control de gastos y egresos",
     icon: TrendingDown,
     bgGradient: 'from-red-50/50 to-red-100/30 dark:from-red-950/20 dark:to-red-900/10',
     iconBg: 'bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700',
@@ -64,14 +63,14 @@ const getBasicReports = (t: any): ReportCard[] => [
 ]
 
 // Función para obtener reportes avanzados (para empresas con múltiples sucursales)
-const getAdvancedReports = (t: any): ReportCard[] => [
+const getAdvancedReports = (): ReportCard[] => [
   // Helper para usar traducciones con fallback seguro (evita que MISSING_MESSAGE rompa la UI)
   (() => {
     let title = 'Reporte de Sucursales'
     let description = 'Desempeño de ventas e ingresos por sucursal'
     try {
-      title = t('reports.reports.branches.title')
-      description = t('reports.reports.branches.description')
+      title = "Reporte de Sucursales"
+      description = "Desempeño por sucursal"
     } catch {
       // Si hay problema con las traducciones, usamos texto por defecto
     }
@@ -88,8 +87,8 @@ const getAdvancedReports = (t: any): ReportCard[] => [
   })(),
   {
     id: 'customers',
-    title: t('reports.reports.customers.title'),
-    description: t('reports.reports.customers.description'),
+    title: "Reporte de Clientes",
+    description: "Análisis de clientes",
     icon: Users,
     bgGradient: 'from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10',
     iconBg: 'bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700',
@@ -98,8 +97,8 @@ const getAdvancedReports = (t: any): ReportCard[] => [
   },
   {
     id: 'cash-registers',
-    title: t('reports.reports.cashRegisters.title'),
-    description: t('reports.reports.cashRegisters.description'),
+    title: "Reporte de Cajas",
+    description: "Estado de cajas registradoras",
     icon: Receipt,
     bgGradient: 'from-indigo-50/50 to-indigo-100/30 dark:from-indigo-950/20 dark:to-indigo-900/10',
     iconBg: 'bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700',
@@ -108,8 +107,8 @@ const getAdvancedReports = (t: any): ReportCard[] => [
   },
   {
     id: 'ai-advanced',
-    title: t('reports.reports.aiAdvanced.title'),
-    description: t('reports.reports.aiAdvanced.description'),
+    title: "Reporte con IA",
+    description: "Análisis inteligente con IA",
     icon: Sparkles,
     bgGradient: 'from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10',
     iconBg: 'bg-gradient-to-br from-purple-500 to-indigo-500 dark:from-purple-600 dark:to-indigo-700',
@@ -124,13 +123,12 @@ interface ReportsContainerProps {
 }
 
 export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainerProps) {
-  const t = useTranslations()
   const router = useRouter()
 
   // Determinar si mostrar reportes avanzados (más de una sucursal permitida)
   const isAdvanced = (maxBranches ?? 1) > 1
-  const basicReports = getBasicReports(t)
-  const advancedReports = getAdvancedReports(t)
+  const basicReports = getBasicReports()
+  const advancedReports = getAdvancedReports()
 
   const renderReportCard = (report: ReportCard) => {
     const Icon = report.icon
@@ -153,7 +151,7 @@ export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainer
                 </h3>
                 {report.type === 'advanced' && (
                   <Badge variant="outline" className="text-[10px] sm:text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800 w-fit">
-                    {t('reports.advancedLabel')}
+                    {"Avanzado"}
                   </Badge>
                 )}
               </div>
@@ -167,7 +165,7 @@ export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainer
           </div>
           <div className="pt-2 sm:pt-3 border-t border-gray-200/50 dark:border-gray-800/50">
             <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">
-              {t('reports.viewFullReport')}
+              {"Ver reporte completo"}
             </p>
           </div>
         </CardContent>
@@ -183,7 +181,7 @@ export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainer
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400" />
-            <span className="whitespace-nowrap">{t('reports.basic')}</span>
+            <span className="whitespace-nowrap">{"Reportes Básicos"}</span>
           </h2>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
         </div>
@@ -199,9 +197,9 @@ export function ReportsContainer({ customerSlug, maxBranches }: ReportsContainer
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white flex flex-wrap items-center gap-2">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
-              <span className="whitespace-nowrap">{t('reports.advanced')}</span>
+              <span className="whitespace-nowrap">{"Reportes Avanzados"}</span>
               <Badge variant="outline" className="text-[10px] sm:text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800 whitespace-nowrap">
-                {t('reports.advancedBadge')}
+                {"IA"}
               </Badge>
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>

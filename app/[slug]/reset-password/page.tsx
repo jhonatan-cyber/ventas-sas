@@ -4,7 +4,7 @@ import { LoginWelcomeSection } from "@/components/sales/auth/login-welcome-secti
 import { ResetPasswordForm } from "@/components/sales/auth/reset-password-form";
 import { ThemeProvider } from "@/components/theme-provider";
 import { prisma } from "@/lib/prisma";
-import { I18nProvider } from "@/lib/utils/i18n-provider";
+;
 import { getCustomerBySlug } from "@/lib/utils/organization";
 
 export default async function ResetPasswordPage({
@@ -89,8 +89,7 @@ export default async function ResetPasswordPage({
       enableSystem
       storageKey="sas-theme"
     >
-      <I18nProvider>
-        <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#1a1a1a] relative overflow-hidden">
+      <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#1a1a1a] relative overflow-hidden">
           {/* Elementos decorativos de fondo animados */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {/* Círculos animados de fondo con movimiento */}
@@ -122,7 +121,6 @@ export default async function ResetPasswordPage({
             </div>
           </div>
         </div>
-      </I18nProvider>
     </ThemeProvider>
   );
 }

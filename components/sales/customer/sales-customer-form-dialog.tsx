@@ -1,7 +1,6 @@
 "use client"
 
 import { SalesCustomer } from "@prisma/client"
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,6 @@ const capitalizeWords = (value: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase())
 
 export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, isLoading: externalLoading = false }: SalesCustomerFormDialogProps) {
-  const t = useTranslations()
   const [ci, setCi] = useState("")
   const [name, setName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -79,12 +77,12 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {customer ? t('customers.edit') : t('customers.new')}
+              {customer ? 'Editar Cliente' : 'Nuevo Cliente'}
             </DialogTitle>
             <DialogDescription>
               {customer 
-                ? t('customers.editDescription') 
-                : t('customers.newDescription')}
+                ? 'Modifica la información del cliente seleccionado.' 
+                : 'Completa los datos para registrar un nuevo cliente.'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -94,24 +92,24 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ci">{t('form.taxId')}</Label>
+                <Label htmlFor="ci">RUC/CI</Label>
                 <Input
                   id="ci"
                   value={ci}
                   onChange={(e) => setCi(e.target.value.toUpperCase())}
-                  placeholder={t('form.taxIdPlaceholder')}
+                  placeholder="Ingresa RUC o CI"
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="name">{t('form.name')} <span className="text-red-500">*</span></Label>
+                <Label htmlFor="name">Nombre <span className="text-red-500">*</span></Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(capitalizeWords(e.target.value))}
-                  placeholder={t('form.name')}
+                  placeholder="Nombre"
                   required
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
@@ -121,12 +119,12 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lastName">{t('form.lastName')} <span className="text-red-500">*</span></Label>
+                <Label htmlFor="lastName">Apellido <span className="text-red-500">*</span></Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(capitalizeWords(e.target.value))}
-                  placeholder={t('form.lastName')}
+                  placeholder="Apellido"
                   required
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
@@ -134,13 +132,13 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">{t('form.email')}</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('form.emailPlaceholder')}
+                  placeholder="correo@ejemplo.com"
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
                 />
@@ -149,25 +147,25 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">{t('form.phone')}</Label>
+                <Label htmlFor="phone">Teléfono</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t('form.phone')}
+                  placeholder="Teléfono"
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">{t('form.address')}</Label>
+                <Label htmlFor="address">Dirección</Label>
                 <Input
                   id="address"
                   value={address}
                   onChange={(e) => setAddress(capitalizeWords(e.target.value))}
-                  placeholder={t('form.addressPlaceholder')}
+                  placeholder="Dirección completa"
                   disabled={isLoading || externalLoading}
                   className="rounded-full"
                 />
@@ -184,7 +182,7 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
               onClick={() => onOpenChange(false)}
               disabled={isLoading || externalLoading}
             >
-              {t('action.cancel')}
+              Cancelar
             </Button>
             <Button 
               type="submit" 
@@ -192,7 +190,7 @@ export function SalesCustomerFormDialog({ open, onOpenChange, customer, onSave, 
               className="w-full sm:w-auto rounded-full"
               disabled={isLoading || externalLoading || !name.trim() || !lastName.trim()}
             >
-              {isLoading || externalLoading ? t('message.saving') : customer ? t('action.update') : t('action.add')}
+              {isLoading || externalLoading ? 'Guardando...' : customer ? 'Actualizar' : 'Agregar'}
             </Button>
           </DialogFooter>
         </form>

@@ -311,7 +311,7 @@ Necesitas ayuda? Estamos aqui para asistirte.`
   // Función para guardar factura
   const handleSave = () => {
     setIsInvoiceFormOpen(false)
-    window.dispatchEvent(new Event('invoice-updated'))
+    window.dispatchEvent(new Event("Invoice-updated"))
   }
 
   // Función para agregar pago
@@ -325,7 +325,7 @@ Necesitas ayuda? Estamos aqui para asistirte.`
     setIsPaymentFormOpen(false)
     setIsInvoiceDetailOpen(false)
     setSelectedInvoice(null)
-    window.dispatchEvent(new Event('invoice-updated'))
+    window.dispatchEvent(new Event("Invoice-updated"))
   }
 
   return (

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { captureServerEvent } from '@/lib/analytics/posthog-server'
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { ExpenseService, CreateExpenseData } from '@/lib/services/sales/expense-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeExpense } from '@/lib/utils/serializers'
-import { translateText } from '@/lib/utils/translatable-text'
+// import { translateText } from '@/lib/utils/translatable-text' - removed
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createExpenseSchema } from '@/lib/validators/sales-validators'
 
@@ -20,20 +21,23 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const branchParam = searchParams.get('branchId')
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const branchParam = searchParams.get("Branch Id")
     const branchId = branchParam === 'none' ? null : branchParam === 'all' || !branchParam ? undefined : branchParam
-    const userId = searchParams.get('userId') || undefined
-    const category = searchParams.get('category') || undefined
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
+    const userId = searchParams.get("User Id") || undefined
+    const category = searchParams.get("Category") || undefined
+    const startDate = searchParams.get("Start Date") ? new Date(searchParams.get("Start Date")!) : undefined
+    const endDate = searchParams.get("End Date") ? new Date(searchParams.get("End Date")!) : undefined
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
       throw AppError.notFound('Cliente no encontrado o inactivo')
     }
+
+    // Verificar permiso para gestionar gastos
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.GASTOS_MANAGE)
 
     const skip = (page - 1) * pageSize
 
@@ -76,7 +80,10 @@ export async function POST(
       throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    // Verificar permiso para crear gastos
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.GASTOS_MANAGE)
+
+    const token = request.cookies.get("sas-auth-token")?.value
     currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {
@@ -139,16 +146,7 @@ export async function POST(
       payload.category = validatedData.category
     }
 
-    // Traducir descripción automáticamente si existe
-    if (validatedData.description && validatedData.description.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        payload.descriptionTranslations = await translateText(validatedData.description, sourceLanguage)
-      } catch (error) {
-        console.error('Error traduciendo descripción de gasto:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Descripción sin traducción automática
 
     const expense = await ExpenseService.createExpense(organizationId, payload)
 

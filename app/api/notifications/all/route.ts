@@ -12,14 +12,14 @@ import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 export async function PATCH(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const system = searchParams.get('system')
-    const slug = searchParams.get('slug')
+    const system = searchParams.get("System")
+    const slug = searchParams.get("Slug")
 
     const cookieStore = await cookies()
     const filters: any = {}
 
     if (system === 'admin') {
-      const token = cookieStore.get('admin-auth-token')?.value
+      const token = cookieStore.get("admin-auth-token")?.value
       if (!token) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
@@ -31,7 +31,7 @@ export async function PATCH(request: NextRequest) {
 
       filters.userId = payload.userId
     } else if (system === 'sas' && slug) {
-      const sessionCookie = cookieStore.get('sas-session')?.value
+      const sessionCookie = cookieStore.get("sas-session")?.value
       if (!sessionCookie) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }

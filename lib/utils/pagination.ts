@@ -148,8 +148,8 @@ export interface PaginationParams {
  */
 export function parsePaginationParams(request: { url: string }): PaginationParams {
   const url = new URL(request.url)
-  const limit = parseInt(url.searchParams.get('limit') || '20', 10)
-  const cursor = url.searchParams.get('cursor') || undefined
+  const limit = parseInt(url.searchParams.get("Limit") || '20', 10)
+  const cursor = url.searchParams.get("Cursor") || undefined
 
   return {
     limit: Math.min(Math.max(1, limit), 100), // Limitar entre 1 y 100

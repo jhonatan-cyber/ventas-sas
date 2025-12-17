@@ -1,6 +1,7 @@
 "use client"
 
 import { ReactNode, forwardRef, memo } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -13,7 +14,7 @@ interface AnimatedButtonProps extends React.ComponentProps<typeof Button> {
 
 // Componente optimizado usando CSS en lugar de Framer Motion para mejor rendimiento
 export const AnimatedButton = memo(forwardRef<HTMLButtonElement, AnimatedButtonProps>(
-  ({ children, className, loading, pulse, bounce, disabled, ...props }, ref) => {
+  ({ children, className, loading, pulse, bounce: _bounce, disabled, ...props }, ref) => {
     const isDisabled = disabled || loading
 
     return (
@@ -63,7 +64,7 @@ export const RippleButton = memo(function RippleButton({
         const x = e.clientX - rect.left - size / 2
         const y = e.clientY - rect.top - size / 2
         
-        const ripple = document.createElement('span')
+        const ripple = document.createElement("span") as HTMLSpanElement
         ripple.className = 'ripple-effect'
         ripple.style.width = `${size}px`
         ripple.style.height = `${size}px`

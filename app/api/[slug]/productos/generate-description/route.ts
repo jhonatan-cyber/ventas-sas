@@ -190,7 +190,7 @@ Responde SOLO con el JSON, sin texto adicional:`
     // Buscar imagen del producto usando Google Custom Search (si está configurado)
     let imageUrl = null
     try {
-      const { ProductAIService } = await import('@/lib/services/ai/product-ai-service')
+      const { ProductAIService } = await import("@/lib/services/ai/product-ai-service")
       const productInfo = await ProductAIService.searchProductInfo(
         name.trim(),
         finalBrand,

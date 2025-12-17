@@ -11,7 +11,6 @@ import {
   CalendarDays,
   User,
 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { SalesQuotationWithRelations } from "./types"
@@ -84,9 +83,7 @@ export function QuotationsCards({
   onViewDetails,
   onConvert,
   maxBranches,
-}: QuotationsCardsProps) {
-  const t = useTranslations();
-  const [mounted, setMounted] = useState(false);
+}: QuotationsCardsProps) {const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -138,7 +135,7 @@ export function QuotationsCards({
         }`.trim();
         const customerDisplayName =
           rawFullName || quotation.customerName || "Cliente sin registrar";
-        const branchName = quotation.branch?.name || t("common.noBranch");
+        const branchName = quotation.branch?.name || "Sin sucursal";
         const customerEmail = quotation.customer?.email || null;
         const hasMissingProductIds = quotation.items?.some(
           (item) => !item.productId

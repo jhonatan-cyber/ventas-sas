@@ -47,6 +47,39 @@ model Profile {
   @@map("system_users")
 }
 
+model ProfileSas {
+  id                    String                    @id @default(uuid())
+  email                 String                    @unique
+  password              String?
+  passwordChangedAt     DateTime?                 @map("password_changed_at")
+  fullName              String?                   @map("full_name")
+  role                  String                    @default("user")
+  isActive              Boolean                   @default(true) @map("is_active")
+  lastLoginAt           DateTime?                 @map("last_login_at")
+  createdAt             DateTime                  @default(now()) @map("created_at")
+  updatedAt             DateTime                  @updatedAt @map("updated_at")
+  address               String?
+  phone                 String?
+  ci                    String?                   @unique
+  twoFactorEnabled      Boolean                   @default(false) @map("two_factor_enabled")
+  twoFactorSecret       String?                   @map("two_factor_secret")
+  twoFactorBackupCodes  Json?                     @map("two_factor_backup_codes")
+  twoFactorEnabledAt    DateTime?                 @map("two_factor_enabled_at")
+  photo                 String?                   @map("photo")
+  organizationId        String                    @map("organization_id")
+
+  // Relaciones
+  organization          Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  notifications         Notification[]            @relation("NotificationProfileSas")
+  passwordResetTokens   PasswordResetToken[]      @relation("PasswordResetProfileSas")
+  sessions              SasSession[]              @relation("SasSessionProfileSas")
+
+  @@index([organizationId, isActive])
+  @@index([email, organizationId])
+  @@index([ci, organizationId])
+  @@map("sas_profiles")
+}
+
 model Organization {
   id                       String                         @id @default(uuid())
   name                     String
@@ -98,7 +131,7 @@ model Organization {
   paymentMethods           PaymentMethod[]
   subscriptions            Subscription[]
   supportTickets           SupportTicket[]
-
+  profilesSas              ProfileSas[]
 
   whiteLabelBranding       WhiteLabelBranding?
   enhancedSessions         EnhancedSession[]
@@ -663,7 +696,8 @@ model UsuarioSas {
 
 model SasSession {
   id             String       @id @default(uuid())
-  userId         String       @map("user_id")
+  userId         String?      @map("user_id")
+  profileSasId   String?      @map("profile_sas_id")
   sessionToken   String       @unique @map("session_token")
   ipAddress      String?      @map("ip_address")
   userAgent      String?      @map("user_agent")
@@ -674,9 +708,11 @@ model SasSession {
   createdAt      DateTime     @default(now()) @map("created_at")
   organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  user           UsuarioSas   @relation(fields: [userId], references: [id])
+  user           UsuarioSas?  @relation(fields: [userId], references: [id])
+  profileSas     ProfileSas?  @relation("SasSessionProfileSas", fields: [profileSasId], references: [id])
 
   @@index([userId, isActive])
+  @@index([profileSasId, isActive])
   @@index([organizationId, isActive])
   @@index([sessionToken])
   @@index([lastActivityAt])
@@ -686,7 +722,8 @@ model SasSession {
 
 model PasswordResetToken {
   id             String       @id @default(uuid())
-  userId         String       @map("user_id")
+  userId         String?      @map("user_id")
+  profileSasId   String?      @map("profile_sas_id")
   token          String       @unique
   email          String
   organizationId String       @map("organization_id")
@@ -694,10 +731,12 @@ model PasswordResetToken {
   usedAt         DateTime?    @map("used_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  user           UsuarioSas   @relation(fields: [userId], references: [id])
+  user           UsuarioSas?  @relation(fields: [userId], references: [id])
+  profileSas     ProfileSas?  @relation("PasswordResetProfileSas", fields: [profileSasId], references: [id])
 
   @@index([token])
   @@index([userId])
+  @@index([profileSasId])
   @@index([organizationId])
   @@index([expiresAt])
   @@map("password_reset_tokens")
@@ -786,6 +825,7 @@ model Notification {
   data           Json?
   userId         String?       @map("user_id")
   usuarioSasId   String?       @map("usuario_sas_id")
+  profileSasId   String?       @map("profile_sas_id")
   organizationId String?       @map("organization_id")
   isRead         Boolean       @default(false) @map("is_read")
   readAt         DateTime?     @map("read_at")
@@ -794,9 +834,11 @@ model Notification {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           Profile?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   usuarioSas     UsuarioSas?   @relation(fields: [usuarioSasId], references: [id], onDelete: Cascade)
+  profileSas     ProfileSas?   @relation("NotificationProfileSas", fields: [profileSasId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
   @@index([usuarioSasId, isRead, createdAt])
+  @@index([profileSasId, isRead, createdAt])
   @@index([organizationId, isRead, createdAt])
   @@index([type, createdAt])
   @@index([expiresAt])

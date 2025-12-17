@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from 'react'
+
 import { getCachedOrganization, getCachedPreferences } from '@/lib/cache/api-cache'
 
 /**

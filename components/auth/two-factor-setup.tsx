@@ -111,7 +111,7 @@ export function TwoFactorSetup({ endpoint, onComplete, onCancel }: TwoFactorSetu
       type: 'text/plain',
     })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a") as HTMLAnchorElement
     a.href = url
     a.download = 'backup-codes-2fa.txt'
     a.click()

@@ -29,15 +29,15 @@ export async function GET(request: NextRequest) {
     const isAdmin = user.isSuperAdmin || user.role?.toLowerCase() === 'administrador' || user.role?.toLowerCase() === 'admin'
 
     const { searchParams } = new URL(request.url)
-    const statusParam = searchParams.get('status')
-    const priorityParam = searchParams.get('priority')
-    const categoryParam = searchParams.get('category')
+    const statusParam = searchParams.get("Status")
+    const priorityParam = searchParams.get("Priority")
+    const categoryParam = searchParams.get("Category")
     
     const filters = {
-      organizationId: searchParams.get('organizationId') || undefined,
-      assignedToId: searchParams.get('assignedToId') === 'null'
+      organizationId: searchParams.get("Organization Id") || undefined,
+      assignedToId: searchParams.get("Assigned To Id") === 'null'
         ? null
-        : searchParams.get('assignedToId') || undefined,
+        : searchParams.get("Assigned To Id") || undefined,
       status: (statusParam && ['open', 'in_progress', 'resolved', 'closed'].includes(statusParam))
         ? statusParam as 'open' | 'in_progress' | 'resolved' | 'closed'
         : undefined,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       category: (categoryParam && ['bug', 'feature_request', 'question', 'billing', 'technical', 'other'].includes(categoryParam))
         ? categoryParam as 'bug' | 'feature_request' | 'question' | 'billing' | 'technical' | 'other'
         : undefined,
-      search: searchParams.get('search') || undefined,
+      search: searchParams.get("Search") || undefined,
     }
 
     // Si el usuario no es admin ni super admin, filtrar solo tickets asignados a él
@@ -56,10 +56,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Soportar tanto paginación offset como page-based
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '20')
-    const skip = parseInt(searchParams.get('skip') || String((page - 1) * pageSize))
-    const take = parseInt(searchParams.get('take') || String(pageSize))
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '20')
+    const skip = parseInt(searchParams.get("Skip") || String((page - 1) * pageSize))
+    const take = parseInt(searchParams.get("Take") || String(pageSize))
 
     const result = await SupportService.getTickets(filters, skip, take)
 

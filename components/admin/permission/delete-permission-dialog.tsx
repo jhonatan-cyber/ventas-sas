@@ -1,7 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +26,7 @@ export function DeletePermissionDialog({
   permission,
   onConfirm,
   isLoading = false,
-}: DeletePermissionDialogProps) {
-  const t = useTranslations()
-  
-  if (!permission) return null
+}: DeletePermissionDialogProps) {if (!permission) return null
 
   const hasRoles = permission.roleCount > 0
 
@@ -40,26 +35,26 @@ export function DeletePermissionDialog({
       <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-gray-900 dark:text-white">
-            {t('permissions.delete.title')}
+            {"Title"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
             {hasRoles ? (
               <>
-                {t('permissions.delete.withRoles')} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
+                {"With Roles"} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
                 <br />
                 <br />
-                {t('permissions.delete.withRolesDescription', { count: permission.roleCount })}{" "}
+                {"Este permiso está asignado a " + permission.roleCount + " rol(es):"}{" "}
                 <strong>{permission.roles.join(", ")}</strong>.
                 <br />
                 <br />
-                {t('permissions.delete.withRolesEnd')}
+                {"With Roles End"}
               </>
             ) : (
               <>
-                {t('permissions.delete.withoutRoles')} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
+                {"Without Roles"} <strong className="font-mono text-gray-900 dark:text-white">{permission.name}</strong>.
                 <br />
                 <br />
-                {t('permissions.delete.withoutRolesDescription')}
+                {"Without Roles Description"}
               </>
             )}
           </AlertDialogDescription>
@@ -70,14 +65,14 @@ export function DeletePermissionDialog({
             className="w-full sm:w-auto rounded-full"
             disabled={isLoading}
           >
-            {t('action.cancel')}
+            {"Cancel"}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-full"
             disabled={isLoading}
           >
-            {isLoading ? t('permissions.delete.deleting') : t('action.delete')}
+            {isLoading ? "Deleting" : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -5,9 +5,11 @@ import { join } from 'path'
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { prisma } from '@/lib/prisma'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 export const runtime = 'nodejs'
 
@@ -31,6 +33,9 @@ export async function POST(
     }
     console.log('✅ Usuario autenticado:', currentUser.id)
 
+    // Verificar permiso para modificar configuración (logo)
+    await requirePermission(request, slug, PERMISSIONS.MANAGE_ALL)
+
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
       console.error('❌ Organización no encontrada para slug:', slug)
@@ -40,7 +45,7 @@ export async function POST(
 
     // Obtener archivo desde FormData (como en productos)
     const formData = await request.formData()
-    const file = formData.get('logo') as File | null
+    const file = formData.get("Logo") as File | null
 
     if (!file) {
       console.error('❌ No se proporcionó ningún archivo')
@@ -94,7 +99,7 @@ export async function POST(
     let oldLogoUrl: string | null = null
     try {
       // Buscar logo anterior en WhiteLabelBranding (fuente principal)
-      const { WhiteLabelService } = await import('@/lib/services/admin/white-label-service')
+      const { WhiteLabelService } = await import("@/lib/services/admin/white-label-service")
       const branding = await WhiteLabelService.getBranding(organizationId)
       if (branding?.logoUrl) {
         oldLogoUrl = branding.logoUrl as string
@@ -112,7 +117,7 @@ export async function POST(
       
       // Si hay un logo anterior, obtener la ruta del archivo
       if (oldLogoUrl && oldLogoUrl.startsWith('/uploads/config/')) {
-        const oldFileName = oldLogoUrl.split('/').pop()
+        const oldFileName = oldLogoUrl.split("/").pop()
         if (oldFileName) {
           oldLogoPath = join(uploadsDir, oldFileName)
           console.log('📋 Logo anterior encontrado:', oldLogoUrl)
@@ -203,7 +208,7 @@ export async function POST(
       // Eliminar el logo anterior ANTES de actualizar WhiteLabelBranding
       if (oldLogoPath && oldLogoPath !== filePath && existsSync(oldLogoPath)) {
         try {
-          const { unlink } = await import('fs/promises')
+          const { unlink } = await import("fs/promises")
           await unlink(oldLogoPath)
           console.log('🗑️ Logo anterior eliminado del sistema de archivos:', oldLogoPath)
         } catch (deleteError) {
@@ -217,7 +222,7 @@ export async function POST(
       console.error('❌ Error guardando URL del logo en la base de datos:', dbError)
       // Si falla el guardado en BD, eliminar el archivo recién creado
       try {
-        const { unlink } = await import('fs/promises')
+        const { unlink } = await import("fs/promises")
         await unlink(filePath)
         console.log('🗑️ Archivo eliminado debido a error en BD')
       } catch (deleteError) {
@@ -230,7 +235,7 @@ export async function POST(
 
     // Actualizar WhiteLabelBranding con el nuevo logo
     try {
-      const { WhiteLabelService } = await import('@/lib/services/admin/white-label-service')
+      const { WhiteLabelService } = await import("@/lib/services/admin/white-label-service")
       await WhiteLabelService.updateBranding(organizationId, {
         logoUrl: publicUrl,
       })

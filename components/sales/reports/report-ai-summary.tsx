@@ -1,7 +1,6 @@
 "use client"
 
 import { Sparkles, Lightbulb, Loader2 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import type { BasicReportType, ReportAISummary } from "@/lib/services/sales/report-ai-service"
@@ -17,7 +16,6 @@ interface ReportAiSummaryProps {
 }
 
 export function ReportAiSummary({ customerSlug, type, startDate, endDate }: ReportAiSummaryProps) {
-  const t = useTranslations()
   const [summary, setSummary] = useState<ReportAISummary | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -68,22 +66,22 @@ export function ReportAiSummary({ customerSlug, type, startDate, endDate }: Repo
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {t("reports.aiSummary.title")}
+                Resumen con IA
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("reports.aiSummary.description")}
+                Análisis inteligente de tus datos
               </p>
             </div>
           </div>
           <Badge variant="outline" className="text-[10px] sm:text-xs px-2 py-1 border-purple-200 dark:border-purple-800">
-            {loading ? t("reports.aiSummary.generating") : t("reports.aiSummary.powered")}
+            {loading ? "Generando..." : "Powered by AI"}
           </Badge>
         </div>
 
         {loading && (
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {t("reports.aiSummary.loading")}
+            Generando resumen inteligente...
           </div>
         )}
 
@@ -92,7 +90,7 @@ export function ReportAiSummary({ customerSlug, type, startDate, endDate }: Repo
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{summary.summary}</p>
             {summary.highlights?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t("reports.aiSummary.highlights")}</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Puntos destacados</p>
                 <ul className="space-y-1.5">
                   {summary.highlights.map((item, index) => (
                     <li key={index} className="text-sm text-gray-700 dark:text-gray-300">
@@ -106,7 +104,7 @@ export function ReportAiSummary({ customerSlug, type, startDate, endDate }: Repo
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1">
                   <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-                  {t("reports.aiSummary.actions")}
+                  Recomendaciones
                 </p>
                 <ul className="space-y-1.5">
                   {summary.actions.map((item, index) => (
@@ -122,7 +120,7 @@ export function ReportAiSummary({ customerSlug, type, startDate, endDate }: Repo
 
         {!loading && !summary && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {t("reports.aiSummary.unavailable") || "No se pudo generar el resumen en este momento."}
+            No se pudo generar el resumen en este momento.
           </p>
         )}
       </CardContent>

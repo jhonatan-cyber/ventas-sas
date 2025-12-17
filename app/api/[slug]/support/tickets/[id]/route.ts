@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { slug, id } = await params
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     if (!token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
@@ -52,7 +52,7 @@ export async function PATCH(
   try {
     const { slug, id } = await params
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     if (!token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }

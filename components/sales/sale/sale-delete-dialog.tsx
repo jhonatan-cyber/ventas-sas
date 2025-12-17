@@ -1,7 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import { SalesSaleWithRelations } from "./types"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -16,8 +14,6 @@ interface SaleDeleteDialogProps {
 }
 
 export function SaleDeleteDialog({ open, onOpenChange, sale, customerSlug, onDelete }: SaleDeleteDialogProps) {
-  const t = useTranslations()
-  
   const handleConfirm = async () => {
     await onDelete()
     onOpenChange(false)
@@ -27,18 +23,18 @@ export function SaleDeleteDialog({ open, onOpenChange, sale, customerSlug, onDel
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('sales.delete.confirm')}</AlertDialogTitle>
+          <AlertDialogTitle>¿Eliminar venta?</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('sales.delete.description')}
+            Esta acción no se puede deshacer. La venta será eliminada permanentemente.
             <strong className="block mt-2">
-              "{sale?.saleNumber ?? t('sales.sale')}" {t('sales.by')} {sale ? formatCurrencyWithPreferences(Number(sale.total || 0), customerSlug) : '0.00'}
+              "{sale?.saleNumber ?? 'Venta'}" por {sale ? formatCurrencyWithPreferences(Number(sale.total || 0), customerSlug) : '0.00'}
             </strong>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <AlertDialogCancel className="w-full sm:w-auto rounded-full">{t('action.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel className="w-full sm:w-auto rounded-full">Cancelar</AlertDialogCancel>
           <AlertDialogAction className="bg-rose-600 hover:bg-rose-700 text-white w-full sm:w-auto rounded-full" onClick={handleConfirm}>
-            {t('action.delete')}
+            Eliminar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

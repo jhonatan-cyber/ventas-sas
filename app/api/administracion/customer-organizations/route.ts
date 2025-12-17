@@ -44,11 +44,11 @@ export async function GET(request: NextRequest) {
 
     // Obtener parámetros
     const searchParams = request.nextUrl.searchParams
-    const customerId = searchParams.get("customerId")
-    const organizationId = searchParams.get("organizationId")
-    const search = searchParams.get("search") || ""
-    const page = parseInt(searchParams.get("page") || "1")
-    const pageSize = parseInt(searchParams.get("pageSize") || "20")
+    const customerId = searchParams.get("Customer Id")
+    const organizationId = searchParams.get("Organization Id")
+    const search = searchParams.get("Search") || ""
+    const page = parseInt(searchParams.get("Page") || "1")
+    const pageSize = parseInt(searchParams.get("Page Size") || "20")
 
     if (customerId) {
       // Obtener organizaciones de un cliente específico

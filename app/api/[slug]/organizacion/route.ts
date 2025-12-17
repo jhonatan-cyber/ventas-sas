@@ -43,6 +43,8 @@ export async function GET(
           phone: true,
           address: true,
           website: true,
+          subscriptionStatus: true,
+          subscriptionEndDate: true,
           owner: {
             select: {
               nombre: true,
@@ -53,6 +55,37 @@ export async function GET(
             select: {
               logoUrl: true,
             },
+          },
+          subscriptionPlan: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+            },
+          },
+          subscriptions: {
+            where: {
+              status: {
+                in: ['active', 'trial']
+              },
+              OR: [
+                { endDate: null },
+                { endDate: { gt: new Date() } }
+              ]
+            },
+            select: {
+              plan: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                }
+              }
+            },
+            orderBy: {
+              startDate: 'desc'
+            },
+            take: 1
           },
         },
       } as any);
@@ -75,6 +108,14 @@ export async function GET(
       );
     }
 
+    // Determinar el plan de suscripción activo
+    let subscriptionPlan = null;
+    if (organization.subscriptionPlan) {
+      subscriptionPlan = organization.subscriptionPlan;
+    } else if (organization.subscriptions && organization.subscriptions.length > 0) {
+      subscriptionPlan = organization.subscriptions[0].plan;
+    }
+
     return NextResponse.json({
       success: true,
       organization: {
@@ -87,7 +128,14 @@ export async function GET(
         website: organization.website || null,
         logoUrl: organization.whiteLabelBranding?.logoUrl || null,
         ownerName: organization.owner ? `${organization.owner.nombre} ${organization.owner.apellido}`.trim() : null,
+        subscriptionStatus: organization.subscriptionStatus,
+        subscriptionEndDate: organization.subscriptionEndDate,
       },
+      subscriptionPlan: subscriptionPlan ? {
+        id: subscriptionPlan.id,
+        name: subscriptionPlan.name,
+        description: subscriptionPlan.description,
+      } : null,
     });
   } catch (error) {
     console.error("Error inesperado en GET /organizacion:", error);

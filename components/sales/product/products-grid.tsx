@@ -2,7 +2,6 @@
 
 import { SalesProduct, Category, Branch } from "@prisma/client"
 import { Package, Edit, Power, PowerOff, Trash2, Building2, Sparkles, Eye } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,8 +16,6 @@ import {
 import { CardsGridSkeleton } from "@/components/ui/cards-grid-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { getProductDescription } from "@/lib/utils/product-description"
-
 interface ProductsGridProps {
   products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
   isLoading?: boolean
@@ -57,7 +54,6 @@ export function ProductsGrid({
   onToggleStatus,
   onView,
 }: ProductsGridProps) {
-  const t = useTranslations()
   if (isLoading) {
     return <CardsGridSkeleton columns={3} />
   }
@@ -82,20 +78,7 @@ export function ProductsGrid({
         {products.map((product) => {
           const isActive = product.isActive
           const isLowStock = product.stock <= product.minStock
-          // Obtener descripción según el idioma actual
-          const currentLanguage = (() => {
-            try {
-              const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-              return prefs?.language || 'es';
-            } catch {
-              return 'es';
-            }
-          })();
-          const description = getProductDescription(
-            product.description,
-            (product as any).descriptionTranslations,
-            currentLanguage
-          )?.trim() ?? ""
+          const description = (product.description || "").trim()
 
           return (
             <Card
@@ -105,7 +88,7 @@ export function ProductsGrid({
               <CardHeader className="gap-4 pb-0">
                 <div className="relative h-40 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-[#2a2a2a]">
                   {product.imageUrl ? (
-                     
+
                     <img
                       src={product.imageUrl}
                       alt={product.name}
@@ -170,11 +153,10 @@ export function ProductsGrid({
                   </div>
                   <div className="text-muted-foreground">Stock</div>
                   <div
-                    className={`font-semibold ${
-                      isLowStock
+                    className={`font-semibold ${isLowStock
                         ? "text-red-600 dark:text-red-400"
                         : "text-gray-900 dark:text-white"
-                    }`}
+                      }`}
                   >
                     {product.stock}
                     <span className="text-xs text-muted-foreground"> / mín. {product.minStock}</span>
@@ -212,7 +194,7 @@ export function ProductsGrid({
                 <div className="flex w-full flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Sparkles className="h-4 w-4" />
-                    <span>{product.category?.name || t('common.noCategory')}</span>
+                    <span>{product.category?.name || "Sin categoría"}</span>
                   </div>
                   <div className="flex flex-1 justify-end gap-2">
                     {onView && (

@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
       throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
 
+
+
     // Validar que se proporcionen los campos requeridos
     // Una organización es una empresa con: razonSocial, address, phone, slug, customerId
     // El ownerId se toma del usuario administrador actual (currentUser.id)

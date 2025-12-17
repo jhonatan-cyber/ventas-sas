@@ -10,8 +10,8 @@
 
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 interface AuthState {
@@ -356,7 +356,7 @@ export function useEnhancedAuth(options: UseEnhancedAuthOptions) {
     checkAuthStatus()
 
     // Configurar interceptor global para manejar 401s automáticamente
-    import('@/lib/auth/global-auth-interceptor').then(({ setupGlobalAuthInterceptor }) => {
+    import("@/lib/auth/global-auth-interceptor").then(({ setupGlobalAuthInterceptor }) => {
       setupGlobalAuthInterceptor(customerSlug)
     })
   }, [checkAuthStatus, customerSlug])

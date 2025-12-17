@@ -5,10 +5,10 @@ import { SessionsPageClient } from "@/components/admin/sessions/sessions-page-cl
 
 export default async function SessionsPage() {
   const cookieStore = await cookies()
-  const token = cookieStore.get('admin-auth-token')?.value
+  const token = cookieStore.get("admin-auth-token")?.value
 
   if (!token) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
 
   return <SessionsPageClient />

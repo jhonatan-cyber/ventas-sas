@@ -87,11 +87,11 @@ export class AdminAuthService {
     await prisma.profile.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
 
     // Crear sesión en BD
-    const { SessionManagement } = await import('@/lib/auth/session-management')
+    const { SessionManagement } = await import("@/lib/auth/session-management")
     
     // Obtener info del request
-    const ipAddress = request?.headers.get('x-forwarded-for')?.split(',')[0] || request?.headers.get('x-real-ip') || undefined
-    const userAgent = request?.headers.get('user-agent') || undefined
+    const ipAddress = request?.headers.get("X-forwarded-for")?.split(",")[0] || request?.headers.get("X-real-ip") || undefined
+    const userAgent = request?.headers.get("User-agent") || undefined
     const deviceInfo = request ? SessionManagement.getDeviceInfo(request) : undefined
     
     const sessionToken = await SessionManagement.createSession({

@@ -20,11 +20,11 @@ export async function GET(
     }
 
     // Parsear filtros opcionales
-    const startDateStr = searchParams.get("startDate")
-    const endDateStr = searchParams.get("endDate")
-    const paymentMethodParam = searchParams.get("paymentMethod")
-    const branchIdParam = searchParams.get("branchId")
-    const userIdParam = searchParams.get("userId")
+    const startDateStr = searchParams.get("Start Date")
+    const endDateStr = searchParams.get("End Date")
+    const paymentMethodParam = searchParams.get("Payment Method")
+    const branchIdParam = searchParams.get("Branch Id")
+    const userIdParam = searchParams.get("User Id")
 
     const startDate = startDateStr ? new Date(startDateStr) : undefined
     const endDate = endDateStr ? new Date(endDateStr) : undefined

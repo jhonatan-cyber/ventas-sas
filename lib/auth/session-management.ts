@@ -218,7 +218,7 @@ export class SessionManagement {
         }
 
         // Verificar que el usuario sigue activo
-        if (!session.user.isActive) {
+        if (!session.user || !session.user.isActive) {
           await this.invalidateSession(sessionToken, systemType, organizationId)
           return { valid: false }
         }
@@ -231,7 +231,7 @@ export class SessionManagement {
 
         return {
           valid: true,
-          userId: session.userId,
+          userId: session.userId || undefined,
           needsRefresh: minutesSinceActivity > inactivityTimeout * 0.8,
         }
       }
@@ -411,7 +411,7 @@ export class SessionManagement {
     browser?: string
     os?: string
   } {
-    const userAgent = request.headers.get('user-agent') || ''
+    const userAgent = request.headers.get("User-agent") || ''
 
     // Parsing básico de user agent (en producción, usar una librería como 'ua-parser-js')
     const browser = this.parseBrowser(userAgent)

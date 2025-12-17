@@ -27,7 +27,7 @@ export default async function EnMantenimientoPage({
   
   // Si la organización NO existe, redirigir a la raíz
   if (!organization) {
-    redirect('/')
+    redirect("/")
   }
 
   // Validar que tenga al menos una relación activa con un cliente activo
@@ -36,7 +36,7 @@ export default async function EnMantenimientoPage({
   )
 
   if (activeCustomerOrgs.length === 0) {
-    redirect('/')
+    redirect("/")
   }
 
   // Verificar si existe al menos una suscripción activa en la tabla Subscription

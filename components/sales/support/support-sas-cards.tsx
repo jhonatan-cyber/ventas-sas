@@ -3,7 +3,6 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { HelpCircle, Clock, CheckCircle2, XCircle, AlertCircle, MessageSquare, MoreVertical, Eye } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,34 +29,32 @@ interface SupportSasCardsProps {
 }
 
 export function SupportSasCards({ tickets, onViewDetails }: SupportSasCardsProps) {
-  const t = useTranslations()
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
         return {
-          label: t('support.status.open'),
+          label: "Abierto",
           className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
           icon: HelpCircle,
           iconColor: "text-blue-600 dark:text-blue-400",
         }
       case "in_progress":
         return {
-          label: t('support.status.inProgress'),
+          label: "En progreso",
           className: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800",
           icon: Clock,
           iconColor: "text-yellow-600 dark:text-yellow-400",
         }
       case "resolved":
         return {
-          label: t('support.status.resolved'),
+          label: "Resuelto",
           className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
           icon: CheckCircle2,
           iconColor: "text-green-600 dark:text-green-400",
         }
       case "closed":
         return {
-          label: t('support.status.closed'),
+          label: "Cerrado",
           className: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-800",
           icon: XCircle,
           iconColor: "text-gray-600 dark:text-gray-400",
@@ -76,22 +73,22 @@ export function SupportSasCards({ tickets, onViewDetails }: SupportSasCardsProps
     switch (priority) {
       case "low":
         return {
-          label: t('support.priority.low'),
+          label: "Baja",
           className: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
         }
       case "medium":
         return {
-          label: t('support.priority.medium'),
+          label: "Media",
           className: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800",
         }
       case "high":
         return {
-          label: t('support.priority.high'),
+          label: "Alta",
           className: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
         }
       case "urgent":
         return {
-          label: t('support.priority.urgent'),
+          label: "Urgente",
           className: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
         }
       default:
@@ -150,7 +147,7 @@ export function SupportSasCards({ tickets, onViewDetails }: SupportSasCardsProps
                         className="cursor-pointer text-blue-600 focus:text-blue-600 dark:text-blue-400 dark:focus:text-blue-400"
                       >
                         <Eye className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        <span className="text-blue-600 dark:text-blue-400">{t('support.cards.viewDetails')}</span>
+                        <span className="text-blue-600 dark:text-blue-400">Ver detalles</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -178,7 +175,7 @@ export function SupportSasCards({ tickets, onViewDetails }: SupportSasCardsProps
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                     <span className="text-xs text-gray-700 dark:text-gray-300">
-                      {ticket._count?.comments || 0} {ticket._count?.comments === 1 ? t('support.cards.comments') : t('support.cards.commentsPlural')}
+                      {ticket._count?.comments || 0} {ticket._count?.comments === 1 ? 'comentario' : 'comentarios'}
                     </span>
                   </div>
 
@@ -186,7 +183,7 @@ export function SupportSasCards({ tickets, onViewDetails }: SupportSasCardsProps
                   <div className="flex items-center gap-2">
                     <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                     <span className="text-xs text-gray-700 dark:text-gray-300">
-                      {t('support.cards.updated')} {format(new Date(ticket.updatedAt), "dd MMM yyyy, HH:mm", { locale: es })}
+                      Actualizado {format(new Date(ticket.updatedAt), "dd MMM yyyy, HH:mm", { locale: es })}
                     </span>
                   </div>
                 </div>

@@ -15,7 +15,9 @@ import { redirect } from "next/navigation"
 
 import { AnalyticsDashboardClient } from "@/components/analytics/analytics-dashboard-client"
 import { FormattedDate, FormattedCurrency } from "@/components/dashboard/dashboard-formatters"
+import { NonAdminDashboard } from "@/components/sales/dashboard/non-admin-dashboard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { prisma } from "@/lib/prisma"
 import { QuotationService } from "@/lib/services/sales/quotation-service"
 import { SalesDashboardService } from "@/lib/services/sales/sales-dashboard-service"
 import { getOrganizationIdByCustomerSlug, getCustomerBySlug, getMaxBranchesBySlug } from "@/lib/utils/organization"
@@ -69,6 +71,54 @@ export default async function DashboardPage({
   const maxBranches = await getMaxBranchesBySlug(slug)
 
   const fullName = session.fullName || customer.primaryOrganization?.razonSocial || customer.primaryOrganization?.name || "Usuario"
+
+  // Obtener información del usuario para determinar si es administrador
+  let userInfo = null
+  let isAdmin = false
+  
+  if (organizationId && session.userId) {
+    try {
+      userInfo = await prisma.usuarioSas.findUnique({
+        where: {
+          id: session.userId,
+          organizationId,
+          deletedAt: null
+        },
+        include: {
+          rol: {
+            select: {
+              id: true,
+              nombre: true
+            }
+          },
+          sucursal: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      })
+      
+      // Determinar si es administrador
+      isAdmin = userInfo?.rol?.nombre?.toLowerCase().includes('administrador') || false
+    } catch (error) {
+      console.error('Error obteniendo información del usuario:', error)
+    }
+  }
+
+  // Si no es administrador, mostrar dashboard específico para usuarios
+  if (userInfo && !isAdmin) {
+    return (
+      <NonAdminDashboard
+        customerSlug={slug}
+        userName={fullName}
+        userRole={userInfo.rol?.nombre || 'Usuario'}
+        userBranch={userInfo.sucursal?.name}
+        maxBranches={maxBranches}
+      />
+    )
+  }
 
   // Obtener estadísticas (si no hay organización, usar valores por defecto)
   const [stats, recentQuotations] = organizationId

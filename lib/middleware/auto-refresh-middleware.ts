@@ -34,8 +34,8 @@ export class AutoRefreshMiddleware {
     customerSlug: string
   ): Promise<RefreshMiddlewareResult> {
     try {
-      const accessToken = request.cookies.get('sas-auth-token')?.value
-      const refreshToken = request.cookies.get('sas-refresh-token')?.value
+      const accessToken = request.cookies.get("sas-auth-token")?.value
+      const refreshToken = request.cookies.get("sas-refresh-token")?.value
 
       // Si no hay tokens, requerir login
       if (!accessToken && !refreshToken) {

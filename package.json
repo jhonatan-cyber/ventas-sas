@@ -17,7 +17,7 @@
     "db:seed": "node scripts/seed-simple.js",
     "db:studio": "prisma studio",
     "setup:db": "pnpm run db:generate && pnpm run db:push && pnpm run db:seed",
-    "translate:generate": "tsx scripts/generate-translations.ts",
+
     "close-inactive-tickets": "tsx scripts/close-inactive-tickets.ts",
     "migrate:auth": "tsx scripts/migrate-to-enhanced-auth.ts",
     "auth:migrate": "tsx scripts/migrate-to-enhanced-auth.ts migrate",
@@ -92,7 +92,7 @@
     "jspdf": "^3.0.3",
     "lucide-react": "^0.454.0",
     "next": "^16.0.8",
-    "next-intl": "^4.5.3",
+
     "next-themes": "^0.4.6",
     "node-cache": "^5.1.2",
     "node-cron": "^4.2.1",

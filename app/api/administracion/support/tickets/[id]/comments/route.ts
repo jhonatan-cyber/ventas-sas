@@ -17,14 +17,14 @@ function isFile(entry: FormDataEntryValue): entry is File {
 }
 
 async function parseAdminCommentPayload(request: NextRequest) {
-  const contentType = request.headers.get('content-type') || ''
+  const contentType = request.headers.get("Content-type") || ''
 
   if (contentType.includes('multipart/form-data')) {
     const formData = await request.formData()
     const attachmentFiles = formData.getAll('attachments').filter(isFile)
     const rawData = {
-      content: formData.get('content')?.toString() ?? '',
-      isInternal: formData.get('isInternal')?.toString() === 'true',
+      content: formData.get("Content")?.toString() ?? '',
+      isInternal: formData.get("Is Internal")?.toString() === 'true',
     }
 
     const validation = createCommentSchema.safeParse(rawData)

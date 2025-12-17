@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { CashRegisterService } from '@/lib/services/sales/cash-register-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCustomerBySlug, getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { serializeCashRegister } from '@/lib/utils/serializers'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createCashRegisterSchema } from '@/lib/validators/sales-validators'
@@ -17,17 +19,20 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const branchId = searchParams.get('branchId') || undefined
-    const isOpen = searchParams.get('isOpen') === 'true' ? true : searchParams.get('isOpen') === 'false' ? false : undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const branchId = searchParams.get("Branch Id") || undefined
+    const isOpen = searchParams.get("Is Open") === 'true' ? true : searchParams.get("Is Open") === 'false' ? false : undefined
 
     const customer = await getCustomerBySlug(slug)
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!customer || !organizationId) {
       throw AppError.notFound('Cliente no encontrado o inactivo')
     }
+
+    // Verificar permiso para gestionar cajas
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.CAJAS_MANAGE)
 
     const skip = (page - 1) * pageSize
 
@@ -68,7 +73,10 @@ export async function POST(
       throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    // Verificar permiso para crear/gestionar cajas
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.CAJAS_MANAGE)
+
+    const token = request.cookies.get("sas-auth-token")?.value
     currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {

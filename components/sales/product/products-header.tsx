@@ -1,7 +1,6 @@
 "use client";
 
 import { Plus, ArrowLeft, Download } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +8,7 @@ interface ProductsHeaderProps {
   title: string;
   description: string;
   newButtonText?: string;
-  onNewClick: () => void;
+  onNewClick?: () => void;
   showButton?: boolean;
   showBackButton?: boolean;
   onBackClick?: () => void;
@@ -25,9 +24,7 @@ export function ProductsHeader({
   showBackButton = false,
   onBackClick,
   onExportImportClick,
-}: ProductsHeaderProps) {
-  const t = useTranslations()
-  const defaultNewText = newButtonText || t('action.new')
+}: ProductsHeaderProps) {const defaultNewText = newButtonText || "Nuevo"
   
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 md:mb-8">
@@ -45,7 +42,7 @@ export function ProductsHeader({
             onClick={onBackClick}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            <span>{t('action.back')}</span>
+            <span>{"Volver"}</span>
           </Button>
         )}
         {onExportImportClick && (
@@ -55,10 +52,10 @@ export function ProductsHeader({
             onClick={onExportImportClick}
           >
             <Download className="h-4 w-4 mr-2" />
-            <span>{t('products.exportImport.title') || 'Exportar/Importar'}</span>
+            <span>Exportar/Importar</span>
           </Button>
         )}
-        {showButton && (
+        {showButton && onNewClick && (
           <Button variant="new" className="rounded-full w-full sm:w-auto" onClick={onNewClick}>
             <Plus className="h-4 w-4 mr-2" />
             <span>{defaultNewText}</span>

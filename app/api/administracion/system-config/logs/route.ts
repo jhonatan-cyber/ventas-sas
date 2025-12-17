@@ -21,14 +21,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
-    const type = searchParams.get('type') || undefined
-    const userId = searchParams.get('userId') || undefined
-    const customerId = searchParams.get('customerId') || undefined
-    const success = searchParams.get('success') ? searchParams.get('success') === 'true' : undefined
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
+    const limit = parseInt(searchParams.get("Limit") || '50')
+    const offset = parseInt(searchParams.get("Offset") || '0')
+    const type = searchParams.get("Type") || undefined
+    const userId = searchParams.get("User Id") || undefined
+    const customerId = searchParams.get("Customer Id") || undefined
+    const success = searchParams.get("Success") ? searchParams.get("Success") === 'true' : undefined
+    const startDate = searchParams.get("Start Date") ? new Date(searchParams.get("Start Date")!) : undefined
+    const endDate = searchParams.get("End Date") ? new Date(searchParams.get("End Date")!) : undefined
 
     const result = await SystemConfigService.getSecurityLogs(limit, offset, {
       type,

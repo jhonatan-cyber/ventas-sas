@@ -19,7 +19,7 @@ export async function GET(
     const resolvedParams = await params
     const slug = resolvedParams.slug
     const { searchParams } = new URL(request.url)
-    const range = searchParams.get('range') || '7d'
+    const range = searchParams.get("Range") || '7d'
 
     if (!slug) {
       return NextResponse.json(
@@ -38,7 +38,7 @@ export async function GET(
     }
 
     // Verificar autenticación
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const accessToken = request.cookies.get("sas-auth-token")?.value
     if (!accessToken) {
       return NextResponse.json(
         { error: 'No autenticado' },
@@ -216,7 +216,7 @@ export async function GET(
       },
       trends: {
         dailyLogins: dailyLogins.map(item => ({
-          date: item.date.toISOString().split('T')[0],
+          date: item.date.toISOString().split("T")[0],
           count: Number(item.count),
         })),
         hourlyActivity: Array.from({ length: 24 }, (_, hour) => ({
@@ -227,7 +227,7 @@ export async function GET(
       },
       security: {
         failedAttempts: failedAttempts.map(item => ({
-          date: item.date.toISOString().split('T')[0],
+          date: item.date.toISOString().split("T")[0],
           count: Number(item.count),
         })),
         blockedIPs: [], // Implementar con sistema de IPs bloqueadas

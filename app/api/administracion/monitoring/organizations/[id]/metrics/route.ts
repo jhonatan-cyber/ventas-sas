@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SessionMonitoringService } from '@/lib/services/admin/session-monitoring-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(
@@ -36,7 +36,7 @@ export async function GET(
 
     // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url)
-    const days = parseInt(searchParams.get('days') || '30')
+    const days = parseInt(searchParams.get("Days") || '30')
 
     // Obtener métricas de la organización
     const metrics = await SessionMonitoringService.getOrganizationMetrics(

@@ -37,49 +37,49 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     // Paginación
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '50')
     const skip = (page - 1) * pageSize
 
     // Filtros
     const filters: InvoiceFilters = {}
 
-    const organizationId = searchParams.get('organizationId')
+    const organizationId = searchParams.get("Organization Id")
     if (organizationId) {
       filters.organizationId = organizationId
     }
 
-    const subscriptionId = searchParams.get('subscriptionId')
+    const subscriptionId = searchParams.get("Subscription Id")
     if (subscriptionId) {
       filters.subscriptionId = subscriptionId
     }
 
-    const statusParam = searchParams.get('status')
+    const statusParam = searchParams.get("Status")
     if (statusParam) {
       if (statusParam.includes(',')) {
-        filters.status = statusParam.split(',')
+        filters.status = statusParam.split(",")
       } else {
         filters.status = statusParam
       }
     }
 
-    const startDate = searchParams.get('startDate')
+    const startDate = searchParams.get("Start Date")
     if (startDate) {
       filters.startDate = new Date(startDate)
     }
 
-    const endDate = searchParams.get('endDate')
+    const endDate = searchParams.get("End Date")
     if (endDate) {
       filters.endDate = new Date(endDate)
     }
 
-    const search = searchParams.get('search')
+    const search = searchParams.get("Search")
     if (search) {
       filters.search = search
     }
 
     // Obtener estadísticas si se solicita
-    const includeStats = searchParams.get('includeStats') === 'true'
+    const includeStats = searchParams.get("Include Stats") === 'true'
     let stats = null
     if (includeStats) {
       stats = await BillingService.getBillingStats(

@@ -66,18 +66,11 @@ async function getCompanyInfo(customerSlug: string): Promise<CompanyInfo> {
   // 2) Fallback: leer cookie de preferencias si faltan datos clave
   try {
     if (!companyName || !companyLogo || !companyPhone) {
-      const rawCookie =
-        document.cookie
-          .split("; ")
-          .find((c) => c.startsWith(`sas-prefs-${customerSlug}=`))
-          ?.split("=")[1] ||
-        document.cookie
-          .split("; ")
-          .find((c) => c.startsWith(`sas_prefs=`))
-          ?.split("=")[1]
+      const { getSasPreferences, getCookie } = require('./cookies')
+      const parsed = getSasPreferences(customerSlug) || 
+                    (getCookie('sas_prefs') ? JSON.parse(getCookie('sas_prefs')!) : null)
 
-    if (rawCookie) {
-        const parsed = JSON.parse(decodeURIComponent(rawCookie))
+    if (parsed) {
         companyName = companyName || (typeof parsed.companyName === "string" ? parsed.companyName : "")
         companyContactName =
           companyContactName || (typeof parsed.companyContactName === "string" ? parsed.companyContactName : "")
@@ -110,7 +103,7 @@ function getPrimaryColor(): { r: number; g: number; b: number } {
   if (typeof window === 'undefined') return fallback
 
   try {
-    const dummy = document.createElement('span')
+    const dummy = document.createElement("span") as HTMLSpanElement
     dummy.style.position = 'fixed'
     dummy.style.opacity = '0'
     dummy.style.pointerEvents = 'none'
@@ -474,7 +467,7 @@ export async function exportSalesReportToPDF(
     )
   }
 
-  doc.save(`reporte-ventas-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-ventas-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -555,7 +548,7 @@ export async function exportGeneralReportToPDF(
     cursorY += 6
   })
 
-  doc.save(`reporte-general-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-general-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -672,7 +665,7 @@ export async function exportAnalyticsMarkdownReportToPDF(
       if (tableLines.length >= 2) {
         const headerLine = tableLines[0]
         const headerCells = headerLine
-          .split('|')
+          .split("|")
           .slice(1, -1)
           .map((c) => c.trim())
 
@@ -681,7 +674,7 @@ export async function exportAnalyticsMarkdownReportToPDF(
         const rows = dataLines
           .map((row) =>
             row
-              .split('|')
+              .split("|")
               .slice(1, -1)
               .map((c) => c.trim())
           )
@@ -738,7 +731,7 @@ export async function exportAnalyticsMarkdownReportToPDF(
     addTextBlock(line, { size: 10 })
   }
 
-  doc.save(`reporte-analytics-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-analytics-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -861,7 +854,7 @@ export async function exportProductsReportToPDF(
     )
   }
 
-  doc.save(`reporte-productos-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-productos-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -948,7 +941,7 @@ export async function exportExpensesReportToPDF(
     )
   }
 
-  doc.save(`reporte-gastos-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-gastos-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -1070,7 +1063,7 @@ export async function exportCustomersReportToPDF(
     )
   }
 
-  doc.save(`reporte-clientes-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-clientes-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**
@@ -1160,7 +1153,7 @@ export async function exportCashRegistersReportToPDF(
     )
   }
 
-  doc.save(`reporte-cajas-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`reporte-cajas-${new Date().toISOString().split("T")[0]}.pdf`)
 }
 
 /**

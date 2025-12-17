@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const key = searchParams.get('key') || undefined
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const key = searchParams.get("Key") || undefined
+    const limit = parseInt(searchParams.get("Limit") || '50')
 
     if (!key) {
       return NextResponse.json(

@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -12,6 +11,7 @@ import { ExpensesHeader } from "./expenses-header"
 import { ExpenseBranchSummary, SalesExpenseWithRelations } from "./types"
 
 import { useExpenseActions } from "@/hooks/sales/expense/use-expense-actions"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 interface ExpensesPageClientProps {
   initialExpenses: SalesExpenseWithRelations[]
@@ -58,7 +58,9 @@ export function ExpensesPageClient({
   initialIsAdmin = false,
   maxBranches,
 }: ExpensesPageClientProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [expenses, setExpenses] = useState<SalesExpenseWithRelations[]>(() => initialExpenses.map(normalizeExpense))
   const [availableBranches, setAvailableBranches] = useState<ExpenseBranchSummary[]>(branches)
   const [isLoading, setIsLoading] = useState(false)
@@ -163,14 +165,21 @@ export function ExpensesPageClient({
     await loadBranches()
   })
 
+  // Verificar permisos para mostrar botones de acciones
+  const canCreateExpense = hasPermission('gastos_crear')
+  const canEditExpense = hasPermission('gastos_editar')
+  const canDeleteExpense = hasPermission('gastos_eliminar')
+  const canViewExpenseDetails = hasPermission('gastos_ver_detalles')
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       {/* Header con título y botón */}
       <ExpensesHeader
-        title={t('expenses.title')}
-        description={t('expenses.description')}
-        newButtonText={t('expenses.create')}
-        onNewClick={openCreateDialog}
+        title="Gastos"
+        description="Gestiona los gastos del negocio"
+        newButtonText="Nuevo Gasto"
+        onNewClick={canCreateExpense ? openCreateDialog : undefined}
+        showNewButton={canCreateExpense}
       />
 
       {/* Contenedor con filtros, tabla y paginación */}
@@ -181,12 +190,12 @@ export function ExpensesPageClient({
         isAdmin={isAdmin}
         userBranchId={userBranchId}
         maxBranches={maxBranches}
-        onEdit={openEditDialog}
-        onDelete={openDeleteDialog}
-        onView={(expense) => {
+        onEdit={canEditExpense ? openEditDialog : undefined}
+        onDelete={canDeleteExpense ? openDeleteDialog : undefined}
+        onView={canViewExpenseDetails ? (expense) => {
           setSelectedExpenseForDetail(expense)
           setIsDetailDialogOpen(true)
-        }}
+        } : undefined}
         customerSlug={customerSlug}
       />
 
@@ -219,12 +228,12 @@ export function ExpensesPageClient({
         expense={selectedExpenseForDetail}
         customerSlug={customerSlug}
         maxBranches={maxBranches}
-        onEdit={() => {
+        onEdit={canEditExpense ? () => {
           setIsDetailDialogOpen(false)
           if (selectedExpenseForDetail) {
             openEditDialog(selectedExpenseForDetail)
           }
-        }}
+        } : undefined}
       />
     </div>
   )

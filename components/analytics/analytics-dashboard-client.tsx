@@ -105,20 +105,24 @@ export function AnalyticsDashboardClient({ slug, maxBranches }: AnalyticsDashboa
         </div>
 
         {/* Comparación con período anterior */}
-        {comparison && (
+        {comparison && 
+         comparison.sales && 
+         comparison.revenue && 
+         typeof comparison.sales.current !== 'undefined' && 
+         typeof comparison.revenue.current !== 'undefined' && (
           <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 mb-6">
             <ComparisonCard
               title="Ventas"
-              current={comparison.sales.current}
-              previous={comparison.sales.previous}
+              current={comparison.sales.current || 0}
+              previous={comparison.sales.previous || 0}
               format="number"
               icon={<TrendingUp className="h-5 w-5 text-blue-500" />}
               slug={slug}
             />
             <ComparisonCard
               title="Ingresos"
-              current={comparison.revenue.current}
-              previous={comparison.revenue.previous}
+              current={comparison.revenue.current || 0}
+              previous={comparison.revenue.previous || 0}
               format="currency"
               icon={<DollarSign className="h-5 w-5 text-green-500" />}
               slug={slug}

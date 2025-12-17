@@ -1,9 +1,10 @@
 "use client"
 
 import { Loader2, CheckSquare2 } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
+
+import { ModuleActionsPreview } from "./module-actions-preview"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -27,7 +28,6 @@ interface PermissionSasFormDialogProps {
 }
 
 export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, customerSlug, maxBranches }: PermissionSasFormDialogProps) {
-  const t = useTranslations()
   const [selectedModule, setSelectedModule] = useState<string>("")
   const [selectedActions, setSelectedActions] = useState<string[]>([])
   const [existingPermissionNames, setExistingPermissionNames] = useState<string[]>([])
@@ -48,8 +48,11 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
     return filtered
   }, [allModules, maxBranches])
   
-  // Usar useMemo para que actions sea estable y no cause re-renders infinitos
-  const actions = useMemo(() => PermissionSasService.getAvailableActions(), [])
+  // Obtener acciones disponibles para el módulo seleccionado
+  const actions = useMemo(() => {
+    if (!selectedModule) return []
+    return PermissionSasService.getAvailableActions(selectedModule)
+  }, [selectedModule])
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -138,12 +141,12 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
 
   const handleSubmit = async () => {
     if (!selectedModule) {
-      toast.error(t('permissions.sas.moduleRequired'))
+      toast.error('Por favor selecciona un módulo')
       return
     }
 
     if (selectedActions.length === 0) {
-      toast.error(t('permissions.sas.actionsRequired'))
+      toast.error('Por favor selecciona al menos una acción')
       return
     }
 
@@ -200,7 +203,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
         ? `Se han creado ${newPermissions.length} permiso(s) nuevo(s). ${existingCount} permiso(s) ya existían.`
         : `Se han creado ${newPermissions.length} permiso(s) para el módulo ${modules.find(m => m.id === selectedModule)?.label}`
 
-      toast.success(t('permissions.sas.registeredSuccess'), {
+      toast.success('Permisos registrados correctamente', {
         description: message,
       })
 
@@ -208,7 +211,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
       onOpenChange(false)
     } catch (error: any) {
       console.error("Error al crear permisos:", error)
-      toast.error(t('permissions.sas.errorRegistering'), {
+      toast.error('Error al registrar permisos', {
         description: error.message || "No se pudieron crear los permisos",
       })
     } finally {
@@ -239,7 +242,7 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
               </Label>
               <Select value={selectedModule} onValueChange={setSelectedModule}>
                 <SelectTrigger id="module" className="rounded-full w-full">
-                  <SelectValue placeholder={t('common.placeholders.selectModule')} />
+                  <SelectValue placeholder="Selecciona un módulo" />
                 </SelectTrigger>
                 <SelectContent>
                   {modules.map((module) => (
@@ -267,6 +270,9 @@ export function PermissionSasFormDialog({ open, onOpenChange, onSuccess, custome
               </Button>
             </div>
           </div>
+
+          {/* Vista previa de acciones por módulo */}
+          <ModuleActionsPreview selectedModule={selectedModule} />
 
           {loadingExistingPermissions && selectedModule && (
             <div className="text-xs text-gray-500 dark:text-gray-400">

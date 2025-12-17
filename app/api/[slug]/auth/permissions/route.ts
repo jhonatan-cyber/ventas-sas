@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { prisma } from '@/lib/prisma'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 
 export async function GET(
@@ -18,10 +19,21 @@ export async function GET(
     }
 
     // Obtener permisos del rol
-    const permissions = user.rol?.permissions as string[] | null || []
+    const rolePermissions = user.rol?.permissions as string[] | null || []
+
+    // Filtrar solo los permisos que están activos en el sistema
+    const activePermissions = await prisma.permissionSas.findMany({
+      where: {
+        name: { in: rolePermissions },
+        isActive: true,
+      },
+      select: { name: true },
+    })
+
+    const filteredPermissions = activePermissions.map(p => p.name)
 
     return NextResponse.json({
-      permissions,
+      permissions: filteredPermissions,
       isSuperAdmin: false, // En el sistema SAS no hay super admin, solo roles
       userId: user.id,
       roleName: user.rol?.nombre || null,

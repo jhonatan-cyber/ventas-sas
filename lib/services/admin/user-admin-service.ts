@@ -88,7 +88,7 @@ export class UserAdminService {
       
       // Invalidar sesiones al cambiar contraseña (con manejo de errores)
       try {
-        const { SessionManagement } = await import('@/lib/auth/session-management')
+        const { SessionManagement } = await import("@/lib/auth/session-management")
         await SessionManagement.invalidateSessionsOnPasswordChange(id, 'admin')
       } catch (error) {
         // Si falla la invalidación de sesiones, continuar con la actualización
@@ -141,7 +141,7 @@ export class UserAdminService {
     const hashedPassword = await PasswordService.hashPassword(newPassword)
 
     // Invalidar sesiones al cambiar contraseña
-    const { SessionManagement } = await import('@/lib/auth/session-management')
+    const { SessionManagement } = await import("@/lib/auth/session-management")
     await SessionManagement.invalidateSessionsOnPasswordChange(id, 'admin')
 
     return prisma.profile.update({

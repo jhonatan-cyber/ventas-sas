@@ -1,7 +1,6 @@
 "use client"
 
 import { Eye, Search, X, HelpCircle } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { SupportSasCards } from "./support-sas-cards"
 import { SupportSasStats } from "./support-sas-stats"
@@ -72,14 +71,12 @@ export function SupportContainer({
   pageSize,
   onPageSizeChange
 }: SupportContainerProps) {
-  const t = useTranslations()
-  
   const STATUS_TABS: Array<{ value: "all" | "open" | "in_progress" | "resolved" | "closed"; label: string }> = [
-    { value: "all", label: t('support.filters.statusAll') },
-    { value: "open", label: t('support.filters.statusOpen') },
-    { value: "in_progress", label: t('support.filters.statusInProgress') },
-    { value: "resolved", label: t('support.filters.statusResolved') },
-    { value: "closed", label: t('support.filters.statusClosed') },
+    { value: "all", label: "Todos" },
+    { value: "open", label: "Abiertos" },
+    { value: "in_progress", label: "En progreso" },
+    { value: "resolved", label: "Resueltos" },
+    { value: "closed", label: "Cerrados" },
   ]
 
   const PRIORITY_BADGE: Record<string, string> = {
@@ -90,10 +87,10 @@ export function SupportContainer({
   }
 
   const PRIORITY_LABELS: Record<string, string> = {
-    low: t('support.priority.low'),
-    medium: t('support.priority.medium'),
-    high: t('support.priority.high'),
-    urgent: t('support.priority.urgent'),
+    low: "Baja",
+    medium: "Media",
+    high: "Alta",
+    urgent: "Urgente",
   }
   
   return (
@@ -110,13 +107,13 @@ export function SupportContainer({
                 htmlFor="search-support"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
               >
-                {t('support.filters.search')}
+                Buscar
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
                 <Input
                   id="search-support"
-                  placeholder={t('support.filters.searchPlaceholder')}
+                  placeholder="Buscar por número o título..."
                   className="pl-10 pr-10 w-full rounded-full"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
@@ -143,7 +140,7 @@ export function SupportContainer({
                   htmlFor="status-filter"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
                 >
-                  {t('support.filters.status')}
+                  Estado
                 </Label>
                 <Select
                   onValueChange={onStatusFilterChange}
@@ -151,7 +148,7 @@ export function SupportContainer({
                   defaultValue="all"
                 >
                   <SelectTrigger id="status-filter" className="w-full rounded-full">
-                    <SelectValue placeholder={t('support.filters.statusAll')} />
+                    <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_TABS.map((tab) => (
@@ -169,7 +166,7 @@ export function SupportContainer({
                   htmlFor="page-size"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
                 >
-                  {t('support.filters.pageSize')}
+                  Mostrar
                 </Label>
                 <Select
                   onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -180,10 +177,10 @@ export function SupportContainer({
                     <SelectValue placeholder="10" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">{t('support.filters.pageSize5')}</SelectItem>
-                    <SelectItem value="10">{t('support.filters.pageSize10')}</SelectItem>
-                    <SelectItem value="20">{t('support.filters.pageSize20')}</SelectItem>
-                    <SelectItem value="50">{t('support.filters.pageSize50')}</SelectItem>
+                    <SelectItem value="5">5 por página</SelectItem>
+                    <SelectItem value="10">10 por página</SelectItem>
+                    <SelectItem value="20">20 por página</SelectItem>
+                    <SelectItem value="50">50 por página</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -203,12 +200,12 @@ export function SupportContainer({
             <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('support.table.ticket')}</TableHead>
-              <TableHead>{t('support.table.status')}</TableHead>
-              <TableHead>{t('support.table.priority')}</TableHead>
-              <TableHead>{t('support.table.updated')}</TableHead>
-              <TableHead>{t('support.table.comments')}</TableHead>
-              <TableHead className="text-right">{t('support.table.actions')}</TableHead>
+              <TableHead>Ticket</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Prioridad</TableHead>
+              <TableHead>Actualizado</TableHead>
+              <TableHead>Comentarios</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,7 +242,7 @@ export function SupportContainer({
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>{t('support.table.viewDetails')}</TooltipContent>
+                      <TooltipContent>Ver detalles</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </TableCell>
@@ -262,7 +259,7 @@ export function SupportContainer({
               <HelpCircle className="h-8 w-8 text-gray-400" />
             </div>
             <p className="text-gray-500 dark:text-gray-400">
-              {loading ? t('support.table.loading') : t('support.table.noTickets')}
+              {loading ? 'Cargando tickets...' : 'No hay tickets de soporte'}
             </p>
           </div>
         </div>

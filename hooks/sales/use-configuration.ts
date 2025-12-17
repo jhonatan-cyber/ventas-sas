@@ -124,8 +124,8 @@ export function useConfiguration(
         // Actualizar caché de idioma
         if (data.configuration.language && typeof window !== 'undefined') {
           try {
-            const { updateLanguageCache } = await import('@/lib/utils/i18n')
-            updateLanguageCache(customerSlug, data.configuration.language)
+            // Language cache update removed - no longer using i18n
+            // updateLanguageCache(customerSlug, data.configuration.language) - removed
           } catch {
             // Ignorar errores de importación
           }
@@ -187,14 +187,7 @@ export function useConfiguration(
             document.documentElement.setAttribute('data-sas-color', data.configuration.themeColor)
           }
           // Actualizar caché de idioma si cambió
-          if (data.configuration.language && typeof window !== 'undefined') {
-            try {
-              const { updateLanguageCache } = await import('@/lib/utils/i18n')
-              updateLanguageCache(customerSlug, data.configuration.language)
-            } catch {
-              // Ignorar errores de importación
-            }
-          }
+          // Language cache update removed - no longer using i18n
           return true
         }
 

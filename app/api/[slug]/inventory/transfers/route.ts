@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { prisma } from '@/lib/prisma'
 import { NotificationService } from '@/lib/services/notification-service'
@@ -11,6 +12,7 @@ import { InventoryTransferService } from '@/lib/services/sales/inventory-transfe
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 export async function GET(
   request: NextRequest,
@@ -31,13 +33,19 @@ export async function GET(
       throw AppError.unauthorized('Usuario no autenticado')
     }
 
-    const branchId = searchParams.get('branchId') || undefined
-    const productId = searchParams.get('productId') || undefined
-    const status = searchParams.get('status') as any
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    // Requiere permiso para gestionar transferencias de inventario
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.INVENTORY_MANAGE)
+
+    // Requiere permiso para gestionar inventario (transferencias)
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.INVENTORY_MANAGE)
+
+    const branchId = searchParams.get("Branch Id") || undefined
+    const productId = searchParams.get("Product Id") || undefined
+    const status = searchParams.get("Status") as any
+    const startDate = searchParams.get("Start Date") ? new Date(searchParams.get("Start Date")!) : undefined
+    const endDate = searchParams.get("End Date") ? new Date(searchParams.get("End Date")!) : undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '50')
     const skip = (page - 1) * pageSize
 
     const result = await InventoryTransferService.getTransfers(organizationId, {

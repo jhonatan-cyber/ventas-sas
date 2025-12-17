@@ -10,19 +10,19 @@ import { AuthService } from "@/lib/services/auth-service"
 export default async function AdminSetupPage() {
   // Validación de sesión Admin en el servidor
   const cookieStore = await cookies()
-  const token = cookieStore.get('admin-auth-token')?.value
+  const token = cookieStore.get("admin-auth-token")?.value
   if (!token) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
   const payload = await AdminJWTService.verifyToken(token!)
   if (!payload) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
   
   // Validar acceso de administrador (super admin o rol Administrador)
   const hasAccess = await AuthService.hasAdminAccess(payload.userId)
   if (!hasAccess) {
-    redirect('/administracion/login')
+    redirect("/administracion/login")
   }
 
   // Obtener datos iniciales

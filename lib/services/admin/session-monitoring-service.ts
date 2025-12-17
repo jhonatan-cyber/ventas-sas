@@ -5,8 +5,9 @@
  * del sistema SAS desde el panel de administración
  */
 
-import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
 
 export interface SessionStats {
@@ -302,7 +303,7 @@ export class SessionMonitoringService {
   static async getSecurityAlerts(
     page: number = 1,
     pageSize: number = 20,
-    filters: {
+    _filters: {
       severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
       type?: string
       resolved?: boolean

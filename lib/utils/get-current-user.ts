@@ -11,7 +11,7 @@ import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
  */
 export async function getCurrentAdminUser(request: NextRequest) {
   try {
-    const token = request.cookies.get('admin-auth-token')?.value
+    const token = request.cookies.get("admin-auth-token")?.value
     if (!token) return null
 
     const payload = await AdminJWTService.verifyToken(token)
@@ -46,13 +46,13 @@ export async function getCurrentAdminUser(request: NextRequest) {
  */
 export async function getCurrentSasUser(request: NextRequest, slug: string) {
   try {
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     if (token) {
       const user = await AuthSasService.verifyToken(slug, token)
       if (user) return user
     }
 
-    const sessionCookie = request.cookies.get('sas-session')?.value
+    const sessionCookie = request.cookies.get("sas-session")?.value
     if (sessionCookie) {
       try {
         let session: any = null

@@ -22,7 +22,7 @@ interface AdminGrowthChartProps {
 export function AdminGrowthChart({ data }: AdminGrowthChartProps) {
   // Formatear fecha (mes)
   const formatDate = (dateStr: string) => {
-    const [year, month] = dateStr.split('-')
+    const [year, month] = dateStr.split("-")
     return `${month}/${year}`
   }
 

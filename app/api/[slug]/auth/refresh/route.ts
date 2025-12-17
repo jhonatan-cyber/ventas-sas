@@ -25,8 +25,8 @@ export async function POST(
     }
 
     // Obtener refresh token de las cookies
-    const refreshToken = request.cookies.get('sas-refresh-token')?.value
-    const accessToken = request.cookies.get('sas-auth-token')?.value
+    const refreshToken = request.cookies.get("Sas-refresh-token")?.value
+    const accessToken = request.cookies.get("Sas-auth-token")?.value
 
     console.log('🔄 API Refresh - Debug:', {
       slug,
@@ -118,7 +118,7 @@ export async function POST(
 
     // Actualizar session cookie para compatibilidad
     try {
-      const existingSession = request.cookies.get('sas-session')?.value
+      const existingSession = request.cookies.get("sas-session")?.value
       if (existingSession) {
         const sessionData = JSON.parse(Buffer.from(existingSession, 'base64').toString('utf8'))
         sessionData.lastUpdated = Date.now()

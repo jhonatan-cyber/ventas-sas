@@ -3,7 +3,6 @@
 
 import { BrowserMultiFormatReader } from "@zxing/library"
 import { ScanLine, X, Check, AlertCircle } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { toast } from "sonner"
 
@@ -33,7 +32,6 @@ interface SaleCancelDialogProps {
 }
 
 export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCancelDialogProps) {
-  const t = useTranslations()
   const [isCancelling, setIsCancelling] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [_scanningProductId, setScanningProductId] = useState<string | null>(null)
@@ -153,10 +151,10 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
       })
     } catch (error) {
       console.error('Error al acceder a la cámara:', error)
-      toast.error(t('common.cameraError'))
+      toast.error('Error al acceder a la cámara')
       stopScanning()
     }
-  }, [stopScanning, validateCode, t])
+  }, [stopScanning, validateCode])
 
   useEffect(() => {
     return () => {
@@ -291,7 +289,7 @@ export function SaleCancelDialog({ open, onOpenChange, sale, onCancel }: SaleCan
                     <div className="flex gap-2">
                       <Input
                         key={inputKey}
-                        placeholder={t('common.placeholders.scanCode')}
+                        placeholder="Escanear código"
                         className="rounded-full flex-1"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {

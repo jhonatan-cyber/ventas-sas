@@ -25,7 +25,7 @@ export function generateCSRFToken(): string {
   // Crear hash del token
   const hash = createHash('sha256')
     .update(`${combined}:${CSRF_SECRET}`)
-    .digest('hex')
+    .digest("hex")
   
   return `${randomToken}:${timestamp}:${hash}`
 }
@@ -39,8 +39,8 @@ export function validateCSRFToken(token: string, cookieToken?: string): boolean 
   }
 
   // Verificar que los tokens coincidan (parte aleatoria y timestamp)
-  const [randomPart, timestamp] = token.split(':')
-  const [cookieRandomPart, cookieTimestamp] = cookieToken.split(':')
+  const [randomPart, timestamp] = token.split(":")
+  const [cookieRandomPart, cookieTimestamp] = cookieToken.split(":")
   
   if (randomPart !== cookieRandomPart || timestamp !== cookieTimestamp) {
     return false
@@ -49,9 +49,9 @@ export function validateCSRFToken(token: string, cookieToken?: string): boolean 
   // Verificar hash del token en cookie
   const expectedHash = createHash('sha256')
     .update(`${cookieRandomPart}:${cookieTimestamp}:${CSRF_SECRET}`)
-    .digest('hex')
+    .digest("hex")
   
-  const [providedHash] = cookieToken.split(':').slice(-1)
+  const [providedHash] = cookieToken.split(":").slice(-1)
   
   if (providedHash !== expectedHash) {
     return false

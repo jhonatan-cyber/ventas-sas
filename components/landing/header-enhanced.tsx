@@ -55,12 +55,12 @@ export function HeaderEnhanced({ mobileMenuOpen, setMobileMenuOpen }: HeaderProp
     >
       <div className="container mx-auto max-w-7xl relative flex h-20 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-emerald-600 shadow-lg transition-all duration-300 ${scrolled ? "shadow-blue-500/30" : "shadow-blue-500/20"
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-600 to-emerald-500 shadow-lg transition-all duration-300 ${scrolled ? "shadow-sky-500/30" : "shadow-sky-500/20"
             } group-hover:shadow-emerald-500/40 group-hover:scale-105`}>
             <BarChart3 className="h-6 w-6 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-600 bg-clip-text text-transparent leading-tight">
+            <span className="text-xl font-bold bg-gradient-to-r from-sky-600 via-emerald-500 to-sky-600 bg-clip-text text-transparent leading-tight">
               SmartPOS
             </span>
           </div>
@@ -73,7 +73,7 @@ export function HeaderEnhanced({ mobileMenuOpen, setMobileMenuOpen }: HeaderProp
                 key={item.href}
                 href={item.href}
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ${activeSection === item.href
-                  ? "bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-md"
+                  ? "bg-gradient-to-r from-sky-600 to-emerald-500 text-white shadow-md"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
               >
@@ -85,7 +85,6 @@ export function HeaderEnhanced({ mobileMenuOpen, setMobileMenuOpen }: HeaderProp
 
         <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
-
         </div>
 
         <button
@@ -105,7 +104,7 @@ export function HeaderEnhanced({ mobileMenuOpen, setMobileMenuOpen }: HeaderProp
                 key={item.href}
                 href={item.href}
                 className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${activeSection === item.href
-                  ? "bg-gradient-to-r from-blue-600 to-emerald-600 text-white"
+                  ? "bg-gradient-to-r from-sky-600 to-emerald-500 text-white"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 onClick={() => setMobileMenuOpen(false)}
@@ -118,7 +117,6 @@ export function HeaderEnhanced({ mobileMenuOpen, setMobileMenuOpen }: HeaderProp
               <span className="text-sm font-medium text-muted-foreground">Tema</span>
               <ThemeToggle />
             </div>
-
           </div>
         </div>
       )}

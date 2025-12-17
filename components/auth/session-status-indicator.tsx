@@ -6,13 +6,13 @@
 
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { Clock, Shield, Wifi, WifiOff } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { useEnhancedAuth } from '@/hooks/use-enhanced-auth'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useEnhancedAuth } from '@/hooks/use-enhanced-auth'
 
 interface SessionStatusIndicatorProps {
   customerSlug: string

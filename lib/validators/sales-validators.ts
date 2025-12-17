@@ -12,7 +12,7 @@ const saleItemSchema = z.object({
     .uuid('El ID del producto no es válido'),
   quantity: z
     .number()
-    .int('La cantidad debe ser un número entero')
+    .int("La cantidad debe ser un número entero")
     .positive('La cantidad debe ser mayor a 0')
     .max(10000, 'La cantidad máxima es 10,000'),
   unitPrice: z
@@ -145,12 +145,12 @@ export const createProductSchema = z.object({
     .optional(),
   stock: z
     .number()
-    .int('El stock debe ser un número entero')
+    .int("El stock debe ser un número entero")
     .nonnegative('El stock no puede ser negativo')
     .default(0),
   minStock: z
     .number()
-    .int('El stock mínimo debe ser un número entero')
+    .int("El stock mínimo debe ser un número entero")
     .nonnegative('El stock mínimo no puede ser negativo')
     .default(0),
   sku: z
@@ -260,7 +260,7 @@ const quotationItemSchema = z.object({
     .nullable(),
   quantity: z
     .number()
-    .int('La cantidad debe ser un número entero')
+    .int("La cantidad debe ser un número entero")
     .positive('La cantidad debe ser mayor a 0')
     .max(10000, 'La cantidad máxima es 10,000'),
   unitPrice: z
@@ -480,8 +480,8 @@ export const createSupportTicketSchema = z.object({
     .string()
     .min(10, 'La descripción debe tener al menos 10 caracteres')
     .max(2000, 'La descripción es demasiado larga'),
-  priority: ticketPriorityEnum.optional().default('medium'),
-  category: ticketCategoryEnum.optional().default('other'),
+  priority: ticketPriorityEnum.optional().default("medium"),
+  category: ticketCategoryEnum.optional().default("other"),
   contactEmail: z
     .string()
     .email('El email no es válido')

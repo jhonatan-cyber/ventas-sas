@@ -12,9 +12,6 @@ import { ProductsStats } from "./products-stats"
 import { ProductsTable } from "./products-table"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { getProductDescription } from "@/lib/utils/product-description"
-
-
 interface ProductsContainerProps {
   products: (SalesProduct & { category: Category | null; branch: Branch | null })[]
   categoryName?: string
@@ -70,20 +67,7 @@ export function ProductsContainer({
     // Filtrar por búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase()
-      // Obtener descripción para búsqueda (usar idioma actual o español por defecto)
-      const currentLanguage = (() => {
-        try {
-          const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-          return prefs?.language || 'es';
-        } catch {
-          return 'es';
-        }
-      })();
-      const description = getProductDescription(
-        product.description,
-        (product as any).descriptionTranslations,
-        currentLanguage
-      ) || "";
+      const description = product.description || "";
       const matchesSearch = 
         product.name?.toLowerCase().includes(searchLower) ||
         description.toLowerCase().includes(searchLower) ||

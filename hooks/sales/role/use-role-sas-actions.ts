@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
+import { PermissionNotificationService } from "@/lib/services/sales/permission-notification-service"
+
 type RoleWithRelations = RoleSas & {
   organization?: { razonSocial: string | null; name: string | null; slug: string | null } | null
   sucursal?: { name: string } | null
@@ -109,6 +111,17 @@ export function useRoleSasActions(
         })
       }
       
+      // Notificar cambio de permisos en tiempo real
+      try {
+        PermissionNotificationService.notifyRolePermissionsUpdated(
+          customerSlug,
+          selectedRole.id,
+          selectedRole.nombre
+        )
+      } catch (notificationError) {
+        console.error('Error enviando notificación:', notificationError)
+      }
+      
       toast.success('Permisos actualizados', {
         description: `Los permisos de ${selectedRole.nombre} han sido actualizados exitosamente.`,
       })
@@ -142,6 +155,8 @@ export function useRoleSasActions(
 
       const savedRole = await response.json()
       const message = selectedRole ? "Rol actualizado" : "Rol creado"
+      const action = selectedRole ? "updated" : "created"
+      
       toast.success(message)
       closeDialogs()
       
@@ -163,6 +178,18 @@ export function useRoleSasActions(
         startTransition(() => {
           router.refresh()
         })
+      }
+
+      // Notificar cambio de rol en tiempo real
+      try {
+        PermissionNotificationService.notifyRoleUpdated(
+          customerSlug,
+          savedRole.id,
+          savedRole.nombre || data.nombre,
+          action
+        )
+      } catch (notificationError) {
+        console.error('Error enviando notificación:', notificationError)
       }
     } catch (error: any) {
       toast.error(error.message || "Error al guardar el rol")
@@ -193,6 +220,18 @@ export function useRoleSasActions(
       } else {
         startTransition(() => router.refresh())
       }
+
+      // Notificar eliminación de rol en tiempo real
+      try {
+        PermissionNotificationService.notifyRoleUpdated(
+          customerSlug,
+          selectedRole.id,
+          selectedRole.nombre,
+          'deleted'
+        )
+      } catch (notificationError) {
+        console.error('Error enviando notificación:', notificationError)
+      }
     })
     setConfirmOpen(true)
   }
@@ -221,6 +260,18 @@ export function useRoleSasActions(
             r.id === role.id ? { ...r, isActive: newStatus, ...updatedRole } : r
           )
         )
+      }
+      
+      // Notificar cambio de estado en tiempo real
+      try {
+        PermissionNotificationService.notifyRoleUpdated(
+          customerSlug,
+          role.id,
+          role.nombre,
+          newStatus ? 'activated' : 'deactivated'
+        )
+      } catch (notificationError) {
+        console.error('Error enviando notificación:', notificationError)
       }
       
       toast.success(newStatus ? 'Rol activado' : 'Rol desactivado')

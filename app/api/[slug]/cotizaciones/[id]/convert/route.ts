@@ -51,7 +51,7 @@ export async function POST(
       throw AppError.notFound('Cliente no encontrado o inactivo')
     }
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
 
     if (!currentUser) {

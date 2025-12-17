@@ -2,6 +2,7 @@
 
 import { m } from 'framer-motion'
 import { ReactNode } from 'react'
+
 import { Table, TableBody, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 

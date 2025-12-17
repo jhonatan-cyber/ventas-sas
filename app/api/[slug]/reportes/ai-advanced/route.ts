@@ -13,8 +13,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url)
-    const startDateStr = searchParams.get("startDate")
-    const endDateStr = searchParams.get("endDate")
+    const startDateStr = searchParams.get("Start Date")
+    const endDateStr = searchParams.get("End Date")
 
     const dateRange =
       startDateStr || endDateStr

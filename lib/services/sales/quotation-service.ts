@@ -99,7 +99,7 @@ export class QuotationService {
 
     let sequence = 1
     if (lastQuotation) {
-      const lastSequence = parseInt(lastQuotation.quotationNumber.split('-').pop() || '0')
+      const lastSequence = parseInt(lastQuotation.quotationNumber.split("-").pop() || '0')
       sequence = lastSequence + 1
     }
 

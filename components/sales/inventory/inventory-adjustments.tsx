@@ -6,9 +6,9 @@
 
 import { format } from "date-fns"
 import { RefreshCw, Plus, ArrowUp, ArrowDown, Edit } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 interface InventoryAdjustment {
   id: string
@@ -63,7 +64,6 @@ interface InventoryAdjustmentsProps {
   customerSlug: string
 }
 
-// Las sugerencias de razones se traducen dinámicamente usando t('inventory.adjustments.reasonSuggestions.*')
 const REASON_SUGGESTIONS = [
   "loss",
   "damage",
@@ -76,7 +76,9 @@ const REASON_SUGGESTIONS = [
 ];
 
 export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps) {
-  const t = useTranslations()
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+
   const [adjustments, setAdjustments] = useState<InventoryAdjustment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -161,12 +163,12 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
 
   const handleCreateAdjustment = async () => {
     if (!productId || !adjustmentType || !quantity || !reason || !justification) {
-      toast.error(t('inventory.adjustments.fillAllFields') || 'Completa todos los campos requeridos')
+      toast.error('Completa todos los campos requeridos')
       return
     }
 
     if (adjustmentType !== "CORRECTION" && parseInt(quantity) <= 0) {
-      toast.error(t('inventory.adjustments.quantityPositive') || 'La cantidad debe ser mayor a 0')
+      toast.error('La cantidad debe ser mayor a 0')
       return
     }
 
@@ -188,12 +190,12 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        const errorMessage = data.error || data.message || t('inventory.adjustments.error') || 'Error al crear ajuste'
+        const errorMessage = data.error || data.message || 'Error al crear ajuste'
         toast.error(errorMessage)
         return
       }
 
-      toast.success(t('inventory.adjustments.created') || 'Ajuste creado')
+      toast.success('Ajuste creado')
       setIsCreateDialogOpen(false)
       setProductId("")
       setBranchId("")
@@ -204,7 +206,7 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
       setNotes("")
       loadAdjustments()
     } catch (error: any) {
-      const errorMessage = error?.message || t('inventory.adjustments.error') || 'Error al crear ajuste'
+      const errorMessage = error?.message || 'Error al crear ajuste'
       toast.error(errorMessage)
     }
   }
@@ -224,9 +226,9 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
 
   const getAdjustmentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      INCREASE: t('inventory.adjustments.types.increase') || 'Aumento',
-      DECREASE: t('inventory.adjustments.types.decrease') || 'Disminución',
-      CORRECTION: t('inventory.adjustments.types.correction') || 'Corrección',
+      INCREASE: 'Aumento',
+      DECREASE: 'Disminución',
+      CORRECTION: 'Corrección',
     }
     return labels[type] || type
   }
@@ -252,16 +254,16 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
             <div>
               <CardTitle className="flex items-center gap-2">
                 <RefreshCw className="h-5 w-5" />
-                {t('inventory.adjustments.title') || 'Ajustes de Inventario'}
+                'Ajustes de Inventario'
               </CardTitle>
               <CardDescription>
-                {t('inventory.adjustments.description') || 'Ajusta el stock de productos con justificación'}
+                'Ajusta el stock de productos con justificación'
               </CardDescription>
             </div>
             <div className="flex items-end gap-2">
               <div className="space-y-1">
                 <Label className="text-xs text-gray-600 dark:text-gray-300">
-                  {t("common.data") || "Datos"}
+                  {"Datos"}
                 </Label>
                 <Select
                   value={String(pageSize)}
@@ -276,22 +278,24 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                   <SelectContent>
                     {[5, 10, 20, 50, 100].map((n) => (
                       <SelectItem key={n} value={String(n)}>
-                        {n} {t("common.perPage") || "por página"}
+                        {n} {"por página"}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                onClick={() => {
-                  setIsCreateDialogOpen(true)
-                  loadProducts()
-                }}
-                className="rounded-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t('inventory.adjustments.new') || 'Nuevo Ajuste'}
-              </Button>
+              {hasPermission('inventario_crear') && (
+                <Button
+                  onClick={() => {
+                    setIsCreateDialogOpen(true)
+                    loadProducts()
+                  }}
+                  className="rounded-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Ajuste
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -304,7 +308,7 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
             </div>
           ) : adjustments.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              {t('inventory.adjustments.noAdjustments') || 'No hay ajustes registrados'}
+              'No hay ajustes registrados'
             </div>
           ) : (
             <>
@@ -312,13 +316,13 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t('inventory.adjustments.product') || 'Producto'}</TableHead>
-                      <TableHead>{t('inventory.adjustments.type') || 'Tipo'}</TableHead>
-                      <TableHead>{t('inventory.adjustments.quantity') || 'Cantidad'}</TableHead>
-                      <TableHead>{t('inventory.movements.stock') || 'Stock'}</TableHead>
-                      <TableHead>{t('inventory.adjustments.reason') || 'Razón'}</TableHead>
-                      <TableHead>{t('inventory.adjustments.user') || 'Usuario'}</TableHead>
-                      <TableHead>{t('inventory.adjustments.date') || 'Fecha'}</TableHead>
+                      <TableHead>'Producto'</TableHead>
+                      <TableHead>'Tipo'</TableHead>
+                      <TableHead>'Cantidad'</TableHead>
+                      <TableHead>'Stock'</TableHead>
+                      <TableHead>'Razón'</TableHead>
+                      <TableHead>'Usuario'</TableHead>
+                      <TableHead>'Fecha'</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -389,11 +393,10 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                       disabled={page === 1}
                       className="rounded-full"
                     >
-                      {t("action.previous") || "Anterior"}
+                      {"Anterior"}
                     </Button>
                     <div className="text-sm text-gray-500 dark:text-gray-400 px-2">
-                      {t("pagination.page") || t("common.page") || "Página"} {page}{" "}
-                      {t("pagination.of") || t("common.of") || "de"} {totalPages}
+                      Página {page} de {totalPages}
                     </div>
                     <Button
                       variant="outline"
@@ -402,7 +405,7 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                       disabled={page === totalPages}
                       className="rounded-full"
                     >
-                      {t("action.next") || "Siguiente"}
+                      {"Siguiente"}
                     </Button>
                   </div>
                 )
@@ -418,13 +421,13 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
           {/* Header estático */}
           <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
             <DialogHeader className="px-0 py-0 space-y-2">
-              <DialogTitle>{t('inventory.adjustments.new') || 'Nuevo Ajuste'}</DialogTitle>
+              <DialogTitle>Nuevo Ajuste</DialogTitle>
               <DialogDescription>
-                {t('inventory.adjustments.createDescription') || 'Crea un nuevo ajuste de inventario con justificación'}
+                'Crea un nuevo ajuste de inventario con justificación'
               </DialogDescription>
             </DialogHeader>
           </div>
-          
+
           <div className="flex flex-col flex-1 min-h-0">
             {/* Contenido con scroll */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gray-50/60 dark:bg-[#0c0c0c]">
@@ -432,7 +435,7 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('common.branch') || 'Sucursal'} ({t('common.optional') || 'Opcional'})
+                    'Sucursal (Opcional)'
                   </Label>
                   <Select value={branchId || '__all__'} onValueChange={(value) => {
                     const actualValue = value === '__all__' ? '' : value
@@ -440,10 +443,10 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                     loadProducts(actualValue || undefined)
                   }}>
                     <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-                      <SelectValue placeholder={t('common.placeholders.allBranches') || 'Todas las sucursales'} />
+                      <SelectValue placeholder='Todas las sucursales' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">{t('common.placeholders.allBranches') || 'Todas las sucursales'}</SelectItem>
+                      <SelectItem value="__all__">'Todas las sucursales'</SelectItem>
                       {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>
                           {branch.name}
@@ -454,11 +457,11 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('inventory.adjustments.product') || 'Producto'} *
+                    'Producto' *
                   </Label>
                   <Select value={productId} onValueChange={setProductId}>
                     <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
-                      <SelectValue placeholder={t('inventory.adjustments.selectProduct') || 'Seleccionar producto'} />
+                      <SelectValue placeholder='Seleccionar producto' />
                     </SelectTrigger>
                     <SelectContent>
                       {products.map((product) => (
@@ -475,24 +478,24 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('inventory.adjustments.type') || 'Tipo'} *
+                    'Tipo' *
                   </Label>
                   <Select value={adjustmentType} onValueChange={(value) => setAdjustmentType(value as any)}>
                     <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="INCREASE">{t('inventory.adjustments.types.increase') || 'Aumento'}</SelectItem>
-                      <SelectItem value="DECREASE">{t('inventory.adjustments.types.decrease') || 'Disminución'}</SelectItem>
-                      <SelectItem value="CORRECTION">{t('inventory.adjustments.types.correction') || 'Corrección'}</SelectItem>
+                      <SelectItem value="INCREASE">'Aumento'</SelectItem>
+                      <SelectItem value="DECREASE">'Disminución'</SelectItem>
+                      <SelectItem value="CORRECTION">'Corrección'</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('inventory.adjustments.quantity') || 'Cantidad'} *
+                    'Cantidad' *
                     {adjustmentType === "CORRECTION" && (
-                      <span className="text-xs text-gray-500 ml-1 block">({t('inventory.adjustments.correctionHint') || 'Stock final'})</span>
+                      <span className="text-xs text-gray-500 ml-1 block">('Stock final')</span>
                     )}
                   </Label>
                   <Input
@@ -506,12 +509,12 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t('inventory.adjustments.reason') || 'Razón'} *
+                    'Razón' *
                   </Label>
                   <Input
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder={t('inventory.adjustments.reasonPlaceholder') || 'Pérdida, daño...'}
+                    placeholder='Pérdida, daño...'
                     className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]"
                   />
                 </div>
@@ -537,14 +540,13 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
                       <button
                         key={suggestion}
                         type="button"
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                          reason === originalValue
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${reason === originalValue
                             ? "bg-emerald-500 text-white border-emerald-500"
                             : "text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }`}
+                          }`}
                         onClick={() => setReason(originalValue)}
                       >
-                        {t(`inventory.adjustments.reasonSuggestions.${suggestion}`) || originalValue}
+                        originalValue
                       </button>
                     );
                   })}
@@ -554,12 +556,12 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
               {/* Justificación */}
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('inventory.adjustments.justification') || 'Justificación'} *
+                  'Justificación' *
                 </Label>
                 <Textarea
                   value={justification}
                   onChange={(e) => setJustification(e.target.value)}
-                  placeholder={t('inventory.adjustments.justificationPlaceholder') || 'Explica el motivo del ajuste...'}
+                  placeholder='Explica el motivo del ajuste...'
                   className="rounded-2xl bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]"
                   rows={3}
                 />
@@ -568,34 +570,34 @@ export function InventoryAdjustments({ customerSlug }: InventoryAdjustmentsProps
               {/* Notas */}
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('common.notes') || 'Notas'} ({t('common.optional') || 'Opcional'})
+                  {'Notas'} ({'Opcional'})
                 </Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t('inventory.adjustments.notesPlaceholder') || 'Notas opcionales...'}
+                  placeholder={'Notas opcionales...'}
                   className="rounded-2xl bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]"
                   rows={2}
                 />
               </div>
             </div>
-            
+
             {/* Footer estático */}
             <DialogFooter className="flex w-full flex-col sm:flex-row sm:justify-center items-center gap-3 border-t border-gray-200 dark:border-[#2a2a2a] px-6 py-4 bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky bottom-0 z-10">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="w-full sm:w-auto rounded-full"
                 onClick={() => setIsCreateDialogOpen(false)}
               >
-                {t('action.cancel') || 'Cancelar'}
+                'Cancelar'
               </Button>
-              <Button 
+              <Button
                 type="button"
-                onClick={handleCreateAdjustment} 
+                onClick={handleCreateAdjustment}
                 className="w-full sm:w-auto rounded-full"
               >
-                {t('action.create') || 'Crear'}
+                {'Crear'}
               </Button>
             </DialogFooter>
           </div>

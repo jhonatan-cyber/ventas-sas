@@ -71,7 +71,7 @@ export function useOrganizationActions() {
       setSelectedOrganization(undefined)
       
       // Disparar evento para recargar organizaciones
-      window.dispatchEvent(new Event('organization-updated'))
+      window.dispatchEvent(new Event("Organization-updated"))
       
       // Mostrar toast de éxito
       const orgName = data.razonSocial || data.name || 'Organización'
@@ -122,7 +122,7 @@ export function useOrganizationActions() {
       })
 
       // Disparar evento para recargar organizaciones
-      window.dispatchEvent(new Event('organization-updated'))
+      window.dispatchEvent(new Event("Organization-updated"))
 
       startTransition(() => {
         router.refresh()
@@ -155,7 +155,7 @@ export function useOrganizationActions() {
       setDeleteDialog({ open: false, organizationId: '', organizationName: '' })
 
       // Disparar evento para recargar organizaciones
-      window.dispatchEvent(new Event('organization-updated'))
+      window.dispatchEvent(new Event("Organization-updated"))
 
       startTransition(() => {
         router.refresh()

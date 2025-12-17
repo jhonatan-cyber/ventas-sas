@@ -15,8 +15,8 @@ import { logger } from '@/lib/utils/logger'
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const system = searchParams.get('system') // 'admin' | 'sas'
-  const slug = searchParams.get('slug') // Para SAS
+  const system = searchParams.get("System") // 'admin' | 'sas'
+  const slug = searchParams.get("Slug") // Para SAS
 
   try {
     // Verificar autenticación
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     let customerId: string | undefined
 
     if (system === 'admin') {
-      const token = cookieStore.get('admin-auth-token')?.value
+      const token = cookieStore.get("admin-auth-token")?.value
       if (!token) {
         return new Response('Unauthorized', { status: 401 })
       }
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
 
       userId = payload.userId
     } else if (system === 'sas' && slug) {
-      const token = cookieStore.get('sas-auth-token')?.value
-      const sessionCookie = cookieStore.get('sas-session')?.value
+      const token = cookieStore.get("Sas-auth-token")?.value
+      const sessionCookie = cookieStore.get("sas-session")?.value
 
       if (!token && !sessionCookie) {
         return new Response('Unauthorized', { status: 401 })

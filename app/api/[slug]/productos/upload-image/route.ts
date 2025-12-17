@@ -5,7 +5,9 @@ import { join } from 'path'
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { getCustomerBySlug } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 
 // Función para procesar y convertir imagen a WebP
 async function processImageToWebP(imageBuffer: Buffer): Promise<Buffer> {
@@ -37,16 +39,19 @@ export async function POST(
       )
     }
 
+    // Verificar permisos: crear/editar productos
+    await requirePermission(request, slug, [PERMISSIONS.PRODUCTOS_CREAR, PERMISSIONS.PRODUCTOS_EDITAR])
+
     // Intentar obtener archivo desde FormData
     let file: File | null = null
     let remoteUrl: string | null = null
 
     try {
-      const contentType = request.headers.get('content-type') || ''
+      const contentType = request.headers.get("Content-type") || ''
       
       if (contentType.includes('multipart/form-data')) {
         const formData = await request.formData()
-        file = formData.get('image') as File
+        file = formData.get("Image") as File
       } else {
         // Si no es FormData, intentar obtener URL remota desde JSON
         const body = await request.json()

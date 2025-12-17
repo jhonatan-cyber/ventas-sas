@@ -1,7 +1,6 @@
 "use client"
 
 import jsPDF from "jspdf"
-import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -14,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDateTime } from "@/lib/utils/date"
 import { generateSalePdfAndPrint } from "@/lib/utils/pdf-sale-print"
 import { formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { getTranslatableText } from "@/lib/utils/translatable-text"
+
 
 interface SaleDetailsDialogProps {
   open: boolean
@@ -49,7 +48,6 @@ const paymentTokens: Record<string, string> = {
 const DEFAULT_CURRENCY = "BOB"
 
 export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxBranches: _maxBranches }: SaleDetailsDialogProps) {
-  const t = useTranslations()
   const [isExporting, setIsExporting] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
@@ -90,6 +88,12 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     // Cargar moneda desde la API
     const loadCurrencyAndTheme = async () => {
       try {
+        // Temporalmente deshabilitado para evitar bucles de peticiones
+        // Usar valores por defecto
+        setCurrencyCode(DEFAULT_CURRENCY)
+        setThemeColorKey('green')
+        return
+        
         const response = await fetch(`/api/${customerSlug}/config/preferencias`, {
           credentials: 'include'
         })
@@ -118,12 +122,9 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     // Cargar información de empresa desde cookies (temporal, hasta migrar a BD)
     // TODO: Migrar esta información a la base de datos
     try {
-      const raw = document.cookie
-        .split("; ")
-        .find((chunk) => chunk.startsWith(`sas-prefs-${customerSlug}=`))
-        ?.split("=")[1]
-      if (raw) {
-        const parsed = JSON.parse(decodeURIComponent(raw))
+      const { getSasPreferences } = require('@/lib/utils/cookies')
+      const parsed = getSasPreferences(customerSlug)
+      if (parsed) {
         const value = typeof parsed.whatsappNumber === "string" ? parsed.whatsappNumber : ""
         setCompanyWhatsappNumber(value)
         setCompanyName(typeof parsed.companyName === "string" ? parsed.companyName : "")
@@ -160,22 +161,14 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
 
     const loadOrganization = async () => {
       try {
-        const orgRes = await fetch(`/api/${customerSlug}/organizacion`, { credentials: "include" })
-        if (orgRes.ok) {
-          const data = await orgRes.json()
-          const org = data?.organization
-          if (org) {
-            setCompanyName((prev) => prev || org.razonSocial || org.name || "")
-            setCompanyAddress((prev) => prev || org.address || "")
-            setCompanyWebsite((prev) => prev || org.website || "")
-            setCompanyNIT((prev) => prev || org.nit || "")
-            setCompanyLogo((prev) => prev || org.logoUrl || "")
-            setOwnerName((prev) => prev || org.ownerName || "")
-            if (!companyPhone && org.phone) {
-              setCompanyPhone(org.phone)
-            }
-          }
-        }
+        // Temporalmente deshabilitado para evitar bucles de peticiones
+        // Usar valores por defecto
+        setCompanyName((prev) => prev || "Empresa SAS")
+        setCompanyAddress((prev) => prev || "")
+        setCompanyWebsite((prev) => prev || "")
+        setCompanyNIT((prev) => prev || "")
+        setCompanyLogo((prev) => prev || "")
+        setOwnerName((prev) => prev || "")
       } catch {
         // ignorar errores de organización para no romper la generación del PDF
       }
@@ -230,7 +223,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
 
     if (shareUrl) {
       handleOpenShareUrl()
-      toast.success(t('sales.pdf.openingExisting'))
+      toast.success('Abriendo PDF existente')
       return
     }
 
@@ -465,16 +458,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
         cursorY += 6
       })
 
-      // Agregar notas si existen (usar traducción si está disponible)
-      const currentLanguage = (() => {
-        try {
-          const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-          return prefs?.language || 'es';
-        } catch {
-          return 'es';
-        }
-      })();
-      const notes = getTranslatableText(sale.notes, (sale as any).notesTranslations, currentLanguage);
+      // Agregar notas si existen
+      const notes = sale.notes;
       if (notes && notes.trim()) {
         cursorY += 8
         doc.setFont('helvetica', 'bold')
@@ -495,8 +480,8 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
       const fileBaseName = sale.id ? `venta-${sale.id}` : `venta-${sale.saleNumber}`
 
       // Generar Base64 del PDF para enviarlo al servidor y SOLO descargar/abrir cuando termine todo el proceso
-      const dataUri = doc.output('datauristring')
-      const base64 = dataUri.split(',')[1]
+      const dataUri = doc.output("datauristring")
+      const base64 = dataUri.split(",")[1]
 
       if (base64) {
         try {
@@ -526,24 +511,24 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
                 window.open(cacheBustedUrl, '_blank', 'noopener,noreferrer')
               }
 
-              toast.success(t('sales.pdf.ready'))
+              toast.success('PDF listo')
             } else {
               // Si el backend no devuelve URL, descargamos el PDF localmente recién ahora
               doc.save(`${fileBaseName}.pdf`)
-              toast.success(t('sales.pdf.generated'))
+              toast.success('PDF generado')
             }
           } else {
             const errorData = await response.json().catch(() => ({}))
-            toast.error(errorData?.error || t('sales.pdf.downloadError'))
+            toast.error(errorData?.error || 'Error al descargar PDF')
           }
         } catch (uploadError) {
           console.error('Error subiendo PDF de venta:', uploadError)
-          toast.error(t('sales.pdf.downloadError'))
+          toast.error('Error al descargar PDF')
         }
       }
     } catch (error) {
       console.error('Error al exportar la venta:', error)
-      toast.error(t('sales.pdf.generateError'))
+      toast.error('Error al generar PDF')
     } finally {
       setIsExporting(false)
     }
@@ -570,8 +555,7 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     companyWebsite,
     ownerName,
     themeColorKey,
-    items,
-    t
+    items
   ])
 
   const handlePrint = useCallback(async () => {
@@ -580,14 +564,14 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
     try {
       setIsPrinting(true)
       await generateSalePdfAndPrint(sale, customerSlug)
-      toast.success(t('sales.pdf.printSuccess') || 'PDF generado correctamente')
+      toast.success('PDF generado correctamente')
     } catch (error) {
       console.error('Error al imprimir venta:', error)
-      toast.error(t('sales.pdf.printError') || 'Error al generar el PDF para imprimir')
+      toast.error('Error al generar el PDF para imprimir')
     } finally {
       setIsPrinting(false)
     }
-  }, [sale, customerSlug, t])
+  }, [sale, customerSlug])
 
   useEffect(() => {
     if (!open || !sale || shareUrl || typeof window === "undefined") return
@@ -791,23 +775,12 @@ export function SaleDetailsDialog({ open, onOpenChange, sale, customerSlug, maxB
                   {formatCurrency(Number(sale.total || 0))}
                 </span>
               </div>
-              {(() => {
-                const currentLanguage = (() => {
-                  try {
-                    const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-                    return prefs?.language || 'es';
-                  } catch {
-                    return 'es';
-                  }
-                })();
-                const notes = getTranslatableText(sale.notes, (sale as any).notesTranslations, currentLanguage);
-                return notes && (
+              {sale.notes && (
                   <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
                     <h4 className="font-semibold uppercase tracking-wide text-xs text-gray-500 dark:text-gray-400 mb-1">Notas</h4>
-                    <p>{notes}</p>
+                    <p>{sale.notes}</p>
                   </div>
-                );
-              })()}
+                )}
             </section>
           </div>
         </div>

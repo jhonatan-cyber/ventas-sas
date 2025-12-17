@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
+import requirePermission from '@/lib/utils/require-permission'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 
 // GET - Obtener usuario por ID
@@ -34,7 +36,10 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id, slug } = await params
+
+    // Verificar permiso para editar usuarios
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.USUARIOS_EDITAR)
     
     let body: any
     try {
@@ -43,7 +48,6 @@ export async function PUT(
       throw AppError.validation('Error al procesar el cuerpo de la solicitud')
     }
     
-    const { slug } = await params
     const { ci, nombre, apellido, address, phone, email, password, rolId, foto, sucursalId, isActive } = body
 
     // Obtener usuario actual y usuario objetivo para auditoría
@@ -151,6 +155,9 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso para eliminar usuarios
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.USUARIOS_ELIMINAR)
 
     // Obtener usuario actual y usuario objetivo para auditoría
     const currentUser = await getCurrentSasUser(request, slug)

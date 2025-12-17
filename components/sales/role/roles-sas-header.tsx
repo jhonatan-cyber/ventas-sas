@@ -8,14 +8,16 @@ interface RolesSasHeaderProps {
   title: string
   description: string
   newButtonText?: string
-  onNewClick: () => void
+  onNewClick?: () => void
+  showNewButton?: boolean
 }
 
 export function RolesSasHeader({
   title,
   description,
   newButtonText = "Nuevo",
-  onNewClick
+  onNewClick,
+  showNewButton = true
 }: RolesSasHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -27,15 +29,17 @@ export function RolesSasHeader({
           {description}
         </p>
       </div>
-      <Button 
-        variant="new" 
-        rounded="full" 
-        onClick={onNewClick}
-        className="w-full sm:w-auto"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        {newButtonText}
-      </Button>
+      {showNewButton && onNewClick && (
+        <Button 
+          variant="new" 
+          rounded="full" 
+          onClick={onNewClick}
+          className="w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {newButtonText}
+        </Button>
+      )}
     </div>
   )
 }

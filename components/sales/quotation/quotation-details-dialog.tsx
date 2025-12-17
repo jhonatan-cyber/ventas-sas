@@ -1,7 +1,6 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,7 +32,7 @@ import {
   formatDateWithPreferences,
   invalidateConfigCache,
 } from "@/lib/utils/preferences";
-import { getTranslatableText } from "@/lib/utils/translatable-text";
+;
 
 // Formato de fecha con hora (para mostrar en UI)
 // Esta función se usa dentro del componente donde tenemos acceso a dateFormat y customerSlug
@@ -98,9 +97,7 @@ export function QuotationDetailsDialog({
   quotation,
   customerSlug,
   maxBranches,
-}: QuotationDetailsDialogProps) {
-  const t = useTranslations()
-  const [isExporting, setIsExporting] = useState(false);
+}: QuotationDetailsDialogProps) {const [isExporting, setIsExporting] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [companyWhatsappNumber, setCompanyWhatsappNumber] =
     useState<string>("");
@@ -213,6 +210,12 @@ export function QuotationDetailsDialog({
     // Cargar preferencias (moneda y formato de fecha) desde la API cuando se abre el modal
     const loadPreferences = async () => {
       try {
+        // Temporalmente deshabilitado para evitar bucles de peticiones
+        // Usar valores por defecto
+        setCurrencyCode(DEFAULT_CURRENCY);
+        setThemeColor('green');
+        return
+        
         const response = await fetch(
           `/api/${customerSlug}/config/preferencias`,
           {
@@ -230,7 +233,7 @@ export function QuotationDetailsDialog({
             if (data.configuration.dateFormat) {
               setDateFormat(data.configuration.dateFormat);
             } else {
-              setDateFormat("dd/MM/yyyy");
+              setDateFormat("Dd/ M M/yyyy");
             }
             if (data.configuration.themeColor) {
               setThemeColor(data.configuration.themeColor);
@@ -239,17 +242,17 @@ export function QuotationDetailsDialog({
             }
           } else {
             setCurrencyCode(DEFAULT_CURRENCY);
-            setDateFormat("dd/MM/yyyy");
+            setDateFormat("Dd/ M M/yyyy");
             setThemeColor("green");
           }
         } else {
           setCurrencyCode(DEFAULT_CURRENCY);
-          setDateFormat("dd/MM/yyyy");
+          setDateFormat("Dd/ M M/yyyy");
           setThemeColor("green");
         }
       } catch {
         setCurrencyCode(DEFAULT_CURRENCY);
-        setDateFormat("dd/MM/yyyy");
+        setDateFormat("Dd/ M M/yyyy");
         setThemeColor("green");
       }
     };
@@ -260,36 +263,18 @@ export function QuotationDetailsDialog({
   useEffect(() => {
     if (typeof document === "undefined" || !open) return;
 
-    // Cargar información de empresa desde la API de organización
+    // Temporalmente deshabilitado para evitar bucles de peticiones
     const loadOrganizationInfo = async () => {
       try {
-        const response = await fetch(`/api/${customerSlug}/organizacion`, {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.organization) {
-            const org = data.organization;
-            // Usar razonSocial si existe, sino usar name
-            setCompanyName(org.razonSocial || org.name || "");
-            setCompanyAddress(org.address || "");
-            setCompanyPhone(org.phone || "");
-            setCompanyWebsite(org.website || "");
-            setCompanyNIT(org.nit || "");
-            setCompanyLogo(org.logoUrl || "");
-            setOwnerName(org.ownerName || "");
-            // Extraer número de WhatsApp del teléfono si tiene código de país
-            if (org.phone) {
-              const phoneDigits = org.phone.replace(/\D/g, "");
-              if (phoneDigits) {
-                setCompanyWhatsappNumber(
-                  org.phone.startsWith("+") ? org.phone : `+${phoneDigits}`
-                );
-              }
-            }
-          }
-        }
+        // Usar valores por defecto temporalmente
+        setCompanyName("Empresa SAS");
+        setCompanyAddress("");
+        setCompanyPhone("");
+        setCompanyWebsite("");
+        setCompanyNIT("");
+        setCompanyLogo("");
+        setOwnerName("");
+        setCompanyWhatsappNumber("");
       } catch (error) {
         console.error("Error cargando información de organización:", error);
       }
@@ -304,7 +289,7 @@ export function QuotationDetailsDialog({
 
     if (shareUrl) {
       handleOpenShareUrl();
-      toast.success(t('quotations.form.pdf.openingExisting'));
+      toast.success("Abriendo PDF existente");
       return;
     }
 
@@ -360,13 +345,13 @@ export function QuotationDetailsDialog({
             const errorData = await response.json().catch(() => ({}));
             toast.error(
               errorData?.error ||
-              t('quotations.form.pdf.downloadError')
+              "Error al descargar PDF"
             );
             return; // No descargar si falla la subida
           }
         } catch (uploadError) {
           console.error("Error subiendo PDF de cotización:", uploadError);
-          toast.error(t('quotations.form.pdf.downloadError'));
+          toast.error("Error al descargar PDF");
           return; // No descargar si falla la subida
         }
       }
@@ -376,13 +361,13 @@ export function QuotationDetailsDialog({
 
       // Mostrar mensaje de éxito
       if (shareUrl) {
-        toast.success(t('quotations.form.pdf.ready'));
+        toast.success("PDF listo para compartir");
       } else {
-        toast.success(t('quotations.form.pdf.generated'));
+        toast.success("PDF generado exitosamente");
       }
     } catch (error) {
       console.error("Error al exportar la cotización:", error);
-      toast.error(t('quotations.form.pdf.generateError'));
+      toast.error("Error al generar PDF");
     } finally {
       setIsExporting(false);
     }
@@ -401,7 +386,6 @@ export function QuotationDetailsDialog({
     customerSlug,
     currencyCode,
     ownerName,
-    t,
   ]);
 
   useEffect(() => {
@@ -469,16 +453,16 @@ export function QuotationDetailsDialog({
   const handleSendWhatsapp = useCallback(() => {
     if (!customerWhatsappLink) {
       if (!customerWhatsapp) {
-        toast.error(t('quotations.form.whatsapp.noPhone'));
+        toast.error("El cliente no tiene número de WhatsApp");
       } else {
-        toast.error(t('quotations.form.whatsapp.noWhatsappConfig'));
+        toast.error("WhatsApp no está configurado");
       }
       return;
     }
     if (typeof window !== "undefined") {
       window.open(customerWhatsappLink, "_blank", "noopener,noreferrer");
     }
-  }, [customerWhatsapp, customerWhatsappLink, t]);
+  }, [customerWhatsapp, customerWhatsappLink]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -550,7 +534,7 @@ export function QuotationDetailsDialog({
                       Sucursal
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {quotation.branch.name ?? t('common.noBranch')}
+                      {quotation.branch.name ?? "Sin sucursal"}
                     </p>
                     {quotation.branch.address ? (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -753,27 +737,16 @@ export function QuotationDetailsDialog({
               </div>
             </div>
 
-            {(() => {
-              const currentLanguage = (() => {
-                try {
-                  const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-                  return prefs?.language || 'es';
-                } catch {
-                  return 'es';
-                }
-              })();
-              const notes = getTranslatableText(quotation.notes, (quotation as any).notesTranslations, currentLanguage);
-              return notes && (
+            {quotation.notes && (
                 <div className="space-y-2">
                   <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
                     Notas
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-[#2a2a2a] px-4 py-3">
-                    {notes}
+                    {quotation.notes}
                   </p>
                 </div>
-              );
-            })()}
+              )}
 
             {shareUrl && (
               <div className="space-y-3 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#151515] p-4">
@@ -795,10 +768,10 @@ export function QuotationDetailsDialog({
                       className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-3 rounded-full text-xs"
                       onClick={() => {
                         navigator.clipboard.writeText(shareUrl);
-                        toast.success(t('quotations.form.linkCopied'));
+                        toast.success("Enlace copiado al portapapeles");
                       }}
                     >
-                      {t('quotations.form.copyLink')}
+                      {"Copiar enlace"}
                     </Button>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">

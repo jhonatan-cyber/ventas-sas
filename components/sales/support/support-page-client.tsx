@@ -1,13 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { SupportContainer } from "./support-container"
 import { SupportHeader } from "./support-header"
 import { SupportTicketFormDialog } from "./support-ticket-form-dialog"
+
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions"
 
 interface SupportTicketSummary {
   id: string
@@ -49,6 +50,9 @@ export function SupportTicketsPageClient({
   initialTotal: _initialTotal,
   initialStats: _initialStats,
 }: SupportPageClientProps) {
+  // Hook para verificar permisos del usuario (soporte siempre disponible, pero por consistencia)
+  const { hasPermission: _hasPermission } = useSasPermissions()
+  
   const [allTickets, setAllTickets] = useState<SupportTicketSummary[]>(initialTickets)
   const [statusFilter, setStatusFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -58,7 +62,6 @@ export function SupportTicketsPageClient({
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const router = useRouter()
-  const t = useTranslations()
 
   // Filtrar tickets localmente por estado y búsqueda
   const filteredTickets = useMemo(() => {
@@ -177,13 +180,19 @@ export function SupportTicketsPageClient({
     setPage(1)
   }
 
+  // Verificar permisos para mostrar botones de acciones
+  // Nota: El soporte siempre está disponible, pero mantenemos consistencia
+  const canCreateTicket = true // Siempre permitido
+  const _canViewTickets = true // Siempre permitido
+
   return (
     <div className="space-y-4 md:space-y-6 py-4 md:py-6 px-4 md:px-6">
       <SupportHeader 
-        title={t('support.title')} 
-        description={t('support.description')}
-        onNewClick={() => setIsFormOpen(true)}
+        title="Soporte técnico" 
+        description="Gestiona tus tickets de soporte y obtén ayuda de nuestro equipo técnico"
+        onNewClick={canCreateTicket ? () => setIsFormOpen(true) : undefined}
         loading={loading}
+        showNewButton={canCreateTicket}
       />
 
       <SupportContainer

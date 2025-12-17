@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const statusParam = searchParams.get('status')
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const statusParam = searchParams.get("Status")
     const status = statusParam && ['active', 'cancelled', 'expired', 'trial'].includes(statusParam) 
       ? statusParam as SubscriptionStatus 
       : undefined

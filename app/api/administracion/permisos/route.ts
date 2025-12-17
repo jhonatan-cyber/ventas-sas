@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Preparar permisos para crear
     const permissionsToCreate = permissions.map((permName: string) => {
-      const parts = permName.split('_')
+      const parts = permName.split("_")
       const permModule = parts[0] || module
       const permAction = parts.slice(1).join('_') || 'unknown'
       

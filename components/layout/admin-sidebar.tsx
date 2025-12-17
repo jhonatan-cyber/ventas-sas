@@ -18,9 +18,6 @@ import {
   Activity,
   Database,
   Palette,
-  BookOpen,
-  MessageSquare,
-  GitBranch,
 
   Building2,
   Key,

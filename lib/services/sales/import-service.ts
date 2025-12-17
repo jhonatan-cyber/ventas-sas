@@ -11,10 +11,7 @@ import * as XLSX from 'xlsx'
 import { SalesProductService, CreateSalesProductData } from './sales-product-service'
 
 import { prisma } from '@/lib/prisma'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { logger } from '@/lib/utils/logger'
-import { translateText } from '@/lib/utils/translatable-text'
-
 export type ImportFormat = 'excel' | 'csv'
 export type ImportEntity = 'products' | 'customers'
 
@@ -70,28 +67,13 @@ export class ImportService {
         return result
       }
 
-      // Obtener categorías y sucursales existentes para mapeo
-      const [categories, branches] = await Promise.all([
-        prisma.category.findMany({
-          where: { organizationId: options.organizationId },
-          select: { id: true, name: true },
-        }),
-        prisma.branch.findMany({
-          where: { organizationId: options.organizationId },
-          select: { id: true, name: true },
-        }),
-      ])
+      // Obtener categorías existentes para mapeo
+      const categories = await prisma.category.findMany({
+        where: { organizationId: options.organizationId },
+        select: { id: true, name: true },
+      })
 
       const categoryMap = new Map(categories.map((c) => [c.name.toLowerCase(), c.id]))
-      const branchMap = new Map(branches.map((b) => [b.name?.toLowerCase() || '', b.id]))
-
-      // Obtener idioma de la organización para traducciones
-      let sourceLanguage = 'es'
-      try {
-        sourceLanguage = await getOrganizationLocale(options.organizationId)
-      } catch (error) {
-        logger.warn('No se pudo obtener idioma de organización, usando español por defecto', { error })
-      }
 
       // Procesar cada fila
       for (let i = 0; i < data.length; i++) {
@@ -104,8 +86,6 @@ export class ImportService {
             row,
             options.organizationId,
             categoryMap,
-            branchMap,
-            sourceLanguage,
             { defaultBranchId: options.defaultBranchId, defaultCategoryId: options.defaultCategoryId }
           )
 
@@ -179,8 +159,6 @@ export class ImportService {
     row: any,
     organizationId: string,
     categoryMap: Map<string, string>,
-    branchMap: Map<string, string>,
-    sourceLanguage: string,
     defaults?: { defaultBranchId?: string; defaultCategoryId?: string }
   ): Promise<CreateSalesProductData> {
     // Normalizar nombres de columnas (case-insensitive)
@@ -205,15 +183,8 @@ export class ImportService {
 
     const description = getValue(['Descripción', 'description', 'descripcion'])?.toString().trim() || undefined
 
-    // Traducir descripción si existe
-    let descriptionTranslations = undefined
-    if (description && description.trim()) {
-      try {
-        descriptionTranslations = await translateText(description, sourceLanguage)
-      } catch (error) {
-        logger.warn('Error traduciendo descripción durante importación', { error })
-      }
-    }
+    // Descripción sin traducción automática
+    const descriptionTranslations = undefined
 
     const priceStr = getValue(['Precio', 'price', 'precio'])?.toString().trim()
     const price = priceStr ? parseFloat(priceStr) : undefined

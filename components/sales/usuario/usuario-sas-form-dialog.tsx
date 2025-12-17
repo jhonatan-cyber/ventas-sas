@@ -3,7 +3,6 @@
 
 import { UsuarioSas, RoleSas } from "@prisma/client";
 import { InfoIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,6 @@ export function UsuarioSasFormDialog({
   onSave,
   defaultSucursalId,
 }: UsuarioSasFormDialogProps) {
-  const t = useTranslations()
   const [ci, setCi] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -106,7 +104,7 @@ export function UsuarioSasFormDialog({
     if (file) {
       // Validar tamaño del archivo (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("La imagen es demasiado grande. Por favor, selecciona una imagen menor a 5MB.");
+        alert("");
         e.target.value = "";
         return;
       }
@@ -114,7 +112,7 @@ export function UsuarioSasFormDialog({
       // Validar tipo de archivo
       const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        alert("Tipo de archivo no válido. Por favor, selecciona una imagen (PNG, JPG, GIF o WEBP).");
+        alert("");
         e.target.value = "";
         return;
       }
@@ -235,7 +233,7 @@ export function UsuarioSasFormDialog({
                   id="ci"
                   value={ci}
                   onChange={(e) => setCi(e.target.value)}
-                  placeholder={t('common.placeholders.taxId')}
+                  placeholder="Número de CI"
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -249,7 +247,7 @@ export function UsuarioSasFormDialog({
                   id="nombre"
                   value={nombre}
                   onChange={(e) => setNombre(capitalizeWords(e.target.value))}
-                  placeholder={t('common.placeholders.name')}
+                  placeholder="Nombre"
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -266,7 +264,7 @@ export function UsuarioSasFormDialog({
                   id="apellido"
                   value={apellido}
                   onChange={(e) => setApellido(capitalizeWords(e.target.value))}
-                  placeholder={t('common.placeholders.lastName')}
+                  placeholder="Apellido"
                   required
                   disabled={isLoading}
                   className="rounded-full"
@@ -296,7 +294,7 @@ export function UsuarioSasFormDialog({
                   id="direccion"
                   value={direccion}
                   onChange={(e) => setDireccion(capitalizeWords(e.target.value))}
-                  placeholder={t('common.placeholders.address')}
+                  placeholder="Dirección"
                   disabled={isLoading}
                   className="rounded-full"
                 />
@@ -317,7 +315,7 @@ export function UsuarioSasFormDialog({
                     required
                   >
                     <SelectTrigger className="w-full rounded-full">
-                      <SelectValue placeholder={t('common.placeholders.selectRole')} />
+                      <SelectValue placeholder="Seleccionar rol" />
                     </SelectTrigger>
                     <SelectContent>
                       {roles.map((rol) => (
@@ -336,7 +334,7 @@ export function UsuarioSasFormDialog({
                     disabled={isLoading}
                   >
                     <SelectTrigger className="w-full rounded-full">
-                      <SelectValue placeholder={t('common.placeholders.selectBranch')} />
+                      <SelectValue placeholder="Seleccionar sucursal" />
                     </SelectTrigger>
                     <SelectContent>
                       {sucursales.map((sucursal) => (

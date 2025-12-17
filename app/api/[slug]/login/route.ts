@@ -42,7 +42,7 @@ export async function POST(
     if (!rateLimitResult.allowed) {
       logger.security('Login SAS bloqueado por rate limit', {
         slug,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        ip: request.headers.get("X-forwarded-for") || request.headers.get("X-real-ip") || 'unknown',
         identifier: body.ci || body.email,
       })
       

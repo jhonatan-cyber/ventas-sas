@@ -11,6 +11,7 @@
  */
 
 import { randomBytes, createHash } from 'crypto'
+
 import jwt from 'jsonwebtoken'
 import { NextRequest } from 'next/server'
 
@@ -79,7 +80,7 @@ export class EnhancedTokenService {
         deviceFingerprint,
         deviceName,
         ipAddress: this.getClientIP(request),
-        userAgent: request?.headers.get('user-agent') || undefined,
+        userAgent: request?.headers.get("User-agent") || undefined,
         rememberMe,
       })
     }
@@ -517,15 +518,15 @@ export class EnhancedTokenService {
     if (!request) return 'unknown'
 
     const components = [
-      request.headers.get('user-agent') || '',
-      request.headers.get('accept-language') || '',
-      request.headers.get('accept-encoding') || '',
+      request.headers.get("User-agent") || '',
+      request.headers.get("Accept-language") || '',
+      request.headers.get("Accept-encoding") || '',
       // No incluir IP ya que puede cambiar
     ]
 
     return createHash('sha256')
       .update(components.join('|'))
-      .digest('hex')
+      .digest("hex")
       .substring(0, 16)
   }
 
@@ -533,8 +534,8 @@ export class EnhancedTokenService {
     if (!request) return 'unknown'
 
     return (
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
+      request.headers.get("X-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("X-real-ip") ||
       'unknown'
     )
   }
@@ -553,7 +554,7 @@ export class EnhancedTokenService {
     }
   }
 
-  private static async checkRefreshRateLimit(key: string): Promise<boolean> {
+  private static async checkRefreshRateLimit(_key: string): Promise<boolean> {
     // Implementar rate limiting simple en memoria o Redis
     // Por ahora, siempre permitir
     return true
@@ -577,7 +578,7 @@ export class EnhancedTokenService {
 
     await prisma.invalidatedToken.create({
       data: {
-        tokenHash: createHash('sha256').update(token).digest('hex'),
+        tokenHash: createHash('sha256').update(token).digest("hex"),
         invalidatedAt: new Date(),
         reason: 'REFRESH_TOKEN_ROTATION',
         expiresAt // Explicit expiration

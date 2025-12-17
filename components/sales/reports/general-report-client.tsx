@@ -2,7 +2,6 @@
 
 import { ArrowLeft, Download, DollarSign, TrendingUp, ShoppingCart, TrendingDown, Receipt, Package, Users, Percent, TrendingUpDown } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 
@@ -119,25 +118,23 @@ export function GeneralReportClient({ customerSlug }: GeneralReportClientProps) 
     fetchReport()
   }, [fetchReport])
 
-  const t = useTranslations()
-  
   const handleExport = useCallback(async () => {
     if (!report) {
-      toast.error(t('reports.export.noData'))
+      toast.error("No hay datos para exportar")
       return
     }
 
-    const toastId = toast.loading(t('reports.export.generating'))
+    const toastId = toast.loading("Generando reporte...")
     try {
       await exportGeneralReportToPDF(report, customerSlug, startDate, endDate)
-      toast.success(t('reports.export.success'), { id: toastId })
+      toast.success("Reporte exportado exitosamente", { id: toastId })
     } catch (error) {
       console.error("Error al exportar PDF:", error)
-      toast.error(t('reports.export.error'), { id: toastId })
+      toast.error("Error al exportar reporte", { id: toastId })
     } finally {
       toast.dismiss(toastId)
     }
-  }, [report, customerSlug, startDate, endDate, t])
+  }, [report, customerSlug, startDate, endDate])
 
   const isInitialLoading = isLoading && !report
 

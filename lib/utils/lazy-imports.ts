@@ -14,12 +14,12 @@ import type { ComponentType, ReactNode } from 'react'
  * Estas páginas suelen ser pesadas por los gráficos y análisis
  */
 export const ReportesPages = {
-  General: lazy(() => import('@/app/[slug]/reportes/general/page')),
-  Sales: lazy(() => import('@/app/[slug]/reportes/sales/page')),
-  Products: lazy(() => import('@/app/[slug]/reportes/products/page')),
-  Expenses: lazy(() => import('@/app/[slug]/reportes/expenses/page')),
-  Customers: lazy(() => import('@/app/[slug]/reportes/customers/page')),
-  CashRegisters: lazy(() => import('@/app/[slug]/reportes/cash-registers/page')),
+  General: lazy(() => import("@/app/[slug]/reportes/general/page")),
+  Sales: lazy(() => import("@/app/[slug]/reportes/sales/page")),
+  Products: lazy(() => import("@/app/[slug]/reportes/products/page")),
+  Expenses: lazy(() => import("@/app/[slug]/reportes/expenses/page")),
+  Customers: lazy(() => import("@/app/[slug]/reportes/customers/page")),
+  CashRegisters: lazy(() => import("@/app/[slug]/reportes/cash-registers/page")),
 }
 
 /**
@@ -27,8 +27,8 @@ export const ReportesPages = {
  * Los dashboards suelen tener múltiples widgets y gráficos
  */
 export const DashboardPages = {
-  SalesDashboard: lazy(() => import('@/app/[slug]/dashboard/page')),
-  AdminDashboard: lazy(() => import('@/app/administracion/dashboard/page')),
+  SalesDashboard: lazy(() => import("@/app/[slug]/dashboard/page")),
+  AdminDashboard: lazy(() => import("@/app/administracion/dashboard/page")),
 }
 
 /**

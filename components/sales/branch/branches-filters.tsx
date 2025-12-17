@@ -1,7 +1,6 @@
 "use client"
 
 import { Search } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,8 +26,8 @@ export function BranchesFilters({
   onSearchChange,
   statusValue = "all",
 }: BranchesFiltersProps) {
-  const t = useTranslations()
-  const isMobile = useIsMobile()
+
+const isMobile = useIsMobile()
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-end">
@@ -38,13 +37,13 @@ export function BranchesFilters({
           htmlFor="search-branches"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          {t('common.search')}
+          {"Buscar"}
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="search-branches"
-            placeholder={t('common.placeholders.searchBranches')}
+            placeholder={"Search Branches"}
             className="pl-10 w-full rounded-full"
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -67,7 +66,7 @@ export function BranchesFilters({
             defaultValue="all"
           >
             <SelectTrigger id="status-filter" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.filterByStatus')} />
+              <SelectValue placeholder={"Filtrar por estado"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{isMobile ? "Todos" : "Todos los estados"}</SelectItem>
@@ -90,7 +89,7 @@ export function BranchesFilters({
             defaultValue="10"
           >
             <SelectTrigger id="page-size" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.perPage')} />
+              <SelectValue placeholder={"Por página"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="5">5 por página</SelectItem>

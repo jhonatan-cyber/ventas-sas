@@ -49,7 +49,8 @@ export interface InvoiceWithRelations {
     razonSocial: string | null
     owner?: {
       id: string
-      fullName: string | null
+      nombre: string | null
+      apellido: string | null
       email: string
       phone: string | null
     } | null
@@ -130,7 +131,8 @@ export interface SerializedInvoiceWithRelations {
     razonSocial: string | null
     owner?: {
       id: string
-      fullName: string | null
+      nombre: string | null
+      apellido: string | null
       email: string
       phone: string | null
     } | null
@@ -421,7 +423,8 @@ export class BillingService {
               owner: {
                 select: {
                   id: true,
-                  fullName: true,
+                  nombre: true,
+                  apellido: true,
                   email: true,
                   phone: true
                 }
@@ -522,7 +525,8 @@ export class BillingService {
               owner: {
                 select: {
                   id: true,
-                  fullName: true,
+                  nombre: true,
+                  apellido: true,
                   email: true,
                   phone: true
                 }

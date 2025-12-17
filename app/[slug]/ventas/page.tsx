@@ -73,7 +73,7 @@ export default async function SalesPage({
   const maxBranches = await getMaxBranchesBySlug(slug)
 
   const cookieStore = await cookies()
-  const token = cookieStore.get('sas-auth-token')?.value
+  const token = cookieStore.get("sas-auth-token")?.value
   const currentUser = token ? await AuthSasService.verifyToken(slug, token) : null
   const serializedUser = currentUser
     ? {

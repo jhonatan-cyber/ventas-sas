@@ -3,7 +3,7 @@
 import { Loader2, Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+;
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LanguageSelector } from "@/components/ui/language-selector";
 import { ThemeSelector } from "@/components/ui/theme-selector";
 
 interface ResetPasswordFormProps {
@@ -32,8 +31,7 @@ export function ResetPasswordForm({
   organizationName,
   logoUrl,
   token,
-}: ResetPasswordFormProps) {
-  const _t = useTranslations();
+}: ResetPasswordFormProps) {;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
@@ -364,10 +362,8 @@ export function ResetPasswordForm({
               </Link>
             </div>
 
-            {/* Selectores de tema e idioma */}
-            <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-              <LanguageSelector customerSlug={customerSlug} />
-              <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
+            {/* Selector de tema */}
+            <div className="flex items-center justify-center pt-4 border-t border-gray-200 dark:border-gray-800">
               <ThemeSelector />
             </div>
           </form>

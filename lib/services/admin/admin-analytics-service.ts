@@ -153,7 +153,7 @@ export class AdminAnalyticsService {
         const grouped = new Map<string, { active: number; new: number }>()
 
         newUsers.forEach((user) => {
-          const date = user.createdAt.toISOString().split('T')[0]
+          const date = user.createdAt.toISOString().split("T")[0]
           const current = grouped.get(date) || { active: 0, new: 0 }
           grouped.set(date, {
             active: current.active,
@@ -166,7 +166,7 @@ export class AdminAnalyticsService {
         const currentDate = new Date(startDate)
 
         while (currentDate <= endDate) {
-          const key = currentDate.toISOString().split('T')[0]
+          const key = currentDate.toISOString().split("T")[0]
           const data = grouped.get(key) || { active: 0, new: 0 }
 
           result.push({

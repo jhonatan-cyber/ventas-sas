@@ -13,13 +13,13 @@ function isFile(entry: FormDataEntryValue): entry is File {
 }
 
 async function parseCommentPayload(request: NextRequest) {
-  const contentType = request.headers.get('content-type') || ''
+  const contentType = request.headers.get("Content-type") || ''
 
   if (contentType.includes('multipart/form-data')) {
     const formData = await request.formData()
     const attachmentFiles = formData.getAll('attachments').filter(isFile)
     const rawData = {
-      content: formData.get('content')?.toString() ?? '',
+      content: formData.get("Content")?.toString() ?? '',
     }
 
     const validation = addSupportTicketCommentSchema.safeParse(rawData)
@@ -50,7 +50,7 @@ export async function POST(
   try {
     const { slug, id } = await params
 
-    const token = request.cookies.get('sas-auth-token')?.value
+    const token = request.cookies.get("sas-auth-token")?.value
     if (!token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }

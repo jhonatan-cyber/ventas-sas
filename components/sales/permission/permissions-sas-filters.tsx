@@ -2,7 +2,6 @@
 
 
 import { Search, X } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +40,6 @@ export function PermissionsSasFilters({
   pageSize,
   onPageSizeChange,
 }: PermissionsSasFiltersProps) {
-  const t = useTranslations()
   const [searchValue, setSearchValue] = useState(searchTerm)
   const isMobile = useIsMobile()
 
@@ -71,13 +69,13 @@ export function PermissionsSasFilters({
           htmlFor="search-permissions"
           className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
         >
-          {t('common.search')}
+          Buscar
         </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
           <Input
             id="search-permissions"
-            placeholder={t('common.placeholders.searchPermissions')}
+            placeholder="Buscar permisos..."
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10 pr-10 w-full rounded-full"
@@ -135,7 +133,7 @@ export function PermissionsSasFilters({
             defaultValue="all"
           >
             <SelectTrigger id="category-filter" className="w-full rounded-full">
-              <SelectValue placeholder={t('common.placeholders.filterByCategory')} />
+              <SelectValue placeholder="Filtrar por categoría" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{isMobile ? "Todas" : "Todas las categorías"}</SelectItem>
@@ -163,7 +161,7 @@ export function PermissionsSasFilters({
               defaultValue="10"
             >
               <SelectTrigger id="page-size" className="w-full rounded-full">
-                <SelectValue placeholder={t('common.placeholders.perPage')} />
+                <SelectValue placeholder="por página" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="5">5 por página</SelectItem>

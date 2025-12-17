@@ -78,7 +78,7 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
       setIsEditing(false);
 
       // Recargar información del usuario en el header
-      window.dispatchEvent(new Event("profile-updated"));
+      window.dispatchEvent(new Event("Profile-updated"));
 
       toast.success("Perfil actualizado correctamente");
     } catch {

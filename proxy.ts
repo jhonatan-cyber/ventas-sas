@@ -40,7 +40,7 @@ export default function proxy(request: NextRequest) {
   // Admin zone protection
   if (pathname.startsWith('/administracion')) {
     const isLogin = pathname.startsWith('/administracion/login')
-    const token = request.cookies.get('admin-auth-token')?.value
+    const token = request.cookies.get("admin-auth-token")?.value
     edgeLogger.debug('Admin route check', { pathname, isLogin, hasToken: Boolean(token) })
     
     // Permitir siempre el acceso a login (evitar bucles de redirección)
@@ -59,7 +59,7 @@ export default function proxy(request: NextRequest) {
 
   // Rutas públicas - no requieren autenticación
   const publicRoutes = ['privacidad', 'terminos', 'cookies', 'doc', 'offline']
-  const first = pathname.split('/').filter(Boolean)[0]
+  const first = pathname.split("/").filter(Boolean)[0]
   
   // Permitir acceso a la ruta raíz (página principal)
   if (pathname === '/') {
@@ -76,9 +76,9 @@ export default function proxy(request: NextRequest) {
   if (first && !excluded.includes(first)) {
     const isLogin = pathname.startsWith(`/${first}/login`)
     const isResetPassword = pathname.startsWith(`/${first}/reset-password`)
-    const hasAuthToken = Boolean(request.cookies.get('sas-auth-token')?.value)
-    const hasRefreshToken = Boolean(request.cookies.get('sas-refresh-token')?.value)
-    const hasSession = Boolean(request.cookies.get('sas-session')?.value)
+    const hasAuthToken = Boolean(request.cookies.get("sas-auth-token")?.value)
+    const hasRefreshToken = Boolean(request.cookies.get("sas-refresh-token")?.value)
+    const hasSession = Boolean(request.cookies.get("sas-session")?.value)
     
     // Permitir acceso a login y reset-password sin autenticación
     if (isLogin || isResetPassword) {

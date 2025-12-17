@@ -6,15 +6,15 @@
 
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { Monitor, Smartphone, Tablet, Trash2, Shield, Clock, MapPin } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { useEnhancedAuth } from '@/hooks/use-enhanced-auth'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { useEnhancedAuth } from '@/hooks/use-enhanced-auth'
 
 interface ActiveSession {
   id: string

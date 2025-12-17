@@ -31,7 +31,7 @@ function shortenProductName(name: string, maxLength = 50): string {
   }
 
   // Construir un nombre corto manteniendo las primeras palabras descriptivas
-  const words = normalized.split(' ')
+  const words = normalized.split(" ")
   const shortWords: string[] = []
   const isLikelyBrand = (word: string) => {
     const cleaned = word.replace(/[^A-Za-zÁÉÍÓÚÜÑ]/g, '')
@@ -129,7 +129,7 @@ async function enhanceProductInfoWithAI(
     // Buscar imagen si no existe
     let imageUrl = null
     if (!imageUrl) {
-      const { ProductAIService } = await import('@/lib/services/ai/product-ai-service')
+      const { ProductAIService } = await import("@/lib/services/ai/product-ai-service")
       const productInfo = await ProductAIService.searchProductInfo(productName, brand || null, model || null)
       imageUrl = productInfo.imageUrl
       // Actualizar marca y modelo si se encontraron mejores valores
@@ -394,7 +394,7 @@ export async function POST(request: NextRequest) {
             
             // Intentar extraer información del título y snippet
             // El título generalmente contiene: "Nombre del Producto - Marca - Modelo"
-            const titleParts = title.split(' - ')
+            const titleParts = title.split("-")
             const productName = titleParts[0] || title
             const brand = titleParts[1] || null
             const model = titleParts[2] || null

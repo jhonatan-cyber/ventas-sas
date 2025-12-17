@@ -17,7 +17,7 @@ import { logger } from '@/lib/utils/logger'
 export async function GET(request: NextRequest) {
   try {
     // Verificar autorización del cron job
-    const authHeader = request.headers.get('authorization')
+    const authHeader = request.headers.get("Authorization")
     const cronSecret = process.env.CRON_SECRET
 
     if (!cronSecret) {
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     results.expiredSessions = expiredSessionsResult
 
     // 2. Limpiar tokens invalidados expirados (más de 30 días)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const _thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const invalidatedTokensResult = await prisma.invalidatedToken.deleteMany({
       where: {
         expiresAt: { lt: new Date() }

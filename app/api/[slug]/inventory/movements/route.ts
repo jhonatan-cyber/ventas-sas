@@ -29,13 +29,13 @@ export async function GET(
       throw AppError.unauthorized('Usuario no autenticado')
     }
 
-    const productId = searchParams.get('productId') || undefined
-    const branchId = searchParams.get('branchId') || undefined
-    const movementType = searchParams.get('movementType') as any
-    const startDate = searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined
-    const endDate = searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    const productId = searchParams.get("Product Id") || undefined
+    const branchId = searchParams.get("Branch Id") || undefined
+    const movementType = searchParams.get("Movement Type") as any
+    const startDate = searchParams.get("Start Date") ? new Date(searchParams.get("Start Date")!) : undefined
+    const endDate = searchParams.get("End Date") ? new Date(searchParams.get("End Date")!) : undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '50')
     const skip = (page - 1) * pageSize
 
     let result

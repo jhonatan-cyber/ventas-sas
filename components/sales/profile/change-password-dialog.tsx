@@ -1,7 +1,6 @@
 "use client"
 
 import { Lock, Eye, EyeOff } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -27,7 +26,6 @@ export function ChangePasswordDialog({
   onOpenChange,
   customerSlug,
 }: ChangePasswordDialogProps) {
-  const t = useTranslations()
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -42,25 +40,25 @@ export function ChangePasswordDialog({
 
     // Validaciones
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error(t('profile.security.passwordFields.allFieldsRequired') || "Todos los campos son requeridos")
+      toast.error("Todos los campos son requeridos")
       setIsLoading(false)
       return
     }
 
     if (newPassword.length < 8) {
-      toast.error(t('profile.security.passwordFields.minLength') || "La nueva contraseña debe tener al menos 8 caracteres")
+      toast.error("La nueva contraseña debe tener al menos 8 caracteres")
       setIsLoading(false)
       return
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error(t('profile.security.passwordFields.noMatch') || "Las contraseñas no coinciden")
+      toast.error("Las contraseñas no coinciden")
       setIsLoading(false)
       return
     }
 
     if (currentPassword === newPassword) {
-      toast.error(t('profile.security.passwordFields.samePassword') || "La nueva contraseña debe ser diferente a la actual")
+      toast.error("La nueva contraseña debe ser diferente a la actual")
       setIsLoading(false)
       return
     }
@@ -81,17 +79,17 @@ export function ChangePasswordDialog({
       const data = await response.json()
 
       if (!response.ok) {
-        toast.error(data.error || t('profile.security.passwordFields.error') || 'Error al cambiar la contraseña')
+        toast.error(data.error || 'Error al cambiar la contraseña')
         return
       }
 
-      toast.success(t('profile.security.passwordFields.success') || 'Contraseña actualizada correctamente')
+      toast.success('Contraseña actualizada correctamente')
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
       onOpenChange(false)
     } catch {
-      toast.error(t('profile.security.passwordFields.error') || 'Error al cambiar la contraseña')
+      toast.error('Error al cambiar la contraseña')
     } finally {
       setIsLoading(false)
     }
@@ -103,15 +101,15 @@ export function ChangePasswordDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            {t('profile.security.changePassword') || 'Cambiar Contraseña'}
+            Cambiar Contraseña
           </DialogTitle>
           <DialogDescription>
-            {t('profile.security.passwordFields.description') || 'Ingresa tu contraseña actual y la nueva contraseña'}
+            Ingresa tu contraseña actual y la nueva contraseña
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">{t('profile.security.passwordFields.current') || 'Contraseña Actual'}</Label>
+            <Label htmlFor="currentPassword">Contraseña Actual</Label>
             <div className="relative">
               <Input
                 id="currentPassword"
@@ -139,7 +137,7 @@ export function ChangePasswordDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword">{t('profile.security.passwordFields.new') || 'Nueva Contraseña'}</Label>
+            <Label htmlFor="newPassword">Nueva Contraseña</Label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -166,12 +164,12 @@ export function ChangePasswordDialog({
               </Button>
             </div>
             <p className="text-xs text-gray-500">
-              {t('profile.security.passwordFields.minLengthHint') || 'Mínimo 8 caracteres'}
+              Mínimo 8 caracteres
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">{t('profile.security.passwordFields.confirm') || 'Confirmar Nueva Contraseña'}</Label>
+            <Label htmlFor="confirmPassword">Confirmar Nueva Contraseña</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -201,7 +199,7 @@ export function ChangePasswordDialog({
 
           <div className="flex gap-2 pt-4 justify-center">
             <Button type="submit" disabled={isLoading} className="rounded-full">
-              {isLoading ? (t('message.saving') || 'Actualizando...') : (t('action.update') || 'Actualizar')}
+              {isLoading ? "Actualizando..." : "Actualizar"}
             </Button>
             <Button
               type="button"
@@ -210,7 +208,7 @@ export function ChangePasswordDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t('action.cancel') || 'Cancelar'}
+              Cancelar
             </Button>
           </div>
         </form>

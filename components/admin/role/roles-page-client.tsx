@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+;
 
 import { DeleteRoleDialog } from "./delete-role-dialog";
 import { RoleDetailDialog } from "./role-detail-dialog";
@@ -18,9 +18,7 @@ interface RolesPageClientProps {
   initialRoles: RoleWithStats[];
 }
 
-export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
-  const t = useTranslations()
-  const {
+export function RolesPageClient({ initialRoles }: RolesPageClientProps) {const {
     openDialog,
     setOpenDialog,
     selectedRole,
@@ -49,9 +47,9 @@ export function RolesPageClient({ initialRoles }: RolesPageClientProps) {
       <div className="space-y-4 md:space-y-6 px-4 md:px-0">
         {/* Header con título y botón */}
         <RoleHeader
-          title={t('roles.title')}
-          description={t('roles.description')}
-          newButtonText={t('roles.create')}
+          title={"Roles"}
+          description={"Description"}
+          newButtonText={"Create"}
           onNewClick={handleNewClick}
         />
 

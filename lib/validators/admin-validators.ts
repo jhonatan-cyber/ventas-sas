@@ -78,7 +78,7 @@ export const createUserSchema = z.object({
   role: z
     .string()
     .max(50, 'El rol es demasiado largo')
-    .default('user'),
+    .default("User"),
   isSuperAdmin: z
     .boolean()
     .default(false),
@@ -162,19 +162,19 @@ const subscriptionPlanBaseSchema = z.object({
     .nullable(),
   maxUsers: z
     .number()
-    .int('El máximo de usuarios debe ser un número entero')
+    .int("El máximo de usuarios debe ser un número entero")
     .positive('El máximo de usuarios debe ser mayor a 0')
     .optional()
     .nullable(),
   maxProducts: z
     .number()
-    .int('El máximo de productos debe ser un número entero')
+    .int("El máximo de productos debe ser un número entero")
     .positive('El máximo de productos debe ser mayor a 0')
     .optional()
     .nullable(),
   maxBranches: z
     .number()
-    .int('El máximo de sucursales debe ser un número entero')
+    .int("El máximo de sucursales debe ser un número entero")
     .positive('El máximo de sucursales debe ser mayor a 0')
     .optional()
     .nullable(),

@@ -1,5 +1,6 @@
 "use client";
 
+import { Shield, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, useEffect } from "react";
 
@@ -16,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 
 function AdminLoginFormContent() {
   const router = useRouter();
@@ -31,7 +31,7 @@ function AdminLoginFormContent() {
 
   // Verificar si hay un error en la URL
   useEffect(() => {
-    const errorParam = searchParams.get("error");
+    const errorParam = searchParams.get("Error");
     if (errorParam === "no_access") {
       setError(
         "No tienes permisos de administrador. Contacta al administrador del sistema para obtener acceso."

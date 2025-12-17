@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SessionMonitoringService } from '@/lib/services/admin/session-monitoring-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
 
     // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '50')
-    const organizationId = searchParams.get('organizationId') || undefined
-    const userId = searchParams.get('userId') || undefined
-    const riskLevel = searchParams.get('riskLevel') as 'LOW' | 'MEDIUM' | 'HIGH' | undefined
-    const deviceType = searchParams.get('deviceType') || undefined
-    const ipAddress = searchParams.get('ipAddress') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '50')
+    const organizationId = searchParams.get("Organization Id") || undefined
+    const userId = searchParams.get("User Id") || undefined
+    const riskLevel = searchParams.get("Risk Level") as 'LOW' | 'MEDIUM' | 'HIGH' | undefined
+    const deviceType = searchParams.get("Device Type") || undefined
+    const ipAddress = searchParams.get("Ip Address") || undefined
 
     // Obtener sesiones
     const result = await SessionMonitoringService.getAllActiveSessions(

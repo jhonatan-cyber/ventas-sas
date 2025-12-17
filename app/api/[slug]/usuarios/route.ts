@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { EXTRA_PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { UsuarioSasService } from '@/lib/services/sales/usuario-sas-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
 import { getOrganizationIdByCustomerSlug, getMaxUsersByOrganizationId } from '@/lib/utils/organization'
+import requirePermission from '@/lib/utils/require-permission'
 import { SecurityAuditLogger } from '@/lib/utils/security-audit'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { createUsuarioSasSchema } from '@/lib/validators/sales-validators'
@@ -17,12 +19,12 @@ export async function GET(
   try {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
-    const rolId = searchParams.get('rolId') || undefined
-    const sucursalId = searchParams.get('sucursalId') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '10')
+    const search = searchParams.get("Search") || undefined
+    const status = searchParams.get("Status") || undefined
+    const rolId = searchParams.get("Rol Id") || undefined
+    const sucursalId = searchParams.get("Sucursal Id") || undefined
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -60,6 +62,9 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
+
+    // Verificar permiso para crear usuarios
+    await requirePermission(request, slug, EXTRA_PERMISSIONS.USUARIOS_CREAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {

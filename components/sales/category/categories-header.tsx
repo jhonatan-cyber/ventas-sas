@@ -8,14 +8,16 @@ interface CategoriesHeaderProps {
   title: string
   description: string
   newButtonText?: string
-  onNewClick: () => void
+  onNewClick?: () => void
+  showNew?: boolean
 }
 
 export function CategoriesHeader({
   title,
   description,
   newButtonText = "Nueva",
-  onNewClick
+  onNewClick,
+  showNew = true
 }: CategoriesHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -27,15 +29,17 @@ export function CategoriesHeader({
           {description}
         </p>
       </div>
-      <Button 
-        variant="new" 
-        rounded="full" 
-        onClick={onNewClick}
-        className="w-full sm:w-auto"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        {newButtonText}
-      </Button>
+      {showNew && onNewClick && (
+        <Button 
+          variant="new" 
+          rounded="full" 
+          onClick={onNewClick}
+          className="w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {newButtonText}
+        </Button>
+      )}
     </div>
   )
 }

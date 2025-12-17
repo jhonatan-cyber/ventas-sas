@@ -6,7 +6,7 @@ import { BillingService } from '@/lib/services/admin/billing-service'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const invoiceId = searchParams.get('invoiceId')
+    const invoiceId = searchParams.get("Invoice Id")
 
     if (!invoiceId) {
       return NextResponse.json(
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generar el PDF como buffer
-    const pdfBuffer = doc.output('arraybuffer')
+    const pdfBuffer = doc.output("arraybuffer")
 
     // Retornar el PDF
     return new NextResponse(pdfBuffer, {

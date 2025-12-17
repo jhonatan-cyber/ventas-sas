@@ -27,11 +27,11 @@ async function getActiveSubscriptionForOrganization(organizationId?: string | nu
 export default async function ConfiguracionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const cookieStore = await cookies()
-  const session = cookieStore.get('sas-session')
+  const session = cookieStore.get("sas-session")
   if (!session) redirect(`/${slug}/login`)
 
   const customer = await getCustomerBySlug(slug)
-  if (!customer) redirect('/')
+  if (!customer) redirect("/")
 
   const organizationId = customer.primaryOrganization?.id
   const activeSubscription = await getActiveSubscriptionForOrganization(organizationId)

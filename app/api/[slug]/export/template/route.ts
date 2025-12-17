@@ -19,8 +19,8 @@ export async function GET(
     const { slug } = await params
     const { searchParams } = new URL(request.url)
 
-    const entity = searchParams.get('entity') as ExportEntity
-    const format = (searchParams.get('format') || 'excel') as ExportFormat
+    const entity = searchParams.get("Entity") as ExportEntity
+    const format = (searchParams.get("Format") || 'excel') as ExportFormat
 
     if (!entity) {
       throw AppError.validation('Entity es requerido')

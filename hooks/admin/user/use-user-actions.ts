@@ -88,7 +88,7 @@ export function useUserActions() {
       const updatedUser = await response.json()
       
       // Disparar evento para recargar usuarios
-      window.dispatchEvent(new Event('user-updated'))
+      window.dispatchEvent(new Event("User-updated"))
       
       // Si se actualizó el usuario logueado, recargar su información en el header
       if (selectedUser) {
@@ -100,7 +100,7 @@ export function useUserActions() {
             const currentUser = await currentUserResponse.json()
             // Si el usuario actualizado es el usuario logueado, actualizar el header
             if (currentUser.id === updatedUser.id) {
-              window.dispatchEvent(new Event('profile-updated'))
+              window.dispatchEvent(new Event("Profile-updated"))
             }
           }
         } catch (error) {

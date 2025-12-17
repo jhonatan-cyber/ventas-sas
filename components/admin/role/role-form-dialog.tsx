@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -17,9 +16,7 @@ interface RoleFormDialogProps {
   onSave: (data: { name: string; description: string }) => void
 }
 
-export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDialogProps) {
-  const t = useTranslations()
-  const [name, setName] = useState(role?.name || "")
+export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDialogProps) {const [name, setName] = useState(role?.name || "")
   const [description, setDescription] = useState(role?.description || "")
   const [isLoading, setIsLoading] = useState(false)
   
@@ -73,10 +70,10 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
         <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
           <DialogHeader className="px-0 py-0 space-y-2">
             <DialogTitle>
-              {role ? t('roles.edit') : t('roles.new')}
+              {role ? "Edit" : "New"}
             </DialogTitle>
             <DialogDescription>
-              {role ? t('roles.editDescription') : t('roles.newDescription')}
+              {role ? "Edit Description" : "New Description"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -85,11 +82,11 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('roles.form.name')} <span className="text-red-500">*</span>
+                  {"Name"} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
-                  placeholder={t('roles.form.namePlaceholder')}
+                  placeholder={"Name Placeholder"}
                   value={name}
                   onChange={(e) => setName(capitalizeWords(e.target.value))}
                   required
@@ -99,11 +96,11 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
 
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('roles.form.description')}
+                  {"Description"}
                 </Label>
                 <Textarea
                   id="description"
-                  placeholder={t('roles.form.descriptionPlaceholder')}
+                  placeholder={"Description Placeholder"}
                   value={description}
                   onChange={(e) => setDescription(capitalizeWords(e.target.value))}
                   rows={4}
@@ -120,14 +117,14 @@ export function RoleFormDialog({ open, onOpenChange, role, onSave }: RoleFormDia
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t('action.cancel')}
+              {"Cancel"}
             </Button>
             <Button
               type="submit"
               className="w-full sm:w-auto rounded-full px-6"
               disabled={isLoading || !isFormValid}
             >
-              {isLoading ? t('message.saving') : role ? t('action.update') : t('action.add')}
+              {isLoading ? "Saving" : role ? "Update" : "Add"}
             </Button>
           </DialogFooter>
         </form>

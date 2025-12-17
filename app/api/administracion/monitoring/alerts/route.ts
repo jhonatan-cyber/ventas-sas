@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { SessionMonitoringService } from '@/lib/services/admin/session-monitoring-service'
+import { getCurrentAdminUser } from '@/lib/utils/get-current-user'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
 
     // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('pageSize') || '20')
-    const severity = searchParams.get('severity') as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | undefined
-    const type = searchParams.get('type') || undefined
-    const resolved = searchParams.get('resolved') === 'true' ? true : 
-                    searchParams.get('resolved') === 'false' ? false : undefined
-    const organizationId = searchParams.get('organizationId') || undefined
+    const page = parseInt(searchParams.get("Page") || '1')
+    const pageSize = parseInt(searchParams.get("Page Size") || '20')
+    const severity = searchParams.get("Severity") as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | undefined
+    const type = searchParams.get("Type") || undefined
+    const resolved = searchParams.get("Resolved") === 'true' ? true : 
+                    searchParams.get("Resolved") === 'false' ? false : undefined
+    const organizationId = searchParams.get("Organization Id") || undefined
 
     // Obtener alertas
     const result = await SessionMonitoringService.getSecurityAlerts(

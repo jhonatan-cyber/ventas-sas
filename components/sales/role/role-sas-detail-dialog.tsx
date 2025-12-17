@@ -66,7 +66,7 @@ export function RoleSasDetailDialog({
 
   // Función para extraer el módulo del nombre del permiso (formato: modulo_accion)
   const getModuleFromPermission = (permissionName: string): string => {
-    const parts = String(permissionName).split('_')
+    const parts = String(permissionName).split("_")
     return parts[0] || 'unknown'
   }
 
@@ -211,7 +211,7 @@ export function RoleSasDetailDialog({
                         <div className="flex flex-wrap gap-2">
                           {module.permissions.map((permission, index) => {
                             // Extraer la acción del permiso (formato: modulo_accion)
-                            const action = permission.split('_').slice(1).join('_')
+                            const action = permission.split("_").slice(1).join('_')
                             return (
                               <Badge
                                 key={index}

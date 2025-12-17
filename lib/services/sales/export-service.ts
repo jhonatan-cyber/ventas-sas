@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx'
 
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { getTranslatableText } from '@/lib/utils/translatable-text'
+// import { getTranslatableText } from '@/lib/utils/translatable-text' - removed
 
 export type ExportFormat = 'excel' | 'csv'
 export type ExportEntity = 'products' | 'customers' | 'sales' | 'quotations' | 'expenses'
@@ -77,16 +77,9 @@ export class ExportService {
         }
       }
 
-      // Obtener idioma actual para traducciones (por defecto 'es')
-      const currentLanguage = 'es'
-
       // Preparar datos para exportación
       const exportData = products.map((product) => {
-        const description = getTranslatableText(
-          product.description,
-          product.descriptionTranslations as any,
-          currentLanguage
-        )
+        const description = product.description
 
         return {
           'Nombre': product.name,
@@ -101,8 +94,8 @@ export class ExportService {
           'Stock': product.stock,
           'Stock Mínimo': product.minStock,
           'Estado': product.isActive ? 'Activo' : 'Inactivo',
-          'Fecha de Creación': product.createdAt.toISOString().split('T')[0],
-          'Fecha de Actualización': product.updatedAt.toISOString().split('T')[0],
+          'Fecha de Creación': product.createdAt.toISOString().split("T")[0],
+          'Fecha de Actualización': product.updatedAt.toISOString().split("T")[0],
         }
       })
 
@@ -162,8 +155,8 @@ export class ExportService {
         'País': customer.country || '',
         'RUC': customer.ruc || '',
         'Estado': customer.isActive ? 'Activo' : 'Inactivo',
-        'Fecha de Creación': customer.createdAt.toISOString().split('T')[0],
-        'Fecha de Actualización': customer.updatedAt.toISOString().split('T')[0],
+        'Fecha de Creación': customer.createdAt.toISOString().split("T")[0],
+        'Fecha de Actualización': customer.updatedAt.toISOString().split("T")[0],
       }))
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
@@ -220,15 +213,8 @@ export class ExportService {
         }
       }
 
-      // Obtener idioma actual para traducciones (por defecto 'es')
-      const currentLanguage = 'es'
-
       const exportData = sales.map((sale) => {
-        const notes = getTranslatableText(
-          sale.notes,
-          sale.notesTranslations as any,
-          currentLanguage
-        )
+        const notes = sale.notes
 
         return {
           'ID': sale.id,
@@ -242,7 +228,7 @@ export class ExportService {
           'Estado': sale.status,
           'Notas': notes || '',
           'Items': sale.items.length,
-          'Fecha': sale.createdAt.toISOString().split('T')[0],
+          'Fecha': sale.createdAt.toISOString().split("T")[0],
         }
       })
 

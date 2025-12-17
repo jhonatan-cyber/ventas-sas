@@ -7,9 +7,10 @@
 
 import { NextRequest } from 'next/server'
 
-import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 import { EnhancedTokenService } from './enhanced-token-service'
+
 import { prisma } from '@/lib/prisma'
+import { AuthSasService } from '@/lib/services/sales/auth-sas-service'
 
 export interface SasAuthUser {
   id: string
@@ -154,7 +155,7 @@ export async function getSasUserFromRequest(
   request: NextRequest,
   customerSlug: string
 ): Promise<SasAuthUser | null> {
-  const token = request.cookies.get('sas-auth-token')?.value
+  const token = request.cookies.get("sas-auth-token")?.value
   
   if (!token) {
     return null

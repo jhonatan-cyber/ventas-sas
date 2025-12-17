@@ -1,7 +1,6 @@
 "use client"
 
 import { FileText } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { FC, memo, useMemo, useState, useEffect } from "react"
 
 import { QuotationsCards } from "./quotations-cards"
@@ -12,8 +11,6 @@ import { QuotationsTable } from "./quotations-table"
 
 import { SalesQuotationWithRelations } from "@/components/sales/quotation/types"
 import { Card, CardContent } from "@/components/ui/card"
-import { getTranslatableText } from "@/lib/utils/translatable-text"
-
 const QuotationsTableComponent = QuotationsTable as unknown as FC<any>
 
 export interface QuotationsContainerProps {
@@ -49,7 +46,6 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
   onBranchFilterChange,
   selectedBranchFilter,
 }) => {
-  const t = useTranslations()
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
@@ -69,7 +65,7 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
         return
       }
       if (!unique.has(branch.id)) {
-        unique.set(branch.id, { id: branch.id, name: branch.name ?? t('common.noBranch') })
+        unique.set(branch.id, { id: branch.id, name: branch.name ?? "Sin sucursal" })
       }
     })
 
@@ -78,7 +74,7 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
       const branchName =
         quotation.branch?.name ??
         unique.get(branchId ?? "")?.name ??
-        t('common.noBranch')
+        "Sin sucursal"
 
       if (branchId) {
         if (!unique.has(branchId)) {
@@ -92,11 +88,11 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
     const options = Array.from(unique.values())
 
     if (includeUnassigned) {
-      options.push({ id: "none", name: t('common.noBranch') })
+      options.push({ id: "none", name: "Sin sucursal" })
     }
 
     return options
-  }, [branches, quotations, t])
+  }, [branches, quotations])
 
   // Filtrar cotizaciones por búsqueda y estado
   const filteredQuotations = useMemo(() => {
@@ -112,20 +108,8 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
 
       if (searchTerm.trim() !== "") {
         const searchLower = searchTerm.toLowerCase()
-        // Obtener notas traducidas para búsqueda
-        const currentLanguage = (() => {
-          try {
-            const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-            return prefs?.language || 'es';
-          } catch {
-            return 'es';
-          }
-        })();
-        const notes = getTranslatableText(
-          quotation.notes,
-          (quotation as any).notesTranslations,
-          currentLanguage
-        ) || "";
+        const notes = quotation.notes || '';
+        quotation.notes || "";
         const matchesSearch =
           quotation.quotationNumber?.toLowerCase().includes(searchLower) ||
           `${quotation.customer?.name ?? ""} ${quotation.customer?.lastName ?? ""}`.trim().toLowerCase().includes(searchLower) ||
@@ -177,7 +161,7 @@ const QuotationsContainerComponent: FC<QuotationsContainerProps> = ({
 
       <Card className="bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
         <CardContent className="pt-6">
-          <QuotationsFilters 
+          <QuotationsFilters
             onPageSizeChange={handlePageSizeChange}
             onSearchChange={handleSearchChange}
             onStatusChange={handleStatusChange}

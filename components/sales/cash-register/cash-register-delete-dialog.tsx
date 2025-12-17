@@ -1,7 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-
 import type { CashRegisterWithRelations } from "./types"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -14,9 +12,8 @@ interface CashRegisterDeleteDialogProps {
 }
 
 export function CashRegisterDeleteDialog({ open, onOpenChange, cashRegister, onDelete }: CashRegisterDeleteDialogProps) {
-  const t = useTranslations()
-  
-  const handleDelete = () => {
+
+const handleDelete = () => {
     onDelete()
     onOpenChange(false)
   }
@@ -25,20 +22,20 @@ export function CashRegisterDeleteDialog({ open, onOpenChange, cashRegister, onD
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
+          <AlertDialogTitle>{"Are You Sure"}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('cashRegisters.deleteWarning')}
+            {"Delete Warning"}
             <strong className="block mt-2">"{cashRegister?.name}"</strong>
-            {t('cashRegisters.deleteWarningEnd')}
+            {"Delete Warning End"}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full">{t('action.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full">{"Cancelar"}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             className="rounded-full bg-red-600 hover:bg-red-700 text-white"
           >
-            {t('action.delete')}
+            {"Eliminar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

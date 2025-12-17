@@ -4,7 +4,7 @@ import { SalesLayoutClient } from "@/components/layout/sales-layout-client"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PostHogProvider } from "@/lib/analytics/posthog-provider"
 import { prisma } from "@/lib/prisma"
-import { I18nProvider } from "@/lib/utils/i18n-provider"
+import { UserPermissionsService } from "@/lib/services/sales/user-permissions-service"
 import { getMaxBranchesBySlug, getModulesBySlug } from "@/lib/utils/organization"
 
 export default async function SalesLayout({
@@ -31,7 +31,7 @@ export default async function SalesLayout({
   
   // Si la organización NO existe, redirigir a la raíz
   if (!organization) {
-    redirect('/')
+    redirect("/")
   }
 
   // Validar que tenga al menos una relación activa con un cliente activo
@@ -40,7 +40,7 @@ export default async function SalesLayout({
   )
 
   if (activeCustomerOrgs.length === 0) {
-    redirect('/')
+    redirect("/")
   }
   
   // Obtener límite de sucursales para ocultar el módulo en el sidebar si es necesario
@@ -49,16 +49,22 @@ export default async function SalesLayout({
   // Obtener módulos permitidos según el plan suscrito
   const allowedModules = await getModulesBySlug(slug)
   
+  // Obtener permisos del usuario actual (server-side)
+  const userPermissions = await UserPermissionsService.getUserPermissions(slug)
+  
   // Nota: La validación de suscripción se hará en cada página individual según corresponda
   
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="sas-theme">
       <PostHogProvider>
-        <I18nProvider>
-          <SalesLayoutClient organizationSlug={slug} maxBranches={maxBranches} allowedModules={allowedModules}>
+        <SalesLayoutClient 
+            organizationSlug={slug} 
+            maxBranches={maxBranches} 
+            allowedModules={allowedModules}
+            userPermissions={userPermissions}
+          >
             {children}
           </SalesLayoutClient>
-        </I18nProvider>
       </PostHogProvider>
     </ThemeProvider>
   )

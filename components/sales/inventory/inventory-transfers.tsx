@@ -6,9 +6,9 @@
 
 import { format } from "date-fns";
 import { ArrowRightLeft, Check, X, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useSasPermissions } from "@/hooks/sales/use-sas-permissions";
 
 interface InventoryTransfer {
   id: string;
@@ -93,7 +94,9 @@ interface InventoryTransfersProps {
 }
 
 export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
-  const t = useTranslations();
+  // Hook para verificar permisos del usuario
+  const { hasPermission } = useSasPermissions()
+  
   const [transfers, setTransfers] = useState<InventoryTransfer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -226,15 +229,14 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
   const handleCreateTransfer = async () => {
     if (!productId || !fromBranchId || !toBranchId || !quantity) {
       toast.error(
-        t("inventory.transfers.fillAllFields") || "Completa todos los campos"
+        "Completa todos los campos"
       );
       return;
     }
 
     if (fromBranchId === toBranchId) {
       toast.error(
-        t("inventory.transfers.differentBranches") ||
-          "Las sucursales deben ser diferentes"
+        "Las sucursales deben ser diferentes"
       );
       return;
     }
@@ -242,8 +244,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
     const quantityNum = parseInt(quantity);
     if (isNaN(quantityNum) || quantityNum <= 0) {
       toast.error(
-        t("inventory.transfers.invalidQuantity") ||
-          "La cantidad debe ser un número mayor a 0"
+        "La cantidad debe ser un número mayor a 0"
       );
       return;
     }
@@ -251,8 +252,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
     // Validar que la cantidad no exceda el stock disponible
     if (selectedProductStock !== null && quantityNum > selectedProductStock) {
       toast.error(
-        t("inventory.transfers.insufficientStock") ||
-          `Stock insuficiente. Stock disponible: ${selectedProductStock}, solicitado: ${quantityNum}`
+        `Stock insuficiente. Stock disponible: ${selectedProductStock}, solicitado: ${quantityNum}`
       );
       return;
     }
@@ -277,7 +277,6 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
         const errorMessage =
           data.error ||
           data.message ||
-          t("inventory.transfers.error") ||
           "Error al crear transferencia";
         toast.error(errorMessage);
         return;
@@ -285,7 +284,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
 
       if (data.success) {
         toast.success(
-          t("inventory.transfers.created") || "Transferencia creada"
+          "Transferencia creada"
         );
         setIsCreateDialogOpen(false);
         setProductId("");
@@ -303,14 +302,13 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
       } else {
         toast.error(
           data.error ||
-            t("inventory.transfers.error") ||
             "Error al crear transferencia"
         );
       }
     } catch (error) {
       console.error("Error creando transferencia:", error);
       toast.error(
-        t("inventory.transfers.error") || "Error al crear transferencia"
+        "Error al crear transferencia"
       );
     }
   };
@@ -336,10 +334,10 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
       if (data.success) {
         toast.success(
           action === "approve"
-            ? t("inventory.transfers.approved") || "Transferencia aprobada"
+            ? "Transferencia aprobada"
             : action === "reject"
-            ? t("inventory.transfers.rejected") || "Transferencia rechazada"
-            : t("inventory.transfers.completed") || "Transferencia completada"
+            ? "Transferencia rechazada"
+            : "Transferencia completada"
         );
         setIsActionDialogOpen(false);
         setSelectedTransfer(null);
@@ -348,13 +346,12 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
       } else {
         toast.error(
           data.error ||
-            t("inventory.transfers.error") ||
             "Error al procesar transferencia"
         );
       }
     } catch {
       toast.error(
-        t("inventory.transfers.error") || "Error al procesar transferencia"
+        "Error al procesar transferencia"
       );
     }
   };
@@ -363,27 +360,27 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
     const badges: Record<string, { variant: any; label: string }> = {
       pending: {
         variant: "secondary",
-        label: t("inventory.transfers.status.pending") || "Pendiente",
+        label: "Pendiente",
       },
       approved: {
         variant: "default",
-        label: t("inventory.transfers.status.approved") || "Aprobada",
+        label: "Aprobada",
       },
       rejected: {
         variant: "destructive",
-        label: t("inventory.transfers.status.rejected") || "Rechazada",
+        label: "Rechazada",
       },
       in_transit: {
         variant: "outline",
-        label: t("inventory.transfers.status.inTransit") || "En tránsito",
+        label: "En tránsito",
       },
       completed: {
         variant: "default",
-        label: t("inventory.transfers.status.completed") || "Completada",
+        label: "Completada",
       },
       cancelled: {
         variant: "outline",
-        label: t("inventory.transfers.status.cancelled") || "Cancelada",
+        label: "Cancelada",
       },
     };
     return badges[status] || { variant: "outline", label: status };
@@ -397,20 +394,16 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <ArrowRightLeft className="h-5 w-5" />
-                {t("inventory.transfers.title") ||
-                  "Transferencias entre Sucursales"}
+                {"Transferencias entre Sucursales"}
               </CardTitle>
               <CardDescription>
-                {t("inventory.transfers.description") ||
-                  "Gestiona transferencias de productos entre sucursales"}
+                {"Gestiona transferencias de productos entre sucursales"}
               </CardDescription>
             </div>
             <div className="flex items-end gap-2">
               <div className="space-y-1">
                 <Label className="text-xs text-gray-600 dark:text-gray-300">
-                  {t("inventory.transfers.statusHeader") ||
-                    t("inventory.transfers.status") ||
-                    "Estado"}
+                  {"Estado"}
                 </Label>
                 <Select
                   value={status}
@@ -424,24 +417,23 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
-                      {t("common.all") || "Todos"}
+                      {"Todos"}
                     </SelectItem>
                     <SelectItem value="pending">
-                      {t("inventory.transfers.status.pending") || "Pendientes"}
+                      {"Pendientes"}
                     </SelectItem>
                     <SelectItem value="approved">
-                      {t("inventory.transfers.status.approved") || "Aprobadas"}
+                      {"Aprobadas"}
                     </SelectItem>
                     <SelectItem value="completed">
-                      {t("inventory.transfers.status.completed") ||
-                        "Completadas"}
+                      {"Completadas"}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-gray-600 dark:text-gray-300">
-                  {t("common.data") || "Datos"}
+                  {"Datos"}
                 </Label>
                 <Select
                   value={String(pageSize)}
@@ -456,19 +448,21 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   <SelectContent>
                     {[5, 10, 20, 50, 100].map((n) => (
                       <SelectItem key={n} value={String(n)}>
-                        {n} {t("common.perPage") || "por página"}
+                        {n} {"por página"}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="rounded-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t("inventory.transfers.new") || "Nueva Transferencia"}
-              </Button>
+              {hasPermission('inventario_crear') && (
+                <Button
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="rounded-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Transferencia
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -481,8 +475,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
             </div>
           ) : transfers.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              {t("inventory.transfers.noTransfers") ||
-                "No hay transferencias registradas"}
+              {"No hay transferencias registradas"}
             </div>
           ) : (
             <>
@@ -491,28 +484,27 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead>
-                        {t("inventory.transfers.product") || "Producto"}
+                        {"Producto"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.from") || "Desde"}
+                        {"Desde"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.to") || "Hacia"}
+                        {"Hacia"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.quantity") || "Cantidad"}
+                        {"Cantidad"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.statusHeader") || "Estado"}
+                        {"Estado"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.requestedBy") ||
-                          "Solicitado por"}
+                        {"Solicitado por"}
                       </TableHead>
                       <TableHead>
-                        {t("inventory.transfers.date") || "Fecha"}
+                        {"Fecha"}
                       </TableHead>
-                      <TableHead>{t("action.actions") || "Acciones"}</TableHead>
+                      <TableHead>{"Acciones"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -601,11 +593,11 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                         disabled={page === 1}
                         className="rounded-full"
                       >
-                        {t("action.previous") || "Anterior"}
+                        {"Anterior"}
                       </Button>
                       <div className="text-sm text-gray-500 dark:text-gray-400 px-2">
-                        {t("pagination.page") || t("common.page") || "Página"}{" "}
-                        {page} {t("pagination.of") || t("common.of") || "de"}{" "}
+                        {"Página"}{" "}
+                        {page} {"de"}{" "}
                         {totalPages}
                       </div>
                       <Button
@@ -617,7 +609,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                         disabled={page === totalPages}
                         className="rounded-full"
                       >
-                        {t("action.next") || "Siguiente"}
+                        {"Siguiente"}
                       </Button>
                     </div>
                   )
@@ -659,11 +651,10 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
           <div className="px-6 py-5 border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#111111]/95 backdrop-blur sticky top-0 z-10">
             <DialogHeader className="px-0 py-0 space-y-2">
               <DialogTitle>
-                {t("inventory.transfers.new") || "Nueva Transferencia"}
+                {"Nueva Transferencia"}
               </DialogTitle>
               <DialogDescription>
-                {t("inventory.transfers.createDescription") ||
-                  "Crea una nueva transferencia de productos entre sucursales"}
+                {"Crea una nueva transferencia de productos entre sucursales"}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -675,7 +666,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t("inventory.transfers.fromBranch") || "Sucursal Origen"}
+                    {"Sucursal Origen"}
                   </Label>
                   <Select
                     value={fromBranchId}
@@ -689,7 +680,6 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                     <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
                       <SelectValue
                         placeholder={
-                          t("inventory.transfers.selectFromBranch") ||
                           "Seleccionar sucursal origen"
                         }
                       />
@@ -705,7 +695,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t("inventory.transfers.product") || "Producto"}
+                    {"Producto"}
                   </Label>
                   <Select
                     value={productId}
@@ -721,7 +711,6 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                     <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
                       <SelectValue
                         placeholder={
-                          t("inventory.transfers.selectProduct") ||
                           "Seleccionar producto"
                         }
                       />
@@ -736,7 +725,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   </Select>
                   {selectedProductStock !== null && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {t("inventory.alerts.currentStock") || "Stock actual"}:{" "}
+                      {"Stock actual"}:{" "}
                       <strong>{selectedProductStock}</strong>
                     </p>
                   )}
@@ -747,14 +736,13 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t("inventory.transfers.toBranch") || "Sucursal Destino"}
+                    {"Sucursal Destino"}
                   </Label>
                   {isAdmin ? (
                     <Select value={toBranchId} onValueChange={setToBranchId}>
                       <SelectTrigger className="w-full rounded-full bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]">
                         <SelectValue
                           placeholder={
-                            t("inventory.transfers.selectToBranch") ||
                             "Seleccionar sucursal destino"
                           }
                         />
@@ -772,14 +760,13 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   ) : (
                     <div className="w-full px-3 py-2 rounded-full bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-300">
                       {branches.find((b) => b.id === toBranchId)?.name ||
-                        t("inventory.transfers.selectToBranch") ||
                         "Seleccionar sucursal destino"}
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {t("inventory.transfers.quantity") || "Cantidad"}
+                    {"Cantidad"}
                   </Label>
                   <Input
                     type="number"
@@ -792,8 +779,7 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                   />
                   {selectedProductStock !== null && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {t("inventory.transfers.maxQuantity") ||
-                        "Máximo disponible"}
+                      {"Máximo disponible"}
                       : {selectedProductStock}
                     </p>
                   )}
@@ -801,13 +787,12 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t("common.notes") || "Notas"}
+                  {"Notas"}
                 </Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={
-                    t("inventory.transfers.notesPlaceholder") ||
                     "Notas opcionales..."
                   }
                   className="rounded-2xl bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#2a2a2a]"
@@ -824,14 +809,14 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                 className="w-full sm:w-auto rounded-full"
                 onClick={() => setIsCreateDialogOpen(false)}
               >
-                {t("action.cancel") || "Cancelar"}
+                {"Cancelar"}
               </Button>
               <Button
                 type="button"
                 onClick={handleCreateTransfer}
                 className="w-full sm:w-auto rounded-full"
               >
-                {t("action.create") || "Crear"}
+                {"Crear"}
               </Button>
             </DialogFooter>
           </div>
@@ -844,23 +829,17 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
           <DialogHeader>
             <DialogTitle>
               {action === "approve"
-                ? t("inventory.transfers.approveTitle") ||
-                  "Aprobar Transferencia"
+                ? "Aprobar Transferencia"
                 : action === "reject"
-                ? t("inventory.transfers.rejectTitle") ||
-                  "Rechazar Transferencia"
-                : t("inventory.transfers.completeTitle") ||
-                  "Completar Transferencia"}
+                ? "Rechazar Transferencia"
+                : "Completar Transferencia"}
             </DialogTitle>
             <DialogDescription>
               {action === "approve"
-                ? t("inventory.transfers.approveDescription") ||
-                  "¿Estás seguro de aprobar esta transferencia?"
+                ? "¿Estás seguro de aprobar esta transferencia?"
                 : action === "reject"
-                ? t("inventory.transfers.rejectDescription") ||
-                  "¿Estás seguro de rechazar esta transferencia?"
-                : t("inventory.transfers.completeDescription") ||
-                  "¿Estás seguro de completar esta transferencia? El stock se moverá entre sucursales."}
+                ? "¿Estás seguro de rechazar esta transferencia?"
+                : "¿Estás seguro de completar esta transferencia? El stock se moverá entre sucursales."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -869,21 +848,21 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
                 <div className="text-sm">
                   <div>
                     <strong>
-                      {t("inventory.transfers.product") || "Producto"}:
+                      {"Producto"}:
                     </strong>{" "}
                     {selectedTransfer.product.name}
                   </div>
                   <div>
-                    <strong>{t("inventory.transfers.from") || "Desde"}:</strong>{" "}
+                    <strong>{"Desde"}:</strong>{" "}
                     {selectedTransfer.fromBranch.name}
                   </div>
                   <div>
-                    <strong>{t("inventory.transfers.to") || "Hacia"}:</strong>{" "}
+                    <strong>{"Hacia"}:</strong>{" "}
                     {selectedTransfer.toBranch.name}
                   </div>
                   <div>
                     <strong>
-                      {t("inventory.transfers.quantity") || "Cantidad"}:
+                      {"Cantidad"}:
                     </strong>{" "}
                     {selectedTransfer.quantity}
                   </div>
@@ -891,12 +870,11 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
               </div>
             )}
             <div className="space-y-2">
-              <Label>{t("common.notes") || "Notas"}</Label>
+              <Label>{"Notas"}</Label>
               <Textarea
                 value={actionNotes}
                 onChange={(e) => setActionNotes(e.target.value)}
                 placeholder={
-                  t("inventory.transfers.actionNotesPlaceholder") ||
                   "Notas opcionales..."
                 }
                 className="rounded-2xl"
@@ -910,14 +888,14 @@ export function InventoryTransfers({ customerSlug }: InventoryTransfersProps) {
               onClick={() => setIsActionDialogOpen(false)}
               className="rounded-full"
             >
-              {t("action.cancel") || "Cancelar"}
+              {"Cancelar"}
             </Button>
             <Button onClick={handleAction} className="rounded-full">
               {action === "approve"
-                ? t("action.approve") || "Aprobar"
+                ? "Aprobar"
                 : action === "reject"
-                ? t("action.reject") || "Rechazar"
-                : t("action.complete") || "Completar"}
+                ? "Rechazar"
+                : "Completar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,8 +1,6 @@
 "use client"
 
 import { Plus } from "lucide-react"
-import { useTranslations } from "next-intl"
-
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -20,9 +18,7 @@ export function RoleHeader({
   description,
   newButtonText = "Agregar Rol",
   onNewClick
-}: RoleHeaderProps) {
-  const t = useTranslations()
-  const canCreate = useHasPermission("roles_crear")
+}: RoleHeaderProps) {const canCreate = useHasPermission("roles_crear")
 
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0 mb-6 md:mb-8">
@@ -48,7 +44,7 @@ export function RoleHeader({
           </TooltipTrigger>
           {!canCreate && (
             <TooltipContent>
-              <p>{t('roles.noPermissionToCreate')}</p>
+              <p>{"No Permission To Create"}</p>
             </TooltipContent>
           )}
         </Tooltip>

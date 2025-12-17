@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { PERMISSIONS } from '@/lib/config/sas-permissions'
 import { AppError } from '@/lib/errors/app-error'
 import { SalesProductService } from '@/lib/services/sales/sales-product-service'
 import { handleApiError, createErrorContext } from '@/lib/utils/error-handler'
 import { getCurrentSasUser } from '@/lib/utils/get-current-user'
-import { getOrganizationLocale } from '@/lib/utils/i18n-server'
 import { getOrganizationIdByCustomerSlug } from '@/lib/utils/organization'
-import { translateProductDescription } from '@/lib/utils/product-description'
+// import { translateProductDescription } from '@/lib/utils/product-description' - removed
+import requirePermission from '@/lib/utils/require-permission'
 import { validateRequestBody } from '@/lib/utils/validation-helper'
 import { updateProductSchema } from '@/lib/validators/sales-validators'
 
@@ -22,6 +23,9 @@ export async function GET(
     if (!organizationId) {
       throw AppError.notFound('Organización no encontrada o inactiva')
     }
+
+    // Verificar permiso para ver producto
+    await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_VER)
 
     const product = await SalesProductService.getProductById(id)
     
@@ -60,6 +64,9 @@ export async function PUT(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de editar productos
+    await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_EDITAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {
@@ -101,20 +108,8 @@ export async function PUT(
 
     const validatedData = validation.data
 
-    // Traducir descripción automáticamente si se está actualizando
-    let descriptionTranslations = undefined
-    if (validatedData.description !== undefined && validatedData.description !== null && validatedData.description.trim()) {
-      try {
-        const sourceLanguage = await getOrganizationLocale(slug)
-        descriptionTranslations = await translateProductDescription(
-          validatedData.description,
-          sourceLanguage
-        )
-      } catch (error) {
-        console.error('Error traduciendo descripción del producto:', error)
-        // Continuar sin traducciones si falla
-      }
-    }
+    // Descripción sin traducción automática
+    const descriptionTranslations = undefined
 
     // Obtener usuario para determinar si puede cambiar branchId
     const currentUserForUpdate = await getCurrentSasUser(request, slug)
@@ -153,6 +148,9 @@ export async function DELETE(
 ) {
   try {
     const { slug, id } = await params
+
+    // Verificar permiso de eliminar productos
+    await requirePermission(request, slug, PERMISSIONS.PRODUCTOS_ELIMINAR)
 
     const organizationId = await getOrganizationIdByCustomerSlug(slug)
     if (!organizationId) {

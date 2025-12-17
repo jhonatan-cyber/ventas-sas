@@ -20,8 +20,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url)
-    const start = searchParams.get("start")
-    const end = searchParams.get("end")
+    const start = searchParams.get("Start")
+    const end = searchParams.get("End")
 
     const dateRange =
       start && end

@@ -1,7 +1,6 @@
 "use client"
 
 import { Edit, Trash2, DollarSign, Eye } from "lucide-react"
-import { useTranslations } from "next-intl"
 
 import { SalesExpenseWithRelations, ExpenseBranchSummary } from "./types"
 
@@ -10,9 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatDateWithPreferences, formatCurrencyWithPreferences } from "@/lib/utils/preferences"
-import { getTranslatableText } from "@/lib/utils/translatable-text"
-
-
 interface ExpensesTableProps {
   expenses: SalesExpenseWithRelations[]
   isLoading?: boolean
@@ -24,7 +20,6 @@ interface ExpensesTableProps {
 }
 
 export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches, onEditClick, onDeleteClick, onViewClick }: ExpensesTableProps) {
-  const t = useTranslations()
   // Ocultar columna de sucursal si el plan solo permite una y solo hay una disponible
   const shouldHideBranchColumn = maxBranches === 1 && branches.length === 1
   const columnCount = shouldHideBranchColumn ? 6 : 7 // Sin columna sucursal: 6, con columna sucursal: 7
@@ -84,28 +79,18 @@ export function ExpensesTable({ expenses, isLoading, branches = [], maxBranches,
                     {!shouldHideBranchColumn && (
                       <TableCell>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                          {expense.branch?.name ?? t('common.noBranch')}
+                          {expense.branch?.name ?? 'Sin sucursal'}
                         </span>
                       </TableCell>
                     )}
                     <TableCell>
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {(() => {
-                          const currentLanguage = (() => {
-                            try {
-                              const prefs = JSON.parse(localStorage.getItem('sas_prefs') || '{}');
-                              return prefs?.language || 'es';
-                            } catch {
-                              return 'es';
-                            }
-                          })();
-                          return getTranslatableText(expense.description, (expense as any).descriptionTranslations, currentLanguage) || expense.description;
-                        })()}
+                        {expense.description || ''}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {expense.user?.fullName || t('users.sas.unassignedUser')}
+                        {expense.user?.fullName || 'Usuario no asignado'}
                       </div>
                       {expense.user?.email && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">

@@ -1,7 +1,6 @@
 "use client"
 
 import { Search, X } from "lucide-react"
-import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -49,9 +48,7 @@ export function QuotationsFilters({
   onBranchChange,
   showBranchFilter = false,
   maxBranches: _maxBranches,
-}: QuotationsFiltersProps) {
-  const t = useTranslations()
-  const [searchValue, setSearchValue] = useState("")
+}: QuotationsFiltersProps) {const [searchValue, setSearchValue] = useState("")
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
@@ -78,7 +75,7 @@ export function QuotationsFilters({
       }
 
       if (!unique.has(branch.id)) {
-        unique.set(branch.id, { id: branch.id, name: branch.name ?? t('branches.details.noName') })
+        unique.set(branch.id, { id: branch.id, name: branch.name ?? "Sin nombre" })
       }
     })
 
@@ -87,7 +84,7 @@ export function QuotationsFilters({
       hasUnassignedBranch:
         includeUnassigned || branches.some((branch) => branch?.id === "none"),
     }
-  }, [branches, t])
+  }, [branches])
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-end">
@@ -102,7 +99,7 @@ export function QuotationsFilters({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 id="quotations-search"
-                placeholder={t('common.placeholders.searchQuotations')}
+                placeholder={"Buscar cotizaciones..."}
                 className="pl-10 pr-10 w-full rounded-full"
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
@@ -149,17 +146,17 @@ export function QuotationsFilters({
                 }}
               >
                 <SelectTrigger id="branch-filter" className="w-full rounded-full">
-                  <SelectValue placeholder={t('common.placeholders.allBranches')} />
+                  <SelectValue placeholder={"Todas las sucursales"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('common.placeholders.allBranches')}</SelectItem>
+                  <SelectItem value="all">{"Todas las sucursales"}</SelectItem>
                   {branchOptions.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
-                      {branch.name ?? t('branches.details.noName')}
+                      {branch.name ?? "Sin nombre"}
                     </SelectItem>
                   ))}
                   {hasUnassignedBranch && (
-                    <SelectItem value="none">{t('common.noBranch')}</SelectItem>
+                    <SelectItem value="none">{"Sin sucursal"}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -181,7 +178,7 @@ export function QuotationsFilters({
                 defaultValue="all"
               >
                 <SelectTrigger id="status-filter" className="w-full rounded-full">
-                  <SelectValue placeholder={t('common.placeholders.filterByStatus')} />
+                  <SelectValue placeholder={"Filtrar por estado"} />
                 </SelectTrigger>
                 <SelectContent>
                   {statusOptions.map((option) => (
@@ -206,7 +203,7 @@ export function QuotationsFilters({
                 defaultValue="10"
               >
                 <SelectTrigger id="page-size" className="w-full rounded-full">
-                  <SelectValue placeholder={t('common.placeholders.perPage')} />
+                  <SelectValue placeholder={"Por página"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="5">5 por página</SelectItem>
